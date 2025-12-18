@@ -6,7 +6,7 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
-const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'sarah@darkridge.com';
+const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'hello@sarahsbooks.com';
 const FEEDBACK_GITHUB_NEW_ISSUE_URL = 'https://github.com/sarahcodeswell/sarahs-library/issues/new';
 
 const STOP_WORDS = new Set([
@@ -1061,15 +1061,16 @@ export default function App() {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
     track('thanks_heart_click', { source: view });
 
-    const subject = "❤️ Thanks for Sarah's Library";
-    const body = `❤️ Thank you for creating this free service!\n\nSent from: ${url}\n`;
+    const subject = 'Thanks <3';
+    const body = `❤️ Thank you!\n\nSent from: ${url}\n`;
 
     const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
     track('thanks_heart_send', { method, source: view });
 
     if (FEEDBACK_EMAIL) {
-      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
-      showToast('Thanks — opening your email app ❤️');
+      showToast('Opening your email app…');
+      const mailto = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
+      setTimeout(() => { window.location.href = mailto; }, 200);
     } else {
       window.open(buildGithubIssueUrl({ title: '❤️ Love Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
       showToast('Thanks — opening GitHub ❤️');
@@ -1086,15 +1087,16 @@ export default function App() {
     const msg = String(featureRequestText || '').trim();
     if (!msg) return;
 
-    const subject = 'Feature request: Sarah’s Library';
+    const subject = 'Sarahs Books Feature Request';
     const body = `${msg}\n\nSent from: ${url}\n`;
 
     const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
     track('feature_request_send', { method, source: view, message_length: msg.length });
 
     if (FEEDBACK_EMAIL) {
-      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
       showToast('Opening your email app…');
+      const mailto = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
+      setTimeout(() => { window.location.href = mailto; }, 200);
     } else {
       window.open(buildGithubIssueUrl({ title: 'Feature request: Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
       showToast('Opening GitHub…');
@@ -1541,6 +1543,10 @@ export default function App() {
                 }}
               />
             </div>
+          </div>
+
+          <div className="mt-6 text-xs text-[#7A8F6C] font-light text-center">
+            For the ❤️ of reading.
           </div>
 
         </main>
