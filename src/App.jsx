@@ -246,7 +246,7 @@ function parseRecommendations(text) {
 // Check if message contains structured recommendations
 function hasStructuredRecommendations(text) {
   const t = String(text || '');
-  return t.includes('Title:') && (t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:'));
+  return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
 function RecommendationCard({ rec, index }) {
