@@ -266,6 +266,8 @@ function hasStructuredRecommendations(text) {
 function RecommendationCard({ rec, index, messageIndex }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [coverUrl, setCoverUrl] = useState(null);
+  const [coverLoaded, setCoverLoaded] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -319,6 +321,30 @@ function RecommendationCard({ rec, index, messageIndex }) {
     return d.length > 140 ? `${d.slice(0, 137)}…` : d;
   })();
 
+  useEffect(() => {
+    let alive = true;
+    setCoverLoaded(false);
+    setCoverUrl(null);
+
+    const t = String(rec?.title || '').trim();
+    if (!t) return () => { alive = false; };
+
+    const url = new URL('/api/covers', window.location.origin);
+    url.searchParams.set('title', t);
+    if (displayAuthor) url.searchParams.set('author', displayAuthor);
+
+    fetch(url.toString())
+      .then(r => r.json())
+      .then(data => {
+        if (!alive) return;
+        const u = String(data?.coverUrl || '').trim();
+        if (u) setCoverUrl(u);
+      })
+      .catch((e) => { void e; });
+
+    return () => { alive = false; };
+  }, [rec?.title, displayAuthor]);
+
   const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
   const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
@@ -331,9 +357,28 @@ function RecommendationCard({ rec, index, messageIndex }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
       >
-        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
-          {index + 1}
-        </span>
+        <div className="flex-shrink-0 flex items-start gap-2">
+          <span className="w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
+            {index + 1}
+          </span>
+          <div className="w-9 h-12 rounded-md bg-white border border-[#D4DAD0] overflow-hidden flex items-center justify-center">
+            {coverUrl && !coverLoaded ? (
+              <div className="w-full h-full bg-[#E8EBE4]" />
+            ) : null}
+            {coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={rec.title}
+                className={`w-full h-full object-cover ${coverLoaded ? '' : 'hidden'}`}
+                loading="lazy"
+                onLoad={() => setCoverLoaded(true)}
+                onError={() => { setCoverUrl(null); setCoverLoaded(false); }}
+              />
+            ) : (
+              <Book className="w-4 h-4 text-[#96A888]" />
+            )}
+          </div>
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
