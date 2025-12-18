@@ -312,8 +312,15 @@ function RecommendationCard({ rec, index, messageIndex }) {
     }
   };
 
-  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}`;
-  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
+  const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
+  const displayWhy = String(rec?.why || '').trim() || (() => {
+    const d = String(catalogBook?.description || '').trim();
+    if (!d) return '';
+    return d.length > 140 ? `${d.slice(0, 137)}…` : d;
+  })();
+
+  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
+  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
@@ -332,8 +339,8 @@ function RecommendationCard({ rec, index, messageIndex }) {
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
-          {rec.author && <p className="text-xs text-[#7A8F6C]">{rec.author}</p>}
-          <p className="text-xs text-[#5F7252] mt-1">{rec.why}</p>
+          {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
+          {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
@@ -1257,30 +1264,55 @@ export default function App() {
                 <span className="hidden sm:inline ml-2 text-sm font-medium">Share</span>
               </button>
 
-              <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
+              <div className="hidden sm:flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
+                <button
+                  onClick={() => setView('chat')}
+                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
+                    view === 'chat' 
+                      ? 'bg-white text-[#4A5940] shadow-sm' 
+                      : 'text-[#5F7252] hover:text-[#4A5940]'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Ask Sarah</span>
+                  <MessageCircle className="w-4 h-4 sm:hidden" />
+                </button>
+                <button
+                  onClick={() => setView('browse')}
+                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
+                    view === 'browse' 
+                      ? 'bg-white text-[#4A5940] shadow-sm' 
+                      : 'text-[#5F7252] hover:text-[#4A5940]'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Browse</span>
+                  <Book className="w-4 h-4 sm:hidden" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 sm:hidden">
+            <div className="flex bg-[#E8EBE4] rounded-full p-1.5 border border-[#D4DAD0] shadow-sm">
               <button
                 onClick={() => setView('chat')}
-                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'chat' 
-                    ? 'bg-white text-[#4A5940] shadow-sm' 
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  view === 'chat'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
                     : 'text-[#5F7252] hover:text-[#4A5940]'
                 }`}
               >
-                <span className="hidden sm:inline">Ask Sarah</span>
-                <MessageCircle className="w-4 h-4 sm:hidden" />
+                Ask Sarah
               </button>
               <button
                 onClick={() => setView('browse')}
-                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'browse' 
-                    ? 'bg-white text-[#4A5940] shadow-sm' 
+                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  view === 'browse'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
                     : 'text-[#5F7252] hover:text-[#4A5940]'
                 }`}
               >
-                <span className="hidden sm:inline">Browse</span>
-                <Book className="w-4 h-4 sm:hidden" />
+                Browse
               </button>
-            </div>
             </div>
           </div>
         </div>
