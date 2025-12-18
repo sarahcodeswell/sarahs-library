@@ -852,7 +852,6 @@ export default function App() {
   const shareFeedbackTimeoutRef = useRef(null);
   const [feedbackStatus, setFeedbackStatus] = useState({
     isSendingThanks: false,
-    thanksMsg: '',
   });
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
@@ -1208,9 +1207,8 @@ export default function App() {
       });
 
     void url;
-    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: 'Thanks ❤️' }));
+    setFeedbackStatus(s => ({ ...s, isSendingThanks: true }));
     setTimeout(() => setFeedbackStatus(s => ({ ...s, isSendingThanks: false })), 700);
-    setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2000);
   };
 
   return (
@@ -1233,9 +1231,9 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3">
-              {(shareFeedback || feedbackStatus.thanksMsg) && (
+              {shareFeedback && (
                 <div className="hidden sm:block text-xs text-[#7A8F6C] font-light">
-                  {feedbackStatus.thanksMsg || shareFeedback}
+                  {shareFeedback}
                 </div>
               )}
 
