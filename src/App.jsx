@@ -298,7 +298,7 @@ function AboutSection() {
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
           <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              I've always been the friend people text when they need a book recommendation. "Something that'll make me feel something," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
+              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel something," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
             </p>
             <p>
               So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
@@ -494,7 +494,7 @@ export default function App() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Themes</label>
+                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Curator Themes</label>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(themeInfo).map(([key, info]) => (
                     <button
