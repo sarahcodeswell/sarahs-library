@@ -321,9 +321,11 @@ function RecommendationCard({ rec, index, messageIndex }) {
   };
   
   const handleLinkClick = (destination) => {
+    const safeTitle = String(rec?.title || '').trim();
+    const safeAuthor = String(displayAuthor || '').trim();
     track('book_link_click', {
-      book_title: rec.title,
-      book_author: rec.author || '',
+      book_title: safeTitle,
+      book_author: safeAuthor,
       destination: destination,
       source: 'recommendation_card'
     });
@@ -345,8 +347,10 @@ function RecommendationCard({ rec, index, messageIndex }) {
     return d.length > 140 ? `${d.slice(0, 137)}…` : d;
   })();
 
-  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
-  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
+  const safeTitle = String(rec?.title || '').trim();
+  const safeAuthor = String(displayAuthor || '').trim();
+  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${safeTitle} ${safeAuthor}`)}`;
+  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${safeTitle} ${safeAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
@@ -495,12 +499,16 @@ const genreDescriptions = {
 };
 
 const getGoodreadsSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  const t = String(title || '').trim();
+  const a = String(author || '').trim();
+  const searchQuery = encodeURIComponent(`${t} ${a}`);
   return `https://www.goodreads.com/search?q=${searchQuery}`;
 };
 
 const getBookshopSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  const t = String(title || '').trim();
+  const a = String(author || '').trim();
+  const searchQuery = encodeURIComponent(`${t} ${a}`);
   return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 };
 
@@ -617,14 +625,17 @@ function BookDetail({ book, onClose, onRecommendMoreLikeThis }) {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="mt-2">
             <button
               onClick={() => onRecommendMoreLikeThis?.(book)}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-xl hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium text-sm"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5" />
               Recommend more like this
             </button>
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
             <a 
               href={goodreadsUrl} 
               target="_blank" 
