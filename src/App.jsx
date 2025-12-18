@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Sparkles } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -478,6 +478,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
+            {catalogBook && <Book className="w-3.5 h-3.5 text-[#96A888] flex-shrink-0" />}
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
           {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
@@ -662,7 +663,7 @@ When asked for "best books of the year" or new releases, treat the current year 
   }
 };
 
-function BookDetail({ book, onClose }) {
+function BookDetail({ book, onClose, onRecommendMoreLikeThis }) {
   const handleLinkClick = (destination) => {
     track('book_link_click', {
       book_title: book.title,
@@ -732,6 +733,13 @@ function BookDetail({ book, onClose }) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => onRecommendMoreLikeThis?.(book)}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-xl hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium text-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              Recommend more like this
+            </button>
             <a 
               href={goodreadsUrl} 
               target="_blank" 
@@ -1005,6 +1013,7 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const hasHydratedChatRef = useRef(false);
   const chatStorageKey = 'sarah_books_chat_history_v1';
+  const nextDiscoverIncludeShortlistRef = useRef(false);
 
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
@@ -1229,10 +1238,9 @@ export default function App() {
     }));
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
-
-    const userMessage = inputValue.trim();
+  const handleSendMessage = async (overrideText) => {
+    const userMessage = String(overrideText ?? inputValue).trim();
+    if (!userMessage || isLoading) return;
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
@@ -1262,13 +1270,20 @@ export default function App() {
           content: m.text
         }));
 
+      const includeShortlistInDiscover = chatMode !== 'library' && nextDiscoverIncludeShortlistRef.current;
+      nextDiscoverIncludeShortlistRef.current = false;
+
+      const baseDiscoverContent = (() => {
+        if (!importedLibrary?.items?.length) return userMessage;
+        const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+        return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
+      })();
+
       const userContent = chatMode === 'library'
         ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
-        : (() => {
-            if (!importedLibrary?.items?.length) return userMessage;
-            const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
-            return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
-          })();
+        : (includeShortlistInDiscover
+          ? `SARAH'S PERSONAL LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nIMPORTANT: You may recommend both from Sarah's personal library and from outside her library.\nIf a recommendation is from Sarah's library, it will be marked with a 📚 icon in the UI.\n\nUSER REQUEST:\n${userMessage}`
+          : baseDiscoverContent);
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -1301,6 +1316,26 @@ export default function App() {
       inFlightRequestRef.current = null;
       setIsLoading(false);
     }
+  };
+
+  const handleRecommendMoreLikeThis = (book) => {
+    const title = String(book?.title || '').trim();
+    const author = String(book?.author || '').trim();
+    if (!title) return;
+
+    const prompt = `Recommend more books like "${title}"${author ? ` by ${author}` : ''}.
+
+Give me 3 picks total: include the best matches from Sarah's personal library and the best matches from outside her library.
+
+Use the same Top 3 response format.`;
+
+    nextDiscoverIncludeShortlistRef.current = true;
+    setView('chat');
+    setChatMode('discover');
+    setInputValue(prompt);
+    setTimeout(() => {
+      handleSendMessage(prompt);
+    }, 0);
   };
 
   const suggestionChips = chatMode === 'library' 
@@ -1806,7 +1841,11 @@ export default function App() {
       )}
 
       {selectedBook && (
-        <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetail
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+          onRecommendMoreLikeThis={handleRecommendMoreLikeThis}
+        />
       )}
 
     </div>
