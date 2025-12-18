@@ -987,29 +987,31 @@ export default function App() {
       ) : (
         <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
           <div className="mb-4 flex justify-center">
-            <div className="bg-white rounded-full p-1 border border-[#D4DAD0] shadow-sm">
-              <button
-                onClick={() => setChatMode('library')}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
-                  chatMode === 'library'
-                    ? 'bg-[#5F7252] text-white'
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                <Library className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                My Library
-              </button>
-              <button
-                onClick={() => setChatMode('discover')}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
-                  chatMode === 'discover'
-                    ? 'bg-[#5F7252] text-white'
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Discover New
-              </button>
+            <div className="w-full max-w-sm bg-[#E8EBE4] rounded-2xl p-1 border border-[#D4DAD0] shadow-sm">
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  onClick={() => setChatMode('library')}
+                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
+                    chatMode === 'library'
+                      ? 'bg-white text-[#4A5940] shadow-sm'
+                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
+                  }`}
+                >
+                  <Library className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  My Library
+                </button>
+                <button
+                  onClick={() => setChatMode('discover')}
+                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
+                    chatMode === 'discover'
+                      ? 'bg-white text-[#4A5940] shadow-sm'
+                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Discover New
+                </button>
+              </div>
             </div>
           </div>
 
