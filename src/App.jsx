@@ -833,7 +833,7 @@ export default function App() {
               <img
                 src="/books.jpg"
                 alt="Stack of books"
-                className="block w-full h-[clamp(200px,32vh,460px)] object-cover object-center"
+                className="block w-full h-[clamp(140px,18vh,220px)] object-cover object-center"
               />
             </div>
             <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
@@ -1019,14 +1019,17 @@ export default function App() {
                 <img
                   src="/books.jpg"
                   alt="Open book on desk"
-                  className="block w-full h-[clamp(160px,24vh,320px)] object-cover object-center"
+                  className="block w-full h-[clamp(140px,18vh,220px)] object-cover object-center"
                 />
               </div>
               <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
-                <div className="px-5 sm:px-6 py-3">
-                  <h2 className="text-[#4A5940] font-serif text-lg sm:text-xl">
+                <div className="px-5 sm:px-8 py-4">
+                  <h2 className="text-[#4A5940] font-serif text-lg sm:text-xl mb-1">
                     {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
                   </h2>
+                  <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
+                    {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
+                  </p>
                 </div>
               </div>
             </div>
