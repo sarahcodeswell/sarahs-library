@@ -16,6 +16,62 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function BrowseBookRow({ book, onClick }) {
+  const coverUrl = useCoverUrl(book?.title, book?.author);
+  const [coverLoaded, setCoverLoaded] = useState(false);
+
+  useEffect(() => {
+    setCoverLoaded(false);
+  }, [coverUrl]);
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] px-4 py-3 hover:bg-[#F5F7F2] hover:border-[#D4DAD0] transition-colors"
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-12 rounded-md bg-white border border-[#D4DAD0] overflow-hidden flex items-center justify-center flex-shrink-0">
+          {coverUrl && !coverLoaded ? (
+            <div className="w-full h-full bg-[#E8EBE4]" />
+          ) : null}
+          {coverUrl ? (
+            <img
+              src={coverUrl}
+              alt={book.title}
+              className={`w-full h-full object-cover ${coverLoaded ? '' : 'hidden'}`}
+              loading="lazy"
+              onLoad={() => setCoverLoaded(true)}
+              onError={() => { setCoverLoaded(false); }}
+            />
+          ) : (
+            <Book className="w-4 h-4 text-[#96A888]" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
+                {book.favorite && (
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                )}
+              </div>
+              <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
+            </div>
+
+            {!!book.themes?.length && (
+              <span className="text-xs text-[#96A888] flex-shrink-0">
+                {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function bumpLocalMetric(key, by = 1) {
   const inc = safeNumber(by, 1);
   let next = inc;
@@ -70,6 +126,65 @@ const CATALOG_TITLE_INDEX = (() => {
   }
   return map;
 })();
+
+const COVER_CACHE = new Map();
+const COVER_INFLIGHT = new Map();
+
+const coverKey = (title, author) => {
+  const t = normalizeTitle(title);
+  const a = normalizeAuthor(author);
+  return `${t}::${a}`;
+};
+
+async function getCoverUrlCached(title, author) {
+  const key = coverKey(title, author);
+  if (!key || key === '::') return null;
+  if (COVER_CACHE.has(key)) return COVER_CACHE.get(key);
+  if (COVER_INFLIGHT.has(key)) return COVER_INFLIGHT.get(key);
+
+  const p = (async () => {
+    try {
+      const params = new URLSearchParams();
+      params.set('title', String(title || ''));
+      if (author) params.set('author', String(author || ''));
+      const res = await fetch(`/api/covers?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      const u = String(data?.coverUrl || '').trim() || null;
+      COVER_CACHE.set(key, u);
+      return u;
+    } catch (e) {
+      void e;
+      COVER_CACHE.set(key, null);
+      return null;
+    } finally {
+      COVER_INFLIGHT.delete(key);
+    }
+  })();
+
+  COVER_INFLIGHT.set(key, p);
+  return p;
+}
+
+function useCoverUrl(title, author) {
+  const [url, setUrl] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    const t = String(title || '').trim();
+    if (!t) return () => { alive = false; };
+
+    getCoverUrlCached(t, author)
+      .then((u) => {
+        if (!alive) return;
+        setUrl(u);
+      })
+      .catch((e) => { void e; });
+
+    return () => { alive = false; };
+  }, [title, author]);
+
+  return url;
+}
 
 function parseCsvLine(line) {
   const out = [];
@@ -266,7 +381,6 @@ function hasStructuredRecommendations(text) {
 function RecommendationCard({ rec, index, messageIndex }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [coverUrl, setCoverUrl] = useState(null);
   const [coverLoaded, setCoverLoaded] = useState(false);
   
   // Look up full book details from local catalog
@@ -321,29 +435,11 @@ function RecommendationCard({ rec, index, messageIndex }) {
     return d.length > 140 ? `${d.slice(0, 137)}…` : d;
   })();
 
+  const coverUrl = useCoverUrl(rec?.title, displayAuthor);
+
   useEffect(() => {
-    let alive = true;
     setCoverLoaded(false);
-    setCoverUrl(null);
-
-    const t = String(rec?.title || '').trim();
-    if (!t) return () => { alive = false; };
-
-    const url = new URL('/api/covers', window.location.origin);
-    url.searchParams.set('title', t);
-    if (displayAuthor) url.searchParams.set('author', displayAuthor);
-
-    fetch(url.toString())
-      .then(r => r.json())
-      .then(data => {
-        if (!alive) return;
-        const u = String(data?.coverUrl || '').trim();
-        if (u) setCoverUrl(u);
-      })
-      .catch((e) => { void e; });
-
-    return () => { alive = false; };
-  }, [rec?.title, displayAuthor]);
+  }, [coverUrl]);
 
   const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
   const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
@@ -1023,12 +1119,14 @@ export default function App() {
     }
   }, [messages, chatMode]);
 
-  const filteredBooks = bookCatalog.filter(book => {
-    if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
-    if (selectedTheme && !book.themes.includes(selectedTheme)) return false;
-    if (showFavoritesOnly && !book.favorite) return false;
-    return true;
-  });
+  const filteredBooks = React.useMemo(() => {
+    return bookCatalog.filter(book => {
+      if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
+      if (selectedTheme && !book.themes.includes(selectedTheme)) return false;
+      if (showFavoritesOnly && !book.favorite) return false;
+      return true;
+    });
+  }, [selectedGenre, selectedTheme, showFavoritesOnly]);
 
   const importedOverlap = React.useMemo(() => {
     const imported = importedLibrary?.items;
@@ -1107,18 +1205,22 @@ export default function App() {
     }));
   };
 
-  const booksByGenre = filteredBooks.reduce((acc, book) => {
-    const g = book.genre || 'Other';
-    if (!acc[g]) acc[g] = [];
-    acc[g].push(book);
-    return acc;
-  }, {});
+  const booksByGenre = React.useMemo(() => {
+    return filteredBooks.reduce((acc, book) => {
+      const g = book.genre || 'Other';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(book);
+      return acc;
+    }, {});
+  }, [filteredBooks]);
 
   const genreOrder = (selectedGenre !== 'All')
     ? [selectedGenre]
     : genres.filter(g => g !== 'All');
 
-  const visibleGenres = genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
+  const visibleGenres = React.useMemo(() => {
+    return genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
+  }, [booksByGenre]);
 
   const toggleGenreExpanded = (genre) => {
     setExpandedGenres(prev => ({
@@ -1474,28 +1576,11 @@ export default function App() {
                     <div className="px-5 sm:px-6 py-4">
                       <div className="space-y-2">
                         {shown.map((book) => (
-                          <button
+                          <BrowseBookRow
                             key={`${book.title}__${book.author}`}
+                            book={book}
                             onClick={() => setSelectedBook(book)}
-                            className="w-full text-left rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] px-4 py-3 hover:bg-[#F5F7F2] hover:border-[#D4DAD0] transition-colors"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
-                                  {book.favorite && (
-                                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                                  )}
-                                </div>
-                                <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
-                              </div>
-                              {!!book.themes?.length && (
-                                <span className="text-xs text-[#96A888] flex-shrink-0">
-                                  {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                                </span>
-                              )}
-                            </div>
-                          </button>
+                          />
                         ))}
                       </div>
 

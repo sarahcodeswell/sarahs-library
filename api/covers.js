@@ -7,7 +7,12 @@ export const config = {
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      // Cache at the edge; KV still remains the source of truth.
+      // This helps avoid repeated requests for popular titles.
+      'Cache-Control': 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800',
+    },
   });
 
 const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
