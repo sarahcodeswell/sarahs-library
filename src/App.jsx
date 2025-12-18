@@ -687,7 +687,7 @@ function AboutSection() {
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
           <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel something," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
+              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
             </p>
             <p>
               So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
@@ -713,8 +713,6 @@ export default function App() {
   const [genreShowAll, setGenreShowAll] = useState({});
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
-  const [importExpanded, setImportExpanded] = useState(false);
-  const [showImportPanel, setShowImportPanel] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
@@ -722,6 +720,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
   const inFlightRequestRef = useRef(null);
+  const importFileInputRef = useRef(null);
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -813,7 +812,6 @@ export default function App() {
         items
       };
       setImportedLibrary(payload);
-      setImportExpanded(true);
       window.localStorage.setItem('imported_goodreads_library_v1', JSON.stringify(payload));
     } catch (e) {
       void e;
@@ -824,9 +822,7 @@ export default function App() {
   const handleClearImport = () => {
     try { window.localStorage.removeItem('imported_goodreads_library_v1'); } catch (e) { void e; }
     setImportedLibrary(null);
-    setImportExpanded(false);
     setImportError('');
-    setShowImportPanel(false);
   };
 
   const toggleGenreShowAll = (genre) => {
@@ -1193,94 +1189,6 @@ export default function App() {
               </div>
             </div>
           )}
-
-          <div className="mb-4 sm:mb-6 bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
-            <div className="px-5 sm:px-6 py-4 border-b border-[#E8EBE4] bg-[#FDFBF4]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-serif text-base sm:text-lg text-[#4A5940]">Import Your Library</h3>
-                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">Upload a Goodreads CSV to avoid repeats and see what we share.</p>
-                </div>
-                {importedLibrary?.items?.length ? (
-                  <button
-                    onClick={handleClearImport}
-                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
-                  >
-                    Clear
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="px-5 sm:px-6 py-4">
-              {!importedLibrary?.items?.length && !showImportPanel && (
-                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
-                  <button
-                    onClick={() => setShowImportPanel(true)}
-                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
-                  >
-                    Upload Goodreads CSV
-                  </button>
-                </div>
-              )}
-
-              {(!importedLibrary?.items?.length && showImportPanel) && (
-                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                  <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
-                    Choose CSV file
-                    <input
-                      type="file"
-                      accept=".csv,text/csv"
-                      className="hidden"
-                      onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
-                    />
-                  </label>
-                  <button
-                    onClick={() => { setShowImportPanel(false); setImportError(''); }}
-                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
-                  >
-                    Not now
-                  </button>
-                </div>
-              )}
-
-              {importedLibrary?.items?.length && (
-                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
-                  You and Sarah share <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span> books · Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span>
-                </div>
-              )}
-
-              {importError && (
-                <p className="mt-3 text-xs text-red-700">{importError}</p>
-              )}
-
-              {importedOverlap.shared.length > 0 && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setImportExpanded(v => !v)}
-                    className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-                  >
-                    {importExpanded ? 'Hide shared books' : 'View shared books'}
-                  </button>
-                  {importExpanded && (
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {importedOverlap.shared.slice(0, 12).map((b) => (
-                        <div key={`${b.title}__${b.author}`} className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4]">
-                          <div className="text-sm text-[#4A5940] font-medium truncate">{b.title}</div>
-                          <div className="text-xs text-[#7A8F6C] font-light truncate">{b.author}</div>
-                        </div>
-                      ))}
-                      {importedOverlap.shared.length > 12 && (
-                        <div className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] text-xs text-[#7A8F6C] font-light flex items-center">
-                          +{importedOverlap.shared.length - 12} more
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
           
           <div className="flex-1 overflow-y-auto pb-4">
             {messages.map((msg, idx) => (
@@ -1340,6 +1248,53 @@ export default function App() {
                 {suggestion}
               </button>
             ))}
+          </div>
+
+          <div className="mt-3 sm:mt-4 w-full rounded-2xl border border-[#D4DAD0] bg-white px-4 py-2.5 flex items-center justify-between gap-3">
+            <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate">
+              {importError ? (
+                <span className="text-red-700">{importError}</span>
+              ) : (
+                <>
+                  Upload a Goodreads CSV to avoid repeats and see what we share.
+                  {importedLibrary?.items?.length ? (
+                    <>
+                      {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
+                      <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
+                    </>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {importedLibrary?.items?.length ? (
+                <button
+                  onClick={handleClearImport}
+                  className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                >
+                  Clear
+                </button>
+              ) : null}
+
+              <button
+                onClick={() => { setImportError(''); importFileInputRef.current?.click(); }}
+                className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              >
+                {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
+              </button>
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  handleImportGoodreadsCsv(f);
+                }}
+              />
+            </div>
           </div>
         </main>
       )}
