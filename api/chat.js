@@ -17,19 +17,21 @@ export const config = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
+          'x-api-key': globalThis?.process?.env?.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-beta': 'prompt-caching-2024-07-31'
         },
         body: JSON.stringify(body)
       });
-  
+
       const data = await response.json();
-      
+
       return new Response(JSON.stringify(data), {
-        status: 200,
+        status: response.status,
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error) {
+      void error;
       return new Response(JSON.stringify({ error: 'Failed to fetch from API' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

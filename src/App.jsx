@@ -6,6 +6,100 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 
+const STOP_WORDS = new Set([
+  'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
+]);
+
+function tokenizeForSearch(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .map(t => t.trim())
+    .filter(Boolean)
+    .filter(t => !STOP_WORDS.has(t));
+}
+
+function buildLibraryContext(userMessage, catalog) {
+  const q = String(userMessage || '').toLowerCase();
+  const tokens = tokenizeForSearch(userMessage);
+
+  // Score books by simple lexical overlap. This is intentionally cheap and deterministic.
+  const scored = (catalog || []).map((b, idx) => {
+    const title = String(b.title || '');
+    const author = String(b.author || '');
+    const genre = String(b.genre || '');
+    const themes = Array.isArray(b.themes) ? b.themes : [];
+    const description = String(b.description || '');
+
+    const titleLc = title.toLowerCase();
+    const authorLc = author.toLowerCase();
+    const genreLc = genre.toLowerCase();
+    const descLc = description.toLowerCase();
+    const themesLc = themes.map(t => String(t || '').toLowerCase());
+
+    let score = 0;
+    if (q && titleLc.includes(q)) score += 18;
+    if (q && authorLc.includes(q)) score += 10;
+    if (q && descLc.includes(q)) score += 6;
+
+    for (const t of tokens) {
+      if (titleLc.includes(t)) score += 6;
+      if (authorLc.includes(t)) score += 4;
+      if (genreLc.includes(t)) score += 3;
+      if (themesLc.includes(t)) score += 3;
+      if (descLc.includes(t)) score += 1;
+    }
+
+    if (b.favorite) score += 0.75;
+
+    return { book: b, score, idx };
+  });
+
+  scored.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
+
+  // Keep this shortlist small: it is sent to the model per request.
+  // Always include some favorites for breadth, plus top matches for relevance.
+  const favorites = scored.filter(s => s.book?.favorite).slice(0, 12).map(s => s.book);
+  const topMatches = scored.slice(0, 24).map(s => s.book);
+
+  const picked = [];
+  const seen = new Set();
+  const add = (b) => {
+    const key = `${String(b?.title || '').toLowerCase()}|${String(b?.author || '').toLowerCase()}`;
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    picked.push(b);
+  };
+  favorites.forEach(add);
+  topMatches.forEach(add);
+  // Ensure we provide enough options even for vague queries.
+  for (const s of scored) {
+    if (picked.length >= 28) break;
+    add(s.book);
+  }
+
+  const formatBookLine = (b, includeDescription) => {
+    const title = String(b.title || '').trim();
+    const author = String(b.author || '').trim();
+    const genre = String(b.genre || '').trim();
+    const themes = Array.isArray(b.themes) && b.themes.length ? ` themes: ${b.themes.join(', ')}` : '';
+    const fav = b.favorite ? ' ⭐' : '';
+
+    if (!includeDescription) {
+      return `- "${title}" by ${author} [${genre}]${themes}${fav}`;
+    }
+
+    const desc = String(b.description || '').trim();
+    const short = desc.length > 120 ? `${desc.slice(0, 117)}…` : desc;
+    return `- "${title}" by ${author} [${genre}]${themes}${fav} — ${short}`;
+  };
+
+  const header = `Shortlisted books from Sarah's library (shown: ${picked.length} / total: ${(catalog || []).length}).`;
+  const lines = picked.map((b, i) => formatBookLine(b, i < 10));
+  return [header, ...lines].join('\n');
+}
+
  function FormattedText({ text }) {
    const lines = String(text || '').split('\n');
  
@@ -53,6 +147,8 @@ function parseRecommendations(text) {
         current.author = trimmed.replace('Author:', '').trim();
       } else if (trimmed.startsWith('Why This Fits:')) {
         current.why = trimmed.replace('Why This Fits:', '').trim();
+      } else if (trimmed.startsWith('Why:')) {
+        current.why = trimmed.replace('Why:', '').trim();
       } else if (trimmed.startsWith('Description:')) {
         current.description = trimmed.replace('Description:', '').trim();
       } else if (trimmed.startsWith('Reputation:')) {
@@ -67,7 +163,8 @@ function parseRecommendations(text) {
 
 // Check if message contains structured recommendations
 function hasStructuredRecommendations(text) {
-  return text.includes('Title:') && text.includes('Why This Fits:');
+  const t = String(text || '');
+  return t.includes('Title:') && (t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:'));
 }
 
 function RecommendationCard({ rec, index }) {
@@ -203,7 +300,7 @@ const getBookshopSearchUrl = (title, author) => {
   return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 };
 
-const getSystemPrompt = (mode, catalog) => {
+const getSystemPrompt = (mode) => {
   const responseFormat = `
 RESPONSE FORMAT:
 When recommending books, always respond with exactly this structure:
@@ -229,18 +326,11 @@ Keep responses concise. Be direct and helpful.`;
 Be specific about WHY each book matches their request. If vague, ask one clarifying question first.`;
 
   if (mode === 'library') {
-    const catalogSummary = catalog.map(b => 
-      `- "${b.title}" by ${b.author} [${b.genre}]${b.favorite ? ' ⭐' : ''}`
-    ).join('\n');
-    
     return `You are Sarah, a book curator sharing recommendations from your personal library.
 ${responseFormat}
 ${qualityGuidelines}
 
-IMPORTANT: Only recommend books from this library. If asked about books not listed, offer to switch to "Discover New" mode.
-
-MY LIBRARY:
-${catalogSummary}`;
+IMPORTANT: Only recommend books from the provided LIBRARY SHORTLIST (included in the user's message). If asked about books not listed, offer to switch to "Discover New" mode.`;
   } else {
     return `You are Sarah, a book curator helping discover new reads.
 
@@ -576,8 +666,9 @@ export default function App() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
+  const inFlightRequestRef = useRef(null);
 
-  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode, bookCatalog), [chatMode]);
+  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -622,25 +713,41 @@ export default function App() {
       message_length: userMessage.length
     });
 
+    let timeoutId;
     try {
+      // Abort any in-flight request (e.g., rapid successive sends).
+      if (inFlightRequestRef.current) {
+        try { inFlightRequestRef.current.abort(); } catch (e) { void e; }
+      }
+      const controller = new AbortController();
+      inFlightRequestRef.current = controller;
+      timeoutId = setTimeout(() => {
+        try { controller.abort(); } catch (e) { void e; }
+      }, 25000);
+
       const chatHistory = messages
         .filter(m => m.isUser !== undefined)
-        .slice(-8)
+        .slice(-6)
         .map(m => ({
           role: m.isUser ? 'user' : 'assistant',
           content: m.text
         }));
 
+      const userContent = chatMode === 'library'
+        ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
+        : userMessage;
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 550,
+          max_tokens: 500,
           system: systemPrompt,
           messages: [
             ...chatHistory,
-            { role: 'user', content: userMessage }
+            { role: 'user', content: userContent }
           ]
         })
       });
@@ -649,11 +756,16 @@ export default function App() {
       const assistantMessage = data.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
-      setMessages(prev => [...prev, { 
-        text: "Oops, I'm having a moment. Let me catch my breath and try again!", 
-        isUser: false 
-      }]);
+      const isAbort = error?.name === 'AbortError';
+      if (!isAbort) {
+        setMessages(prev => [...prev, { 
+          text: "Oops, I'm having a moment. Let me catch my breath and try again!", 
+          isUser: false 
+        }]);
+      }
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+      inFlightRequestRef.current = null;
       setIsLoading(false);
     }
   };
