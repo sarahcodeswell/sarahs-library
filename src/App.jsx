@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -674,7 +674,7 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
   );
 }
 
-function AboutSection() {
+function AboutSection({ onShare }) {
   return (
     <div className="mb-6 sm:mb-8 bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm">
       <div className="flex items-start gap-4 sm:gap-6">
@@ -687,7 +687,7 @@ function AboutSection() {
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
           <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
+              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ⭐.
             </p>
             <p>
               So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
@@ -695,6 +695,19 @@ function AboutSection() {
             <p className="text-[#7A8F6C] italic">
               Happy reading, friend. 📚
             </p>
+          </div>
+
+          <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="text-xs text-[#7A8F6C] font-light">
+              Love this library? Share it with a friend.
+            </div>
+            <button
+              onClick={onShare}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors w-full sm:w-auto"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </button>
           </div>
         </div>
       </div>
@@ -721,6 +734,8 @@ export default function App() {
   const chatEndRef = useRef(null);
   const inFlightRequestRef = useRef(null);
   const importFileInputRef = useRef(null);
+  const [shareFeedback, setShareFeedback] = useState('');
+  const shareFeedbackTimeoutRef = useRef(null);
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -930,6 +945,38 @@ export default function App() {
     ? ["What's your favorite book?", "Something about strong women", "I need a good cry"]
     : ["Best books of 2025", "Hidden gems like Kristin Hannah", "Something completely different"];
 
+  const handleShare = async () => {
+    const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
+    const title = "Sarah's Library";
+    const text = "I thought you’d like Sarah’s Library — ask for book recommendations from her shelves.";
+
+    track('share_click', { source: view });
+
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title, text, url });
+        track('share_success', { method: 'web_share', source: view });
+        setShareFeedback('Shared!');
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        track('share_success', { method: 'clipboard', source: view });
+        setShareFeedback('Link copied!');
+      } else {
+        // Last-resort fallback: prompt copy.
+        window.prompt('Copy this link to share:', url);
+        track('share_success', { method: 'prompt', source: view });
+        setShareFeedback('Link ready to copy.');
+      }
+    } catch (e) {
+      void e;
+      track('share_error', { source: view });
+      setShareFeedback('Couldn’t share—try copying the URL.');
+    } finally {
+      if (shareFeedbackTimeoutRef.current) clearTimeout(shareFeedbackTimeoutRef.current);
+      shareFeedbackTimeoutRef.current = setTimeout(() => setShareFeedback(''), 2500);
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
       <Analytics />
@@ -949,7 +996,22 @@ export default function App() {
               </div>
             </div>
             
-            <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {shareFeedback && (
+                <div className="hidden sm:block text-xs text-[#7A8F6C] font-light">
+                  {shareFeedback}
+                </div>
+              )}
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                title="Share this page"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline ml-2 text-sm font-medium">Share</span>
+              </button>
+
+              <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
               <button
                 onClick={() => setView('chat')}
                 className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
@@ -973,6 +1035,7 @@ export default function App() {
                 <Book className="w-4 h-4 sm:hidden" />
               </button>
             </div>
+            </div>
           </div>
         </div>
       </header>
@@ -995,7 +1058,7 @@ export default function App() {
             </div>
           </div>
 
-          <AboutSection />
+          <AboutSection onShare={handleShare} />
 
           <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
             <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
@@ -1250,8 +1313,9 @@ export default function App() {
             ))}
           </div>
 
-          <div className="mt-3 sm:mt-4 w-full rounded-2xl border border-[#D4DAD0] bg-white px-4 py-2.5 flex items-center justify-between gap-3">
-            <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate">
+          <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
+            <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
+              <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
               {importError ? (
                 <span className="text-red-700">{importError}</span>
               ) : (
@@ -1279,8 +1343,9 @@ export default function App() {
 
               <button
                 onClick={() => { setImportError(''); importFileInputRef.current?.click(); }}
-                className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
               >
+                <Upload className="w-4 h-4" />
                 {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
               </button>
               <input
