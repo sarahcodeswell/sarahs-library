@@ -72,11 +72,11 @@ Recommend books you genuinely think are excellent. Include a mix of well-known a
 
 function DestinationToggle({ destination, setDestination }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="hidden sm:flex items-center gap-2">
       <div className="flex bg-[#E8EBE4] rounded-full p-0.5">
         <button
           onClick={() => setDestination('goodreads')}
-          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
             destination === 'goodreads'
               ? 'bg-white text-[#4A5940] shadow-sm'
               : 'text-[#5F7252] hover:text-[#4A5940]'
@@ -84,12 +84,11 @@ function DestinationToggle({ destination, setDestination }) {
           title="Link to Goodreads for reviews"
         >
           <Book className="w-3 h-3" />
-          <span className="hidden sm:inline">Find on Goodreads</span>
-          <span className="sm:hidden">Goodreads</span>
+          Find on Goodreads
         </button>
         <button
           onClick={() => setDestination('bookshop')}
-          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
             destination === 'bookshop'
               ? 'bg-white text-[#4A5940] shadow-sm'
               : 'text-[#5F7252] hover:text-[#4A5940]'
@@ -97,8 +96,7 @@ function DestinationToggle({ destination, setDestination }) {
           title="Buy from local bookstores via Bookshop.org"
         >
           <ShoppingBag className="w-3 h-3" />
-          <span className="hidden sm:inline">Buy Local</span>
-          <span className="sm:hidden">Local</span>
+          Buy Local
         </button>
       </div>
     </div>
@@ -465,7 +463,8 @@ export default function App() {
               />
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">{bookCatalog.length} books · 7 genres · curated with love</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">190+ books with infinite possibilities · Curated with love</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">190+ books · Curated with love</p>
               </div>
             </div>
             
@@ -514,6 +513,34 @@ export default function App() {
           </div>
 
           <AboutSection />
+
+          {/* Mobile-only destination toggle */}
+          <div className="sm:hidden mb-6 flex justify-center">
+            <div className="flex bg-[#E8EBE4] rounded-full p-0.5">
+              <button
+                onClick={() => setLinkDestination('goodreads')}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  linkDestination === 'goodreads'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
+                    : 'text-[#5F7252] hover:text-[#4A5940]'
+                }`}
+              >
+                <Book className="w-3 h-3" />
+                Find on Goodreads
+              </button>
+              <button
+                onClick={() => setLinkDestination('bookshop')}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  linkDestination === 'bookshop'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
+                    : 'text-[#5F7252] hover:text-[#4A5940]'
+                }`}
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Buy Local
+              </button>
+            </div>
+          </div>
 
           <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
             <div className="relative">
@@ -622,6 +649,34 @@ export default function App() {
               >
                 <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Discover New
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile-only destination toggle */}
+          <div className="sm:hidden mb-4 flex justify-center">
+            <div className="flex bg-[#E8EBE4] rounded-full p-0.5">
+              <button
+                onClick={() => setLinkDestination('goodreads')}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  linkDestination === 'goodreads'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
+                    : 'text-[#5F7252] hover:text-[#4A5940]'
+                }`}
+              >
+                <Book className="w-3 h-3" />
+                Find on Goodreads
+              </button>
+              <button
+                onClick={() => setLinkDestination('bookshop')}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  linkDestination === 'bookshop'
+                    ? 'bg-white text-[#4A5940] shadow-sm'
+                    : 'text-[#5F7252] hover:text-[#4A5940]'
+                }`}
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Buy Local
               </button>
             </div>
           </div>
