@@ -5,6 +5,7 @@ import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
+const CURRENT_YEAR = new Date().getFullYear();
 
 const STOP_WORDS = new Set([
   'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
@@ -18,6 +19,69 @@ function tokenizeForSearch(text) {
     .map(t => t.trim())
     .filter(Boolean)
     .filter(t => !STOP_WORDS.has(t));
+}
+
+function normalizeTitle(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeAuthor(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      out.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function parseGoodreadsCsv(text) {
+  const raw = String(text || '').replace(/^\uFEFF/, '');
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  if (!lines.length) return [];
+
+  const headers = parseCsvLine(lines[0]).map(h => String(h || '').trim());
+  const idxTitle = headers.findIndex(h => h.toLowerCase() === 'title');
+  const idxAuthor = headers.findIndex(h => h.toLowerCase() === 'author' || h.toLowerCase() === 'author l-f');
+  if (idxTitle < 0) return [];
+
+  const items = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCsvLine(lines[i]);
+    const title = String(cols[idxTitle] || '').trim();
+    const author = idxAuthor >= 0 ? String(cols[idxAuthor] || '').trim() : '';
+    if (!title) continue;
+    items.push({ title, author });
+  }
+  return items;
 }
 
 function buildLibraryContext(userMessage, catalog) {
@@ -348,7 +412,9 @@ Your taste: women's stories, emotional truth, identity, spirituality, justice.
 ${responseFormat}
 ${qualityGuidelines}
 
-Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.`;
+Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.
+
+When asked for "best books of the year" or new releases, treat the current year as ${CURRENT_YEAR} unless the user specifies a different year. Prefer the best books of ${CURRENT_YEAR}.`;
   }
 };
 
@@ -637,7 +703,7 @@ function AboutSection() {
 }
 
 export default function App() {
-  const [view, setView] = useState('browse');
+  const [view, setView] = useState('chat');
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -645,6 +711,9 @@ export default function App() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
   const [expandedGenres, setExpandedGenres] = useState({});
+  const [importedLibrary, setImportedLibrary] = useState(null);
+  const [importError, setImportError] = useState('');
+  const [importExpanded, setImportExpanded] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
@@ -658,6 +727,19 @@ export default function App() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('imported_goodreads_library_v1');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.items)) {
+        setImportedLibrary(parsed);
+      }
+    } catch (e) {
+      void e;
+    }
+  }, []);
 
   useEffect(() => {
     if (chatMode === 'library') {
@@ -684,6 +766,71 @@ export default function App() {
     }
     return true;
   });
+
+  const importedOverlap = React.useMemo(() => {
+    const imported = importedLibrary?.items;
+    if (!Array.isArray(imported) || imported.length === 0) return { total: 0, shared: [] };
+
+    const libByTitle = new Map();
+    const libByTitleAuthor = new Map();
+
+    for (const b of bookCatalog) {
+      const t = normalizeTitle(b?.title);
+      const a = normalizeAuthor(b?.author);
+      if (!t) continue;
+      if (!libByTitle.has(t)) libByTitle.set(t, b);
+      if (a) libByTitleAuthor.set(`${t}__${a}`, b);
+    }
+
+    const shared = [];
+    const seen = new Set();
+    for (const it of imported) {
+      const t = normalizeTitle(it?.title);
+      const a = normalizeAuthor(it?.author);
+      if (!t) continue;
+      const key = a ? `${t}__${a}` : t;
+      if (seen.has(key)) continue;
+
+      const match = (a && libByTitleAuthor.get(`${t}__${a}`)) || libByTitle.get(t);
+      if (match) {
+        shared.push(match);
+        seen.add(key);
+      }
+    }
+
+    return { total: imported.length, shared };
+  }, [importedLibrary]);
+
+  const handleImportGoodreadsCsv = async (file) => {
+    setImportError('');
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const items = parseGoodreadsCsv(text);
+      if (!items.length) {
+        setImportError('Could not find any books in that CSV. Make sure it is a Goodreads library export.');
+        return;
+      }
+      const payload = {
+        source: 'goodreads_csv',
+        importedAt: Date.now(),
+        items
+      };
+      setImportedLibrary(payload);
+      setImportExpanded(true);
+      window.localStorage.setItem('imported_goodreads_library_v1', JSON.stringify(payload));
+    } catch (e) {
+      void e;
+      setImportError('Could not read that file. Please try exporting your Goodreads library again.');
+    }
+  };
+
+  const handleClearImport = () => {
+    try { window.localStorage.removeItem('imported_goodreads_library_v1'); } catch (e) { void e; }
+    setImportedLibrary(null);
+    setImportExpanded(false);
+    setImportError('');
+  };
 
   const booksByGenre = filteredBooks.reduce((acc, book) => {
     const g = book.genre || 'Other';
@@ -740,7 +887,11 @@ export default function App() {
 
       const userContent = chatMode === 'library'
         ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
-        : userMessage;
+        : (() => {
+            if (!importedLibrary?.items?.length) return userMessage;
+            const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+            return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
+          })();
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -777,7 +928,7 @@ export default function App() {
 
   const suggestionChips = chatMode === 'library' 
     ? ["What's your favorite book?", "Something about strong women", "I need a good cry"]
-    : ["Best books of 2024", "Hidden gems like Kristin Hannah", "Something completely different"];
+    : ["Best books of 2025", "Hidden gems like Kristin Hannah", "Something completely different"];
 
   return (
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
@@ -800,17 +951,6 @@ export default function App() {
             
             <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
               <button
-                onClick={() => setView('browse')}
-                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'browse' 
-                    ? 'bg-white text-[#4A5940] shadow-sm' 
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                <span className="hidden sm:inline">Browse</span>
-                <Book className="w-4 h-4 sm:hidden" />
-              </button>
-              <button
                 onClick={() => setView('chat')}
                 className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
                   view === 'chat' 
@@ -820,6 +960,17 @@ export default function App() {
               >
                 <span className="hidden sm:inline">Ask Sarah</span>
                 <MessageCircle className="w-4 h-4 sm:hidden" />
+              </button>
+              <button
+                onClick={() => setView('browse')}
+                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
+                  view === 'browse' 
+                    ? 'bg-white text-[#4A5940] shadow-sm' 
+                    : 'text-[#5F7252] hover:text-[#4A5940]'
+                }`}
+              >
+                <span className="hidden sm:inline">Browse</span>
+                <Book className="w-4 h-4 sm:hidden" />
               </button>
             </div>
           </div>
@@ -841,6 +992,81 @@ export default function App() {
                 <h2 className="text-[#4A5940] font-serif text-xl sm:text-3xl mb-1 sm:mb-2">Welcome to My Personal Library</h2>
                 <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">Find your next great read.</p>
               </div>
+            </div>
+          </div>
+
+          <div className="mb-6 sm:mb-8 bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#E8EBE4] bg-[#FDFBF4]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-serif text-lg text-[#4A5940]">Import Your Library</h3>
+                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">
+                    Upload a Goodreads CSV export to see what we share—and improve Discover New.
+                  </p>
+                </div>
+                {importedLibrary?.items?.length ? (
+                  <button
+                    onClick={handleClearImport}
+                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="px-6 py-5">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
+                  Upload Goodreads CSV
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
+                  />
+                </label>
+
+                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
+                  {importedLibrary?.items?.length ? (
+                    <>
+                      Imported: <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared: <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
+                    </>
+                  ) : (
+                    <>No library imported yet.</>
+                  )}
+                </div>
+              </div>
+
+              {importError && (
+                <p className="mt-3 text-xs text-red-700">{importError}</p>
+              )}
+
+              {importedOverlap.shared.length > 0 && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setImportExpanded(v => !v)}
+                    className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                  >
+                    {importExpanded ? 'Hide shared books' : 'View shared books'}
+                  </button>
+                  {importExpanded && (
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {importedOverlap.shared.slice(0, 12).map((b) => (
+                        <div key={`${b.title}__${b.author}`} className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4]">
+                          <div className="text-sm text-[#4A5940] font-medium truncate">{b.title}</div>
+                          <div className="text-xs text-[#7A8F6C] font-light truncate">{b.author}</div>
+                        </div>
+                      ))}
+                      {importedOverlap.shared.length > 12 && (
+                        <div className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] text-xs text-[#7A8F6C] font-light flex items-center">
+                          +{importedOverlap.shared.length - 12} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
