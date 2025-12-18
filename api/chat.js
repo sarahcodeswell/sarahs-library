@@ -1,9 +1,18 @@
-export default async function handler(req, res) {
+export const config = {
+    runtime: 'edge',
+  };
+  
+  export default async function handler(req) {
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   
     try {
+      const body = await req.json();
+      
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -11,22 +20,19 @@ export default async function handler(req, res) {
           'x-api-key': process.env.ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01'
         },
-        body: JSON.stringify(req.body)
+        body: JSON.stringify(body)
       });
   
       const data = await response.json();
-      res.status(200).json(data);
+      
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch from API' });
+      return new Response(JSON.stringify({ error: 'Failed to fetch from API' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   }
-  ```
-  
-  Save it (**Ctrl + S**).
-  
-  Now we need to update App.jsx to use `/api/chat` instead of calling Anthropic directly. 
-  
-  In your App.jsx, press **Ctrl + F** and search for:
-  ```
-  api.anthropic.com
-  
