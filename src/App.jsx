@@ -752,7 +752,7 @@ function AboutSection({ onShare }) {
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
           <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ⭐.
+              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ✨.
             </p>
             <p>
               So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
@@ -809,6 +809,8 @@ export default function App() {
     thanksMsg: '',
     featureMsg: ''
   });
+  const [thanksCount, setThanksCount] = useState(null);
+  const thanksCooldownRef = useRef(false);
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -827,6 +829,21 @@ export default function App() {
     } catch (e) {
       void e;
     }
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/thanks')
+      .then(r => r.json())
+      .then(data => {
+        if (!alive) return;
+        const n = Number(data?.count);
+        if (Number.isFinite(n)) setThanksCount(n);
+      })
+      .catch((e) => {
+        void e;
+      });
+    return () => { alive = false; };
   }, []);
 
 
@@ -1028,7 +1045,7 @@ export default function App() {
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
-    const title = "Sarah's Library";
+    const title = "Sarah Books";
     const text = "I thought you’d like Sarah’s Library — ask for book recommendations from her shelves.";
 
     track('share_click', { source: view });
@@ -1061,26 +1078,28 @@ export default function App() {
   const handleSendHeart = () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
     if (feedbackStatus.isSendingThanks) return;
+    if (thanksCooldownRef.current) return;
+    thanksCooldownRef.current = true;
+    setTimeout(() => { thanksCooldownRef.current = false; }, 1200);
 
     track('thanks_heart_click', { source: view });
     track('thanks_heart_send', { method: 'backend', source: view });
 
-    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: '' }));
-    postFeedback({
-      type: 'thanks',
-      message: '❤️ Thank you!',
-      pageUrl: url
-    })
-      .then(() => {
-        setFeedbackStatus(s => ({ ...s, thanksMsg: 'Sent ❤️' }));
+    setThanksCount(prev => (typeof prev === 'number' ? prev + 1 : prev));
+    fetch('/api/thanks', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        const n = Number(data?.count);
+        if (Number.isFinite(n)) setThanksCount(n);
       })
-      .catch(() => {
-        setFeedbackStatus(s => ({ ...s, thanksMsg: 'Couldn’t send—try again.' }));
-      })
-      .finally(() => {
-        setFeedbackStatus(s => ({ ...s, isSendingThanks: false }));
-        setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2500);
+      .catch((e) => {
+        void e;
       });
+
+    void url;
+    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: 'Thanks <3' }));
+    setTimeout(() => setFeedbackStatus(s => ({ ...s, isSendingThanks: false })), 700);
+    setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2000);
   };
 
   const handleOpenFeedback = () => {
@@ -1130,9 +1149,9 @@ export default function App() {
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4DAD0] shadow-sm"
               />
               <div>
-                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">A curated collection with infinite possibilities.</p>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">A curated collection with infinite possibilities.</p>
+                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah Books</h1>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">A Curated Collection of Infinite Possibilities</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">A Curated Collection of Infinite Possibilities</p>
               </div>
             </div>
             
@@ -1159,7 +1178,9 @@ export default function App() {
                 title="Say thanks"
               >
                 <span className="text-base leading-none">❤️</span>
-                <span className="hidden sm:inline ml-2 text-sm font-medium">Thanks</span>
+                <span className="hidden sm:inline ml-2 text-sm font-medium">
+                  Thanks &lt;3{typeof thanksCount === 'number' ? ` · ${thanksCount}` : ''}
+                </span>
               </button>
 
               <button
@@ -1413,7 +1434,7 @@ export default function App() {
                 title="Say thanks"
               >
                 <span className="text-sm leading-none">❤️</span>
-                <span className="ml-2">Thanks</span>
+                <span className="ml-2">Thanks &lt;3{typeof thanksCount === 'number' ? ` · ${thanksCount}` : ''}</span>
               </button>
 
               <button
