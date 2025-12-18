@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Mail } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -27,26 +27,6 @@ function bumpLocalMetric(key, by = 1) {
     void e;
   }
   return next;
-}
-
-async function postFeedback({ type, message, pageUrl }) {
-  const res = await fetch('/api/feedback', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type,
-      message,
-      pageUrl,
-      // Honeypot field (bots may fill it)
-      company: ''
-    })
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || 'Failed to send');
-  }
-  return data;
 }
 
 function tokenizeForSearch(text) {
@@ -801,13 +781,9 @@ export default function App() {
   const importFileInputRef = useRef(null);
   const [shareFeedback, setShareFeedback] = useState('');
   const shareFeedbackTimeoutRef = useRef(null);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [featureRequestText, setFeatureRequestText] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState({
     isSendingThanks: false,
-    isSendingFeature: false,
     thanksMsg: '',
-    featureMsg: ''
   });
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
@@ -1102,40 +1078,6 @@ export default function App() {
     setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2000);
   };
 
-  const handleOpenFeedback = () => {
-    track('feature_request_open', { source: view });
-    setFeedbackOpen(true);
-  };
-
-  const handleSendFeatureRequest = () => {
-    const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
-    const msg = String(featureRequestText || '').trim();
-    if (!msg) return;
-
-    if (feedbackStatus.isSendingFeature) return;
-
-    track('feature_request_send', { method: 'backend', source: view, message_length: msg.length });
-    setFeedbackStatus(s => ({ ...s, isSendingFeature: true, featureMsg: '' }));
-
-    postFeedback({
-      type: 'feature_request',
-      message: msg,
-      pageUrl: url
-    })
-      .then(() => {
-        setFeedbackStatus(s => ({ ...s, featureMsg: 'Sent — thank you!' }));
-        setFeatureRequestText('');
-        setFeedbackOpen(false);
-      })
-      .catch(() => {
-        setFeedbackStatus(s => ({ ...s, featureMsg: 'Couldn’t send—try again.' }));
-      })
-      .finally(() => {
-        setFeedbackStatus(s => ({ ...s, isSendingFeature: false }));
-        setTimeout(() => setFeedbackStatus(s => ({ ...s, featureMsg: '' })), 3500);
-      });
-  };
-
   return (
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
       <Analytics />
@@ -1161,15 +1103,6 @@ export default function App() {
                   {feedbackStatus.thanksMsg || shareFeedback}
                 </div>
               )}
-
-              <button
-                onClick={handleOpenFeedback}
-                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
-                title="Send feature request"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="hidden sm:inline ml-2 text-sm font-medium">Feedback</span>
-              </button>
 
               <button
                 onClick={handleSendHeart}
@@ -1381,7 +1314,8 @@ export default function App() {
           )}
 
           <div className="mt-8 sm:mt-10 text-xs text-[#7A8F6C] font-light text-center">
-            For the ❤️ of reading.
+            <div>For the ❤️ of reading.</div>
+            <div className="mt-1">hello@sarahsbooks.com</div>
           </div>
         </main>
       ) : (
@@ -1417,15 +1351,6 @@ export default function App() {
 
           <div className="mb-3 flex justify-center sm:hidden">
             <div className="w-full max-w-sm flex items-center justify-between gap-2">
-              <button
-                onClick={handleOpenFeedback}
-                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
-                title="Send feature request"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="ml-2">Feedback</span>
-              </button>
-
               <button
                 onClick={handleSendHeart}
                 disabled={feedbackStatus.isSendingThanks}
@@ -1578,7 +1503,8 @@ export default function App() {
           </div>
 
           <div className="mt-6 text-xs text-[#7A8F6C] font-light text-center">
-            For the ❤️ of reading.
+            <div>For the ❤️ of reading.</div>
+            <div className="mt-1">hello@sarahsbooks.com</div>
           </div>
 
         </main>
@@ -1588,57 +1514,6 @@ export default function App() {
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
 
-      {feedbackOpen && (
-        <div className="fixed inset-0 bg-[#4A5940]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setFeedbackOpen(false)}>
-          <div
-            className="bg-[#FDFBF4] rounded-3xl max-w-lg w-full shadow-2xl border border-[#D4DAD0]"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-6 sm:p-7">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-serif text-xl text-[#4A5940]">Feature request</h3>
-                  <p className="text-xs text-[#7A8F6C] font-light mt-1">
-                    Tell me what would make this library even better.
-                  </p>
-                </div>
-                <button onClick={() => setFeedbackOpen(false)} className="text-[#96A888] hover:text-[#4A5940] transition-colors p-1">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <textarea
-                value={featureRequestText}
-                onChange={(e) => setFeatureRequestText(e.target.value)}
-                placeholder="Example: Add a ‘save to list’ button, or let me filter by theme in chat…"
-                className="mt-4 w-full min-h-[120px] px-4 py-3 rounded-2xl border border-[#D4DAD0] bg-white text-sm text-[#4A5940] placeholder-[#96A888] outline-none focus:border-[#96A888]"
-              />
-
-              {feedbackStatus.featureMsg && (
-                <div className="mt-3 text-xs text-[#7A8F6C] font-light">
-                  {feedbackStatus.featureMsg}
-                </div>
-              )}
-
-              <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
-                <button
-                  onClick={() => setFeedbackOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[#D4DAD0] bg-white text-[#5F7252] text-sm font-medium hover:border-[#96A888] hover:text-[#4A5940] transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendFeatureRequest}
-                  disabled={feedbackStatus.isSendingFeature || !String(featureRequestText || '').trim()}
-                  className="px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {feedbackStatus.isSendingFeature ? 'Sending…' : 'Send'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
