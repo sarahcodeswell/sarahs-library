@@ -263,24 +263,32 @@ function parseRecommendations(text) {
     
     if (trimmed.startsWith('Title:')) {
       if (current) recommendations.push(current);
-      current = { title: trimmed.replace('Title:', '').trim() };
+      current = { title: String(trimmed.replace('Title:', '')).trim() };
     } else if (current) {
       if (trimmed.startsWith('Author:')) {
-        current.author = trimmed.replace('Author:', '').trim();
+        current.author = String(trimmed.replace('Author:', '')).trim();
       } else if (trimmed.startsWith('Why This Fits:')) {
-        current.why = trimmed.replace('Why This Fits:', '').trim();
+        current.why = String(trimmed.replace('Why This Fits:', '')).trim();
       } else if (trimmed.startsWith('Why:')) {
-        current.why = trimmed.replace('Why:', '').trim();
+        current.why = String(trimmed.replace('Why:', '')).trim();
       } else if (trimmed.startsWith('Description:')) {
-        current.description = trimmed.replace('Description:', '').trim();
+        current.description = String(trimmed.replace('Description:', '')).trim();
       } else if (trimmed.startsWith('Reputation:')) {
-        current.reputation = trimmed.replace('Reputation:', '').trim();
+        current.reputation = String(trimmed.replace('Reputation:', '')).trim();
       }
     }
   }
   
   if (current && current.title) recommendations.push(current);
-  return recommendations;
+  return recommendations
+    .map(r => ({
+      title: String(r?.title || '').trim(),
+      author: String(r?.author || '').trim(),
+      why: String(r?.why || '').trim(),
+      description: String(r?.description || '').trim(),
+      reputation: String(r?.reputation || '').trim(),
+    }))
+    .filter(r => r.title);
 }
 
 // Check if message contains structured recommendations
@@ -314,8 +322,8 @@ function RecommendationCard({ rec, index, messageIndex }) {
       feedback_type: type,
       message_index: messageIndex,
       recommendation_index: index,
-      book_title: rec?.title || '',
-      book_author: rec?.author || '',
+      book_title: String(rec?.title || '').trim(),
+      book_author: String(rec?.author || '').trim(),
       source: 'recommendation_card'
     });
   };
@@ -631,8 +639,11 @@ function BookDetail({ book, onClose, onRecommendMoreLikeThis }) {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Recommend more like this
+              Recommend more like this (opens Ask Sarah)
             </button>
+            <div className="mt-1 text-[11px] text-[#96A888] font-light">
+              I’ll take you back to chat and suggest 3 more.
+            </div>
           </div>
 
           <div className="mt-4 flex flex-col sm:flex-row gap-3">
@@ -888,6 +899,7 @@ export default function App() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
+  const chatModeRef = useRef('library');
   const [expandedGenres, setExpandedGenres] = useState({});
   const [genreShowAll, setGenreShowAll] = useState({});
   const [importedLibrary, setImportedLibrary] = useState(null);
@@ -911,6 +923,10 @@ export default function App() {
   const chatStorageKey = 'sarah_books_chat_history_v1';
   const nextDiscoverIncludeShortlistRef = useRef(false);
 
+  useEffect(() => {
+    chatModeRef.current = chatMode;
+  }, [chatMode]);
+
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
       return [{
@@ -923,8 +939,6 @@ export default function App() {
       isUser: false
     }];
   };
-
-  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1136,15 +1150,17 @@ export default function App() {
     }));
   };
 
-  const handleSendMessage = async (overrideText) => {
+  const handleSendMessage = async (overrideText, overrideMode) => {
     const userMessage = String(overrideText ?? inputValue).trim();
     if (!userMessage || isLoading) return;
+
+    const effectiveMode = String(overrideMode || chatModeRef.current || chatMode);
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
 
     track('chat_message', {
-      mode: chatMode,
+      mode: effectiveMode,
       message_length: userMessage.length
     });
 
@@ -1168,7 +1184,7 @@ export default function App() {
           content: m.text
         }));
 
-      const includeShortlistInDiscover = chatMode !== 'library' && nextDiscoverIncludeShortlistRef.current;
+      const includeShortlistInDiscover = effectiveMode !== 'library' && nextDiscoverIncludeShortlistRef.current;
       nextDiscoverIncludeShortlistRef.current = false;
 
       const baseDiscoverContent = (() => {
@@ -1177,7 +1193,7 @@ export default function App() {
         return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
       })();
 
-      const userContent = chatMode === 'library'
+      const userContent = effectiveMode === 'library'
         ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
         : (includeShortlistInDiscover
           ? `SARAH'S PERSONAL LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nIMPORTANT: You may recommend both from Sarah's personal library and from outside her library.\nIf a recommendation is from Sarah's library, it will be marked with a 📚 icon in the UI.\n\nUSER REQUEST:\n${userMessage}`
@@ -1190,7 +1206,7 @@ export default function App() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
-          system: systemPrompt,
+          system: getSystemPrompt(effectiveMode),
           messages: [
             ...chatHistory,
             { role: 'user', content: userContent }
@@ -1199,7 +1215,8 @@ export default function App() {
       });
 
       const data = await response.json();
-      const assistantMessage = data.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
+      const assistantMessageRaw = data?.content?.[0]?.text;
+      const assistantMessage = String(assistantMessageRaw || "I'm having trouble thinking right now. Could you try again?");
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
@@ -1221,18 +1238,14 @@ export default function App() {
     const author = String(book?.author || '').trim();
     if (!title) return;
 
-    const prompt = `Recommend more books like "${title}"${author ? ` by ${author}` : ''}.
-
-Give me 3 picks total: include the best matches from Sarah's personal library and the best matches from outside her library.
-
-Use the same Top 3 response format.`;
+    const prompt = `Recommend more books like "${title}"${author ? ` by ${author}` : ''}.\n\nGive me 3 picks total: include the best matches from Sarah's personal library and the best matches from outside her library.\n\nImportant: Use the exact structured Top 3 format with Title/Author/Why This Fits/Description/Reputation so it renders as cards.`;
 
     nextDiscoverIncludeShortlistRef.current = true;
     setView('chat');
     setChatMode('discover');
     setInputValue(prompt);
     setTimeout(() => {
-      handleSendMessage(prompt);
+      handleSendMessage(prompt, 'discover');
     }, 0);
   };
 
