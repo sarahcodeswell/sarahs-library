@@ -63,6 +63,16 @@ function parseCsvLine(line) {
   return out;
 }
 
+function spineColorFromString(value) {
+  const s = String(value || '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  const hue = h % 360;
+  return `hsl(${hue} 32% 86%)`;
+}
+
 function parseGoodreadsCsv(text) {
   const raw = String(text || '').replace(/^\uFEFF/, '');
   const lines = raw.split(/\r?\n/).filter(Boolean);
@@ -707,7 +717,6 @@ export default function App() {
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
   const [expandedGenres, setExpandedGenres] = useState({});
@@ -759,11 +768,6 @@ export default function App() {
     if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
     if (selectedTheme && !book.themes.includes(selectedTheme)) return false;
     if (showFavoritesOnly && !book.favorite) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return book.title.toLowerCase().includes(query) || 
-             book.author.toLowerCase().includes(query);
-    }
     return true;
   });
 
@@ -995,95 +999,9 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mb-6 sm:mb-8 bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#E8EBE4] bg-[#FDFBF4]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-serif text-lg text-[#4A5940]">Import Your Library</h3>
-                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">
-                    Upload a Goodreads CSV export to see what we share—and improve Discover New.
-                  </p>
-                </div>
-                {importedLibrary?.items?.length ? (
-                  <button
-                    onClick={handleClearImport}
-                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
-                  >
-                    Clear
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="px-6 py-5">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
-                  Upload Goodreads CSV
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
-                  />
-                </label>
-
-                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
-                  {importedLibrary?.items?.length ? (
-                    <>
-                      Imported: <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared: <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
-                    </>
-                  ) : (
-                    <>No library imported yet.</>
-                  )}
-                </div>
-              </div>
-
-              {importError && (
-                <p className="mt-3 text-xs text-red-700">{importError}</p>
-              )}
-
-              {importedOverlap.shared.length > 0 && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setImportExpanded(v => !v)}
-                    className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-                  >
-                    {importExpanded ? 'Hide shared books' : 'View shared books'}
-                  </button>
-                  {importExpanded && (
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {importedOverlap.shared.slice(0, 12).map((b) => (
-                        <div key={`${b.title}__${b.author}`} className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4]">
-                          <div className="text-sm text-[#4A5940] font-medium truncate">{b.title}</div>
-                          <div className="text-xs text-[#7A8F6C] font-light truncate">{b.author}</div>
-                        </div>
-                      ))}
-                      {importedOverlap.shared.length > 12 && (
-                        <div className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] text-xs text-[#7A8F6C] font-light flex items-center">
-                          +{importedOverlap.shared.length - 12} more
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
           <AboutSection />
 
           <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#96A888]" />
-              <input
-                type="text"
-                placeholder="Search titles or authors..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-5 py-3 sm:py-4 bg-white rounded-2xl border border-[#D4DAD0] focus:border-[#96A888] focus:ring-4 focus:ring-[#E8EBE4] outline-none transition-all text-[#4A5940] placeholder-[#96A888]"
-              />
-            </div>
-
             <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Genre</label>
@@ -1170,32 +1088,35 @@ export default function App() {
                   </div>
 
                   {!isCollapsed && (
-                    <div className="divide-y divide-[#E8EBE4]">
-                      {shown.map((book) => (
-                        <button
-                          key={`${book.title}__${book.author}`}
-                          onClick={() => setSelectedBook(book)}
-                          className="w-full px-5 sm:px-6 py-3 text-left hover:bg-[#F5F7F2] transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm text-[#4A5940] truncate">{book.title}</span>
+                    <div className="px-5 sm:px-6 py-4 bg-[#FDFBF4]">
+                      <div className="flex gap-3 overflow-x-auto pb-3">
+                        {shown.map((book) => (
+                          <button
+                            key={`${book.title}__${book.author}`}
+                            onClick={() => setSelectedBook(book)}
+                            className="flex-shrink-0 w-28 sm:w-32 rounded-xl border border-[#D4DAD0] hover:border-[#96A888] shadow-sm hover:shadow-md transition-all text-left overflow-hidden"
+                            style={{ backgroundColor: spineColorFromString(`${book.title}__${book.author}`) }}
+                          >
+                            <div className="p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="text-xs font-semibold text-[#4A5940] leading-snug line-clamp-3">
+                                  {book.title}
+                                </div>
                                 {book.favorite && (
                                   <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
                                 )}
                               </div>
-                              <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
+                              <div className="mt-1 text-[11px] text-[#5F7252] font-light truncate">{book.author}</div>
                               {!!book.themes?.length && (
-                                <span className="block text-xs text-[#96A888] mt-1">
+                                <div className="mt-2 text-xs text-[#4A5940]/70">
                                   {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                                </span>
+                                </div>
                               )}
                             </div>
-                            <span className="text-xs text-[#96A888] flex-shrink-0">View</span>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="h-2 rounded-full bg-gradient-to-r from-[#D7C8A8] via-[#E8EBE4] to-[#D7C8A8]" />
                     </div>
                   )}
                 </div>
@@ -1238,6 +1159,79 @@ export default function App() {
                   Discover New
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="mb-4 sm:mb-6 bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
+            <div className="px-5 sm:px-6 py-4 border-b border-[#E8EBE4] bg-[#FDFBF4]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-serif text-base sm:text-lg text-[#4A5940]">Import Your Library</h3>
+                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">Upload a Goodreads CSV to avoid repeats and see what we share.</p>
+                </div>
+                {importedLibrary?.items?.length ? (
+                  <button
+                    onClick={handleClearImport}
+                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="px-5 sm:px-6 py-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
+                  Upload Goodreads CSV
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
+                  />
+                </label>
+
+                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
+                  {importedLibrary?.items?.length ? (
+                    <>
+                      You and Sarah share <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span> books · Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span>
+                    </>
+                  ) : (
+                    <>No library imported yet.</>
+                  )}
+                </div>
+              </div>
+
+              {importError && (
+                <p className="mt-3 text-xs text-red-700">{importError}</p>
+              )}
+
+              {importedOverlap.shared.length > 0 && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setImportExpanded(v => !v)}
+                    className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                  >
+                    {importExpanded ? 'Hide shared books' : 'View shared books'}
+                  </button>
+                  {importExpanded && (
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {importedOverlap.shared.slice(0, 12).map((b) => (
+                        <div key={`${b.title}__${b.author}`} className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4]">
+                          <div className="text-sm text-[#4A5940] font-medium truncate">{b.title}</div>
+                          <div className="text-xs text-[#7A8F6C] font-light truncate">{b.author}</div>
+                        </div>
+                      ))}
+                      {importedOverlap.shared.length > 12 && (
+                        <div className="px-3 py-2 rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] text-xs text-[#7A8F6C] font-light flex items-center">
+                          +{importedOverlap.shared.length - 12} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
