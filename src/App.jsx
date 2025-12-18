@@ -779,7 +779,7 @@ function AboutSection({ onShare }) {
 
 function SiteFooter({ onOpenFeedback, onSendHeart }) {
   return (
-    <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-white/60 backdrop-blur-sm">
+    <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-[#FDFBF4] font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
@@ -799,7 +799,7 @@ function SiteFooter({ onOpenFeedback, onSendHeart }) {
                 className="text-left text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
                 title="Say thanks"
               >
-                Send Heart ❤️
+                Say Thanks ❤️
               </button>
             </div>
           </div>
