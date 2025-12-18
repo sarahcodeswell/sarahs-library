@@ -830,7 +830,11 @@ export default function App() {
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-lg relative">
             <div className="bg-[#FDFBF4]">
-              <img src="/books.jpg" alt="Stack of books" className="w-full h-40 sm:h-44 object-contain" />
+              <img
+                src="/books.jpg"
+                alt="Stack of books"
+                className="block w-full h-[clamp(200px,32vh,460px)] object-cover object-center"
+              />
             </div>
             <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
               <div className="px-5 sm:px-8 py-4">
@@ -1012,7 +1016,11 @@ export default function App() {
           {messages.length <= 2 && (
             <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
               <div className="bg-[#FDFBF4]">
-                <img src="/books.jpg" alt="Open book on desk" className="w-full h-28 sm:h-32 object-contain object-center" />
+                <img
+                  src="/books.jpg"
+                  alt="Open book on desk"
+                  className="block w-full h-[clamp(160px,24vh,320px)] object-cover object-center"
+                />
               </div>
               <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
                 <div className="px-5 sm:px-6 py-3">
