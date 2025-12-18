@@ -63,16 +63,6 @@ function parseCsvLine(line) {
   return out;
 }
 
-function spineColorFromString(value) {
-  const s = String(value || '');
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  }
-  const hue = h % 360;
-  return `hsl(${hue} 32% 86%)`;
-}
-
 function parseGoodreadsCsv(text) {
   const raw = String(text || '').replace(/^\uFEFF/, '');
   const lines = raw.split(/\r?\n/).filter(Boolean);
@@ -720,9 +710,11 @@ export default function App() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
   const [expandedGenres, setExpandedGenres] = useState({});
+  const [genreShowAll, setGenreShowAll] = useState({});
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [importExpanded, setImportExpanded] = useState(false);
+  const [showImportPanel, setShowImportPanel] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
@@ -834,6 +826,14 @@ export default function App() {
     setImportedLibrary(null);
     setImportExpanded(false);
     setImportError('');
+    setShowImportPanel(false);
+  };
+
+  const toggleGenreShowAll = (genre) => {
+    setGenreShowAll(prev => ({
+      ...prev,
+      [genre]: !prev?.[genre]
+    }));
   };
 
   const booksByGenre = filteredBooks.reduce((acc, book) => {
@@ -948,8 +948,8 @@ export default function App() {
               />
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">190+ books with infinite possibilities · Curated with love</p>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">190+ books · Curated with love</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">190+ books with infinite possibilities · Curated with love ♥</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">190+ books · Curated with love ♥</p>
               </div>
             </div>
             
@@ -993,7 +993,7 @@ export default function App() {
             </div>
             <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
               <div className="px-5 sm:px-8 py-4">
-                <h2 className="text-[#4A5940] font-serif text-xl sm:text-3xl mb-1 sm:mb-2">Welcome to My Personal Library</h2>
+                <h2 className="text-[#4A5940] font-serif text-xl sm:text-3xl mb-1 sm:mb-2">My Personal Collection</h2>
                 <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">Find your next great read.</p>
               </div>
             </div>
@@ -1063,7 +1063,8 @@ export default function App() {
             {visibleGenres.map((genre) => {
               const list = booksByGenre[genre] || [];
               const isCollapsed = !!expandedGenres?.[genre];
-              const shown = isCollapsed ? [] : list;
+              const showAll = !!genreShowAll?.[genre];
+              const shown = isCollapsed ? [] : (showAll ? list : list.slice(0, 8));
 
               return (
                 <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
@@ -1088,35 +1089,44 @@ export default function App() {
                   </div>
 
                   {!isCollapsed && (
-                    <div className="px-5 sm:px-6 py-4 bg-[#FDFBF4]">
-                      <div className="flex gap-3 overflow-x-auto pb-3">
+                    <div className="px-5 sm:px-6 py-4">
+                      <div className="space-y-2">
                         {shown.map((book) => (
                           <button
                             key={`${book.title}__${book.author}`}
                             onClick={() => setSelectedBook(book)}
-                            className="flex-shrink-0 w-28 sm:w-32 rounded-xl border border-[#D4DAD0] hover:border-[#96A888] shadow-sm hover:shadow-md transition-all text-left overflow-hidden"
-                            style={{ backgroundColor: spineColorFromString(`${book.title}__${book.author}`) }}
+                            className="w-full text-left rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] px-4 py-3 hover:bg-[#F5F7F2] hover:border-[#D4DAD0] transition-colors"
                           >
-                            <div className="p-3">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="text-xs font-semibold text-[#4A5940] leading-snug line-clamp-3">
-                                  {book.title}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
+                                  {book.favorite && (
+                                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                                  )}
                                 </div>
-                                {book.favorite && (
-                                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                                )}
+                                <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
                               </div>
-                              <div className="mt-1 text-[11px] text-[#5F7252] font-light truncate">{book.author}</div>
                               {!!book.themes?.length && (
-                                <div className="mt-2 text-xs text-[#4A5940]/70">
+                                <span className="text-xs text-[#96A888] flex-shrink-0">
                                   {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                                </div>
+                                </span>
                               )}
                             </div>
                           </button>
                         ))}
                       </div>
-                      <div className="h-2 rounded-full bg-gradient-to-r from-[#D7C8A8] via-[#E8EBE4] to-[#D7C8A8]" />
+
+                      {list.length > 8 && (
+                        <div className="mt-3">
+                          <button
+                            onClick={() => toggleGenreShowAll(genre)}
+                            className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                          >
+                            {showAll ? 'See less' : `See more (${list.length - 8} more)`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1181,27 +1191,45 @@ export default function App() {
             </div>
 
             <div className="px-5 sm:px-6 py-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
-                  Upload Goodreads CSV
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
-                  />
-                </label>
-
-                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
-                  {importedLibrary?.items?.length ? (
-                    <>
-                      You and Sarah share <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span> books · Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span>
-                    </>
-                  ) : (
-                    <>No library imported yet.</>
-                  )}
+              {!importedLibrary?.items?.length && !showImportPanel && (
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">
+                    Want to upload your library first to see what we share?
+                  </p>
+                  <button
+                    onClick={() => setShowImportPanel(true)}
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                  >
+                    Upload Goodreads CSV
+                  </button>
                 </div>
-              </div>
+              )}
+
+              {(!importedLibrary?.items?.length && showImportPanel) && (
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <label className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium cursor-pointer hover:bg-[#4A5940] transition-colors">
+                    Choose CSV file
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="hidden"
+                      onChange={(e) => handleImportGoodreadsCsv(e.target.files?.[0])}
+                    />
+                  </label>
+                  <button
+                    onClick={() => { setShowImportPanel(false); setImportError(''); }}
+                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                  >
+                    Not now
+                  </button>
+                </div>
+              )}
+
+              {importedLibrary?.items?.length && (
+                <div className="text-xs sm:text-sm text-[#7A8F6C] font-light">
+                  You and Sarah share <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span> books · Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span>
+                </div>
+              )}
 
               {importError && (
                 <p className="mt-3 text-xs text-red-700">{importError}</p>
