@@ -660,6 +660,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
+  const [expandedGenres, setExpandedGenres] = useState({});
   const [messages, setMessages] = useState([
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
@@ -699,6 +700,26 @@ export default function App() {
     }
     return true;
   });
+
+  const booksByGenre = filteredBooks.reduce((acc, book) => {
+    const g = book.genre || 'Other';
+    if (!acc[g]) acc[g] = [];
+    acc[g].push(book);
+    return acc;
+  }, {});
+
+  const genreOrder = (selectedGenre !== 'All')
+    ? [selectedGenre]
+    : genres.filter(g => g !== 'All');
+
+  const visibleGenres = genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
+
+  const toggleGenreExpanded = (genre) => {
+    setExpandedGenres(prev => ({
+      ...prev,
+      [genre]: !prev?.[genre]
+    }));
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -904,10 +925,60 @@ export default function App() {
             Showing {filteredBooks.length} of {bookCatalog.length} books
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {filteredBooks.map((book, idx) => (
-              <BookCard key={idx} book={book} onClick={setSelectedBook} />
-            ))}
+          <div className="space-y-5 sm:space-y-6">
+            {visibleGenres.map((genre) => {
+              const list = booksByGenre[genre] || [];
+              const isExpanded = !!expandedGenres?.[genre];
+              const limit = 12;
+              const shown = isExpanded ? list : list.slice(0, limit);
+
+              return (
+                <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
+                  <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#E8EBE4] bg-[#FDFBF4]">
+                    <div>
+                      <h3 className="font-serif text-lg text-[#4A5940]">{genre}</h3>
+                      <p className="text-xs text-[#7A8F6C] font-light">{list.length} books</p>
+                    </div>
+                    {list.length > limit && (
+                      <button
+                        onClick={() => toggleGenreExpanded(genre)}
+                        className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                      >
+                        {isExpanded ? 'Show less' : `Show all (${list.length})`}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="divide-y divide-[#E8EBE4]">
+                    {shown.map((book) => (
+                      <button
+                        key={`${book.title}__${book.author}`}
+                        onClick={() => setSelectedBook(book)}
+                        className="w-full px-5 sm:px-6 py-3 text-left hover:bg-[#F5F7F2] transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-[#4A5940] truncate">{book.title}</span>
+                              {book.favorite && (
+                                <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                              )}
+                            </div>
+                            <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
+                            {!!book.themes?.length && (
+                              <span className="block text-xs text-[#96A888] mt-1">
+                                {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-[#96A888] flex-shrink-0">View</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {filteredBooks.length === 0 && (
