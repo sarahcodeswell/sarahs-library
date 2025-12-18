@@ -17,56 +17,26 @@ function safeNumber(value, fallback = 0) {
 }
 
 function BrowseBookRow({ book, onClick }) {
-  const coverUrl = useCoverUrl(book?.title, book?.author);
-  const [coverLoaded, setCoverLoaded] = useState(false);
-
-  useEffect(() => {
-    setCoverLoaded(false);
-  }, [coverUrl]);
-
   return (
     <button
       onClick={onClick}
       className="w-full text-left rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] px-4 py-3 hover:bg-[#F5F7F2] hover:border-[#D4DAD0] transition-colors"
     >
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-12 rounded-md bg-white border border-[#D4DAD0] overflow-hidden flex items-center justify-center flex-shrink-0">
-          {coverUrl && !coverLoaded ? (
-            <div className="w-full h-full bg-[#E8EBE4]" />
-          ) : null}
-          {coverUrl ? (
-            <img
-              src={coverUrl}
-              alt={book.title}
-              className={`w-full h-full object-cover ${coverLoaded ? '' : 'hidden'}`}
-              loading="lazy"
-              onLoad={() => setCoverLoaded(true)}
-              onError={() => { setCoverLoaded(false); }}
-            />
-          ) : (
-            <Book className="w-4 h-4 text-[#96A888]" />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
-                {book.favorite && (
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                )}
-              </div>
-              <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
-            </div>
-
-            {!!book.themes?.length && (
-              <span className="text-xs text-[#96A888] flex-shrink-0">
-                {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-              </span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
+            {book.favorite && (
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
             )}
           </div>
+          <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
         </div>
+        {!!book.themes?.length && (
+          <span className="text-xs text-[#96A888] flex-shrink-0">
+            {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
+          </span>
+        )}
       </div>
     </button>
   );
@@ -126,65 +96,6 @@ const CATALOG_TITLE_INDEX = (() => {
   }
   return map;
 })();
-
-const COVER_CACHE = new Map();
-const COVER_INFLIGHT = new Map();
-
-const coverKey = (title, author) => {
-  const t = normalizeTitle(title);
-  const a = normalizeAuthor(author);
-  return `${t}::${a}`;
-};
-
-async function getCoverUrlCached(title, author) {
-  const key = coverKey(title, author);
-  if (!key || key === '::') return null;
-  if (COVER_CACHE.has(key)) return COVER_CACHE.get(key);
-  if (COVER_INFLIGHT.has(key)) return COVER_INFLIGHT.get(key);
-
-  const p = (async () => {
-    try {
-      const params = new URLSearchParams();
-      params.set('title', String(title || ''));
-      if (author) params.set('author', String(author || ''));
-      const res = await fetch(`/api/covers?${params.toString()}`);
-      const data = await res.json().catch(() => ({}));
-      const u = String(data?.coverUrl || '').trim() || null;
-      COVER_CACHE.set(key, u);
-      return u;
-    } catch (e) {
-      void e;
-      COVER_CACHE.set(key, null);
-      return null;
-    } finally {
-      COVER_INFLIGHT.delete(key);
-    }
-  })();
-
-  COVER_INFLIGHT.set(key, p);
-  return p;
-}
-
-function useCoverUrl(title, author) {
-  const [url, setUrl] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    const t = String(title || '').trim();
-    if (!t) return () => { alive = false; };
-
-    getCoverUrlCached(t, author)
-      .then((u) => {
-        if (!alive) return;
-        setUrl(u);
-      })
-      .catch((e) => { void e; });
-
-    return () => { alive = false; };
-  }, [title, author]);
-
-  return url;
-}
 
 function parseCsvLine(line) {
   const out = [];
@@ -381,10 +292,9 @@ function hasStructuredRecommendations(text) {
 function RecommendationCard({ rec, index, messageIndex }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [coverLoaded, setCoverLoaded] = useState(false);
   
   // Look up full book details from local catalog
-  const catalogBook = React.useMemo(() => {
+  const catalogBook = (() => {
     const t = String(rec?.title || '');
     const key = normalizeTitle(t);
     if (key && CATALOG_TITLE_INDEX.has(key)) return CATALOG_TITLE_INDEX.get(key);
@@ -396,7 +306,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
       if (k.includes(needle) || needle.includes(k)) return b;
     }
     return null;
-  }, [rec?.title]);
+  })();
 
   const handleFeedback = (type) => {
     setFeedback(type);
@@ -435,12 +345,6 @@ function RecommendationCard({ rec, index, messageIndex }) {
     return d.length > 140 ? `${d.slice(0, 137)}…` : d;
   })();
 
-  const coverUrl = useCoverUrl(rec?.title, displayAuthor);
-
-  useEffect(() => {
-    setCoverLoaded(false);
-  }, [coverUrl]);
-
   const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
   const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
@@ -453,28 +357,9 @@ function RecommendationCard({ rec, index, messageIndex }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
       >
-        <div className="flex-shrink-0 flex items-start gap-2">
-          <span className="w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
-            {index + 1}
-          </span>
-          <div className="w-9 h-12 rounded-md bg-white border border-[#D4DAD0] overflow-hidden flex items-center justify-center">
-            {coverUrl && !coverLoaded ? (
-              <div className="w-full h-full bg-[#E8EBE4]" />
-            ) : null}
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={rec.title}
-                className={`w-full h-full object-cover ${coverLoaded ? '' : 'hidden'}`}
-                loading="lazy"
-                onLoad={() => setCoverLoaded(true)}
-                onError={() => { setCoverLoaded(false); }}
-              />
-            ) : (
-              <Book className="w-4 h-4 text-[#96A888]" />
-            )}
-          </div>
-        </div>
+        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
+          {index + 1}
+        </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
@@ -1223,13 +1108,15 @@ export default function App() {
     }, {});
   }, [filteredBooks]);
 
-  const genreOrder = (selectedGenre !== 'All')
-    ? [selectedGenre]
-    : genres.filter(g => g !== 'All');
+  const genreOrder = React.useMemo(() => {
+    return (selectedGenre !== 'All')
+      ? [selectedGenre]
+      : genres.filter(g => g !== 'All');
+  }, [selectedGenre]);
 
   const visibleGenres = React.useMemo(() => {
     return genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
-  }, [booksByGenre]);
+  }, [booksByGenre, genreOrder]);
 
   const toggleGenreExpanded = (genre) => {
     setExpandedGenres(prev => ({
