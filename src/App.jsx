@@ -251,24 +251,24 @@ export default function App() {
   return (
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
       <header className="bg-[#FDFBF4]/90 backdrop-blur-md border-b border-[#D4DAD0] sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <img 
                 src="/sarah.png" 
                 alt="Sarah" 
-                className="w-12 h-12 rounded-full object-cover border-2 border-[#D4DAD0] shadow-sm"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4DAD0] shadow-sm"
               />
               <div>
-                <h1 className="font-serif text-2xl text-[#4A5940]">Sarah's Library</h1>
+                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
                 <p className="text-xs text-[#7A8F6C] font-light tracking-wide">{bookCatalog.length} books · 7 genres · curated with love</p>
               </div>
             </div>
             
-            <div className="flex bg-[#E8EBE4] rounded-full p-1.5">
+            <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
               <button
                 onClick={() => setView('browse')}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
                   view === 'browse' 
                     ? 'bg-white text-[#4A5940] shadow-sm' 
                     : 'text-[#5F7252] hover:text-[#4A5940]'
@@ -279,7 +279,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setView('chat')}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
                   view === 'chat' 
                     ? 'bg-white text-[#4A5940] shadow-sm' 
                     : 'text-[#5F7252] hover:text-[#4A5940]'
@@ -294,18 +294,18 @@ export default function App() {
       </header>
 
       {view === 'browse' ? (
-        <main className="max-w-6xl mx-auto px-6 py-8">
-          <div className="mb-8 rounded-2xl overflow-hidden shadow-lg relative">
-            <img src="/books.jpg" alt="Stack of books" className="w-full h-44 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/80 to-transparent flex items-center">
-              <div className="px-8">
-                <h2 className="text-white font-serif text-3xl mb-2">Welcome to My Library</h2>
-                <p className="text-white/90 text-sm font-light">Discover {bookCatalog.length} hand-picked books across 7 genres</p>
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-lg relative">
+            <img src="/books.jpg" alt="Stack of books" className="w-full h-36 sm:h-44 object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/90 via-[#4A5940]/70 to-[#4A5940]/40 sm:to-transparent flex items-center">
+              <div className="px-4 sm:px-8">
+                <h2 className="text-white font-serif text-xl sm:text-3xl mb-1 sm:mb-2 drop-shadow-lg">Welcome to My Library</h2>
+                <p className="text-white text-xs sm:text-sm font-light drop-shadow-lg">Discover {bookCatalog.length} hand-picked books across 7 genres</p>
               </div>
             </div>
           </div>
 
-          <div className="mb-8 space-y-5">
+          <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#96A888]" />
               <input
@@ -313,17 +313,17 @@ export default function App() {
                 placeholder="Search titles or authors..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-5 py-4 bg-white rounded-2xl border border-[#D4DAD0] focus:border-[#96A888] focus:ring-4 focus:ring-[#E8EBE4] outline-none transition-all text-[#4A5940] placeholder-[#96A888]"
+                className="w-full pl-12 pr-5 py-3 sm:py-4 bg-white rounded-2xl border border-[#D4DAD0] focus:border-[#96A888] focus:ring-4 focus:ring-[#E8EBE4] outline-none transition-all text-[#4A5940] placeholder-[#96A888]"
               />
             </div>
 
-            <div className="flex flex-wrap gap-6 items-start">
+            <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Genre</label>
                 <select
                   value={selectedGenre}
                   onChange={e => setSelectedGenre(e.target.value)}
-                  className="px-5 py-2.5 bg-white rounded-xl border border-[#D4DAD0] text-sm focus:border-[#96A888] outline-none text-[#5F7252] font-medium min-w-[180px]"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white rounded-xl border border-[#D4DAD0] text-sm focus:border-[#96A888] outline-none text-[#5F7252] font-medium min-w-[160px] sm:min-w-[180px]"
                 >
                   {genres.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
@@ -338,7 +338,7 @@ export default function App() {
                     <button
                       key={key}
                       onClick={() => setSelectedTheme(selectedTheme === key ? null : key)}
-                      className={`px-3 py-2 rounded-xl text-sm transition-all font-medium flex items-center gap-1.5 ${
+                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-sm transition-all font-medium flex items-center gap-1.5 ${
                         selectedTheme === key
                           ? 'bg-[#5F7252] text-white shadow-md'
                           : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
@@ -356,24 +356,25 @@ export default function App() {
                 <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Show</label>
                 <button
                   onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all font-medium ${
+                  className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all font-medium ${
                     showFavoritesOnly
                       ? 'bg-amber-100 text-amber-700 border border-amber-300'
                       : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
                   }`}
                 >
                   <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`} />
-                  Favorites Only
+                  <span className="hidden sm:inline">Favorites Only</span>
+                  <span className="sm:hidden">Favorites</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <p className="text-sm text-[#7A8F6C] mb-6 font-light">
+          <p className="text-sm text-[#7A8F6C] mb-4 sm:mb-6 font-light">
             Showing {filteredBooks.length} of {bookCatalog.length} books
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             {filteredBooks.map((book, idx) => (
               <BookCard key={idx} book={book} onClick={setSelectedBook} />
             ))}
@@ -387,37 +388,37 @@ export default function App() {
           )}
         </main>
       ) : (
-        <main className="max-w-2xl mx-auto px-6 py-8 h-[calc(100vh-100px)] flex flex-col">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
           <div className="mb-4 flex justify-center">
             <div className="bg-white rounded-full p-1 border border-[#D4DAD0] shadow-sm">
               <button
                 onClick={() => setChatMode('library')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
                   chatMode === 'library'
                     ? 'bg-[#5F7252] text-white'
                     : 'text-[#5F7252] hover:text-[#4A5940]'
                 }`}
               >
-                <Library className="w-4 h-4" />
+                <Library className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 My Library
               </button>
               <button
                 onClick={() => setChatMode('discover')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 ${
                   chatMode === 'discover'
                     ? 'bg-[#5F7252] text-white'
                     : 'text-[#5F7252] hover:text-[#4A5940]'
                 }`}
               >
-                <Globe className="w-4 h-4" />
+                <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Discover New
               </button>
             </div>
           </div>
 
           {messages.length <= 2 && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
-              <img src="/books.jpg" alt="Stack of books" className="w-full h-32 object-cover" />
+            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
+              <img src="/books.jpg" alt="Stack of books" className="w-full h-24 sm:h-32 object-cover" />
             </div>
           )}
           
@@ -444,31 +445,31 @@ export default function App() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex gap-2">
+          <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
             <input
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ask me for a recommendation..."
-              className="flex-1 px-4 py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light"
+              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base"
               disabled={isLoading}
             />
             <button
               onClick={handleSendMessage}
               disabled={isLoading || !inputValue.trim()}
-              className="px-5 py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 sm:px-5 py-2 sm:py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
             {suggestionChips.map(suggestion => (
               <button
                 key={suggestion}
                 onClick={() => setInputValue(suggestion)}
-                className="px-4 py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
               >
                 {suggestion}
               </button>
