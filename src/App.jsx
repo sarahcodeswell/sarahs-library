@@ -1148,8 +1148,8 @@ export default function App() {
               />
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">Curated collection of books with infinite possibilities. For the love of reading ♥</p>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">Curated collection of books with infinite possibilities. For the love of reading ♥</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">A curated collection with infinite possibilities. For the ♥ of reading.</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">A curated collection with infinite possibilities. For the ♥ of reading.</p>
               </div>
             </div>
             
