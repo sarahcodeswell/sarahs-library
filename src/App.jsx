@@ -18,15 +18,6 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function readLocalMetric(key, fallback = 0) {
-  try {
-    return safeNumber(window.localStorage.getItem(key), fallback);
-  } catch (e) {
-    void e;
-    return fallback;
-  }
-}
-
 function bumpLocalMetric(key, by = 1) {
   const inc = safeNumber(by, 1);
   let next = inc;
@@ -34,11 +25,6 @@ function bumpLocalMetric(key, by = 1) {
     const cur = safeNumber(window.localStorage.getItem(key), 0);
     next = cur + inc;
     window.localStorage.setItem(key, String(next));
-  } catch (e) {
-    void e;
-  }
-  try {
-    window.dispatchEvent(new CustomEvent('local_metric', { detail: { key, value: next } }));
   } catch (e) {
     void e;
   }
@@ -791,52 +777,39 @@ function AboutSection({ onShare }) {
   );
 }
 
-function SiteFooter({ onOpenFeedback, onSendHeart, localMetrics }) {
-  const goodreadsBooksLocal = safeNumber(localMetrics?.goodreads_books_uploaded_total, 0);
-  const goodreadsClicksLocal = safeNumber(localMetrics?.goodreads_link_clicks, 0);
-  const bookshopClicksLocal = safeNumber(localMetrics?.bookshop_link_clicks, 0);
-
+function SiteFooter({ onOpenFeedback, onSendHeart }) {
   return (
     <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-white/60 backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-sm text-[#5F7252] font-light">
-            Darkridge Copyright 2025
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">
+              Product
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2">
+              <button
+                onClick={onOpenFeedback}
+                className="text-left text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              >
+                Send Feature Request
+              </button>
+              <button
+                onClick={onSendHeart}
+                className="text-left text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                title="Say thanks"
+              >
+                Send Heart ❤️
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-            <button
-              onClick={onOpenFeedback}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
-            >
-              Send a feature request
-            </button>
-            <button
-              onClick={onSendHeart}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
-              title="Say thanks"
-            >
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-              Send ❤️
-            </button>
-          </div>
+          <div />
         </div>
 
-        <div className="mt-4 text-xs text-[#7A8F6C] font-light flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <span>
-            On this device: <span className="font-medium text-[#4A5940]">{goodreadsBooksLocal}</span> Goodreads books uploaded
-          </span>
-          <span className="hidden sm:inline text-[#D4DAD0]">•</span>
-          <span>
-            Clicks: Goodreads <span className="font-medium text-[#4A5940]">{goodreadsClicksLocal}</span> · Bookshop <span className="font-medium text-[#4A5940]">{bookshopClicksLocal}</span>
-          </span>
+        <div className="mt-6 flex justify-end text-xs text-[#7A8F6C] font-light">
+          Darkridge 2025
         </div>
-
-        {!FEEDBACK_EMAIL && (
-          <div className="mt-2 text-[11px] text-[#96A888] font-light">
-            Tip: set <span className="font-medium">VITE_FEEDBACK_EMAIL</span> in Vercel to route feedback via email (otherwise it opens a GitHub issue).
-          </div>
-        )}
       </div>
     </footer>
   );
@@ -867,11 +840,6 @@ export default function App() {
   const [featureRequestText, setFeatureRequestText] = useState('');
   const [feedbackToast, setFeedbackToast] = useState('');
   const feedbackToastTimeoutRef = useRef(null);
-  const [localMetrics, setLocalMetrics] = useState(() => ({
-    goodreads_books_uploaded_total: 0,
-    goodreads_link_clicks: 0,
-    bookshop_link_clicks: 0
-  }));
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -892,23 +860,6 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    // Initialize local metrics + live-update when other components increment counters.
-    setLocalMetrics({
-      goodreads_books_uploaded_total: readLocalMetric('goodreads_books_uploaded_total_v1', 0),
-      goodreads_link_clicks: readLocalMetric('goodreads_link_clicks_v1', 0),
-      bookshop_link_clicks: readLocalMetric('bookshop_link_clicks_v1', 0)
-    });
-
-    const onMetric = (e) => {
-      const key = e?.detail?.key;
-      const value = e?.detail?.value;
-      if (!key) return;
-      setLocalMetrics(prev => ({ ...prev, [key]: value }));
-    };
-    window.addEventListener('local_metric', onMetric);
-    return () => window.removeEventListener('local_metric', onMetric);
-  }, []);
 
   useEffect(() => {
     if (chatMode === 'library') {
@@ -1417,7 +1368,6 @@ export default function App() {
           <SiteFooter
             onOpenFeedback={handleOpenFeedback}
             onSendHeart={handleSendHeart}
-            localMetrics={localMetrics}
           />
         </main>
       ) : (
@@ -1586,7 +1536,6 @@ export default function App() {
             <SiteFooter
               onOpenFeedback={handleOpenFeedback}
               onSendHeart={handleSendHeart}
-              localMetrics={localMetrics}
             />
           </div>
         </main>
