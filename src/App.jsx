@@ -6,6 +6,14 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 
+const themeInfo = {
+  women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
+  emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  identity: { emoji: "🎭", label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
+  spiritual: { emoji: "🕯", label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
+  justice: { emoji: "⚖️", label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+};
+
 // Parse structured recommendations from AI response
 function parseRecommendations(text) {
   const recommendations = [];
@@ -27,8 +35,6 @@ function parseRecommendations(text) {
         current.description = trimmed.replace('Description:', '').trim();
       } else if (trimmed.startsWith('Reputation:')) {
         current.reputation = trimmed.replace('Reputation:', '').trim();
-      } else if (trimmed.startsWith('Content Note:')) {
-        current.contentNote = trimmed.replace('Content Note:', '').trim();
       }
     }
   }
@@ -45,6 +51,13 @@ function hasStructuredRecommendations(text) {
 function RecommendationCard({ rec, index }) {
   const [expanded, setExpanded] = useState(false);
   
+  // Look up full book details from local catalog
+  const catalogBook = bookCatalog.find(b => 
+    b.title.toLowerCase() === rec.title.toLowerCase() ||
+    b.title.toLowerCase().includes(rec.title.toLowerCase()) ||
+    rec.title.toLowerCase().includes(b.title.toLowerCase())
+  );
+  
   const handleLinkClick = (destination) => {
     track('book_link_click', {
       book_title: rec.title,
@@ -57,6 +70,9 @@ function RecommendationCard({ rec, index }) {
   const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}`;
   const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
+  // Use catalog description if available, otherwise use AI-provided description
+  const fullDescription = catalogBook?.description || rec.description;
+
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
       <button
@@ -67,7 +83,10 @@ function RecommendationCard({ rec, index }) {
           {index + 1}
         </span>
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-[#4A5940] text-sm">{rec.title}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
+            {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
+          </div>
           {rec.author && <p className="text-xs text-[#7A8F6C]">{rec.author}</p>}
           <p className="text-xs text-[#5F7252] mt-1">{rec.why}</p>
         </div>
@@ -81,18 +100,25 @@ function RecommendationCard({ rec, index }) {
       {expanded && (
         <div className="px-4 pb-4 pt-0 border-t border-[#E8EBE4]">
           <div className="pt-3 space-y-2">
-            {rec.description && (
-              <p className="text-xs text-[#5F7252] leading-relaxed">{rec.description}</p>
+            {fullDescription && (
+              <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
+            )}
+            {catalogBook && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {catalogBook.themes?.slice(0, 3).map(theme => (
+                  <span key={theme} className="text-xs px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] rounded-full">
+                    {themeInfo[theme]?.emoji} {themeInfo[theme]?.label}
+                  </span>
+                ))}
+              </div>
             )}
             {rec.reputation && (
               <p className="text-xs text-[#7A8F6C]">
                 <span className="font-medium">Reputation:</span> {rec.reputation}
               </p>
             )}
-            {rec.contentNote && rec.contentNote.toLowerCase() !== 'none' && (
-              <p className="text-xs text-amber-600">
-                <span className="font-medium">Content Note:</span> {rec.contentNote}
-              </p>
+            {catalogBook && (
+              <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
             )}
           </div>
           
@@ -143,14 +169,6 @@ function FormattedRecommendations({ text }) {
   );
 }
 
-const themeInfo = {
-  women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  identity: { emoji: "🎭", label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
-  spiritual: { emoji: "🕯", label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
-  justice: { emoji: "⚖️", label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
-};
-
 const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
 
 const getGoodreadsSearchUrl = (title, author) => {
@@ -176,7 +194,6 @@ Author: [Author Name]
 Why This Fits: [1-2 sentences explaining why this matches their request]
 Description: [2-3 sentence description of the book]
 Reputation: [Mention Goodreads rating, awards, or Indie Next List recognition if notable]
-Content Note: [Brief content warnings if applicable, or "None" if family-friendly]
 
 [RECOMMENDATION 2]
 ...same format...
@@ -184,54 +201,32 @@ Content Note: [Brief content warnings if applicable, or "None" if family-friendl
 [RECOMMENDATION 3]
 ...same format...
 
-Keep the "Why This Fits" specific to what the user asked for. Be direct and helpful, not overly chatty.`;
+Keep responses concise. Be direct and helpful.`;
 
   const qualityGuidelines = `
-QUALITY GUIDELINES:
-- Prioritize books that are critically acclaimed (high Goodreads ratings, major awards)
-- Consider Indie Next List picks and independent bookstore favorites
-- Include a mix of well-known titles and hidden gems
-- Be specific about WHY each book matches their request
-- If they ask for something vague, ask one clarifying question before recommending`;
+Be specific about WHY each book matches their request. If vague, ask one clarifying question first.`;
 
   if (mode === 'library') {
     const catalogSummary = catalog.map(b => 
-      `- "${b.title}" by ${b.author} (${b.genre})${b.favorite ? ' ⭐FAVORITE' : ''}: ${b.description}`
+      `- "${b.title}" by ${b.author} [${b.genre}]${b.favorite ? ' ⭐' : ''}`
     ).join('\n');
     
-    return `You are Sarah, a thoughtful book curator sharing recommendations from your personal library of 190+ books.
-
-Your reading personality:
-- Drawn to women's interior lives and untold stories
-- Reading for emotional truth, not escapism
-- Grappling with questions of identity and belonging
-- A spiritual seeker with eclectic tastes
-- Deep care for justice, especially invisible injustices
+    return `You are Sarah, a book curator sharing recommendations from your personal library.
 ${responseFormat}
 ${qualityGuidelines}
 
-IMPORTANT: You can ONLY recommend books from your personal library below. If asked about books not in your collection, acknowledge you don't own them and offer to switch to "Discover New" mode.
+IMPORTANT: Only recommend books from this library. If asked about books not listed, offer to switch to "Discover New" mode.
 
 MY LIBRARY:
 ${catalogSummary}`;
   } else {
-    return `You are Sarah, a thoughtful book curator helping discover new books beyond your personal collection.
+    return `You are Sarah, a book curator helping discover new reads.
 
-Your reading personality informs your taste:
-- Drawn to women's interior lives and untold stories
-- Reading for emotional truth, not escapism  
-- Grappling with questions of identity and belonging
-- A spiritual seeker with eclectic tastes
-- Deep care for justice, especially invisible injustices
+Your taste: women's stories, emotional truth, identity, spirituality, justice.
 ${responseFormat}
 ${qualityGuidelines}
 
-Draw from your broad knowledge of literature. Prioritize:
-- Books with strong Goodreads ratings (4.0+)
-- Award winners (Pulitzer, National Book Award, Booker, Women's Prize)
-- Indie Next List selections
-- Independent bookstore staff picks
-- Both well-known titles and hidden gems that deserve more attention`;
+Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.`;
   }
 };
 
@@ -607,7 +602,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
+          max_tokens: 700,
           system: getSystemPrompt(chatMode, bookCatalog),
           messages: [
             ...messages.filter(m => m.isUser !== undefined).map(m => ({
