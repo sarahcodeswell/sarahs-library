@@ -460,7 +460,7 @@ export default function App() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#2C2C2C]/60 via-[#2C2C2C]/30 to-transparent flex items-end sm:items-center">
               <div className="px-5 sm:px-8 py-4 sm:py-0">
                 <h2 className="text-white font-serif text-2xl sm:text-3xl mb-1 sm:mb-2 drop-shadow-md">Welcome to My Library</h2>
-                <p className="text-white/80 text-xs sm:text-sm font-light drop-shadow-sm">Peruse to find your next read across my favorite genres.</p>
+                <p className="text-white/80 text-xs sm:text-sm font-light drop-shadow-sm">Find your next read across my favorite genres.</p>
               </div>
             </div>
           </div>
