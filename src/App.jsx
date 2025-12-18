@@ -143,8 +143,6 @@ function FormattedRecommendations({ text }) {
   );
 }
 
-const BOOKSHOP_AFFILIATE_ID = '119544';
-
 const themeInfo = {
   women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
   emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
