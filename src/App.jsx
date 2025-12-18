@@ -297,10 +297,10 @@ export default function App() {
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-lg relative">
             <img src="/books.jpg" alt="Stack of books" className="w-full h-36 sm:h-44 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/90 via-[#4A5940]/70 to-[#4A5940]/40 sm:to-transparent flex items-center">
-              <div className="px-4 sm:px-8">
-                <h2 className="text-white font-serif text-xl sm:text-3xl mb-1 sm:mb-2 drop-shadow-lg">Welcome to My Library</h2>
-                <p className="text-white text-xs sm:text-sm font-light drop-shadow-lg">Discover {bookCatalog.length} hand-picked books across 7 genres</p>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/70 to-transparent flex items-center">
+              <div className="px-4 sm:px-8 py-3 rounded-r-xl bg-[#4A5940]/60 backdrop-blur-sm">
+                <h2 className="text-white font-serif text-xl sm:text-3xl mb-1 sm:mb-2">Welcome to My Library</h2>
+                <p className="text-white/90 text-xs sm:text-sm font-light">Discover {bookCatalog.length} hand-picked books across 7 genres</p>
               </div>
             </div>
           </div>
@@ -417,8 +417,15 @@ export default function App() {
           </div>
 
           {messages.length <= 2 && (
-            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
               <img src="/books.jpg" alt="Stack of books" className="w-full h-24 sm:h-32 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/70 to-transparent flex items-center">
+                <div className="px-4 sm:px-6 py-2 rounded-r-xl bg-[#4A5940]/60 backdrop-blur-sm">
+                  <h2 className="text-white font-serif text-lg sm:text-xl">
+                    {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
+                  </h2>
+                </div>
+              </div>
             </div>
           )}
           
