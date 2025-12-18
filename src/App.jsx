@@ -6,8 +6,6 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
-const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'hello@sarahsbooks.com';
-const FEEDBACK_GITHUB_NEW_ISSUE_URL = 'https://github.com/sarahcodeswell/sarahs-library/issues/new';
 
 const STOP_WORDS = new Set([
   'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
@@ -31,19 +29,24 @@ function bumpLocalMetric(key, by = 1) {
   return next;
 }
 
-function buildMailtoUrl(to, subject, body) {
-  const params = new URLSearchParams();
-  if (subject) params.set('subject', subject);
-  if (body) params.set('body', body);
-  const qs = params.toString();
-  return `mailto:${encodeURIComponent(to || '')}${qs ? `?${qs}` : ''}`;
-}
+async function postFeedback({ type, message, pageUrl }) {
+  const res = await fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type,
+      message,
+      pageUrl,
+      // Honeypot field (bots may fill it)
+      company: ''
+    })
+  });
 
-function buildGithubIssueUrl({ title, body }) {
-  const params = new URLSearchParams();
-  if (title) params.set('title', title);
-  if (body) params.set('body', body);
-  return `${FEEDBACK_GITHUB_NEW_ISSUE_URL}?${params.toString()}`;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || 'Failed to send');
+  }
+  return data;
 }
 
 function tokenizeForSearch(text) {
@@ -800,6 +803,12 @@ export default function App() {
   const shareFeedbackTimeoutRef = useRef(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [featureRequestText, setFeatureRequestText] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState({
+    isSendingThanks: false,
+    isSendingFeature: false,
+    thanksMsg: '',
+    featureMsg: ''
+  });
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -1051,19 +1060,27 @@ export default function App() {
 
   const handleSendHeart = () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
+    if (feedbackStatus.isSendingThanks) return;
+
     track('thanks_heart_click', { source: view });
+    track('thanks_heart_send', { method: 'backend', source: view });
 
-    const subject = 'Thanks <3';
-    const body = `❤️ Thank you!\n\nSent from: ${url}\n`;
-
-    const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
-    track('thanks_heart_send', { method, source: view });
-
-    if (FEEDBACK_EMAIL) {
-      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
-    } else {
-      window.open(buildGithubIssueUrl({ title: '❤️ Love Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
-    }
+    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: '' }));
+    postFeedback({
+      type: 'thanks',
+      message: '❤️ Thank you!',
+      pageUrl: url
+    })
+      .then(() => {
+        setFeedbackStatus(s => ({ ...s, thanksMsg: 'Sent ❤️' }));
+      })
+      .catch(() => {
+        setFeedbackStatus(s => ({ ...s, thanksMsg: 'Couldn’t send—try again.' }));
+      })
+      .finally(() => {
+        setFeedbackStatus(s => ({ ...s, isSendingThanks: false }));
+        setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2500);
+      });
   };
 
   const handleOpenFeedback = () => {
@@ -1076,19 +1093,28 @@ export default function App() {
     const msg = String(featureRequestText || '').trim();
     if (!msg) return;
 
-    const subject = 'Sarahs Books Feature Request';
-    const body = `${msg}\n\nSent from: ${url}\n`;
+    if (feedbackStatus.isSendingFeature) return;
 
-    const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
-    track('feature_request_send', { method, source: view, message_length: msg.length });
+    track('feature_request_send', { method: 'backend', source: view, message_length: msg.length });
+    setFeedbackStatus(s => ({ ...s, isSendingFeature: true, featureMsg: '' }));
 
-    if (FEEDBACK_EMAIL) {
-      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
-    } else {
-      window.open(buildGithubIssueUrl({ title: 'Feature request: Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
-    }
-
-    setFeedbackOpen(false);
+    postFeedback({
+      type: 'feature_request',
+      message: msg,
+      pageUrl: url
+    })
+      .then(() => {
+        setFeedbackStatus(s => ({ ...s, featureMsg: 'Sent — thank you!' }));
+        setFeatureRequestText('');
+        setFeedbackOpen(false);
+      })
+      .catch(() => {
+        setFeedbackStatus(s => ({ ...s, featureMsg: 'Couldn’t send—try again.' }));
+      })
+      .finally(() => {
+        setFeedbackStatus(s => ({ ...s, isSendingFeature: false }));
+        setTimeout(() => setFeedbackStatus(s => ({ ...s, featureMsg: '' })), 3500);
+      });
   };
 
   return (
@@ -1111,9 +1137,9 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3">
-              {shareFeedback && (
+              {(shareFeedback || feedbackStatus.thanksMsg) && (
                 <div className="hidden sm:block text-xs text-[#7A8F6C] font-light">
-                  {shareFeedback}
+                  {feedbackStatus.thanksMsg || shareFeedback}
                 </div>
               )}
 
@@ -1128,7 +1154,8 @@ export default function App() {
 
               <button
                 onClick={handleSendHeart}
-                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                disabled={feedbackStatus.isSendingThanks}
+                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Say thanks"
               >
                 <span className="text-base leading-none">❤️</span>
@@ -1381,7 +1408,8 @@ export default function App() {
 
               <button
                 onClick={handleSendHeart}
-                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                disabled={feedbackStatus.isSendingThanks}
+                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Say thanks"
               >
                 <span className="text-sm leading-none">❤️</span>
@@ -1567,6 +1595,12 @@ export default function App() {
                 className="mt-4 w-full min-h-[120px] px-4 py-3 rounded-2xl border border-[#D4DAD0] bg-white text-sm text-[#4A5940] placeholder-[#96A888] outline-none focus:border-[#96A888]"
               />
 
+              {feedbackStatus.featureMsg && (
+                <div className="mt-3 text-xs text-[#7A8F6C] font-light">
+                  {feedbackStatus.featureMsg}
+                </div>
+              )}
+
               <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
                 <button
                   onClick={() => setFeedbackOpen(false)}
@@ -1576,10 +1610,10 @@ export default function App() {
                 </button>
                 <button
                   onClick={handleSendFeatureRequest}
-                  disabled={!String(featureRequestText || '').trim()}
+                  disabled={feedbackStatus.isSendingFeature || !String(featureRequestText || '').trim()}
                   className="px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Open Email…
+                  {feedbackStatus.isSendingFeature ? 'Sending…' : 'Send'}
                 </button>
               </div>
             </div>
