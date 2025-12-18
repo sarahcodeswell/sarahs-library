@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Mail } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -1148,8 +1148,8 @@ export default function App() {
               />
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Library</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">190+ books with infinite possibilities · Curated with love ♥</p>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">190+ books · Curated with love ♥</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">Curated collection of books with infinite possibilities. For the love of reading ♥</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">Curated collection of books with infinite possibilities. For the love of reading ♥</p>
               </div>
             </div>
             
@@ -1159,6 +1159,25 @@ export default function App() {
                   {shareFeedback}
                 </div>
               )}
+
+              <button
+                onClick={handleOpenFeedback}
+                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                title="Send feature request"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline ml-2 text-sm font-medium">Feedback</span>
+              </button>
+
+              <button
+                onClick={handleSendHeart}
+                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                title="Say thanks"
+              >
+                <span className="text-base leading-none">❤️</span>
+                <span className="hidden sm:inline ml-2 text-sm font-medium">Thanks</span>
+              </button>
+
               <button
                 onClick={handleShare}
                 className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
@@ -1524,12 +1543,6 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mt-6">
-            <SiteFooter
-              onOpenFeedback={handleOpenFeedback}
-              onSendHeart={handleSendHeart}
-            />
-          </div>
         </main>
       )}
 
