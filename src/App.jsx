@@ -777,40 +777,6 @@ function AboutSection({ onShare }) {
   );
 }
 
-function SiteFooter({ onOpenFeedback, onSendHeart }) {
-  return (
-    <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-[#FDFBF4] font-sans">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-sm text-[#7A8F6C] font-light">
-            <span className="font-medium text-[#5F7252]">Have feedback?</span> I’d love to hear it.
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-            <button
-              onClick={onOpenFeedback}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
-            >
-              Send Feature Request
-            </button>
-            <button
-              onClick={onSendHeart}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
-              title="Say thanks"
-            >
-              Say Thanks ❤️
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 text-xs text-[#7A8F6C] font-light text-center">
-          For the ♥ of reading.
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 export default function App() {
   const [view, setView] = useState('chat');
   const [selectedGenre, setSelectedGenre] = useState('All');
@@ -1380,10 +1346,9 @@ export default function App() {
             </div>
           )}
 
-          <SiteFooter
-            onOpenFeedback={handleOpenFeedback}
-            onSendHeart={handleSendHeart}
-          />
+          <div className="mt-8 sm:mt-10 text-xs text-[#7A8F6C] font-light text-center">
+            For the ♥ of reading.
+          </div>
         </main>
       ) : (
         <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
