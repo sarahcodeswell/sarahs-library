@@ -800,8 +800,6 @@ export default function App() {
   const shareFeedbackTimeoutRef = useRef(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [featureRequestText, setFeatureRequestText] = useState('');
-  const [feedbackToast, setFeedbackToast] = useState('');
-  const feedbackToastTimeoutRef = useRef(null);
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -1051,12 +1049,6 @@ export default function App() {
     }
   };
 
-  const showToast = (msg) => {
-    setFeedbackToast(msg);
-    if (feedbackToastTimeoutRef.current) clearTimeout(feedbackToastTimeoutRef.current);
-    feedbackToastTimeoutRef.current = setTimeout(() => setFeedbackToast(''), 2600);
-  };
-
   const handleSendHeart = () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
     track('thanks_heart_click', { source: view });
@@ -1068,12 +1060,9 @@ export default function App() {
     track('thanks_heart_send', { method, source: view });
 
     if (FEEDBACK_EMAIL) {
-      showToast('Opening your email app…');
-      const mailto = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
-      setTimeout(() => { window.location.href = mailto; }, 200);
+      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
     } else {
       window.open(buildGithubIssueUrl({ title: '❤️ Love Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
-      showToast('Thanks — opening GitHub ❤️');
     }
   };
 
@@ -1094,16 +1083,12 @@ export default function App() {
     track('feature_request_send', { method, source: view, message_length: msg.length });
 
     if (FEEDBACK_EMAIL) {
-      showToast('Opening your email app…');
-      const mailto = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
-      setTimeout(() => { window.location.href = mailto; }, 200);
+      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
     } else {
       window.open(buildGithubIssueUrl({ title: 'Feature request: Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
-      showToast('Opening GitHub…');
     }
 
     setFeedbackOpen(false);
-    setFeatureRequestText('');
   };
 
   return (
@@ -1594,17 +1579,11 @@ export default function App() {
                   disabled={!String(featureRequestText || '').trim()}
                   className="px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Send
+                  Open Email…
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {feedbackToast && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-white border border-[#D4DAD0] shadow-lg text-sm text-[#4A5940]">
-          {feedbackToast}
         </div>
       )}
     </div>
