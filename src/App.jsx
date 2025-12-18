@@ -297,7 +297,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex }) {
+function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
@@ -363,10 +363,18 @@ function RecommendationCard({ rec, index, messageIndex }) {
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
 
+  const handleOpenDetail = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!catalogBook) return;
+    onOpenBook?.(catalogBook);
+  };
+
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
+        onDoubleClick={handleOpenDetail}
         className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
       >
         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
@@ -473,7 +481,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex }) {
+function FormattedRecommendations({ text, messageIndex, onOpenBook }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -487,8 +495,8 @@ function FormattedRecommendations({ text, messageIndex }) {
       {header && (
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
-      {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
+      {recommendations.slice(0, 3).map((rec, idx) => (
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} onOpenBook={onOpenBook} />
       ))}
     </div>
   );
@@ -749,7 +757,7 @@ function ChatSearchBox({ onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
+function ChatMessage({ message, isUser, showSearchOption, messageIndex, onOpenBook }) {
   const [showSearch, setShowSearch] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const isStructured = !isUser && hasStructuredRecommendations(message);
@@ -779,7 +787,7 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}>
           {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} onOpenBook={onOpenBook} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
@@ -1148,6 +1156,11 @@ export default function App() {
       ...prev,
       [genre]: !prev?.[genre]
     }));
+  };
+
+  const handleOpenBookFromChat = (book) => {
+    if (!book) return;
+    setSelectedBook(book);
   };
 
   const handleSendMessage = async (overrideText, overrideMode) => {
@@ -1642,6 +1655,7 @@ export default function App() {
                 isUser={msg.isUser} 
                 showSearchOption={!msg.isUser && idx > 0}
                 messageIndex={idx}
+                onOpenBook={handleOpenBookFromChat}
               />
             ))}
             {isLoading && (
