@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
+import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 
 const themeInfo = {
@@ -11,6 +13,12 @@ const themeInfo = {
 };
 
 const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
+
+// Generate Goodreads search URL from book title and author
+const getGoodreadsSearchUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author}`);
+  return `https://www.goodreads.com/search?q=${searchQuery}`;
+};
 
 const getSystemPrompt = (mode, catalog) => {
   const basePersonality = `You are Sarah, a warm, thoughtful book lover. You're passionate about reading and love helping people find their next great book.
@@ -77,6 +85,18 @@ function BookCard({ book, onClick }) {
 }
 
 function BookDetail({ book, onClose }) {
+  const handleGoodreadsClick = () => {
+    // Track the click with book details
+    track('goodreads_click', {
+      book_title: book.title,
+      book_author: book.author,
+      book_genre: book.genre,
+      is_favorite: book.favorite || false
+    });
+  };
+
+  const goodreadsUrl = getGoodreadsSearchUrl(book.title, book.author);
+
   return (
     <div className="fixed inset-0 bg-[#4A5940]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
@@ -122,17 +142,16 @@ function BookDetail({ book, onClose }) {
             </div>
           </div>
 
-          {book.goodreads && (
-            <a 
-              href={book.goodreads} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Learn More on Goodreads
-            </a>
-          )}
+          <a 
+            href={goodreadsUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            onClick={handleGoodreadsClick}
+            className="inline-flex items-center gap-2 px-5 py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-sm"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Find on Goodreads
+          </a>
         </div>
       </div>
     </div>
@@ -213,6 +232,12 @@ export default function App() {
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
 
+    // Track chat usage
+    track('chat_message', {
+      mode: chatMode,
+      message_length: userMessage.length
+    });
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -250,6 +275,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
+      <Analytics />
       <header className="bg-[#FDFBF4]/90 backdrop-blur-md border-b border-[#D4DAD0] sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
