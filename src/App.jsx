@@ -57,6 +57,20 @@ function normalizeAuthor(text) {
     .trim();
 }
 
+const CATALOG_TITLE_INDEX = (() => {
+  const map = new Map();
+  try {
+    for (const b of (bookCatalog || [])) {
+      const key = normalizeTitle(b?.title);
+      if (!key) continue;
+      if (!map.has(key)) map.set(key, b);
+    }
+  } catch (e) {
+    void e;
+  }
+  return map;
+})();
+
 function parseCsvLine(line) {
   const out = [];
   let cur = '';
@@ -249,15 +263,36 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index }) {
+function RecommendationCard({ rec, index, messageIndex }) {
   const [expanded, setExpanded] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   
   // Look up full book details from local catalog
-  const catalogBook = bookCatalog.find(b => 
-    b.title.toLowerCase() === rec.title.toLowerCase() ||
-    b.title.toLowerCase().includes(rec.title.toLowerCase()) ||
-    rec.title.toLowerCase().includes(b.title.toLowerCase())
-  );
+  const catalogBook = React.useMemo(() => {
+    const t = String(rec?.title || '');
+    const key = normalizeTitle(t);
+    if (key && CATALOG_TITLE_INDEX.has(key)) return CATALOG_TITLE_INDEX.get(key);
+
+    // Fallback for slight title mismatches (cheap partial match)
+    const needle = normalizeTitle(t);
+    if (!needle) return null;
+    for (const [k, b] of CATALOG_TITLE_INDEX.entries()) {
+      if (k.includes(needle) || needle.includes(k)) return b;
+    }
+    return null;
+  }, [rec?.title]);
+
+  const handleFeedback = (type) => {
+    setFeedback(type);
+    track('recommendation_feedback', {
+      feedback_type: type,
+      message_index: messageIndex,
+      recommendation_index: index,
+      book_title: rec?.title || '',
+      book_author: rec?.author || '',
+      source: 'recommendation_card'
+    });
+  };
   
   const handleLinkClick = (destination) => {
     track('book_link_click', {
@@ -300,6 +335,38 @@ function RecommendationCard({ rec, index }) {
           {rec.author && <p className="text-xs text-[#7A8F6C]">{rec.author}</p>}
           <p className="text-xs text-[#5F7252] mt-1">{rec.why}</p>
         </div>
+
+        <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFeedback('up'); }}
+            disabled={feedback !== null}
+            className={`p-1.5 rounded-lg transition-colors ${
+              feedback === 'up'
+                ? 'text-[#5F7252] bg-[#E8EBE4]'
+                : feedback === 'down'
+                ? 'text-[#D4DAD0] cursor-not-allowed'
+                : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
+            }`}
+            title="Helpful"
+          >
+            <ThumbsUp className={`w-3.5 h-3.5 ${feedback === 'up' ? 'fill-current' : ''}`} />
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFeedback('down'); }}
+            disabled={feedback !== null}
+            className={`p-1.5 rounded-lg transition-colors ${
+              feedback === 'down'
+                ? 'text-[#5F7252] bg-[#E8EBE4]'
+                : feedback === 'up'
+                ? 'text-[#D4DAD0] cursor-not-allowed'
+                : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
+            }`}
+            title="Not helpful"
+          >
+            <ThumbsDown className={`w-3.5 h-3.5 ${feedback === 'down' ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+
         {expanded ? (
           <ChevronUp className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-1" />
         ) : (
@@ -360,12 +427,14 @@ function RecommendationCard({ rec, index }) {
   );
 }
 
-function FormattedRecommendations({ text }) {
-  const recommendations = parseRecommendations(text);
+function FormattedRecommendations({ text, messageIndex }) {
+  const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
-  const headerMatch = text.match(/^(.*?)(?=\[RECOMMENDATION|\nTitle:)/s);
-  const header = headerMatch ? headerMatch[1].trim() : '';
+  const header = React.useMemo(() => {
+    const headerMatch = String(text || '').match(/^(.*?)(?=\[RECOMMENDATION|\nTitle:)/s);
+    return headerMatch ? headerMatch[1].trim() : '';
+  }, [text]);
   
   return (
     <div className="space-y-3">
@@ -373,7 +442,7 @@ function FormattedRecommendations({ text }) {
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} />
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
       ))}
     </div>
   );
@@ -647,7 +716,7 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}>
           {isStructured ? (
-            <FormattedRecommendations text={message} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
@@ -655,7 +724,7 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
           )}
         </div>
         
-        {!isUser && showSearchOption && (
+        {!isUser && showSearchOption && !isStructured && (
           <div className="mt-2">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
