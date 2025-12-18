@@ -352,32 +352,6 @@ Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.`;
   }
 };
 
-function BookCard({ book, onClick }) {
-  return (
-    <div 
-      onClick={() => onClick(book)}
-      className="group cursor-pointer bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 border border-[#D4DAD0] hover:border-[#96A888]"
-    >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="font-serif text-lg text-[#4A5940] group-hover:text-[#5F7252] transition-colors leading-tight pr-2">
-          {book.title}
-        </h3>
-        {book.favorite && (
-          <Star className="w-5 h-5 text-amber-400 fill-amber-400 flex-shrink-0" />
-        )}
-      </div>
-      <p className="text-sm text-[#7A8F6C] mb-4 font-light">{book.author}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {book.themes.slice(0, 3).map(theme => (
-          <span key={theme} className="text-sm opacity-80 hover:opacity-100 transition-opacity" title={themeInfo[theme]?.label}>
-            {themeInfo[theme]?.emoji}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function BookDetail({ book, onClose }) {
   const handleLinkClick = (destination) => {
     track('book_link_click', {
@@ -725,14 +699,10 @@ export default function App() {
   const visibleGenres = genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
 
   const toggleGenreExpanded = (genre) => {
-    setExpandedGenres(prev => {
-      const current = prev?.[genre] || 'partial';
-      const next = current === 'partial' ? 'expanded' : current === 'expanded' ? 'collapsed' : 'partial';
-      return {
-        ...prev,
-        [genre]: next
-      };
-    });
+    setExpandedGenres(prev => ({
+      ...prev,
+      [genre]: !prev?.[genre]
+    }));
   };
 
   const handleSendMessage = async () => {
@@ -942,28 +912,32 @@ export default function App() {
           <div className="space-y-5 sm:space-y-6">
             {visibleGenres.map((genre) => {
               const list = booksByGenre[genre] || [];
-              const state = expandedGenres?.[genre] || 'partial';
-              const limit = 12;
-              const shown = state === 'expanded' ? list : state === 'collapsed' ? [] : list.slice(0, limit);
+              const isCollapsed = !!expandedGenres?.[genre];
+              const shown = isCollapsed ? [] : list;
 
               return (
                 <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
                   <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#E8EBE4] bg-[#FDFBF4]">
                     <div>
-                      <h3 className="font-serif text-lg text-[#4A5940]">{genre}</h3>
-                      <p className="text-xs text-[#7A8F6C] font-light">{list.length} books{genreDescriptions[genre] ? ` · ${genreDescriptions[genre]}` : ''}</p>
+                      <h3 className="font-serif text-lg text-[#4A5940]">
+                        {genre}{' '}
+                        <span className="text-sm text-[#7A8F6C] font-light">({list.length})</span>
+                      </h3>
+                      {genreDescriptions[genre] && (
+                        <p className="text-xs text-[#7A8F6C] font-light">{genreDescriptions[genre]}</p>
+                      )}
                     </div>
-                    {list.length > limit && (
+                    {list.length > 0 && (
                       <button
                         onClick={() => toggleGenreExpanded(genre)}
                         className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
                       >
-                        {state === 'expanded' ? 'Show less' : state === 'collapsed' ? 'Show titles' : `Show all (${list.length})`}
+                        {isCollapsed ? `Expand (${list.length})` : 'Collapse'}
                       </button>
                     )}
                   </div>
 
-                  {state !== 'collapsed' && (
+                  {!isCollapsed && (
                     <div className="divide-y divide-[#E8EBE4]">
                       {shown.map((book) => (
                         <button
