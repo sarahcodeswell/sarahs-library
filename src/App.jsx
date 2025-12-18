@@ -6,10 +6,59 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
+const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || '';
+const FEEDBACK_GITHUB_NEW_ISSUE_URL = 'https://github.com/sarahcodeswell/sarahs-library/issues/new';
 
 const STOP_WORDS = new Set([
   'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
 ]);
+
+function safeNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function readLocalMetric(key, fallback = 0) {
+  try {
+    return safeNumber(window.localStorage.getItem(key), fallback);
+  } catch (e) {
+    void e;
+    return fallback;
+  }
+}
+
+function bumpLocalMetric(key, by = 1) {
+  const inc = safeNumber(by, 1);
+  let next = inc;
+  try {
+    const cur = safeNumber(window.localStorage.getItem(key), 0);
+    next = cur + inc;
+    window.localStorage.setItem(key, String(next));
+  } catch (e) {
+    void e;
+  }
+  try {
+    window.dispatchEvent(new CustomEvent('local_metric', { detail: { key, value: next } }));
+  } catch (e) {
+    void e;
+  }
+  return next;
+}
+
+function buildMailtoUrl(to, subject, body) {
+  const params = new URLSearchParams();
+  if (subject) params.set('subject', subject);
+  if (body) params.set('body', body);
+  const qs = params.toString();
+  return `mailto:${encodeURIComponent(to || '')}${qs ? `?${qs}` : ''}`;
+}
+
+function buildGithubIssueUrl({ title, body }) {
+  const params = new URLSearchParams();
+  if (title) params.set('title', title);
+  if (body) params.set('body', body);
+  return `${FEEDBACK_GITHUB_NEW_ISSUE_URL}?${params.toString()}`;
+}
 
 function tokenizeForSearch(text) {
   return String(text || '')
@@ -248,6 +297,15 @@ function RecommendationCard({ rec, index }) {
       destination: destination,
       source: 'recommendation_card'
     });
+
+    if (destination === 'goodreads') {
+      bumpLocalMetric('goodreads_link_clicks_v1', 1);
+      track('goodreads_link_click', { source: 'recommendation_card' });
+    }
+    if (destination === 'bookshop') {
+      bumpLocalMetric('bookshop_link_clicks_v1', 1);
+      track('bookshop_link_click', { source: 'recommendation_card' });
+    }
   };
 
   const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}`;
@@ -428,6 +486,15 @@ function BookDetail({ book, onClose }) {
       destination: destination,
       source: 'book_detail'
     });
+
+    if (destination === 'goodreads') {
+      bumpLocalMetric('goodreads_link_clicks_v1', 1);
+      track('goodreads_link_click', { source: 'book_detail' });
+    }
+    if (destination === 'bookshop') {
+      bumpLocalMetric('bookshop_link_clicks_v1', 1);
+      track('bookshop_link_click', { source: 'book_detail' });
+    }
   };
 
   const goodreadsUrl = getGoodreadsSearchUrl(book.title, book.author);
@@ -525,6 +592,15 @@ function ChatSearchBox({ onClose }) {
       destination: destination,
       source: 'chat_search'
     });
+
+    if (destination === 'goodreads') {
+      bumpLocalMetric('goodreads_link_clicks_v1', 1);
+      track('goodreads_link_click', { source: 'chat_search' });
+    }
+    if (destination === 'bookshop') {
+      bumpLocalMetric('bookshop_link_clicks_v1', 1);
+      track('bookshop_link_click', { source: 'chat_search' });
+    }
 
     const url = destination === 'goodreads' 
       ? getGoodreadsSearchUrl(searchTerm, '')
@@ -715,6 +791,57 @@ function AboutSection({ onShare }) {
   );
 }
 
+function SiteFooter({ onOpenFeedback, onSendHeart, localMetrics }) {
+  const goodreadsBooksLocal = safeNumber(localMetrics?.goodreads_books_uploaded_total, 0);
+  const goodreadsClicksLocal = safeNumber(localMetrics?.goodreads_link_clicks, 0);
+  const bookshopClicksLocal = safeNumber(localMetrics?.bookshop_link_clicks, 0);
+
+  return (
+    <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-white/60 backdrop-blur-sm">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-sm text-[#5F7252] font-light">
+            Darkridge Copyright 2025
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
+            <button
+              onClick={onOpenFeedback}
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
+            >
+              Send a feature request
+            </button>
+            <button
+              onClick={onSendHeart}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
+              title="Say thanks"
+            >
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+              Send ❤️
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 text-xs text-[#7A8F6C] font-light flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <span>
+            On this device: <span className="font-medium text-[#4A5940]">{goodreadsBooksLocal}</span> Goodreads books uploaded
+          </span>
+          <span className="hidden sm:inline text-[#D4DAD0]">•</span>
+          <span>
+            Clicks: Goodreads <span className="font-medium text-[#4A5940]">{goodreadsClicksLocal}</span> · Bookshop <span className="font-medium text-[#4A5940]">{bookshopClicksLocal}</span>
+          </span>
+        </div>
+
+        {!FEEDBACK_EMAIL && (
+          <div className="mt-2 text-[11px] text-[#96A888] font-light">
+            Tip: set <span className="font-medium">VITE_FEEDBACK_EMAIL</span> in Vercel to route feedback via email (otherwise it opens a GitHub issue).
+          </div>
+        )}
+      </div>
+    </footer>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState('chat');
   const [selectedGenre, setSelectedGenre] = useState('All');
@@ -736,6 +863,15 @@ export default function App() {
   const importFileInputRef = useRef(null);
   const [shareFeedback, setShareFeedback] = useState('');
   const shareFeedbackTimeoutRef = useRef(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [featureRequestText, setFeatureRequestText] = useState('');
+  const [feedbackToast, setFeedbackToast] = useState('');
+  const feedbackToastTimeoutRef = useRef(null);
+  const [localMetrics, setLocalMetrics] = useState(() => ({
+    goodreads_books_uploaded_total: 0,
+    goodreads_link_clicks: 0,
+    bookshop_link_clicks: 0
+  }));
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -754,6 +890,24 @@ export default function App() {
     } catch (e) {
       void e;
     }
+  }, []);
+
+  useEffect(() => {
+    // Initialize local metrics + live-update when other components increment counters.
+    setLocalMetrics({
+      goodreads_books_uploaded_total: readLocalMetric('goodreads_books_uploaded_total_v1', 0),
+      goodreads_link_clicks: readLocalMetric('goodreads_link_clicks_v1', 0),
+      bookshop_link_clicks: readLocalMetric('bookshop_link_clicks_v1', 0)
+    });
+
+    const onMetric = (e) => {
+      const key = e?.detail?.key;
+      const value = e?.detail?.value;
+      if (!key) return;
+      setLocalMetrics(prev => ({ ...prev, [key]: value }));
+    };
+    window.addEventListener('local_metric', onMetric);
+    return () => window.removeEventListener('local_metric', onMetric);
   }, []);
 
   useEffect(() => {
@@ -821,6 +975,13 @@ export default function App() {
         setImportError('Could not find any books in that CSV. Make sure it is a Goodreads library export.');
         return;
       }
+
+      const localTotal = bumpLocalMetric('goodreads_books_uploaded_total_v1', items.length);
+      track('goodreads_csv_upload', {
+        books_uploaded: items.length,
+        total_books_uploaded_local: localTotal
+      });
+
       const payload = {
         source: 'goodreads_csv',
         importedAt: Date.now(),
@@ -975,6 +1136,59 @@ export default function App() {
       if (shareFeedbackTimeoutRef.current) clearTimeout(shareFeedbackTimeoutRef.current);
       shareFeedbackTimeoutRef.current = setTimeout(() => setShareFeedback(''), 2500);
     }
+  };
+
+  const showToast = (msg) => {
+    setFeedbackToast(msg);
+    if (feedbackToastTimeoutRef.current) clearTimeout(feedbackToastTimeoutRef.current);
+    feedbackToastTimeoutRef.current = setTimeout(() => setFeedbackToast(''), 2600);
+  };
+
+  const handleSendHeart = () => {
+    const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
+    track('thanks_heart_click', { source: view });
+
+    const subject = "❤️ Thanks for Sarah's Library";
+    const body = `❤️ Thank you for creating this free service!\n\nSent from: ${url}\n`;
+
+    const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
+    track('thanks_heart_send', { method, source: view });
+
+    if (FEEDBACK_EMAIL) {
+      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
+      showToast('Thanks — opening your email app ❤️');
+    } else {
+      window.open(buildGithubIssueUrl({ title: '❤️ Love Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
+      showToast('Thanks — opening GitHub ❤️');
+    }
+  };
+
+  const handleOpenFeedback = () => {
+    track('feature_request_open', { source: view });
+    setFeedbackOpen(true);
+  };
+
+  const handleSendFeatureRequest = () => {
+    const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
+    const msg = String(featureRequestText || '').trim();
+    if (!msg) return;
+
+    const subject = 'Feature request: Sarah’s Library';
+    const body = `${msg}\n\nSent from: ${url}\n`;
+
+    const method = FEEDBACK_EMAIL ? 'mailto' : 'github_issue';
+    track('feature_request_send', { method, source: view, message_length: msg.length });
+
+    if (FEEDBACK_EMAIL) {
+      window.location.href = buildMailtoUrl(FEEDBACK_EMAIL, subject, body);
+      showToast('Opening your email app…');
+    } else {
+      window.open(buildGithubIssueUrl({ title: 'Feature request: Sarah’s Library', body }), '_blank', 'noopener,noreferrer');
+      showToast('Opening GitHub…');
+    }
+
+    setFeedbackOpen(false);
+    setFeatureRequestText('');
   };
 
   return (
@@ -1199,6 +1413,12 @@ export default function App() {
               <p className="text-[#96A888] font-light">No books match your filters</p>
             </div>
           )}
+
+          <SiteFooter
+            onOpenFeedback={handleOpenFeedback}
+            onSendHeart={handleSendHeart}
+            localMetrics={localMetrics}
+          />
         </main>
       ) : (
         <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
@@ -1361,11 +1581,71 @@ export default function App() {
               />
             </div>
           </div>
+
+          <div className="mt-6">
+            <SiteFooter
+              onOpenFeedback={handleOpenFeedback}
+              onSendHeart={handleSendHeart}
+              localMetrics={localMetrics}
+            />
+          </div>
         </main>
       )}
 
       {selectedBook && (
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
+      )}
+
+      {feedbackOpen && (
+        <div className="fixed inset-0 bg-[#4A5940]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setFeedbackOpen(false)}>
+          <div
+            className="bg-[#FDFBF4] rounded-3xl max-w-lg w-full shadow-2xl border border-[#D4DAD0]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 sm:p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-serif text-xl text-[#4A5940]">Feature request</h3>
+                  <p className="text-xs text-[#7A8F6C] font-light mt-1">
+                    Tell me what would make this library even better.
+                  </p>
+                </div>
+                <button onClick={() => setFeedbackOpen(false)} className="text-[#96A888] hover:text-[#4A5940] transition-colors p-1">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <textarea
+                value={featureRequestText}
+                onChange={(e) => setFeatureRequestText(e.target.value)}
+                placeholder="Example: Add a ‘save to list’ button, or let me filter by theme in chat…"
+                className="mt-4 w-full min-h-[120px] px-4 py-3 rounded-2xl border border-[#D4DAD0] bg-white text-sm text-[#4A5940] placeholder-[#96A888] outline-none focus:border-[#96A888]"
+              />
+
+              <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <button
+                  onClick={() => setFeedbackOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[#D4DAD0] bg-white text-[#5F7252] text-sm font-medium hover:border-[#96A888] hover:text-[#4A5940] transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendFeatureRequest}
+                  disabled={!String(featureRequestText || '').trim()}
+                  className="px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {feedbackToast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-white border border-[#D4DAD0] shadow-lg text-sm text-[#4A5940]">
+          {feedbackToast}
+        </div>
       )}
     </div>
   );
