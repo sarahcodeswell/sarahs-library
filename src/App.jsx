@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
+
+const BOOKSHOP_AFFILIATE_ID = '119544';
 
 const themeInfo = {
   women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
@@ -17,6 +19,17 @@ const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self
 const getGoodreadsSearchUrl = (title, author) => {
   const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
   return `https://www.goodreads.com/search?q=${searchQuery}`;
+};
+
+const getBookshopSearchUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
+};
+
+const getBookUrl = (title, author, destination) => {
+  return destination === 'goodreads' 
+    ? getGoodreadsSearchUrl(title, author)
+    : getBookshopSearchUrl(title, author);
 };
 
 const getSystemPrompt = (mode, catalog) => {
@@ -57,6 +70,41 @@ Recommend books you genuinely think are excellent. Include a mix of well-known a
   }
 };
 
+function DestinationToggle({ destination, setDestination }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex bg-[#E8EBE4] rounded-full p-0.5">
+        <button
+          onClick={() => setDestination('goodreads')}
+          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+            destination === 'goodreads'
+              ? 'bg-white text-[#4A5940] shadow-sm'
+              : 'text-[#5F7252] hover:text-[#4A5940]'
+          }`}
+          title="Link to Goodreads for reviews"
+        >
+          <Book className="w-3 h-3" />
+          <span className="hidden sm:inline">Find on Goodreads</span>
+          <span className="sm:hidden">Goodreads</span>
+        </button>
+        <button
+          onClick={() => setDestination('bookshop')}
+          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+            destination === 'bookshop'
+              ? 'bg-white text-[#4A5940] shadow-sm'
+              : 'text-[#5F7252] hover:text-[#4A5940]'
+          }`}
+          title="Buy from local bookstores via Bookshop.org"
+        >
+          <ShoppingBag className="w-3 h-3" />
+          <span className="hidden sm:inline">Buy Local</span>
+          <span className="sm:hidden">Local</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function BookCard({ book, onClick }) {
   return (
     <div 
@@ -83,18 +131,21 @@ function BookCard({ book, onClick }) {
   );
 }
 
-function BookDetail({ book, onClose }) {
-  const handleGoodreadsClick = () => {
-    track('goodreads_click', {
+function BookDetail({ book, onClose, destination }) {
+  const handleLinkClick = () => {
+    track('book_link_click', {
       book_title: book.title,
       book_author: book.author,
       book_genre: book.genre,
       is_favorite: book.favorite || false,
+      destination: destination,
       source: 'book_detail'
     });
   };
 
-  const goodreadsUrl = getGoodreadsSearchUrl(book.title, book.author);
+  const bookUrl = getBookUrl(book.title, book.author, destination);
+  const buttonText = destination === 'goodreads' ? 'Find on Goodreads' : 'Buy Local';
+  const ButtonIcon = destination === 'goodreads' ? ExternalLink : ShoppingBag;
 
   return (
     <div className="fixed inset-0 bg-[#4A5940]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -142,22 +193,32 @@ function BookDetail({ book, onClose }) {
           </div>
 
           <a 
-            href={goodreadsUrl} 
+            href={bookUrl} 
             target="_blank" 
             rel="noopener noreferrer"
-            onClick={handleGoodreadsClick}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-sm"
+            onClick={handleLinkClick}
+            className={`inline-flex items-center gap-2 px-5 py-3 text-white rounded-xl transition-colors font-medium text-sm ${
+              destination === 'bookshop' 
+                ? 'bg-[#4A7C59] hover:bg-[#3d6649]' 
+                : 'bg-[#5F7252] hover:bg-[#4A5940]'
+            }`}
           >
-            <ExternalLink className="w-4 h-4" />
-            Find on Goodreads
+            <ButtonIcon className="w-4 h-4" />
+            {buttonText}
           </a>
+          
+          {destination === 'bookshop' && (
+            <p className="text-xs text-[#96A888] mt-3">
+              🌱 Supports independent bookstores
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function GoodreadsSearchBox({ onClose }) {
+function GoodreadsSearchBox({ onClose, destination }) {
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef(null);
 
@@ -168,19 +229,24 @@ function GoodreadsSearchBox({ onClose }) {
   const handleSearch = () => {
     if (!searchTerm.trim()) return;
     
-    track('goodreads_click', {
+    track('book_link_click', {
       book_title: searchTerm,
       book_author: '',
       book_genre: 'unknown',
       is_favorite: false,
+      destination: destination,
       source: 'chat_search'
     });
 
-    const url = getGoodreadsSearchUrl(searchTerm, '');
+    const url = getBookUrl(searchTerm, '', destination);
     window.open(url, '_blank');
     setSearchTerm('');
     onClose();
   };
+
+  const placeholderText = destination === 'goodreads' 
+    ? 'Enter book title to find on Goodreads...' 
+    : 'Enter book title to buy local...';
 
   return (
     <div className="mt-2 flex gap-2">
@@ -190,15 +256,19 @@ function GoodreadsSearchBox({ onClose }) {
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         onKeyPress={e => e.key === 'Enter' && handleSearch()}
-        placeholder="Enter book title..."
+        placeholder={placeholderText}
         className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[#D4DAD0] focus:border-[#96A888] outline-none text-[#4A5940] placeholder-[#96A888]"
       />
       <button
         onClick={handleSearch}
         disabled={!searchTerm.trim()}
-        className="px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className={`px-3 py-1.5 text-white rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+          destination === 'bookshop'
+            ? 'bg-[#4A7C59] hover:bg-[#3d6649]'
+            : 'bg-[#5F7252] hover:bg-[#4A5940]'
+        }`}
       >
-        Search
+        {destination === 'goodreads' ? 'Find' : 'Buy'}
       </button>
       <button
         onClick={onClose}
@@ -210,8 +280,12 @@ function GoodreadsSearchBox({ onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, showGoodreadsOption }) {
+function ChatMessage({ message, isUser, showGoodreadsOption, destination }) {
   const [showSearch, setShowSearch] = useState(false);
+
+  const linkText = destination === 'goodreads' 
+    ? 'Find on Goodreads' 
+    : 'Buy Local';
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -238,14 +312,46 @@ function ChatMessage({ message, isUser, showGoodreadsOption }) {
                 onClick={() => setShowSearch(true)}
                 className="self-start mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Find a book on Goodreads
+                {destination === 'goodreads' ? (
+                  <ExternalLink className="w-3.5 h-3.5" />
+                ) : (
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                )}
+                {linkText}
               </button>
             ) : (
-              <GoodreadsSearchBox onClose={() => setShowSearch(false)} />
+              <GoodreadsSearchBox onClose={() => setShowSearch(false)} destination={destination} />
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function AboutSection() {
+  return (
+    <div className="mb-6 sm:mb-8 bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm">
+      <div className="flex items-start gap-4 sm:gap-6">
+        <div className="hidden sm:block flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-[#E8EBE4] flex items-center justify-center">
+            <Heart className="w-8 h-8 text-[#5F7252]" />
+          </div>
+        </div>
+        <div>
+          <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
+          <div className="space-y-3 text-sm sm:text-base text-[#5F7252] leading-relaxed">
+            <p>
+              For as long as I can remember, I've been a voracious reader. People who know me regularly come to me asking for recommendations on their next book. I'm also passionate about keeping local bookstores alive—they're important community gathering spaces.
+            </p>
+            <p>
+              This is a living, breathing library of the books I've read, along with a discovery engine (based on my taste) for new reads—for both you and me.
+            </p>
+            <p className="text-[#7A8F6C] italic">
+              Enjoy! 📖
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -259,6 +365,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
+  const [linkDestination, setLinkDestination] = useState('bookshop');
   const [messages, setMessages] = useState([
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
@@ -362,29 +469,33 @@ export default function App() {
               </div>
             </div>
             
-            <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
-              <button
-                onClick={() => setView('browse')}
-                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'browse' 
-                    ? 'bg-white text-[#4A5940] shadow-sm' 
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                <span className="hidden sm:inline">Browse</span>
-                <Book className="w-4 h-4 sm:hidden" />
-              </button>
-              <button
-                onClick={() => setView('chat')}
-                className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'chat' 
-                    ? 'bg-white text-[#4A5940] shadow-sm' 
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                <span className="hidden sm:inline">Ask Sarah</span>
-                <MessageCircle className="w-4 h-4 sm:hidden" />
-              </button>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <DestinationToggle destination={linkDestination} setDestination={setLinkDestination} />
+              
+              <div className="flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
+                <button
+                  onClick={() => setView('browse')}
+                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
+                    view === 'browse' 
+                      ? 'bg-white text-[#4A5940] shadow-sm' 
+                      : 'text-[#5F7252] hover:text-[#4A5940]'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Browse</span>
+                  <Book className="w-4 h-4 sm:hidden" />
+                </button>
+                <button
+                  onClick={() => setView('chat')}
+                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
+                    view === 'chat' 
+                      ? 'bg-white text-[#4A5940] shadow-sm' 
+                      : 'text-[#5F7252] hover:text-[#4A5940]'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Ask Sarah</span>
+                  <MessageCircle className="w-4 h-4 sm:hidden" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -397,10 +508,12 @@ export default function App() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#4A5940]/70 to-transparent flex items-center">
               <div className="px-4 sm:px-8 py-3 rounded-r-xl bg-[#4A5940]/60 backdrop-blur-sm">
                 <h2 className="text-white font-serif text-xl sm:text-3xl mb-1 sm:mb-2">Welcome to My Library</h2>
-                <p className="text-white/90 text-xs sm:text-sm font-light">Discover {bookCatalog.length} hand-picked books across 7 genres</p>
+                <p className="text-white/90 text-xs sm:text-sm font-light">Peruse to find your next read across my favorite genres.</p>
               </div>
             </div>
           </div>
+
+          <AboutSection />
 
           <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
             <div className="relative">
@@ -533,6 +646,7 @@ export default function App() {
                 message={msg.text} 
                 isUser={msg.isUser} 
                 showGoodreadsOption={!msg.isUser && idx > 0}
+                destination={linkDestination}
               />
             ))}
             {isLoading && (
@@ -588,7 +702,7 @@ export default function App() {
       )}
 
       {selectedBook && (
-        <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} destination={linkDestination} />
       )}
     </div>
   );
