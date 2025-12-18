@@ -14,9 +14,8 @@ const themeInfo = {
 
 const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
 
-// Generate Goodreads search URL from book title and author
 const getGoodreadsSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author}`);
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
   return `https://www.goodreads.com/search?q=${searchQuery}`;
 };
 
@@ -86,12 +85,12 @@ function BookCard({ book, onClick }) {
 
 function BookDetail({ book, onClose }) {
   const handleGoodreadsClick = () => {
-    // Track the click with book details
     track('goodreads_click', {
       book_title: book.title,
       book_author: book.author,
       book_genre: book.genre,
-      is_favorite: book.favorite || false
+      is_favorite: book.favorite || false,
+      source: 'book_detail'
     });
   };
 
@@ -158,7 +157,62 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser }) {
+function GoodreadsSearchBox({ onClose }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) return;
+    
+    track('goodreads_click', {
+      book_title: searchTerm,
+      book_author: '',
+      book_genre: 'unknown',
+      is_favorite: false,
+      source: 'chat_search'
+    });
+
+    const url = getGoodreadsSearchUrl(searchTerm, '');
+    window.open(url, '_blank');
+    setSearchTerm('');
+    onClose();
+  };
+
+  return (
+    <div className="mt-2 flex gap-2">
+      <input
+        ref={inputRef}
+        type="text"
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        onKeyPress={e => e.key === 'Enter' && handleSearch()}
+        placeholder="Enter book title..."
+        className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[#D4DAD0] focus:border-[#96A888] outline-none text-[#4A5940] placeholder-[#96A888]"
+      />
+      <button
+        onClick={handleSearch}
+        disabled={!searchTerm.trim()}
+        className="px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Search
+      </button>
+      <button
+        onClick={onClose}
+        className="px-2 py-1.5 text-[#96A888] hover:text-[#4A5940] transition-colors"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+function ChatMessage({ message, isUser, showGoodreadsOption }) {
+  const [showSearch, setShowSearch] = useState(false);
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       {!isUser && (
@@ -168,12 +222,30 @@ function ChatMessage({ message, isUser }) {
           className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
         />
       )}
-      <div className={`max-w-[80%] rounded-2xl px-5 py-3 ${
-        isUser 
-          ? 'bg-[#5F7252] text-white rounded-br-sm' 
-          : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
-      }`}>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+      <div className="flex flex-col max-w-[80%]">
+        <div className={`rounded-2xl px-5 py-3 ${
+          isUser 
+            ? 'bg-[#5F7252] text-white rounded-br-sm' 
+            : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
+        }`}>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+        </div>
+        
+        {!isUser && showGoodreadsOption && (
+          <>
+            {!showSearch ? (
+              <button
+                onClick={() => setShowSearch(true)}
+                className="self-start mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Find a book on Goodreads
+              </button>
+            ) : (
+              <GoodreadsSearchBox onClose={() => setShowSearch(false)} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -232,7 +304,6 @@ export default function App() {
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
 
-    // Track chat usage
     track('chat_message', {
       mode: chatMode,
       message_length: userMessage.length
@@ -457,7 +528,12 @@ export default function App() {
           
           <div className="flex-1 overflow-y-auto pb-4">
             {messages.map((msg, idx) => (
-              <ChatMessage key={idx} message={msg.text} isUser={msg.isUser} />
+              <ChatMessage 
+                key={idx} 
+                message={msg.text} 
+                isUser={msg.isUser} 
+                showGoodreadsOption={!msg.isUser && idx > 0}
+              />
             ))}
             {isLoading && (
               <div className="flex justify-start mb-4">
