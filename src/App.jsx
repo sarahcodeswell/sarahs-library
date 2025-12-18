@@ -1132,7 +1132,7 @@ export default function App() {
 
               <button
                 onClick={handleOpenFeedback}
-                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
                 title="Send feature request"
               >
                 <Mail className="w-4 h-4" />
@@ -1141,7 +1141,7 @@ export default function App() {
 
               <button
                 onClick={handleSendHeart}
-                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
                 title="Say thanks"
               >
                 <span className="text-base leading-none">❤️</span>
@@ -1150,7 +1150,7 @@ export default function App() {
 
               <button
                 onClick={handleShare}
-                className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
+                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
                 title="Share this page"
               >
                 <Share2 className="w-4 h-4" />
@@ -1347,7 +1347,7 @@ export default function App() {
           )}
 
           <div className="mt-8 sm:mt-10 text-xs text-[#7A8F6C] font-light text-center">
-            For the ♥ of reading.
+            For the ❤️ of reading.
           </div>
         </main>
       ) : (
@@ -1378,6 +1378,37 @@ export default function App() {
                   Discover New
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="mb-3 flex justify-center sm:hidden">
+            <div className="w-full max-w-sm flex items-center justify-between gap-2">
+              <button
+                onClick={handleOpenFeedback}
+                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                title="Send feature request"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="ml-2">Feedback</span>
+              </button>
+
+              <button
+                onClick={handleSendHeart}
+                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                title="Say thanks"
+              >
+                <span className="text-sm leading-none">❤️</span>
+                <span className="ml-2">Thanks</span>
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                title="Share this page"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="ml-2">Share</span>
+              </button>
             </div>
           </div>
 
