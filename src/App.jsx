@@ -340,15 +340,15 @@ function AboutSection() {
         </div>
         <div>
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
-          <div className="space-y-3 text-sm sm:text-base text-[#5F7252] leading-relaxed">
+          <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              For as long as I can remember, I've been a voracious reader. People who know me regularly come to me asking for recommendations on their next book. I'm also passionate about keeping local bookstores alive—they're important community gathering spaces.
+              I've always been the friend people text when they need a book recommendation. "Something that'll make me feel something," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic.
             </p>
             <p>
-              This is a living, breathing library of the books I've read, along with a discovery engine (based on my taste) for new reads—for both you and me.
+              So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
             </p>
             <p className="text-[#7A8F6C] italic">
-              Enjoy! 📖
+              Happy reading, friend. 📖
             </p>
           </div>
         </div>
