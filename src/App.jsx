@@ -6,7 +6,7 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
-const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || '';
+const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'sarah@darkridge.com';
 const FEEDBACK_GITHUB_NEW_ISSUE_URL = 'https://github.com/sarahcodeswell/sarahs-library/issues/new';
 
 const STOP_WORDS = new Set([
