@@ -856,6 +856,21 @@ export default function App() {
   });
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
+  const hasHydratedChatRef = useRef(false);
+  const chatStorageKey = 'sarah_books_chat_history_v1';
+
+  const getInitialMessagesForMode = (mode) => {
+    if (mode === 'discover') {
+      return [{
+        text: "Let's discover something new! 🌍 I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
+        isUser: false
+      }];
+    }
+    return [{
+      text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!",
+      isUser: false
+    }];
+  };
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
@@ -877,6 +892,32 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(chatStorageKey);
+      if (!raw) {
+        hasHydratedChatRef.current = true;
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      const mode = parsed?.mode === 'discover' ? 'discover' : 'library';
+      const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
+
+      const restored = Array.isArray(byMode?.[mode]) ? byMode[mode] : null;
+      if (restored && restored.length) {
+        setChatMode(mode);
+        setMessages(restored);
+      } else {
+        setChatMode(mode);
+        setMessages(getInitialMessagesForMode(mode));
+      }
+    } catch (e) {
+      void e;
+    } finally {
+      hasHydratedChatRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
     let alive = true;
     fetch('/api/thanks')
       .then(r => r.json())
@@ -893,18 +934,43 @@ export default function App() {
 
 
   useEffect(() => {
-    if (chatMode === 'library') {
-      setMessages([{ 
-        text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", 
-        isUser: false 
-      }]);
-    } else {
-      setMessages([{ 
-        text: "Let's discover something new! 🌍 I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.", 
-        isUser: false 
-      }]);
+    if (!hasHydratedChatRef.current) return;
+    try {
+      const raw = window.localStorage.getItem(chatStorageKey);
+      const parsed = raw ? JSON.parse(raw) : null;
+      const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
+      const restored = Array.isArray(byMode?.[chatMode]) ? byMode[chatMode] : null;
+      if (restored && restored.length) {
+        setMessages(restored);
+      } else {
+        setMessages(getInitialMessagesForMode(chatMode));
+      }
+    } catch (e) {
+      void e;
+      setMessages(getInitialMessagesForMode(chatMode));
     }
   }, [chatMode]);
+
+  useEffect(() => {
+    if (!hasHydratedChatRef.current) return;
+    try {
+      const raw = window.localStorage.getItem(chatStorageKey);
+      const parsed = raw ? JSON.parse(raw) : null;
+      const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
+
+      const capped = Array.isArray(messages) ? messages.slice(-50) : [];
+      const next = {
+        mode: chatMode,
+        byMode: {
+          ...byMode,
+          [chatMode]: capped,
+        },
+      };
+      window.localStorage.setItem(chatStorageKey, JSON.stringify(next));
+    } catch (e) {
+      void e;
+    }
+  }, [messages, chatMode]);
 
   const filteredBooks = bookCatalog.filter(book => {
     if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
