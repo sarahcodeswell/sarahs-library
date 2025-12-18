@@ -1172,6 +1172,28 @@ export default function App() {
             </div>
           </div>
 
+          {messages.length <= 2 && (
+            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
+              <div className="bg-[#FDFBF4]">
+                <img
+                  src="/books.jpg"
+                  alt="Open book on desk"
+                  className="block w-full h-[clamp(140px,18vh,220px)] object-cover object-center"
+                />
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
+                <div className="px-5 sm:px-8 py-4">
+                  <h2 className="text-[#4A5940] font-serif text-lg sm:text-xl mb-1">
+                    {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
+                  </h2>
+                  <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
+                    {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-4 sm:mb-6 bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
             <div className="px-5 sm:px-6 py-4 border-b border-[#E8EBE4] bg-[#FDFBF4]">
               <div className="flex items-start justify-between gap-4">
@@ -1192,10 +1214,7 @@ export default function App() {
 
             <div className="px-5 sm:px-6 py-4">
               {!importedLibrary?.items?.length && !showImportPanel && (
-                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                  <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">
-                    Want to upload your library first to see what we share?
-                  </p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
                   <button
                     onClick={() => setShowImportPanel(true)}
                     className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
@@ -1262,28 +1281,6 @@ export default function App() {
               )}
             </div>
           </div>
-
-          {messages.length <= 2 && (
-            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
-              <div className="bg-[#FDFBF4]">
-                <img
-                  src="/books.jpg"
-                  alt="Open book on desk"
-                  className="block w-full h-[clamp(140px,18vh,220px)] object-cover object-center"
-                />
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
-                <div className="px-5 sm:px-8 py-4">
-                  <h2 className="text-[#4A5940] font-serif text-lg sm:text-xl mb-1">
-                    {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
-                  </h2>
-                  <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
-                    {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
           
           <div className="flex-1 overflow-y-auto pb-4">
             {messages.map((msg, idx) => (
