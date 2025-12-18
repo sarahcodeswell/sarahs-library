@@ -6,6 +6,28 @@ import bookCatalog from './books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 
+ function FormattedText({ text }) {
+   const lines = String(text || '').split('\n');
+ 
+   const renderInlineBold = (line) => {
+     const parts = String(line).split('**');
+     return parts.map((part, idx) =>
+       idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <React.Fragment key={idx}>{part}</React.Fragment>
+     );
+   };
+ 
+   return (
+     <>
+       {lines.map((line, idx) => (
+         <React.Fragment key={idx}>
+           {renderInlineBold(line)}
+           {idx < lines.length - 1 && <br />}
+         </React.Fragment>
+       ))}
+     </>
+   );
+ }
+
 const themeInfo = {
   women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
   emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -442,7 +464,9 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
           {isStructured ? (
             <FormattedRecommendations text={message} />
           ) : (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {!isUser ? <FormattedText text={message} /> : message}
+            </p>
           )}
         </div>
         
@@ -553,6 +577,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode, bookCatalog), [chatMode]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -597,18 +623,23 @@ export default function App() {
     });
 
     try {
+      const chatHistory = messages
+        .filter(m => m.isUser !== undefined)
+        .slice(-8)
+        .map(m => ({
+          role: m.isUser ? 'user' : 'assistant',
+          content: m.text
+        }));
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 700,
-          system: getSystemPrompt(chatMode, bookCatalog),
+          max_tokens: 550,
+          system: systemPrompt,
           messages: [
-            ...messages.filter(m => m.isUser !== undefined).map(m => ({
-              role: m.isUser ? 'user' : 'assistant',
-              content: m.text
-            })),
+            ...chatHistory,
             { role: 'user', content: userMessage }
           ]
         })
