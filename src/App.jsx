@@ -290,6 +290,16 @@ function FormattedRecommendations({ text }) {
 
 const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
 
+const genreDescriptions = {
+  "Literary Fiction": "Character-driven, beautifully written novels.",
+  "Historical Fiction": "Immersive stories rooted in real eras and events.",
+  "Memoir": "True personal stories and lived experience.",
+  "Self-Help & Spirituality": "Practical tools, inner work, and meaning-making.",
+  "Thriller & Mystery": "High-stakes suspense, twists, and page-turners.",
+  "Romance & Contemporary": "Modern relationships, heart, and real-life stakes.",
+  "Nonfiction": "Ideas, history, culture, and learning—true and researched."
+};
+
 const getGoodreadsSearchUrl = (title, author) => {
   const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
   return `https://www.goodreads.com/search?q=${searchQuery}`;
@@ -715,10 +725,14 @@ export default function App() {
   const visibleGenres = genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
 
   const toggleGenreExpanded = (genre) => {
-    setExpandedGenres(prev => ({
-      ...prev,
-      [genre]: !prev?.[genre]
-    }));
+    setExpandedGenres(prev => {
+      const current = prev?.[genre] || 'partial';
+      const next = current === 'partial' ? 'expanded' : current === 'expanded' ? 'collapsed' : 'partial';
+      return {
+        ...prev,
+        [genre]: next
+      };
+    });
   };
 
   const handleSendMessage = async () => {
@@ -928,54 +942,56 @@ export default function App() {
           <div className="space-y-5 sm:space-y-6">
             {visibleGenres.map((genre) => {
               const list = booksByGenre[genre] || [];
-              const isExpanded = !!expandedGenres?.[genre];
+              const state = expandedGenres?.[genre] || 'partial';
               const limit = 12;
-              const shown = isExpanded ? list : list.slice(0, limit);
+              const shown = state === 'expanded' ? list : state === 'collapsed' ? [] : list.slice(0, limit);
 
               return (
                 <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
                   <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#E8EBE4] bg-[#FDFBF4]">
                     <div>
                       <h3 className="font-serif text-lg text-[#4A5940]">{genre}</h3>
-                      <p className="text-xs text-[#7A8F6C] font-light">{list.length} books</p>
+                      <p className="text-xs text-[#7A8F6C] font-light">{list.length} books{genreDescriptions[genre] ? ` · ${genreDescriptions[genre]}` : ''}</p>
                     </div>
                     {list.length > limit && (
                       <button
                         onClick={() => toggleGenreExpanded(genre)}
                         className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
                       >
-                        {isExpanded ? 'Show less' : `Show all (${list.length})`}
+                        {state === 'expanded' ? 'Show less' : state === 'collapsed' ? 'Show titles' : `Show all (${list.length})`}
                       </button>
                     )}
                   </div>
 
-                  <div className="divide-y divide-[#E8EBE4]">
-                    {shown.map((book) => (
-                      <button
-                        key={`${book.title}__${book.author}`}
-                        onClick={() => setSelectedBook(book)}
-                        className="w-full px-5 sm:px-6 py-3 text-left hover:bg-[#F5F7F2] transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm text-[#4A5940] truncate">{book.title}</span>
-                              {book.favorite && (
-                                <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                  {state !== 'collapsed' && (
+                    <div className="divide-y divide-[#E8EBE4]">
+                      {shown.map((book) => (
+                        <button
+                          key={`${book.title}__${book.author}`}
+                          onClick={() => setSelectedBook(book)}
+                          className="w-full px-5 sm:px-6 py-3 text-left hover:bg-[#F5F7F2] transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm text-[#4A5940] truncate">{book.title}</span>
+                                {book.favorite && (
+                                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                                )}
+                              </div>
+                              <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
+                              {!!book.themes?.length && (
+                                <span className="block text-xs text-[#96A888] mt-1">
+                                  {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
+                                </span>
                               )}
                             </div>
-                            <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
-                            {!!book.themes?.length && (
-                              <span className="block text-xs text-[#96A888] mt-1">
-                                {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                              </span>
-                            )}
+                            <span className="text-xs text-[#96A888] flex-shrink-0">View</span>
                           </div>
-                          <span className="text-xs text-[#96A888] flex-shrink-0">View</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
