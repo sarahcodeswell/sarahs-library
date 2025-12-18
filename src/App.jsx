@@ -468,7 +468,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
                 className={`w-full h-full object-cover ${coverLoaded ? '' : 'hidden'}`}
                 loading="lazy"
                 onLoad={() => setCoverLoaded(true)}
-                onError={() => { setCoverUrl(null); setCoverLoaded(false); }}
+                onError={() => { setCoverLoaded(false); }}
               />
             ) : (
               <Book className="w-4 h-4 text-[#96A888]" />
@@ -957,7 +957,7 @@ function AboutSection({ onShare }) {
           <h3 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-3">Why I Built This</h3>
           <div className="space-y-2.5 text-xs sm:text-sm text-[#5F7252] leading-relaxed">
             <p>
-              I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ✨.
+              I've always been the friend people call when they need a book recommendation. "I want something that makes me feel deeply," they'll say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ✨.
             </p>
             <p>
               So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
@@ -1401,7 +1401,7 @@ Use the same Top 3 response format.`;
   };
 
   return (
-    <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
+    <div className="min-h-screen font-sans flex flex-col" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
       <Analytics />
       <header className="bg-[#FDFBF4]/90 backdrop-blur-md border-b border-[#D4DAD0] sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
@@ -1649,7 +1649,7 @@ Use the same Top 3 response format.`;
           </div>
         </main>
       ) : (
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 min-h-0 flex flex-col">
           <div className="mb-4 flex justify-center">
             <div className="w-full max-w-sm bg-[#E8EBE4] rounded-2xl p-1 border border-[#D4DAD0] shadow-sm">
               <div className="grid grid-cols-2 gap-1">
@@ -1723,7 +1723,7 @@ Use the same Top 3 response format.`;
             </div>
           )}
           
-          <div className="flex-1 overflow-y-auto pb-4">
+          <div className="flex-1 min-h-0 overflow-y-auto pb-4">
             {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
@@ -1771,66 +1771,70 @@ Use the same Top 3 response format.`;
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
-            {suggestionChips.map(suggestion => (
-              <button
-                key={suggestion}
-                onClick={() => setInputValue(suggestion)}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
+          {messages.length <= 2 && (
+            <>
+              <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
+                {suggestionChips.map(suggestion => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setInputValue(suggestion)}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
 
-          <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
-            <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
-              <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
-              {importError ? (
-                <span className="text-red-700">{importError}</span>
-              ) : (
-                <>
-                  Upload a Goodreads CSV to avoid repeats and see what we share.
-                  {importedLibrary?.items?.length ? (
+              <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
+                  <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
+                  {importError ? (
+                    <span className="text-red-700">{importError}</span>
+                  ) : (
                     <>
-                      {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
-                      <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
+                      Upload a Goodreads CSV to avoid repeats and see what we share.
+                      {importedLibrary?.items?.length ? (
+                        <>
+                          {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
+                          <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
+                        </>
+                      ) : null}
                     </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {importedLibrary?.items?.length ? (
+                    <button
+                      onClick={handleClearImport}
+                      className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                    >
+                      Clear
+                    </button>
                   ) : null}
-                </>
-              )}
-            </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {importedLibrary?.items?.length ? (
-                <button
-                  onClick={handleClearImport}
-                  className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
-                >
-                  Clear
-                </button>
-              ) : null}
-
-              <button
-                onClick={() => { setImportError(''); importFileInputRef.current?.click(); }}
-                className="inline-flex items-center gap-2 text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-                {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
-              </button>
-              <input
-                ref={importFileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  e.target.value = '';
-                  handleImportGoodreadsCsv(f);
-                }}
-              />
-            </div>
-          </div>
+                  <button
+                    onClick={() => importFileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
+                  </button>
+                  <input
+                    ref={importFileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = '';
+                      handleImportGoodreadsCsv(f);
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="mt-6 text-xs text-[#7A8F6C] font-light text-center">
             <div>For the ❤️ of reading.</div>
