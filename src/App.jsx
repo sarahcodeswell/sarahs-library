@@ -1097,7 +1097,7 @@ export default function App() {
       });
 
     void url;
-    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: 'Thanks <3' }));
+    setFeedbackStatus(s => ({ ...s, isSendingThanks: true, thanksMsg: 'Thanks ❤️' }));
     setTimeout(() => setFeedbackStatus(s => ({ ...s, isSendingThanks: false })), 700);
     setTimeout(() => setFeedbackStatus(s => ({ ...s, thanksMsg: '' })), 2000);
   };
@@ -1179,7 +1179,7 @@ export default function App() {
               >
                 <span className="text-base leading-none">❤️</span>
                 <span className="hidden sm:inline ml-2 text-sm font-medium">
-                  Thanks &lt;3{typeof thanksCount === 'number' ? ` · ${thanksCount}` : ''}
+                  Thanks ❤️{typeof thanksCount === 'number' ? ` ${thanksCount}` : ''}
                 </span>
               </button>
 
@@ -1434,7 +1434,7 @@ export default function App() {
                 title="Say thanks"
               >
                 <span className="text-sm leading-none">❤️</span>
-                <span className="ml-2">Thanks &lt;3{typeof thanksCount === 'number' ? ` · ${thanksCount}` : ''}</span>
+                <span className="ml-2">Thanks ❤️{typeof thanksCount === 'number' ? ` ${thanksCount}` : ''}</span>
               </button>
 
               <button
