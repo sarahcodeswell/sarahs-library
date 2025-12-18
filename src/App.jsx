@@ -1,8 +1,147 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart } from 'lucide-react';
+import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
+
+const BOOKSHOP_AFFILIATE_ID = '119544';
+
+// Parse structured recommendations from AI response
+function parseRecommendations(text) {
+  const recommendations = [];
+  const lines = text.split('\n');
+  let current = null;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    if (trimmed.startsWith('Title:')) {
+      if (current) recommendations.push(current);
+      current = { title: trimmed.replace('Title:', '').trim() };
+    } else if (current) {
+      if (trimmed.startsWith('Author:')) {
+        current.author = trimmed.replace('Author:', '').trim();
+      } else if (trimmed.startsWith('Why This Fits:')) {
+        current.why = trimmed.replace('Why This Fits:', '').trim();
+      } else if (trimmed.startsWith('Description:')) {
+        current.description = trimmed.replace('Description:', '').trim();
+      } else if (trimmed.startsWith('Reputation:')) {
+        current.reputation = trimmed.replace('Reputation:', '').trim();
+      } else if (trimmed.startsWith('Content Note:')) {
+        current.contentNote = trimmed.replace('Content Note:', '').trim();
+      }
+    }
+  }
+  
+  if (current && current.title) recommendations.push(current);
+  return recommendations;
+}
+
+// Check if message contains structured recommendations
+function hasStructuredRecommendations(text) {
+  return text.includes('Title:') && text.includes('Why This Fits:');
+}
+
+function RecommendationCard({ rec, index }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  const handleLinkClick = (destination) => {
+    track('book_link_click', {
+      book_title: rec.title,
+      book_author: rec.author || '',
+      destination: destination,
+      source: 'recommendation_card'
+    });
+  };
+
+  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}`;
+  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${rec.author || ''}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
+
+  return (
+    <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
+      >
+        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
+          {index + 1}
+        </span>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-[#4A5940] text-sm">{rec.title}</h4>
+          {rec.author && <p className="text-xs text-[#7A8F6C]">{rec.author}</p>}
+          <p className="text-xs text-[#5F7252] mt-1">{rec.why}</p>
+        </div>
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-1" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-1" />
+        )}
+      </button>
+      
+      {expanded && (
+        <div className="px-4 pb-4 pt-0 border-t border-[#E8EBE4]">
+          <div className="pt-3 space-y-2">
+            {rec.description && (
+              <p className="text-xs text-[#5F7252] leading-relaxed">{rec.description}</p>
+            )}
+            {rec.reputation && (
+              <p className="text-xs text-[#7A8F6C]">
+                <span className="font-medium">Reputation:</span> {rec.reputation}
+              </p>
+            )}
+            {rec.contentNote && rec.contentNote.toLowerCase() !== 'none' && (
+              <p className="text-xs text-amber-600">
+                <span className="font-medium">Content Note:</span> {rec.contentNote}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex gap-2 mt-3">
+            <a
+              href={goodreadsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleLinkClick('goodreads')}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Goodreads
+            </a>
+            <a
+              href={bookshopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleLinkClick('bookshop')}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#4A7C59] text-white rounded-lg text-xs hover:bg-[#3d6649] transition-colors"
+            >
+              <ShoppingBag className="w-3 h-3" />
+              Buy Local
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FormattedRecommendations({ text }) {
+  const recommendations = parseRecommendations(text);
+  
+  // Extract the header (everything before the first recommendation)
+  const headerMatch = text.match(/^(.*?)(?=\[RECOMMENDATION|\nTitle:)/s);
+  const header = headerMatch ? headerMatch[1].trim() : '';
+  
+  return (
+    <div className="space-y-3">
+      {header && (
+        <p className="text-sm font-medium text-[#4A5940]">{header}</p>
+      )}
+      {recommendations.map((rec, idx) => (
+        <RecommendationCard key={idx} rec={rec} index={idx} />
+      ))}
+    </div>
+  );
+}
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 
@@ -27,40 +166,74 @@ const getBookshopSearchUrl = (title, author) => {
 };
 
 const getSystemPrompt = (mode, catalog) => {
-  const basePersonality = `You are Sarah, a warm, thoughtful book lover. You're passionate about reading and love helping people find their next great book.
+  const responseFormat = `
+RESPONSE FORMAT:
+When recommending books, always respond with exactly this structure:
 
-Your reading personality:
-- You're drawn to women's interior lives and untold stories
-- You read for emotional truth, not escapism
-- You grapple with questions of identity and belonging
-- You're a spiritual seeker with eclectic tastes
-- You care deeply about justice, especially invisible injustices
+📚 My Top 3 Picks for You
 
-Be conversational and personal, like chatting with a friend. Keep responses concise but warm (2-3 paragraphs max).`;
+[RECOMMENDATION 1]
+Title: [Book Title]
+Author: [Author Name]
+Why This Fits: [1-2 sentences explaining why this matches their request]
+Description: [2-3 sentence description of the book]
+Reputation: [Mention Goodreads rating, awards, or Indie Next List recognition if notable]
+Content Note: [Brief content warnings if applicable, or "None" if family-friendly]
+
+[RECOMMENDATION 2]
+...same format...
+
+[RECOMMENDATION 3]
+...same format...
+
+Keep the "Why This Fits" specific to what the user asked for. Be direct and helpful, not overly chatty.`;
+
+  const qualityGuidelines = `
+QUALITY GUIDELINES:
+- Prioritize books that are critically acclaimed (high Goodreads ratings, major awards)
+- Consider Indie Next List picks and independent bookstore favorites
+- Include a mix of well-known titles and hidden gems
+- Be specific about WHY each book matches their request
+- If they ask for something vague, ask one clarifying question before recommending`;
 
   if (mode === 'library') {
     const catalogSummary = catalog.map(b => 
       `- "${b.title}" by ${b.author} (${b.genre})${b.favorite ? ' ⭐FAVORITE' : ''}: ${b.description}`
     ).join('\n');
     
-    return `${basePersonality}
+    return `You are Sarah, a thoughtful book curator sharing recommendations from your personal library of 190+ books.
 
-You can ONLY recommend books from your personal library below. If asked about books not in your collection, acknowledge you don't own them and suggest similar books you DO have.
+Your reading personality:
+- Drawn to women's interior lives and untold stories
+- Reading for emotional truth, not escapism
+- Grappling with questions of identity and belonging
+- A spiritual seeker with eclectic tastes
+- Deep care for justice, especially invisible injustices
+${responseFormat}
+${qualityGuidelines}
+
+IMPORTANT: You can ONLY recommend books from your personal library below. If asked about books not in your collection, acknowledge you don't own them and offer to switch to "Discover New" mode.
 
 MY LIBRARY:
 ${catalogSummary}`;
   } else {
-    return `${basePersonality}
+    return `You are Sarah, a thoughtful book curator helping discover new books beyond your personal collection.
 
-You're helping discover NEW books beyond your personal library. Use your broad knowledge of literature to recommend books the user might enjoy. Consider their interests, mood, and reading preferences.
+Your reading personality informs your taste:
+- Drawn to women's interior lives and untold stories
+- Reading for emotional truth, not escapism  
+- Grappling with questions of identity and belonging
+- A spiritual seeker with eclectic tastes
+- Deep care for justice, especially invisible injustices
+${responseFormat}
+${qualityGuidelines}
 
-For context, here are some of your favorite books and themes to understand the user's taste:
-- Kristin Hannah, Paula McLain, Marie Benedict (women's historical fiction)
-- Khaled Hosseini, Yaa Gyasi (identity and emotional depth)
-- Brené Brown (vulnerability and growth)
-- Books about justice, invisible injustices, and untold stories
-
-Recommend books you genuinely think are excellent. Include a mix of well-known and lesser-known titles.`;
+Draw from your broad knowledge of literature. Prioritize:
+- Books with strong Goodreads ratings (4.0+)
+- Award winners (Pulitzer, National Book Award, Booker, Women's Prize)
+- Indie Next List selections
+- Independent bookstore staff picks
+- Both well-known titles and hidden gems that deserve more attention`;
   }
 };
 
@@ -244,8 +417,19 @@ function ChatSearchBox({ onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, showSearchOption }) {
+function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
   const [showSearch, setShowSearch] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const isStructured = !isUser && hasStructuredRecommendations(message);
+
+  const handleFeedback = (type) => {
+    setFeedback(type);
+    track('recommendation_feedback', {
+      feedback_type: type,
+      message_index: messageIndex,
+      message_preview: message.substring(0, 100)
+    });
+  };
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -256,29 +440,77 @@ function ChatMessage({ message, isUser, showSearchOption }) {
           className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
         />
       )}
-      <div className="flex flex-col max-w-[80%]">
+      <div className="flex flex-col max-w-[85%]">
         <div className={`rounded-2xl px-5 py-3 ${
           isUser 
             ? 'bg-[#5F7252] text-white rounded-br-sm' 
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+          {isStructured ? (
+            <FormattedRecommendations text={message} />
+          ) : (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+          )}
         </div>
         
         {!isUser && showSearchOption && (
-          <>
-            {!showSearch ? (
-              <button
-                onClick={() => setShowSearch(true)}
-                className="self-start mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
-              >
-                <Search className="w-3.5 h-3.5" />
-                Find this book...
-              </button>
-            ) : (
+          <div className="mt-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleFeedback('up')}
+                  disabled={feedback !== null}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    feedback === 'up'
+                      ? 'text-[#5F7252] bg-[#E8EBE4]'
+                      : feedback === 'down'
+                      ? 'text-[#D4DAD0] cursor-not-allowed'
+                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
+                  }`}
+                  title="Helpful"
+                >
+                  <ThumbsUp className={`w-3.5 h-3.5 ${feedback === 'up' ? 'fill-current' : ''}`} />
+                </button>
+                <button
+                  onClick={() => handleFeedback('down')}
+                  disabled={feedback !== null}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    feedback === 'down'
+                      ? 'text-[#5F7252] bg-[#E8EBE4]'
+                      : feedback === 'up'
+                      ? 'text-[#D4DAD0] cursor-not-allowed'
+                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
+                  }`}
+                  title="Not helpful"
+                >
+                  <ThumbsDown className={`w-3.5 h-3.5 ${feedback === 'down' ? 'fill-current' : ''}`} />
+                </button>
+                {feedback && (
+                  <span className="text-xs text-[#96A888] ml-1">Thanks!</span>
+                )}
+              </div>
+              
+              {!isStructured && (
+                <>
+                  <div className="w-px h-4 bg-[#D4DAD0]" />
+                  
+                  {!showSearch && (
+                    <button
+                      onClick={() => setShowSearch(true)}
+                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      Find this book...
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            
+            {showSearch && !isStructured && (
               <ChatSearchBox onClose={() => setShowSearch(false)} />
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -598,6 +830,7 @@ export default function App() {
                 message={msg.text} 
                 isUser={msg.isUser} 
                 showSearchOption={!msg.isUser && idx > 0}
+                messageIndex={idx}
               />
             ))}
             {isLoading && (
