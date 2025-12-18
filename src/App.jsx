@@ -781,34 +781,26 @@ function SiteFooter({ onOpenFeedback, onSendHeart }) {
   return (
     <footer className="mt-8 sm:mt-10 border-t border-[#D4DAD0] bg-[#FDFBF4] font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">
-              Product
-            </div>
-
-            <div className="mt-3 flex flex-col gap-2">
-              <button
-                onClick={onOpenFeedback}
-                className="text-left text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-              >
-                Send Feature Request
-              </button>
-              <button
-                onClick={onSendHeart}
-                className="text-left text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-                title="Say thanks"
-              >
-                Say Thanks ❤️
-              </button>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-[#7A8F6C] font-light">
+            <span className="font-medium text-[#5F7252]">Have feedback?</span> I’d love to hear it.
           </div>
 
-          <div />
-        </div>
-
-        <div className="mt-6 flex justify-end text-xs text-[#7A8F6C] font-light">
-          Darkridge 2025
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
+            <button
+              onClick={onOpenFeedback}
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
+            >
+              Send Feature Request
+            </button>
+            <button
+              onClick={onSendHeart}
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-sm font-medium"
+              title="Say thanks"
+            >
+              Say Thanks ❤️
+            </button>
+          </div>
         </div>
       </div>
     </footer>
