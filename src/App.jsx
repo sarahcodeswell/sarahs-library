@@ -456,11 +456,11 @@ export default function App() {
       {view === 'browse' ? (
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-lg relative">
-            <img src="/books.jpg" alt="Open book on desk" className="w-full h-40 sm:h-48 object-cover" />
+            <img src="/books.jpg" alt="Open book on desk" className="w-full h-48 sm:h-56 object-cover object-center transform scale-90 origin-center" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#2C2C2C]/60 via-[#2C2C2C]/30 to-transparent flex items-end sm:items-center">
               <div className="px-5 sm:px-8 py-4 sm:py-0">
                 <h2 className="text-white font-serif text-2xl sm:text-3xl mb-1 sm:mb-2 drop-shadow-md">Welcome to My Library</h2>
-                <p className="text-white/80 text-xs sm:text-sm font-light drop-shadow-sm">Find your next read across my favorite genres.</p>
+                <p className="text-white/80 text-xs sm:text-sm font-light drop-shadow-sm">Find your next good read at your local bookstore.</p>
               </div>
             </div>
           </div>
@@ -580,7 +580,7 @@ export default function App() {
 
           {messages.length <= 2 && (
             <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
-              <img src="/books.jpg" alt="Open book on desk" className="w-full h-28 sm:h-36 object-cover" />
+              <img src="/books.jpg" alt="Open book on desk" className="w-full h-36 sm:h-44 object-cover object-center" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#2C2C2C]/60 via-[#2C2C2C]/30 to-transparent flex items-end sm:items-center">
                 <div className="px-5 sm:px-6 py-3 sm:py-0">
                   <h2 className="text-white font-serif text-lg sm:text-xl drop-shadow-md">
