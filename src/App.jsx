@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -643,7 +643,7 @@ function ChatMessage({ message, isUser, messageIndex, chatMode }) {
         <div className={`rounded-2xl px-5 py-3 ${
           isUser 
             ? 'bg-[#5F7252] text-white rounded-br-sm' 
-            : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
+            : 'bg-[#F8F6EE] text-[#4A5940] rounded-bl-sm border border-[#E8EBE4]'
         }`}> 
           {isStructured ? (
             <FormattedRecommendations text={message} messageIndex={messageIndex} chatMode={chatMode} />
@@ -705,7 +705,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
+    { text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -720,6 +720,9 @@ export default function App() {
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
   const hasHydratedChatRef = useRef(false);
+  const [selectedThemes, setSelectedThemes] = useState([]);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
 
   const getInitialMessagesForMode = (mode) => {
@@ -730,7 +733,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!",
+      text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together.",
       isUser: false
     }];
   };
@@ -740,6 +743,16 @@ export default function App() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (attachmentMenuRef.current && !attachmentMenuRef.current.contains(event.target)) {
+        setShowAttachmentMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     try {
@@ -947,8 +960,12 @@ export default function App() {
         ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 18).join('\n')
         : '';
 
+      const themeFilterText = selectedThemes.length > 0
+        ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
+        : '';
+
       const userContent = chatMode === 'library'
-        ? `LIBRARY SHORTLIST:\n${limitedLibraryShortlist}\n\nUSER REQUEST:\n${userMessage}`
+        ? `LIBRARY SHORTLIST:\n${limitedLibraryShortlist}${themeFilterText}\n\nUSER REQUEST:\n${userMessage}`
         : (() => {
             const parts = [];
             if (discoverAvoidShortlist) {
@@ -959,6 +976,9 @@ export default function App() {
               parts.push(`USER LIBRARY (imported):\n${owned}`);
             }
             parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned. Before finalizing your 3 picks, double-check that none of the 3 titles appear in the DO NOT RECOMMEND list.');
+            if (themeFilterText) {
+              parts.push(themeFilterText.trim());
+            }
             parts.push(`USER REQUEST:\n${userMessage}`);
             return parts.join('\n\n');
           })();
@@ -1029,13 +1049,10 @@ export default function App() {
     }
   };
 
-  const suggestionChips = chatMode === 'library' 
-    ? ["What's your favorite book?", "Something about strong women", "I need a good cry"]
-    : ["Best books of 2025", "Hidden gems like Kristin Hannah", "Something completely different"];
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
-    const title = "Sarah Books";
+    const title = "Sarah's Books";
     const text = "I thought you’d like Sarah’s Library — ask for book recommendations from her shelves.";
 
     track('share_click', { source: 'chat' });
@@ -1104,9 +1121,8 @@ export default function App() {
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4DAD0] shadow-sm"
               />
               <div>
-                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah Books</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide hidden sm:block">A Curated Collection of Infinite Possibilities</p>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide sm:hidden">A Curated Collection of Infinite Possibilities</p>
+                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">A Curated Collection of Infinite Possibilities</p>
               </div>
             </div>
             
@@ -1140,52 +1156,29 @@ export default function App() {
           </div>
         </div>
       </header>
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
-          <div className="mb-3 flex justify-center sm:hidden">
-            <div className="w-full max-w-sm flex items-center justify-between gap-2">
-              <button
-                onClick={handleSendHeart}
-                disabled={feedbackStatus.isSendingThanks}
-                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Say thanks"
-              >
-                <span className="ml-2">Thanks ❤️{typeof thanksCount === 'number' ? ` ${thanksCount}` : ''}</span>
-              </button>
-
-              <button
-                onClick={handleShare}
-                className="inline-flex items-center justify-center flex-1 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
-                title="Share this page"
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="ml-2">Share</span>
-              </button>
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
+          <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
+            <div className="bg-[#FDFBF4]">
+              <img
+                src="/books.jpg"
+                alt="Open book on desk"
+                loading="lazy"
+                className="block w-full h-[clamp(120px,16vh,220px)] object-cover object-center"
+              />
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
+              <div className="px-5 sm:px-8 py-4">
+                <h2 className="text-[#4A5940] font-serif text-base sm:text-xl mb-1 leading-snug break-words">
+                  Find Your Next Read
+                </h2>
+                <p className="text-[#7A8F6C] text-sm sm:text-base font-light leading-relaxed">
+                  Browse my personal collection or discover something new.
+                </p>
+              </div>
             </div>
           </div>
 
-          {messages.length <= 2 && (
-            <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
-              <div className="bg-[#FDFBF4]">
-                <img
-                  src="/books.jpg"
-                  alt="Open book on desk"
-                  className="block w-full h-[clamp(120px,16vh,220px)] object-cover object-center"
-                />
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
-                <div className="px-5 sm:px-8 py-4">
-                  <h2 className="text-[#4A5940] font-serif text-base sm:text-xl mb-1 leading-snug break-words">
-                    {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
-                  </h2>
-                  <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
-                    {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+          <div className="mb-4 min-h-[120px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-4" role="log" aria-live="polite" aria-label="Chat conversation">
             {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
@@ -1202,7 +1195,7 @@ export default function App() {
                   alt="Sarah"
                   className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
                 />
-                <div className="bg-white rounded-2xl rounded-bl-sm px-5 py-3 border border-[#D4DAD0]">
+                <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-3 border border-[#E8EBE4]">
                   <div className="text-xs text-[#7A8F6C] font-light mb-1">Curating your picks…</div>
                   <div className="flex gap-1.5">
                     <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -1215,122 +1208,176 @@ export default function App() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
-            <button
-              onClick={() => setChatMode(chatMode === 'discover' ? 'library' : 'discover')}
-              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center text-base transition-all flex-shrink-0 ${
-                chatMode === 'discover'
-                  ? 'bg-[#E8EBE4] border-[#96A888] text-[#4A5940]'
-                  : 'bg-white border-[#D4DAD0] text-[#96A888] hover:text-[#5F7252] hover:border-[#96A888]'
-              }`}
-              title={chatMode === 'discover' ? 'Anywhere (AI discovery) — click to use My Library' : 'My Library — click for Anywhere (AI discovery)'}
-              aria-label={chatMode === 'discover' ? 'Switch to My Library' : 'Switch to Anywhere'}
-            >
-              ♾️
-            </button>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              placeholder="Ask me for a recommendation..."
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base"
-              disabled={isLoading}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              className="px-4 sm:px-5 py-2 sm:py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-            >
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
-            {suggestionChips.map(suggestion => (
-              <button
-                key={suggestion}
-                onClick={() => setInputValue(suggestion)}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-
-          {messages.length <= 2 && (
-            <div className="mt-3 sm:mt-4 w-full rounded-xl bg-white border border-[#D4DAD0] px-3 py-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="text-[11px] text-[#7A8F6C] font-medium uppercase tracking-wider mr-1">Themes</div>
-                {Object.entries(themeInfo).map(([key, info]) => (
-                  <button
-                    key={key}
-                    onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
-                    className="px-2.5 py-1.5 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-                    title={`${info.label} — ${themeDescriptions[key]}`}
-                    aria-label={`${info.label}. ${themeDescriptions[key]}`}
-                  >
-                    {info.emoji} {info.label}
-                  </button>
-                ))}
+          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
+              <div className="relative" ref={attachmentMenuRef}>
+                <button
+                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                  className="w-8 h-8 rounded-lg border border-[#E8EBE4] bg-white hover:bg-[#F8F6EE] transition-colors flex-shrink-0 flex items-center justify-center text-[#7A8F6C] hover:text-[#5F7252]"
+                  aria-label={importedLibrary?.items?.length ? 'Manage Goodreads library' : 'Upload Goodreads CSV'}
+                  aria-expanded={showAttachmentMenu}
+                >
+                  {importedLibrary?.items?.length ? (
+                    <Library className="w-4 h-4" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                </button>
+                {showAttachmentMenu && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
+                    <button
+                      onClick={() => {
+                        setImportError('');
+                        importFileInputRef.current?.click();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload Goodreads CSV
+                    </button>
+                    {importedLibrary?.items?.length && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Clear imported Goodreads library (${importedOverlap.total} books)?`)) {
+                            handleClearImport();
+                          }
+                          setShowAttachmentMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Clear library ({importedOverlap.total} books)
+                      </button>
+                    )}
+                  </div>
+                )}
+                {importError && (
+                  <div className="absolute top-full left-0 mt-1 text-xs text-red-700 bg-white px-2 py-1 rounded border border-red-200 shadow-sm whitespace-nowrap">
+                    {importError}
+                  </div>
+                )}
               </div>
+              <textarea
+                value={inputValue}
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  e.target.style.height = '24px';
+                  const newHeight = Math.min(e.target.scrollHeight, 200);
+                  e.target.style.height = newHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || e.shiftKey) return;
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                placeholder="What are you in the mood for?"
+                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
+                disabled={isLoading}
+                style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
+                aria-label="Send message"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <button
+              onClick={() => setChatMode('library')}
+              className={`text-xs font-medium transition-colors ${
+                chatMode === 'library'
+                  ? 'text-[#4A5940]'
+                  : 'text-[#96A888] hover:text-[#5F7252]'
+              }`}
+              aria-label="Search my library"
+              aria-pressed={chatMode === 'library'}
+            >
+              My Library
+            </button>
+            <span className="text-[#D4DAD0]" aria-hidden="true">/</span>
+            <button
+              onClick={() => setChatMode('discover')}
+              className={`text-xs font-medium transition-colors ${
+                chatMode === 'discover'
+                  ? 'text-[#4A5940]'
+                  : 'text-[#96A888] hover:text-[#5F7252]'
+              }`}
+              aria-label="Discover all books"
+              aria-pressed={chatMode === 'discover'}
+            >
+              All Books
+            </button>
+          </div>
+
+          {(selectedThemes.length > 0 || chatMode === 'discover') && (
+            <div className="mb-2 flex items-center justify-center gap-2 text-xs text-[#7A8F6C]">
+              <span>
+                {selectedThemes.length > 0 && (
+                  <>
+                    Filtering: {selectedThemes.map(t => themeInfo[t]?.label).join(', ')}
+                    {chatMode === 'discover' && ' · '}
+                  </>
+                )}
+                {chatMode === 'discover' && 'All Books'}
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedThemes([]);
+                  setChatMode('library');
+                }}
+                className="text-[#96A888] hover:text-[#5F7252] font-medium"
+              >
+                Clear all
+              </button>
             </div>
           )}
 
-          <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
-            <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
-              <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
-              {importError ? (
-                <span className="text-red-700">{importError}</span>
-              ) : (
-                <>
-                  Upload a Goodreads CSV to avoid repeats and see what we share.
-                  {importedLibrary?.items?.length ? (
-                    <>
-                      {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
-                      <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
-                    </>
-                  ) : null}
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {importedLibrary?.items?.length ? (
+          <div className="flex items-center justify-center gap-1.5">
+            {Object.entries(themeInfo).map(([key, info]) => {
+              const isSelected = selectedThemes.includes(key);
+              return (
                 <button
-                  onClick={handleClearImport}
-                  className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
+                  key={key}
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedThemes(prev => prev.filter(t => t !== key));
+                    } else {
+                      setSelectedThemes(prev => [...prev, key]);
+                      setInputValue(`Show me options in ${info.label}.`);
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all ${
+                    isSelected
+                      ? 'bg-[#E8EBE4] border-[#96A888] scale-110'
+                      : 'border-[#E8EBE4] bg-[#FDFBF4] hover:border-[#96A888] hover:bg-[#E8EBE4]'
+                  }`}
+                  aria-label={`${info.label} theme filter`}
+                  aria-pressed={isSelected}
+                  title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
                 >
-                  Clear
+                  {info.emoji}
                 </button>
-              ) : null}
-
-              <button
-                onClick={() => { setImportError(''); importFileInputRef.current?.click(); }}
-                className="inline-flex items-center gap-2 text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-                {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
-              </button>
-              <input
-                ref={importFileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  e.target.value = '';
-                  handleImportGoodreadsCsv(f);
-                }}
-              />
-            </div>
+              );
+            })}
           </div>
 
-          <div className="mt-6 text-xs text-[#7A8F6C] font-light text-center">
+          <input
+            ref={importFileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              handleImportGoodreadsCsv(f);
+            }}
+          />
+
+          <div className="mt-16 sm:mt-20 text-xs text-[#7A8F6C] font-light text-center">
             <div>For the ❤️ of reading.</div>
             <div className="mt-1">hello@sarahsbooks.com</div>
           </div>

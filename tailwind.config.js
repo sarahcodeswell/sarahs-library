@@ -30,8 +30,8 @@ export default {
           },
         },
         fontFamily: {
-          sans: ['Poppins', 'sans-serif'],
-          serif: ['Playfair Display', 'serif'],
+          sans: ['Inter', 'sans-serif'],
+          serif: ['Crimson Pro', 'serif'],
         },
       },
     },
