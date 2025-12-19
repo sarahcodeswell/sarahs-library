@@ -1062,7 +1062,7 @@ export default function App() {
 
       const chatHistory = messages
         .filter(m => m.isUser !== undefined)
-        .slice(-6)
+        .slice(-4)
         .map(m => ({
           role: m.isUser ? 'user' : 'assistant',
           content: m.text
@@ -1071,10 +1071,10 @@ export default function App() {
       const libraryShortlist = chatMode === 'library'
         ? String(buildLibraryContext(userMessage, bookCatalog) || '')
         : '';
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 40).join('\n');
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 25).join('\n');
 
       const discoverAvoidShortlist = chatMode === 'discover'
-        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 25).join('\n')
+        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 15).join('\n')
         : '';
 
       const userContent = chatMode === 'library'
@@ -1085,7 +1085,7 @@ export default function App() {
               parts.push(`SARAH'S LIBRARY SHORTLIST (DO NOT RECOMMEND):\n${discoverAvoidShortlist}`);
             }
             if (importedLibrary?.items?.length) {
-              const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+              const owned = importedLibrary.items.slice(0, 25).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
               parts.push(`USER LIBRARY (imported):\n${owned}`);
             }
             parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned.');
@@ -1378,7 +1378,11 @@ export default function App() {
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                handleSendMessage();
+              }}
               placeholder="Ask me for a recommendation..."
               className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base"
               disabled={isLoading}
