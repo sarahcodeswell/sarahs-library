@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -1133,35 +1133,6 @@ export default function App() {
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
-          <div className="mb-4 flex justify-center">
-            <div className="w-full max-w-sm bg-[#E8EBE4] rounded-2xl p-1 border border-[#D4DAD0] shadow-sm">
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  onClick={() => setChatMode('library')}
-                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
-                    chatMode === 'library'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  <Library className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  My Library
-                </button>
-                <button
-                  onClick={() => setChatMode('discover')}
-                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
-                    chatMode === 'discover'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  Discover New
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="mb-3 flex justify-center sm:hidden">
             <div className="w-full max-w-sm flex items-center justify-between gap-2">
               <button
@@ -1201,6 +1172,22 @@ export default function App() {
                   <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
                     {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
                   </p>
+
+                  <div className="mt-3">
+                    <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Curator Themes</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {Object.entries(themeInfo).map(([key, info]) => (
+                        <button
+                          key={key}
+                          onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
+                          className="px-3 py-1.5 rounded-full bg-white border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                          title={info.label}
+                        >
+                          {info.emoji} {info.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1234,6 +1221,33 @@ export default function App() {
               </div>
             )}
             <div ref={chatEndRef} />
+          </div>
+
+          <div className="mb-3">
+            <div className="w-full max-w-sm mx-auto bg-[#E8EBE4] rounded-full p-1 border border-[#D4DAD0] shadow-sm">
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  onClick={() => setChatMode('library')}
+                  className={`w-full px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                    chatMode === 'library'
+                      ? 'bg-white text-[#4A5940] shadow-sm'
+                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
+                  }`}
+                >
+                  My Library
+                </button>
+                <button
+                  onClick={() => setChatMode('discover')}
+                  className={`w-full px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                    chatMode === 'discover'
+                      ? 'bg-white text-[#4A5940] shadow-sm'
+                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
+                  }`}
+                >
+                  Anywhere
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
