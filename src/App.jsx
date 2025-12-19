@@ -3,18 +3,10 @@ import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Librar
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
+import { bumpLocalMetric, normalizeTitle, normalizeAuthor, parseGoodreadsCsv, buildLibraryContext } from './lib/libraryUtils.js';
+import { BOOKSHOP_AFFILIATE_ID, themeInfo } from './lib/libraryData.js';
 
-const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
-
-const STOP_WORDS = new Set([
-  'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
-]);
-
-function safeNumber(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
 
 function BrowseBookRow({ book, onClick }) {
   return (
@@ -42,47 +34,6 @@ function BrowseBookRow({ book, onClick }) {
   );
 }
 
-function bumpLocalMetric(key, by = 1) {
-  const inc = safeNumber(by, 1);
-  let next = inc;
-  try {
-    const cur = safeNumber(window.localStorage.getItem(key), 0);
-    next = cur + inc;
-    window.localStorage.setItem(key, String(next));
-  } catch (e) {
-    void e;
-  }
-  return next;
-}
-
-function tokenizeForSearch(text) {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, ' ')
-    .split(/\s+/)
-    .map(t => t.trim())
-    .filter(Boolean)
-    .filter(t => !STOP_WORDS.has(t));
-}
-
-function normalizeTitle(text) {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/\[[^\]]*\]/g, ' ')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function normalizeAuthor(text) {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 const CATALOG_TITLE_INDEX = (() => {
   const map = new Map();
   try {
@@ -96,131 +47,6 @@ const CATALOG_TITLE_INDEX = (() => {
   }
   return map;
 })();
-
-function parseCsvLine(line) {
-  const out = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (ch === ',' && !inQuotes) {
-      out.push(cur);
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur);
-  return out;
-}
-
-function parseGoodreadsCsv(text) {
-  const raw = String(text || '').replace(/^\uFEFF/, '');
-  const lines = raw.split(/\r?\n/).filter(Boolean);
-  if (!lines.length) return [];
-
-  const headers = parseCsvLine(lines[0]).map(h => String(h || '').trim());
-  const idxTitle = headers.findIndex(h => h.toLowerCase() === 'title');
-  const idxAuthor = headers.findIndex(h => h.toLowerCase() === 'author' || h.toLowerCase() === 'author l-f');
-  if (idxTitle < 0) return [];
-
-  const items = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCsvLine(lines[i]);
-    const title = String(cols[idxTitle] || '').trim();
-    const author = idxAuthor >= 0 ? String(cols[idxAuthor] || '').trim() : '';
-    if (!title) continue;
-    items.push({ title, author });
-  }
-  return items;
-}
-
-function buildLibraryContext(userMessage, catalog) {
-  const q = String(userMessage || '').toLowerCase();
-  const tokens = tokenizeForSearch(userMessage);
-
-  // Score books by simple lexical overlap. This is intentionally cheap and deterministic.
-  const scored = (catalog || []).map((b, idx) => {
-    const title = String(b.title || '');
-    const author = String(b.author || '');
-    const genre = String(b.genre || '');
-    const themes = Array.isArray(b.themes) ? b.themes : [];
-    const description = String(b.description || '');
-
-    const titleLc = title.toLowerCase();
-    const authorLc = author.toLowerCase();
-    const genreLc = genre.toLowerCase();
-    const descLc = description.toLowerCase();
-    const themesLc = themes.map(t => String(t || '').toLowerCase());
-
-    let score = 0;
-    if (q && titleLc.includes(q)) score += 18;
-    if (q && authorLc.includes(q)) score += 10;
-    if (q && descLc.includes(q)) score += 6;
-
-    for (const t of tokens) {
-      if (titleLc.includes(t)) score += 6;
-      if (authorLc.includes(t)) score += 4;
-      if (genreLc.includes(t)) score += 3;
-      if (themesLc.includes(t)) score += 3;
-      if (descLc.includes(t)) score += 1;
-    }
-
-    if (b.favorite) score += 0.75;
-
-    return { book: b, score, idx };
-  });
-
-  scored.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
-
-  // Keep this shortlist small: it is sent to the model per request.
-  // Always include some favorites for breadth, plus top matches for relevance.
-  const favorites = scored.filter(s => s.book?.favorite).slice(0, 12).map(s => s.book);
-  const topMatches = scored.slice(0, 24).map(s => s.book);
-
-  const picked = [];
-  const seen = new Set();
-  const add = (b) => {
-    const key = `${String(b?.title || '').toLowerCase()}|${String(b?.author || '').toLowerCase()}`;
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    picked.push(b);
-  };
-  favorites.forEach(add);
-  topMatches.forEach(add);
-  // Ensure we provide enough options even for vague queries.
-  for (const s of scored) {
-    if (picked.length >= 28) break;
-    add(s.book);
-  }
-
-  const formatBookLine = (b, includeDescription) => {
-    const title = String(b.title || '').trim();
-    const author = String(b.author || '').trim();
-    const genre = String(b.genre || '').trim();
-    const themes = Array.isArray(b.themes) && b.themes.length ? ` themes: ${b.themes.join(', ')}` : '';
-    const fav = b.favorite ? ' ⭐' : '';
-
-    if (!includeDescription) {
-      return `- "${title}" by ${author} [${genre}]${themes}${fav}`;
-    }
-
-    const desc = String(b.description || '').trim();
-    const short = desc.length > 120 ? `${desc.slice(0, 117)}…` : desc;
-    return `- "${title}" by ${author} [${genre}]${themes}${fav} — ${short}`;
-  };
-
-  const header = `Shortlisted books from Sarah's library (shown: ${picked.length} / total: ${(catalog || []).length}).`;
-  const lines = picked.map((b, i) => formatBookLine(b, i < 10));
-  return [header, ...lines].join('\n');
-}
 
  function FormattedText({ text }) {
    const lines = String(text || '').split('\n');
@@ -244,13 +70,7 @@ function buildLibraryContext(userMessage, catalog) {
    );
  }
 
-const themeInfo = {
-  women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  identity: { emoji: "🎭", label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
-  spiritual: { emoji: "🕯", label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
-  justice: { emoji: "⚖️", label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
-};
+ 
 
 // Parse structured recommendations from AI response
 function parseRecommendations(text) {
@@ -263,32 +83,24 @@ function parseRecommendations(text) {
     
     if (trimmed.startsWith('Title:')) {
       if (current) recommendations.push(current);
-      current = { title: String(trimmed.replace('Title:', '')).trim() };
+      current = { title: trimmed.replace('Title:', '').trim() };
     } else if (current) {
       if (trimmed.startsWith('Author:')) {
-        current.author = String(trimmed.replace('Author:', '')).trim();
+        current.author = trimmed.replace('Author:', '').trim();
       } else if (trimmed.startsWith('Why This Fits:')) {
-        current.why = String(trimmed.replace('Why This Fits:', '')).trim();
+        current.why = trimmed.replace('Why This Fits:', '').trim();
       } else if (trimmed.startsWith('Why:')) {
-        current.why = String(trimmed.replace('Why:', '')).trim();
+        current.why = trimmed.replace('Why:', '').trim();
       } else if (trimmed.startsWith('Description:')) {
-        current.description = String(trimmed.replace('Description:', '')).trim();
+        current.description = trimmed.replace('Description:', '').trim();
       } else if (trimmed.startsWith('Reputation:')) {
-        current.reputation = String(trimmed.replace('Reputation:', '')).trim();
+        current.reputation = trimmed.replace('Reputation:', '').trim();
       }
     }
   }
   
   if (current && current.title) recommendations.push(current);
-  return recommendations
-    .map(r => ({
-      title: String(r?.title || '').trim(),
-      author: String(r?.author || '').trim(),
-      why: String(r?.why || '').trim(),
-      description: String(r?.description || '').trim(),
-      reputation: String(r?.reputation || '').trim(),
-    }))
-    .filter(r => r.title);
+  return recommendations;
 }
 
 // Check if message contains structured recommendations
@@ -322,8 +134,8 @@ function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
       feedback_type: type,
       message_index: messageIndex,
       recommendation_index: index,
-      book_title: String(rec?.title || '').trim(),
-      book_author: String(rec?.author || '').trim(),
+      book_title: rec?.title || '',
+      book_author: rec?.author || '',
       source: 'recommendation_card'
     });
   };
@@ -502,17 +314,7 @@ function FormattedRecommendations({ text, messageIndex, onOpenBook }) {
   );
 }
 
-const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
-
-const genreDescriptions = {
-  "Literary Fiction": "Character-driven, beautifully written novels.",
-  "Historical Fiction": "Immersive stories rooted in real eras and events.",
-  "Memoir": "True personal stories and lived experience.",
-  "Self-Help & Spirituality": "Practical tools, inner work, and meaning-making.",
-  "Thriller & Mystery": "High-stakes suspense, twists, and page-turners.",
-  "Romance & Contemporary": "Modern relationships, heart, and real-life stakes.",
-  "Nonfiction": "Ideas, history, culture, and learning—true and researched."
-};
+ 
 
 const getGoodreadsSearchUrl = (title, author) => {
   const t = String(title || '').trim();
@@ -647,11 +449,8 @@ function BookDetail({ book, onClose, onRecommendMoreLikeThis }) {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Recommend more like this (opens Ask Sarah)
+              Recommend more like this
             </button>
-            <div className="mt-1 text-[11px] text-[#96A888] font-light">
-              I’ll take you back to chat and suggest 3 more.
-            </div>
           </div>
 
           <div className="mt-4 flex flex-col sm:flex-row gap-3">
@@ -902,14 +701,10 @@ function AboutSection({ onShare }) {
 
 export default function App() {
   const [view, setView] = useState('chat');
-  const [selectedGenre, setSelectedGenre] = useState('All');
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
-  const chatModeRef = useRef('library');
-  const [expandedGenres, setExpandedGenres] = useState({});
-  const [genreShowAll, setGenreShowAll] = useState({});
+  const [expandedThemes, setExpandedThemes] = useState({});
+  const [themeShowAll, setThemeShowAll] = useState({});
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -931,10 +726,6 @@ export default function App() {
   const chatStorageKey = 'sarah_books_chat_history_v1';
   const nextDiscoverIncludeShortlistRef = useRef(false);
 
-  useEffect(() => {
-    chatModeRef.current = chatMode;
-  }, [chatMode]);
-
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
       return [{
@@ -947,6 +738,8 @@ export default function App() {
       isUser: false
     }];
   };
+
+  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1046,14 +839,23 @@ export default function App() {
     }
   }, [messages, chatMode]);
 
-  const filteredBooks = React.useMemo(() => {
-    return bookCatalog.filter(book => {
-      if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
-      if (selectedTheme && !book.themes.includes(selectedTheme)) return false;
-      if (showFavoritesOnly && !book.favorite) return false;
-      return true;
-    });
-  }, [selectedGenre, selectedTheme, showFavoritesOnly]);
+  const booksByTheme = React.useMemo(() => {
+    const out = {};
+    for (const [key] of Object.entries(themeInfo)) {
+      out[key] = [];
+    }
+    for (const book of bookCatalog) {
+      const themes = Array.isArray(book?.themes) ? book.themes : [];
+      for (const t of themes) {
+        if (!out[t]) out[t] = [];
+        out[t].push(book);
+      }
+    }
+    for (const [k, list] of Object.entries(out)) {
+      out[k] = list.slice().sort((a, b) => Number(!!b.favorite) - Number(!!a.favorite));
+    }
+    return out;
+  }, []);
 
   const importedOverlap = React.useMemo(() => {
     const imported = importedLibrary?.items;
@@ -1125,36 +927,17 @@ export default function App() {
     setImportError('');
   };
 
-  const toggleGenreShowAll = (genre) => {
-    setGenreShowAll(prev => ({
+  const toggleThemeShowAll = (themeKey) => {
+    setThemeShowAll(prev => ({
       ...prev,
-      [genre]: !prev?.[genre]
+      [themeKey]: !prev?.[themeKey]
     }));
   };
 
-  const booksByGenre = React.useMemo(() => {
-    return filteredBooks.reduce((acc, book) => {
-      const g = book.genre || 'Other';
-      if (!acc[g]) acc[g] = [];
-      acc[g].push(book);
-      return acc;
-    }, {});
-  }, [filteredBooks]);
-
-  const genreOrder = React.useMemo(() => {
-    return (selectedGenre !== 'All')
-      ? [selectedGenre]
-      : genres.filter(g => g !== 'All');
-  }, [selectedGenre]);
-
-  const visibleGenres = React.useMemo(() => {
-    return genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
-  }, [booksByGenre, genreOrder]);
-
-  const toggleGenreExpanded = (genre) => {
-    setExpandedGenres(prev => ({
+  const toggleThemeExpanded = (themeKey) => {
+    setExpandedThemes(prev => ({
       ...prev,
-      [genre]: !prev?.[genre]
+      [themeKey]: !prev?.[themeKey]
     }));
   };
 
@@ -1163,17 +946,15 @@ export default function App() {
     setSelectedBook(book);
   };
 
-  const handleSendMessage = async (overrideText, overrideMode) => {
+  const handleSendMessage = async (overrideText) => {
     const userMessage = String(overrideText ?? inputValue).trim();
     if (!userMessage || isLoading) return;
-
-    const effectiveMode = String(overrideMode || chatModeRef.current || chatMode);
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
 
     track('chat_message', {
-      mode: effectiveMode,
+      mode: chatMode,
       message_length: userMessage.length
     });
 
@@ -1197,7 +978,7 @@ export default function App() {
           content: m.text
         }));
 
-      const includeShortlistInDiscover = effectiveMode !== 'library' && nextDiscoverIncludeShortlistRef.current;
+      const includeShortlistInDiscover = chatMode !== 'library' && nextDiscoverIncludeShortlistRef.current;
       nextDiscoverIncludeShortlistRef.current = false;
 
       const baseDiscoverContent = (() => {
@@ -1206,7 +987,7 @@ export default function App() {
         return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
       })();
 
-      const userContent = effectiveMode === 'library'
+      const userContent = chatMode === 'library'
         ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
         : (includeShortlistInDiscover
           ? `SARAH'S PERSONAL LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nIMPORTANT: You may recommend both from Sarah's personal library and from outside her library.\nIf a recommendation is from Sarah's library, it will be marked with a 📚 icon in the UI.\n\nUSER REQUEST:\n${userMessage}`
@@ -1219,7 +1000,7 @@ export default function App() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
-          system: getSystemPrompt(effectiveMode),
+          system: systemPrompt,
           messages: [
             ...chatHistory,
             { role: 'user', content: userContent }
@@ -1228,8 +1009,7 @@ export default function App() {
       });
 
       const data = await response.json();
-      const assistantMessageRaw = data?.content?.[0]?.text;
-      const assistantMessage = String(assistantMessageRaw || "I'm having trouble thinking right now. Could you try again?");
+      const assistantMessage = data.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
@@ -1251,20 +1031,67 @@ export default function App() {
     const author = String(book?.author || '').trim();
     if (!title) return;
 
-    const prompt = `Recommend more books like "${title}"${author ? ` by ${author}` : ''}.\n\nGive me 3 picks total: include the best matches from Sarah's personal library and the best matches from outside her library.\n\nImportant: Use the exact structured Top 3 format with Title/Author/Why This Fits/Description/Reputation so it renders as cards.`;
+    const prompt = `Recommend more books like "${title}"${author ? ` by ${author}` : ''}.
+
+Give me 3 picks total: include the best matches from Sarah's personal library and the best matches from outside her library.
+
+Use the same Top 3 response format.`;
 
     nextDiscoverIncludeShortlistRef.current = true;
     setView('chat');
     setChatMode('discover');
     setInputValue(prompt);
     setTimeout(() => {
-      handleSendMessage(prompt, 'discover');
+      handleSendMessage(prompt);
     }, 0);
   };
 
-  const suggestionChips = chatMode === 'library' 
+  const starterChips = chatMode === 'library'
     ? ["What's your favorite book?", "Something about strong women", "I need a good cry"]
     : ["Best books of 2025", "Hidden gems like Kristin Hannah", "Something completely different"];
+
+  const toggleAskScope = () => {
+    setChatMode((prev) => {
+      const next = prev === 'library' ? 'discover' : 'library';
+      track('chat_mode_switch', { mode: next, source: 'scope_pill' });
+      return next;
+    });
+  };
+
+  const askSearchMatches = React.useMemo(() => {
+    const q = String(inputValue || '').trim();
+    if (!q) return [];
+    if (q.length < 2) return [];
+
+    // Only show autocomplete when the user is likely typing a title/author.
+    // Avoid showing for full prompts/questions.
+    if (q.includes('?')) return [];
+    if (q.includes('\n')) return [];
+    if (q.length > 60) return [];
+    const wordCount = q.split(/\s+/).filter(Boolean).length;
+    if (wordCount > 7) return [];
+
+    const qTitle = normalizeTitle(q);
+    const qAuthor = normalizeAuthor(q);
+    if (!qTitle && !qAuthor) return [];
+
+    const scored = [];
+    for (const b of (bookCatalog || [])) {
+      const t = normalizeTitle(b?.title);
+      const a = normalizeAuthor(b?.author);
+      if (!t && !a) continue;
+
+      let score = 0;
+      if (qTitle && t && t.includes(qTitle)) score += 6;
+      if (qAuthor && a && a.includes(qAuthor)) score += 4;
+      if (b?.favorite) score += 0.5;
+      if (score <= 0) continue;
+      scored.push({ book: b, score });
+    }
+
+    scored.sort((x, y) => (y.score - x.score));
+    return scored.slice(0, 6).map(s => s.book);
+  }, [inputValue]);
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
@@ -1444,86 +1271,33 @@ export default function App() {
 
           <AboutSection onShare={handleShare} />
 
-          <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
-            <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Genre</label>
-                <select
-                  value={selectedGenre}
-                  onChange={e => setSelectedGenre(e.target.value)}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white rounded-xl border border-[#D4DAD0] text-sm focus:border-[#96A888] outline-none text-[#5F7252] font-medium min-w-[160px] sm:min-w-[180px]"
-                >
-                  {genres.map(genre => (
-                    <option key={genre} value={genre}>{genre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Curator Themes</label>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(themeInfo).map(([key, info]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedTheme(selectedTheme === key ? null : key)}
-                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-sm transition-all font-medium flex items-center gap-1.5 ${
-                        selectedTheme === key
-                          ? 'bg-[#5F7252] text-white shadow-md'
-                          : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
-                      }`}
-                      title={info.label}
-                    >
-                      <span>{info.emoji}</span>
-                      <span className="hidden md:inline text-xs">{info.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Show</label>
-                <button
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all font-medium ${
-                    showFavoritesOnly
-                      ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                      : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
-                  }`}
-                >
-                  <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`} />
-                  <span className="hidden sm:inline">Favorites Only</span>
-                  <span className="sm:hidden">Favorites</span>
-                </button>
-              </div>
-            </div>
+          <div className="mb-6 sm:mb-8">
+            <h3 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Curator Themes</h3>
+            <p className="text-xs sm:text-sm text-[#7A8F6C] font-light mt-1">Explore the themes I return to again and again.</p>
           </div>
 
-          <p className="text-sm text-[#7A8F6C] mb-4 sm:mb-6 font-light">
-            Showing {filteredBooks.length} of {bookCatalog.length} books
-          </p>
-
           <div className="space-y-5 sm:space-y-6">
-            {visibleGenres.map((genre) => {
-              const list = booksByGenre[genre] || [];
-              const isCollapsed = !!expandedGenres?.[genre];
-              const showAll = !!genreShowAll?.[genre];
+            {Object.entries(themeInfo).map(([themeKey, info]) => {
+              const list = booksByTheme?.[themeKey] || [];
+              if (!list.length) return null;
+
+              const isCollapsed = !!expandedThemes?.[themeKey];
+              const showAll = !!themeShowAll?.[themeKey];
               const shown = isCollapsed ? [] : (showAll ? list : list.slice(0, 8));
 
               return (
-                <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
+                <div key={themeKey} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
                   <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#E8EBE4] bg-[#FDFBF4]">
                     <div>
-                      <h3 className="font-serif text-lg text-[#4A5940]">
-                        {genre}{' '}
+                      <h3 className="font-serif text-lg text-[#4A5940] flex items-center gap-2">
+                        <span aria-hidden="true">{info.emoji}</span>
+                        <span>{info.label}</span>
                         <span className="text-sm text-[#7A8F6C] font-light">({list.length})</span>
                       </h3>
-                      {genreDescriptions[genre] && (
-                        <p className="text-xs text-[#7A8F6C] font-light">{genreDescriptions[genre]}</p>
-                      )}
                     </div>
                     {list.length > 0 && (
                       <button
-                        onClick={() => toggleGenreExpanded(genre)}
+                        onClick={() => toggleThemeExpanded(themeKey)}
                         className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
                       >
                         {isCollapsed ? `Expand (${list.length})` : 'Collapse'}
@@ -1546,7 +1320,7 @@ export default function App() {
                       {list.length > 8 && (
                         <div className="mt-3">
                           <button
-                            onClick={() => toggleGenreShowAll(genre)}
+                            onClick={() => toggleThemeShowAll(themeKey)}
                             className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
                           >
                             {showAll ? 'See less' : `See more (${list.length - 8} more)`}
@@ -1560,13 +1334,6 @@ export default function App() {
             })}
           </div>
 
-          {filteredBooks.length === 0 && (
-            <div className="text-center py-16">
-              <Book className="w-16 h-16 text-[#D4DAD0] mx-auto mb-4" />
-              <p className="text-[#96A888] font-light">No books match your filters</p>
-            </div>
-          )}
-
           <div className="mt-8 sm:mt-10 text-xs text-[#7A8F6C] font-light text-center">
             <div>For the ❤️ of reading.</div>
             <div className="mt-1">hello@sarahsbooks.com</div>
@@ -1574,35 +1341,6 @@ export default function App() {
         </main>
       ) : (
         <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 min-h-0 flex flex-col">
-          <div className="mb-4 flex justify-center">
-            <div className="w-full max-w-sm bg-[#E8EBE4] rounded-2xl p-1 border border-[#D4DAD0] shadow-sm">
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  onClick={() => setChatMode('library')}
-                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
-                    chatMode === 'library'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  <Library className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  My Library
-                </button>
-                <button
-                  onClick={() => setChatMode('discover')}
-                  className={`w-full px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
-                    chatMode === 'discover'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  Discover New
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="mb-3 flex justify-center sm:hidden">
             <div className="w-full max-w-sm flex items-center justify-between gap-2">
               <button
@@ -1637,10 +1375,10 @@ export default function App() {
               <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
                 <div className="px-5 sm:px-8 py-4">
                   <h2 className="text-[#4A5940] font-serif text-base sm:text-xl mb-1 leading-snug break-words">
-                    {chatMode === 'library' ? 'Ask About My Books' : 'Discover Something New'}
+                    Ask Sarah
                   </h2>
                   <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
-                    {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
+                    Ask for a recommendation, a vibe match, or your next great read.
                   </p>
                 </div>
               </div>
@@ -1677,88 +1415,153 @@ export default function App() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Ask me for a recommendation..."
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base"
-              disabled={isLoading}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              className="px-4 sm:px-5 py-2 sm:py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-            >
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+          <div className="relative">
+            {!!askSearchMatches.length && !isLoading && (
+              <div className="mb-2 bg-white rounded-2xl border border-[#D4DAD0] shadow-lg overflow-hidden">
+                <div className="px-4 py-2 border-b border-[#E8EBE4] bg-[#FDFBF4]">
+                  <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Top matches in my library</div>
+                </div>
+                <div className="p-2 space-y-1">
+                  {askSearchMatches.map((book) => (
+                    <button
+                      key={`${book.title}__${book.author}`}
+                      onClick={() => {
+                        setSelectedBook(book);
+                        track('ask_autocomplete_open_book', { book_title: book?.title || '', book_author: book?.author || '' });
+                      }}
+                      className="w-full text-left rounded-xl px-3 py-2 hover:bg-[#F5F7F2] transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
+                            {book.favorite && <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />}
+                          </div>
+                          <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
+                        </div>
+                        {!!book.themes?.length && (
+                          <span className="text-xs text-[#96A888] flex-shrink-0">
+                            {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleAskScope}
+                className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                  chatMode === 'discover'
+                    ? 'bg-[#5F7252] text-white border-[#5F7252]'
+                    : 'bg-[#FDFBF4] text-[#5F7252] border-[#D4DAD0] hover:border-[#96A888] hover:text-[#4A5940]'
+                }`}
+                title={chatMode === 'discover' ? 'Discover New (tap to switch back to My Library)' : 'My Library (tap to switch to Discover New)'}
+              >
+                {chatMode === 'discover' ? (
+                  <>
+                    <Globe className="w-3.5 h-3.5" />
+                    Discover
+                  </>
+                ) : (
+                  <>
+                    <Library className="w-3.5 h-3.5" />
+                    My Library
+                  </>
+                )}
+              </button>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return;
+                  if (e.shiftKey) return;
+                  if (e.nativeEvent?.isComposing) return;
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                placeholder="Ask me for a recommendation or type a title..."
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base"
+                disabled={isLoading}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
+                className="px-4 sm:px-5 py-2 sm:py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
           </div>
 
           {messages.length <= 2 && (
-            <>
-              <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
-                {suggestionChips.map(suggestion => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setInputValue(suggestion)}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
+            <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
+              {starterChips.map(suggestion => (
+                <button
+                  key={suggestion}
+                  onClick={() => setInputValue(suggestion)}
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-[#D4DAD0] rounded-full text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {messages.length <= 2 && (
+            <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
+                <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
+                {importError ? (
+                  <span className="text-red-700">{importError}</span>
+                ) : (
+                  <>
+                    Upload a Goodreads CSV to avoid repeats and see what we share.
+                    {importedLibrary?.items?.length ? (
+                      <>
+                        {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
+                        <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
+                      </>
+                    ) : null}
+                  </>
+                )}
               </div>
 
-              <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
-                <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
-                  <Library className="w-4 h-4 text-[#96A888] flex-shrink-0" />
-                  {importError ? (
-                    <span className="text-red-700">{importError}</span>
-                  ) : (
-                    <>
-                      Upload a Goodreads CSV to avoid repeats and see what we share.
-                      {importedLibrary?.items?.length ? (
-                        <>
-                          {' '}Imported <span className="font-medium text-[#4A5940]">{importedOverlap.total}</span> · Shared{' '}
-                          <span className="font-medium text-[#4A5940]">{importedOverlap.shared.length}</span>
-                        </>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {importedLibrary?.items?.length ? (
-                    <button
-                      onClick={handleClearImport}
-                      className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-
+              <div className="flex items-center gap-3 flex-shrink-0">
+                {importedLibrary?.items?.length ? (
                   <button
-                    onClick={() => importFileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                    onClick={handleClearImport}
+                    className="text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors"
                   >
-                    <Upload className="w-4 h-4" />
-                    {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
+                    Clear
                   </button>
-                  <input
-                    ref={importFileInputRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      e.target.value = '';
-                      handleImportGoodreadsCsv(f);
-                    }}
-                  />
-                </div>
+                ) : null}
+
+                <button
+                  onClick={() => importFileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all text-xs font-medium"
+                >
+                  <Upload className="w-4 h-4" />
+                  {importedLibrary?.items?.length ? 'Replace CSV' : 'Upload CSV'}
+                </button>
+                <input
+                  ref={importFileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    handleImportGoodreadsCsv(f);
+                  }}
+                />
               </div>
-            </>
+            </div>
           )}
 
           <div className="mt-6 text-xs text-[#7A8F6C] font-light text-center">
