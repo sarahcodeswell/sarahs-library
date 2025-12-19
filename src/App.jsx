@@ -281,7 +281,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex, chatMode }) {
+function RecommendationCard({ rec, index, messageIndex, chatMode, onEngagement }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
@@ -311,6 +311,11 @@ function RecommendationCard({ rec, index, messageIndex, chatMode }) {
       book_author: rec?.author || '',
       chat_mode: chatMode
     });
+    
+    // Track engagement for discover unlock
+    if (type === 'up' && onEngagement) {
+      onEngagement({ title: rec.title, author: rec.author });
+    }
   };
   
   const handleLinkClick = (destination) => {
@@ -337,6 +342,11 @@ function RecommendationCard({ rec, index, messageIndex, chatMode }) {
       chat_mode: chatMode,
       from_catalog: !!catalogBook
     });
+    
+    // Track engagement for discover unlock
+    if (onEngagement) {
+      onEngagement({ title: rec.title, author: rec.author });
+    }
   };
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
@@ -459,7 +469,7 @@ function RecommendationCard({ rec, index, messageIndex, chatMode }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex, chatMode }) {
+function FormattedRecommendations({ text, messageIndex, chatMode, onEngagement }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -477,7 +487,7 @@ function FormattedRecommendations({ text, messageIndex, chatMode }) {
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} chatMode={chatMode} />
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} chatMode={chatMode} onEngagement={onEngagement} />
       ))}
     </div>
   );
@@ -645,7 +655,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, messageIndex, chatMode }) {
+function ChatMessage({ message, isUser, messageIndex, chatMode, onEngagement }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -657,20 +667,18 @@ function ChatMessage({ message, isUser, messageIndex, chatMode }) {
           className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
         />
       )}
-      <div className="flex flex-col max-w-[85%]">
-        <div className={`rounded-2xl px-5 py-3 ${
-          isUser 
-            ? 'bg-[#5F7252] text-white rounded-br-sm' 
-            : 'bg-[#F8F6EE] text-[#4A5940] rounded-bl-sm border border-[#E8EBE4]'
-        }`}> 
-          {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} chatMode={chatMode} />
-          ) : (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {!isUser ? <FormattedText text={message} /> : message}
-            </p>
-          )}
-        </div>
+      <div className={`max-w-[85%] sm:max-w-[75%] ${
+        isUser 
+          ? 'bg-[#5F7252] text-white rounded-2xl rounded-br-sm px-5 py-3' 
+          : 'bg-[#F8F6EE] text-[#4A5940] rounded-2xl rounded-bl-sm px-5 py-3'
+      }`}>
+        {isStructured ? (
+          <FormattedRecommendations text={message} messageIndex={messageIndex} chatMode={chatMode} onEngagement={onEngagement} />
+        ) : (
+          <div className="text-sm leading-relaxed">
+            <FormattedText text={message} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -720,6 +728,8 @@ function AboutSection({ onShare }) {
 export default function App() {
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
+  const [hasEngaged, setHasEngaged] = useState(false);
+  const [likedBooks, setLikedBooks] = useState([]);
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -739,8 +749,7 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const hasHydratedChatRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
-  const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
-  const [pendingMode, setPendingMode] = useState(null);
+  const [showDiscoverPrompt, setShowDiscoverPrompt] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
@@ -758,29 +767,32 @@ export default function App() {
     }];
   };
 
-  const handleModeSwitch = (newMode) => {
-    if (messages.length > 2 && newMode !== chatMode) {
-      // Show confirmation if there's a conversation
-      setPendingMode(newMode);
-      setShowModeSwitchConfirm(true);
-    } else {
-      // Direct switch if no conversation yet
-      setChatMode(newMode);
-    }
+  const handleDiscoverMore = () => {
+    setChatMode('discover');
+    setShowDiscoverPrompt(false);
+    
+    // Build discover message with context from liked books
+    const likedTitles = likedBooks.map(b => b.title).join(', ');
+    const discoverMessage = `Find me books similar to: ${likedTitles}`;
+    
+    // Set the input value so it will be sent
+    setInputValue(discoverMessage);
+    
+    // Trigger send after a brief delay to allow state to update
+    setTimeout(() => {
+      const sendButton = document.querySelector('button[aria-label="Send message"]');
+      if (sendButton) sendButton.click();
+    }, 50);
   };
 
-  const confirmModeSwitch = () => {
-    setChatMode(pendingMode);
-    setMessages(getInitialMessagesForMode(pendingMode));
+  const handleBackToLibrary = () => {
+    setChatMode('library');
+    setMessages(getInitialMessagesForMode('library'));
     setSelectedThemes([]);
     setInputValue('');
-    setShowModeSwitchConfirm(false);
-    setPendingMode(null);
-  };
-
-  const cancelModeSwitch = () => {
-    setShowModeSwitchConfirm(false);
-    setPendingMode(null);
+    setHasEngaged(false);
+    setLikedBooks([]);
+    setShowDiscoverPrompt(false);
   };
 
   const handleNewSearch = () => {
@@ -1238,6 +1250,15 @@ export default function App() {
                 isUser={msg.isUser} 
                 messageIndex={idx}
                 chatMode={chatMode}
+                onEngagement={(book) => {
+                  if (chatMode === 'library' && !hasEngaged) {
+                    setHasEngaged(true);
+                    setLikedBooks(prev => {
+                      const exists = prev.some(b => b.title === book.title);
+                      return exists ? prev : [...prev, book];
+                    });
+                  }
+                }}
               />
             ))}
             {isLoading && (
@@ -1337,65 +1358,65 @@ export default function App() {
               </button>
             </div>
 
-          <div className="mb-2 flex items-center justify-center gap-2">
-            <button
-              onClick={() => handleModeSwitch('library')}
-              className={`text-xs font-medium transition-colors ${
-                chatMode === 'library'
-                  ? 'text-[#4A5940]'
-                  : 'text-[#96A888] hover:text-[#5F7252]'
-              }`}
-              aria-label="Search my library"
-              aria-pressed={chatMode === 'library'}
-            >
-              My Library
-            </button>
-            <span className="text-[#D4DAD0]" aria-hidden="true">/</span>
-            <button
-              onClick={() => handleModeSwitch('discover')}
-              className={`text-xs font-medium transition-colors ${
-                chatMode === 'discover'
-                  ? 'text-[#4A5940]'
-                  : 'text-[#96A888] hover:text-[#5F7252]'
-              }`}
-              aria-label="Discover all books"
-              aria-pressed={chatMode === 'discover'}
-            >
-              All Books
-            </button>
-            {messages.length > 2 && (
-              <>
-                <span className="text-[#D4DAD0]" aria-hidden="true">·</span>
-                <button
-                  onClick={handleNewSearch}
-                  className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
-                  aria-label="Start new search"
-                >
-                  New Search
-                </button>
-              </>
-            )}
-          </div>
+          {chatMode === 'discover' && (
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <button
+                onClick={handleBackToLibrary}
+                className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
+                aria-label="Back to my library"
+              >
+                ← Back to My Library
+              </button>
+            </div>
+          )}
 
-          {(selectedThemes.length > 0 || chatMode === 'discover') && (
+          {messages.length > 2 && chatMode === 'library' && (
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <button
+                onClick={handleNewSearch}
+                className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
+                aria-label="Start new search"
+              >
+                New Search
+              </button>
+            </div>
+          )}
+
+          {selectedThemes.length > 0 && chatMode === 'library' && (
             <div className="mb-2 flex items-center justify-center gap-2 text-xs text-[#7A8F6C]">
               <span>
-                {selectedThemes.length > 0 && (
-                  <>
-                    Filtering: {selectedThemes.map(t => themeInfo[t]?.label).join(', ')}
-                    {chatMode === 'discover' && ' · '}
-                  </>
-                )}
-                {chatMode === 'discover' && 'All Books'}
+                Filtering: {selectedThemes.map(t => themeInfo[t]?.label).join(', ')}
               </span>
               <button
-                onClick={() => {
-                  setSelectedThemes([]);
-                  setChatMode('library');
-                }}
+                onClick={() => setSelectedThemes([])}
                 className="text-[#96A888] hover:text-[#5F7252] font-medium"
               >
-                Clear all
+                Clear
+              </button>
+            </div>
+          )}
+
+          {chatMode === 'discover' && likedBooks.length > 0 && (
+            <div className="mb-3 px-4 py-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
+              <p className="text-xs text-[#7A8F6C] mb-2">🌍 Finding books similar to:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {likedBooks.map((book, idx) => (
+                  <span key={idx} className="text-xs px-2 py-1 bg-white text-[#5F7252] rounded-full border border-[#E8EBE4]">
+                    {book.title}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasEngaged && !showDiscoverPrompt && chatMode === 'library' && messages.length > 2 && (
+            <div className="mb-3 px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
+              <p className="text-sm text-[#5F7252] mb-2">💡 Love these recommendations?</p>
+              <button
+                onClick={handleDiscoverMore}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+              >
+                Discover More Like These
               </button>
             </div>
           )}
@@ -1456,32 +1477,6 @@ export default function App() {
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
 
-      {showModeSwitchConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-[#E8EBE4]">
-            <h3 className="text-lg font-serif text-[#4A5940] mb-2">
-              Start New Search?
-            </h3>
-            <p className="text-sm text-[#7A8F6C] mb-6 leading-relaxed">
-              Switching to <span className="font-medium text-[#5F7252]">{pendingMode === 'discover' ? 'All Books' : 'My Library'}</span> will start a fresh conversation. Your current recommendations will be cleared.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={cancelModeSwitch}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[#E8EBE4] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
-              >
-                Keep Current
-              </button>
-              <button
-                onClick={confirmModeSwitch}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
-              >
-                New Search
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
