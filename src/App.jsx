@@ -243,6 +243,11 @@ function parseRecommendations(text) {
   for (const line of lines) {
     const trimmed = line.trim();
     
+    // Skip lines that are just [RECOMMENDATION X] markers
+    if (trimmed.match(/^\[RECOMMENDATION\s+\d+\]$/i)) {
+      continue;
+    }
+    
     if (trimmed.startsWith('Title:')) {
       if (current) recommendations.push(current);
       current = { title: trimmed.replace('Title:', '').trim() };
@@ -254,9 +259,14 @@ function parseRecommendations(text) {
       } else if (trimmed.startsWith('Why:')) {
         current.why = trimmed.replace('Why:', '').trim();
       } else if (trimmed.startsWith('Description:')) {
+        // Start collecting description
         current.description = trimmed.replace('Description:', '').trim();
       } else if (trimmed.startsWith('Reputation:')) {
         current.reputation = trimmed.replace('Reputation:', '').trim();
+      } else if (current.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('[RECOMMENDATION')) {
+        // Continue appending to description if we're in the middle of one
+        // and the line isn't a new field
+        current.description += ' ' + trimmed;
       }
     }
   }
@@ -1350,9 +1360,13 @@ export default function App() {
                   onClick={() => {
                     if (isSelected) {
                       setSelectedThemes(prev => prev.filter(t => t !== key));
+                      setInputValue('');
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
-                      setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
+                      // Only prefill input if there are no messages yet (first interaction)
+                      if (messages.length <= 2) {
+                        setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
+                      }
                     }
                   }}
                   className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all ${
