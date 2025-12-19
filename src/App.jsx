@@ -1022,9 +1022,19 @@ export default function App() {
       }
 
       if (!response.ok) {
-        const msg = String(data?.error || rawText || '').trim();
+        const msg = (() => {
+          if (!data) return String(rawText || '').trim();
+          if (typeof data?.error === 'string') return data.error.trim();
+          if (data?.error && typeof data.error === 'object') {
+            const nested = data.error?.message || data.error?.error || data.error?.type;
+            if (nested) return String(nested).trim();
+          }
+          if (data?.message) return String(data.message).trim();
+          return String(rawText || '').trim();
+        })();
+        const statusLine = typeof response.status === 'number' && response.status ? ` (${response.status})` : '';
         setMessages(prev => [...prev, {
-          text: msg ? `Oops — the server returned an error: ${msg}` : "Oops — I'm having trouble right now. Could you try again?",
+          text: msg ? `Oops — the server returned an error${statusLine}: ${msg}` : "Oops — I'm having trouble right now. Could you try again?",
           isUser: false
         }]);
         return;
