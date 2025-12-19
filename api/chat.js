@@ -24,6 +24,11 @@ export const config = {
         return json({ error: 'ANTHROPIC_API_KEY not configured' }, 500);
       }
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        try { controller.abort(); } catch (e) { void e; }
+      }, 20000);
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -32,8 +37,11 @@ export const config = {
           'anthropic-version': '2023-06-01',
           'anthropic-beta': 'prompt-caching-2024-07-31'
         },
+        signal: controller.signal,
         body: JSON.stringify(body)
       });
+
+      clearTimeout(timeoutId);
 
       const text = await response.text();
       let parsed;
@@ -62,6 +70,10 @@ export const config = {
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error) {
+      const isAbort = error?.name === 'AbortError';
+      if (isAbort) {
+        return json({ error: 'Upstream request timed out', status: 504 }, 504);
+      }
       void error;
       return json({ error: 'Failed to fetch from API' }, 500);
     }

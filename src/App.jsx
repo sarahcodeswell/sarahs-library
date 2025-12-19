@@ -1044,7 +1044,12 @@ export default function App() {
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
-      if (!isAbort) {
+      if (isAbort) {
+        setMessages(prev => [...prev, {
+          text: "That took a little too long on my end. Want to try again (or ask for something shorter)?",
+          isUser: false
+        }]);
+      } else {
         setMessages(prev => [...prev, { 
           text: "Oops, I'm having a moment. Let me catch my breath and try again!", 
           isUser: false 
