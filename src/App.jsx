@@ -1263,21 +1263,18 @@ export default function App() {
           </div>
 
           {messages.length <= 2 && (
-            <div className="mt-3 sm:mt-4 w-full rounded-2xl bg-white border border-[#D4DAD0] px-4 py-3">
-              <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Sarah’s Curator Themes</div>
-              <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-3 sm:mt-4 w-full rounded-xl bg-white border border-[#D4DAD0] px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="text-[11px] text-[#7A8F6C] font-medium uppercase tracking-wider mr-1">Themes</div>
                 {Object.entries(themeInfo).map(([key, info]) => (
                   <button
                     key={key}
                     onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
-                    className="flex items-start gap-2 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] hover:border-[#96A888] transition-colors text-left"
-                    title={info.label}
+                    className="px-2.5 py-1.5 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                    title={`${info.label} — ${themeDescriptions[key]}`}
+                    aria-label={`${info.label}. ${themeDescriptions[key]}`}
                   >
-                    <span className="text-base leading-none">{info.emoji}</span>
-                    <span className="min-w-0">
-                      <span className="block text-xs font-medium text-[#4A5940] leading-snug">{info.label}</span>
-                      <span className="block text-[11px] text-[#7A8F6C] font-light leading-snug">{themeDescriptions[key]}</span>
-                    </span>
+                    {info.emoji} {info.label}
                   </button>
                 ))}
               </div>
