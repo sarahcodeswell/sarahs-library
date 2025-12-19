@@ -739,6 +739,8 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const hasHydratedChatRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
+  const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
+  const [pendingMode, setPendingMode] = useState(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
@@ -754,6 +756,37 @@ export default function App() {
       text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.",
       isUser: false
     }];
+  };
+
+  const handleModeSwitch = (newMode) => {
+    if (messages.length > 2 && newMode !== chatMode) {
+      // Show confirmation if there's a conversation
+      setPendingMode(newMode);
+      setShowModeSwitchConfirm(true);
+    } else {
+      // Direct switch if no conversation yet
+      setChatMode(newMode);
+    }
+  };
+
+  const confirmModeSwitch = () => {
+    setChatMode(pendingMode);
+    setMessages(getInitialMessagesForMode(pendingMode));
+    setSelectedThemes([]);
+    setInputValue('');
+    setShowModeSwitchConfirm(false);
+    setPendingMode(null);
+  };
+
+  const cancelModeSwitch = () => {
+    setShowModeSwitchConfirm(false);
+    setPendingMode(null);
+  };
+
+  const handleNewSearch = () => {
+    setMessages(getInitialMessagesForMode(chatMode));
+    setSelectedThemes([]);
+    setInputValue('');
   };
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
@@ -1306,7 +1339,7 @@ export default function App() {
 
           <div className="mb-2 flex items-center justify-center gap-2">
             <button
-              onClick={() => setChatMode('library')}
+              onClick={() => handleModeSwitch('library')}
               className={`text-xs font-medium transition-colors ${
                 chatMode === 'library'
                   ? 'text-[#4A5940]'
@@ -1319,7 +1352,7 @@ export default function App() {
             </button>
             <span className="text-[#D4DAD0]" aria-hidden="true">/</span>
             <button
-              onClick={() => setChatMode('discover')}
+              onClick={() => handleModeSwitch('discover')}
               className={`text-xs font-medium transition-colors ${
                 chatMode === 'discover'
                   ? 'text-[#4A5940]'
@@ -1330,6 +1363,18 @@ export default function App() {
             >
               All Books
             </button>
+            {messages.length > 2 && (
+              <>
+                <span className="text-[#D4DAD0]" aria-hidden="true">·</span>
+                <button
+                  onClick={handleNewSearch}
+                  className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
+                  aria-label="Start new search"
+                >
+                  New Search
+                </button>
+              </>
+            )}
           </div>
 
           {(selectedThemes.length > 0 || chatMode === 'discover') && (
@@ -1409,6 +1454,33 @@ export default function App() {
 
       {selectedBook && (
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
+      )}
+
+      {showModeSwitchConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-[#E8EBE4]">
+            <h3 className="text-lg font-serif text-[#4A5940] mb-2">
+              Start New Search?
+            </h3>
+            <p className="text-sm text-[#7A8F6C] mb-6 leading-relaxed">
+              Switching to <span className="font-medium text-[#5F7252]">{pendingMode === 'discover' ? 'All Books' : 'My Library'}</span> will start a fresh conversation. Your current recommendations will be cleared.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelModeSwitch}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#E8EBE4] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+              >
+                Keep Current
+              </button>
+              <button
+                onClick={confirmModeSwitch}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+              >
+                New Search
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
