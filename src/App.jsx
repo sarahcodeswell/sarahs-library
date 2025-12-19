@@ -455,26 +455,14 @@ function FormattedRecommendations({ text, messageIndex }) {
   );
 }
 
-const genres = ["All", "Literary Fiction", "Historical Fiction", "Memoir", "Self-Help & Spirituality", "Thriller & Mystery", "Romance & Contemporary", "Nonfiction"];
-
-const genreDescriptions = {
-  "Literary Fiction": "Character-driven, beautifully written novels.",
-  "Historical Fiction": "Immersive stories rooted in real eras and events.",
-  "Memoir": "True personal stories and lived experience.",
-  "Self-Help & Spirituality": "Practical tools, inner work, and meaning-making.",
-  "Thriller & Mystery": "High-stakes suspense, twists, and page-turners.",
-  "Romance & Contemporary": "Modern relationships, heart, and real-life stakes.",
-  "Nonfiction": "Ideas, history, culture, and learning—true and researched."
+const getBookshopSearchUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 };
 
 const getGoodreadsSearchUrl = (title, author) => {
   const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
   return `https://www.goodreads.com/search?q=${searchQuery}`;
-};
-
-const getBookshopSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 };
 
 const getSystemPrompt = (mode) => {
@@ -837,14 +825,8 @@ function AboutSection({ onShare }) {
 }
 
 export default function App() {
-  const [view, setView] = useState('chat');
-  const [selectedGenre, setSelectedGenre] = useState('All');
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
-  const [expandedGenres, setExpandedGenres] = useState({});
-  const [genreShowAll, setGenreShowAll] = useState({});
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -978,13 +960,6 @@ export default function App() {
     }
   }, [messages, chatMode]);
 
-  const filteredBooks = bookCatalog.filter(book => {
-    if (selectedGenre !== 'All' && book.genre !== selectedGenre) return false;
-    if (selectedTheme && !book.themes.includes(selectedTheme)) return false;
-    if (showFavoritesOnly && !book.favorite) return false;
-    return true;
-  });
-
   const importedOverlap = React.useMemo(() => {
     const imported = importedLibrary?.items;
     if (!Array.isArray(imported) || imported.length === 0) return { total: 0, shared: [] };
@@ -1053,33 +1028,6 @@ export default function App() {
     try { window.localStorage.removeItem('imported_goodreads_library_v1'); } catch (e) { void e; }
     setImportedLibrary(null);
     setImportError('');
-  };
-
-  const toggleGenreShowAll = (genre) => {
-    setGenreShowAll(prev => ({
-      ...prev,
-      [genre]: !prev?.[genre]
-    }));
-  };
-
-  const booksByGenre = filteredBooks.reduce((acc, book) => {
-    const g = book.genre || 'Other';
-    if (!acc[g]) acc[g] = [];
-    acc[g].push(book);
-    return acc;
-  }, {});
-
-  const genreOrder = (selectedGenre !== 'All')
-    ? [selectedGenre]
-    : genres.filter(g => g !== 'All');
-
-  const visibleGenres = genreOrder.filter(g => (booksByGenre[g] || []).length > 0);
-
-  const toggleGenreExpanded = (genre) => {
-    setExpandedGenres(prev => ({
-      ...prev,
-      [genre]: !prev?.[genre]
-    }));
   };
 
   const handleSendMessage = async () => {
@@ -1165,26 +1113,26 @@ export default function App() {
     const title = "Sarah Books";
     const text = "I thought you’d like Sarah’s Library — ask for book recommendations from her shelves.";
 
-    track('share_click', { source: view });
+    track('share_click', { source: 'chat' });
 
     try {
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
         await navigator.share({ title, text, url });
-        track('share_success', { method: 'web_share', source: view });
+        track('share_success', { method: 'web_share', source: 'chat' });
         setShareFeedback('Shared!');
       } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
-        track('share_success', { method: 'clipboard', source: view });
+        track('share_success', { method: 'clipboard', source: 'chat' });
         setShareFeedback('Link copied!');
       } else {
         // Last-resort fallback: prompt copy.
         window.prompt('Copy this link to share:', url);
-        track('share_success', { method: 'prompt', source: view });
+        track('share_success', { method: 'prompt', source: 'chat' });
         setShareFeedback('Link ready to copy.');
       }
     } catch (e) {
       void e;
-      track('share_error', { source: view });
+      track('share_error', { source: 'chat' });
       setShareFeedback('Couldn’t share—try copying the URL.');
     } finally {
       if (shareFeedbackTimeoutRef.current) clearTimeout(shareFeedbackTimeoutRef.current);
@@ -1199,8 +1147,8 @@ export default function App() {
     thanksCooldownRef.current = true;
     setTimeout(() => { thanksCooldownRef.current = false; }, 1200);
 
-    track('thanks_heart_click', { source: view });
-    track('thanks_heart_send', { method: 'backend', source: view });
+    track('thanks_heart_click', { source: 'chat' });
+    track('thanks_heart_send', { method: 'backend', source: 'chat' });
 
     setThanksCount(prev => (typeof prev === 'number' ? prev + 1 : prev));
     fetch('/api/thanks', { method: 'POST' })
@@ -1263,228 +1211,11 @@ export default function App() {
                 <Share2 className="w-4 h-4" />
                 <span className="hidden sm:inline ml-2 text-sm font-medium">Share</span>
               </button>
-
-              <div className="hidden sm:flex bg-[#E8EBE4] rounded-full p-1 sm:p-1.5">
-                <button
-                  onClick={() => setView('chat')}
-                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                    view === 'chat' 
-                      ? 'bg-white text-[#4A5940] shadow-sm' 
-                      : 'text-[#5F7252] hover:text-[#4A5940]'
-                  }`}
-                >
-                  <span className="hidden sm:inline">Ask Sarah</span>
-                  <MessageCircle className="w-4 h-4 sm:hidden" />
-                </button>
-                <button
-                  onClick={() => setView('browse')}
-                  className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
-                    view === 'browse' 
-                      ? 'bg-white text-[#4A5940] shadow-sm' 
-                      : 'text-[#5F7252] hover:text-[#4A5940]'
-                  }`}
-                >
-                  <span className="hidden sm:inline">Browse</span>
-                  <Book className="w-4 h-4 sm:hidden" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-3 sm:hidden">
-            <div className="flex bg-[#E8EBE4] rounded-full p-1.5 border border-[#D4DAD0] shadow-sm">
-              <button
-                onClick={() => setView('chat')}
-                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'chat'
-                    ? 'bg-white text-[#4A5940] shadow-sm'
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                Ask Sarah
-              </button>
-              <button
-                onClick={() => setView('browse')}
-                className={`flex-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  view === 'browse'
-                    ? 'bg-white text-[#4A5940] shadow-sm'
-                    : 'text-[#5F7252] hover:text-[#4A5940]'
-                }`}
-              >
-                Browse
-              </button>
             </div>
           </div>
         </div>
       </header>
-
-      {view === 'browse' ? (
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-lg relative">
-            <div className="bg-[#FDFBF4]">
-              <img
-                src="/books.jpg"
-                alt="Stack of books"
-                className="block w-full h-[clamp(140px,18vh,220px)] object-cover object-center"
-              />
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
-              <div className="px-5 sm:px-8 py-4">
-                <h2 className="text-[#4A5940] font-serif text-xl sm:text-3xl mb-1 sm:mb-2">My Personal Collection</h2>
-                <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">Find your next great read.</p>
-              </div>
-            </div>
-          </div>
-
-          <AboutSection onShare={handleShare} />
-
-          <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-5">
-            <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Genre</label>
-                <select
-                  value={selectedGenre}
-                  onChange={e => setSelectedGenre(e.target.value)}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white rounded-xl border border-[#D4DAD0] text-sm focus:border-[#96A888] outline-none text-[#5F7252] font-medium min-w-[160px] sm:min-w-[180px]"
-                >
-                  {genres.map(genre => (
-                    <option key={genre} value={genre}>{genre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Curator Themes</label>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(themeInfo).map(([key, info]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedTheme(selectedTheme === key ? null : key)}
-                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-sm transition-all font-medium flex items-center gap-1.5 ${
-                        selectedTheme === key
-                          ? 'bg-[#5F7252] text-white shadow-md'
-                          : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
-                      }`}
-                      title={info.label}
-                    >
-                      <span>{info.emoji}</span>
-                      <span className="hidden md:inline text-xs">{info.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Show</label>
-                <button
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all font-medium ${
-                    showFavoritesOnly
-                      ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                      : 'bg-white border border-[#D4DAD0] text-[#5F7252] hover:border-[#96A888]'
-                  }`}
-                >
-                  <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-amber-400 text-amber-400' : ''}`} />
-                  <span className="hidden sm:inline">Favorites Only</span>
-                  <span className="sm:hidden">Favorites</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-sm text-[#7A8F6C] mb-4 sm:mb-6 font-light">
-            Showing {filteredBooks.length} of {bookCatalog.length} books
-          </p>
-
-          <div className="space-y-5 sm:space-y-6">
-            {visibleGenres.map((genre) => {
-              const list = booksByGenre[genre] || [];
-              const isCollapsed = !!expandedGenres?.[genre];
-              const showAll = !!genreShowAll?.[genre];
-              const shown = isCollapsed ? [] : (showAll ? list : list.slice(0, 8));
-
-              return (
-                <div key={genre} className="bg-white rounded-2xl border border-[#D4DAD0] shadow-sm overflow-hidden">
-                  <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b border-[#E8EBE4] bg-[#FDFBF4]">
-                    <div>
-                      <h3 className="font-serif text-lg text-[#4A5940]">
-                        {genre}{' '}
-                        <span className="text-sm text-[#7A8F6C] font-light">({list.length})</span>
-                      </h3>
-                      {genreDescriptions[genre] && (
-                        <p className="text-xs text-[#7A8F6C] font-light">{genreDescriptions[genre]}</p>
-                      )}
-                    </div>
-                    {list.length > 0 && (
-                      <button
-                        onClick={() => toggleGenreExpanded(genre)}
-                        className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-                      >
-                        {isCollapsed ? `Expand (${list.length})` : 'Collapse'}
-                      </button>
-                    )}
-                  </div>
-
-                  {!isCollapsed && (
-                    <div className="px-5 sm:px-6 py-4">
-                      <div className="space-y-2">
-                        {shown.map((book) => (
-                          <button
-                            key={`${book.title}__${book.author}`}
-                            onClick={() => setSelectedBook(book)}
-                            className="w-full text-left rounded-xl border border-[#E8EBE4] bg-[#FDFBF4] px-4 py-3 hover:bg-[#F5F7F2] hover:border-[#D4DAD0] transition-colors"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
-                                  {book.favorite && (
-                                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                                  )}
-                                </div>
-                                <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
-                              </div>
-                              {!!book.themes?.length && (
-                                <span className="text-xs text-[#96A888] flex-shrink-0">
-                                  {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-
-                      {list.length > 8 && (
-                        <div className="mt-3">
-                          <button
-                            onClick={() => toggleGenreShowAll(genre)}
-                            className="text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
-                          >
-                            {showAll ? 'See less' : `See more (${list.length - 8} more)`}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {filteredBooks.length === 0 && (
-            <div className="text-center py-16">
-              <Book className="w-16 h-16 text-[#D4DAD0] mx-auto mb-4" />
-              <p className="text-[#96A888] font-light">No books match your filters</p>
-            </div>
-          )}
-
-          <div className="mt-8 sm:mt-10 text-xs text-[#7A8F6C] font-light text-center">
-            <div>For the ❤️ of reading.</div>
-            <div className="mt-1">hello@sarahsbooks.com</div>
-          </div>
-        </main>
-      ) : (
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] flex flex-col">
           <div className="mb-4 flex justify-center">
             <div className="w-full max-w-sm bg-[#E8EBE4] rounded-2xl p-1 border border-[#D4DAD0] shadow-sm">
               <div className="grid grid-cols-2 gap-1">
@@ -1673,7 +1404,6 @@ export default function App() {
           </div>
 
         </main>
-      )}
 
       {selectedBook && (
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
