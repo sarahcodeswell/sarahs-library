@@ -243,8 +243,8 @@ function parseRecommendations(text) {
   for (const line of lines) {
     const trimmed = line.trim();
     
-    // Skip lines that are just [RECOMMENDATION X] markers
-    if (trimmed.match(/^\[RECOMMENDATION\s+\d+\]$/i)) {
+    // Skip lines that contain [RECOMMENDATION X] markers (with or without surrounding text)
+    if (trimmed.match(/\[RECOMMENDATION\s+\d+\]/i)) {
       continue;
     }
     
