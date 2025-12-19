@@ -263,7 +263,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex }) {
+function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
@@ -325,6 +325,13 @@ function RecommendationCard({ rec, index, messageIndex }) {
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
 
+  const handleOpenDetail = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!catalogBook) return;
+    onOpenBook?.(catalogBook);
+  };
+
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
       <button
@@ -338,6 +345,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
+            {catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
           </div>
           {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
           {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
@@ -405,6 +413,17 @@ function RecommendationCard({ rec, index, messageIndex }) {
               <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
             )}
           </div>
+
+          {catalogBook && (
+            <div className="mt-3">
+              <button
+                onClick={handleOpenDetail}
+                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#5F7252] text-xs font-medium hover:text-[#4A5940] hover:border-[#96A888] transition-colors"
+              >
+                Open in library
+              </button>
+            </div>
+          )}
           
           <div className="flex gap-2 mt-3">
             <a
@@ -434,7 +453,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex }) {
+function FormattedRecommendations({ text, messageIndex, onOpenBook }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -449,7 +468,7 @@ function FormattedRecommendations({ text, messageIndex }) {
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} onOpenBook={onOpenBook} />
       ))}
     </div>
   );
@@ -681,7 +700,7 @@ function ChatSearchBox({ onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
+function ChatMessage({ message, isUser, showSearchOption, messageIndex, onOpenBook }) {
   const [showSearch, setShowSearch] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const isStructured = !isUser && hasStructuredRecommendations(message);
@@ -709,9 +728,9 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
           isUser 
             ? 'bg-[#5F7252] text-white rounded-br-sm' 
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
-        }`}>
+        }`}> 
           {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} onOpenBook={onOpenBook} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
