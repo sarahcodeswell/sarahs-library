@@ -1172,28 +1172,12 @@ export default function App() {
                   <p className="text-[#7A8F6C] text-xs sm:text-sm font-light">
                     {chatMode === 'library' ? 'Ask for a recommendation from my shelves.' : 'Get recommendations beyond my personal collection.'}
                   </p>
-
-                  <div className="mt-3">
-                    <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Curator Themes</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {Object.entries(themeInfo).map(([key, info]) => (
-                        <button
-                          key={key}
-                          onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
-                          className="px-3 py-1.5 rounded-full bg-white border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-                          title={info.label}
-                        >
-                          {info.emoji} {info.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           )}
           
-          <div className="flex-1 overflow-y-auto pb-4">
+          <div className="flex-1 min-h-0 overflow-y-auto pb-4">
             {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
@@ -1249,6 +1233,32 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {messages.length <= 2 && (
+            <div className="mb-3">
+              <div className="w-full max-w-2xl mx-auto rounded-2xl bg-white border border-[#D4DAD0] px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider flex-shrink-0">
+                    Themes
+                  </div>
+                  <div className="flex-1 overflow-x-auto">
+                    <div className="flex gap-2 pr-2">
+                      {Object.entries(themeInfo).map(([key, info]) => (
+                        <button
+                          key={key}
+                          onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
+                          className="whitespace-nowrap px-3 py-1.5 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
+                          title={info.label}
+                        >
+                          {info.emoji} {info.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
             <input
