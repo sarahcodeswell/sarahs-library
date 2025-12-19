@@ -263,7 +263,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
+function RecommendationCard({ rec, index, messageIndex }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
@@ -324,13 +324,6 @@ function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
-
-  const handleOpenDetail = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!catalogBook) return;
-    onOpenBook?.(catalogBook);
-  };
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
@@ -413,17 +406,6 @@ function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
               <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
             )}
           </div>
-
-          {catalogBook && (
-            <div className="mt-3">
-              <button
-                onClick={handleOpenDetail}
-                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#5F7252] text-xs font-medium hover:text-[#4A5940] hover:border-[#96A888] transition-colors"
-              >
-                Open in library
-              </button>
-            </div>
-          )}
           
           <div className="flex gap-2 mt-3">
             <a
@@ -453,7 +435,7 @@ function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex, onOpenBook }) {
+function FormattedRecommendations({ text, messageIndex }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -468,7 +450,7 @@ function FormattedRecommendations({ text, messageIndex, onOpenBook }) {
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} onOpenBook={onOpenBook} />
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
       ))}
     </div>
   );
@@ -700,7 +682,7 @@ function ChatSearchBox({ onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, showSearchOption, messageIndex, onOpenBook }) {
+function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
   const [showSearch, setShowSearch] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const isStructured = !isUser && hasStructuredRecommendations(message);
@@ -730,7 +712,7 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex, onOpenBo
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}> 
           {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} onOpenBook={onOpenBook} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
