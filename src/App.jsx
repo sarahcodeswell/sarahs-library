@@ -1600,7 +1600,9 @@ Find similar books from beyond my library that match this taste profile.
               Where should I look?
             </h3>
             <p className="text-sm text-[#7A8F6C] mb-6 text-center">
-              I've learned what you like. Let's find more!
+              {tasteProfile.likedBooks.length >= 3 
+                ? "I've learned what you like. Let's find more!"
+                : "Let me learn more about your taste first."}
             </p>
             
             <div className="space-y-3">
@@ -1618,18 +1620,43 @@ Find similar books from beyond my library that match this taste profile.
               </button>
               
               <button
-                onClick={handleShowMoreWorld}
-                className="w-full p-4 rounded-xl border-2 border-[#5F7252] bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] hover:border-[#4A5940] transition-all text-left group"
+                onClick={tasteProfile.likedBooks.length >= 3 ? handleShowMoreWorld : undefined}
+                disabled={tasteProfile.likedBooks.length < 3}
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                  tasteProfile.likedBooks.length >= 3
+                    ? 'border-[#5F7252] bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] hover:border-[#4A5940] cursor-pointer'
+                    : 'border-[#E8EBE4] bg-gray-50 opacity-60 cursor-not-allowed'
+                }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl">∞</span>
+                  <span className="text-2xl">{tasteProfile.likedBooks.length >= 3 ? '∞' : '🔒'}</span>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-[#4A5940] mb-1">Search Everywhere</p>
-                    <p className="text-xs text-[#7A8F6C]">Use your taste profile to search millions of books</p>
-                    {tasteProfile.likedBooks.length > 0 && (
-                      <p className="text-xs text-[#96A888] mt-1 italic">
-                        Based on {tasteProfile.likedBooks.length} book{tasteProfile.likedBooks.length !== 1 ? 's' : ''} you liked
-                      </p>
+                    <p className={`text-sm font-medium mb-1 ${
+                      tasteProfile.likedBooks.length >= 3 ? 'text-[#4A5940]' : 'text-[#96A888]'
+                    }`}>
+                      Search Everywhere {tasteProfile.likedBooks.length < 3 && '(Locked)'}
+                    </p>
+                    {tasteProfile.likedBooks.length >= 3 ? (
+                      <>
+                        <p className="text-xs text-[#7A8F6C]">Use your taste profile to search millions of books</p>
+                        <p className="text-xs text-[#96A888] mt-1 italic">
+                          Based on {tasteProfile.likedBooks.length} book{tasteProfile.likedBooks.length !== 1 ? 's' : ''} you liked
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs text-[#96A888]">Like {3 - tasteProfile.likedBooks.length} more book{3 - tasteProfile.likedBooks.length !== 1 ? 's' : ''} to unlock</p>
+                        <div className="flex gap-1 mt-2">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className={`h-1.5 flex-1 rounded-full ${
+                                i < tasteProfile.likedBooks.length ? 'bg-[#5F7252]' : 'bg-[#E8EBE4]'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
