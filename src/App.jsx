@@ -280,7 +280,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
       if (k.includes(needle) || needle.includes(k)) return b;
     }
     return null;
-  }, [rec.title]);
+  }, [rec?.title]);
 
   const handleFeedback = (type) => {
     setFeedback(type);
