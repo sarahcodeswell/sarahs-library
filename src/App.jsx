@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -607,94 +607,8 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatSearchBox({ onClose }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSearch = (destination) => {
-    if (!searchTerm.trim()) return;
-    
-    track('book_link_click', {
-      book_title: searchTerm,
-      book_author: '',
-      book_genre: 'unknown',
-      is_favorite: false,
-      destination: destination,
-      source: 'chat_search'
-    });
-
-    if (destination === 'goodreads') {
-      bumpLocalMetric('goodreads_link_clicks_v1', 1);
-      track('goodreads_link_click', { source: 'chat_search' });
-    }
-    if (destination === 'bookshop') {
-      bumpLocalMetric('bookshop_link_clicks_v1', 1);
-      track('bookshop_link_click', { source: 'chat_search' });
-    }
-
-    const url = destination === 'goodreads' 
-      ? getGoodreadsSearchUrl(searchTerm, '')
-      : getBookshopSearchUrl(searchTerm, '');
-    window.open(url, '_blank');
-  };
-
-  return (
-    <div className="mt-2 space-y-2">
-      <div className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          placeholder="Enter book title..."
-          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[#D4DAD0] focus:border-[#96A888] outline-none text-[#4A5940] placeholder-[#96A888]"
-        />
-        <button
-          onClick={onClose}
-          className="px-2 py-1.5 text-[#96A888] hover:text-[#4A5940] transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleSearch('goodreads')}
-          disabled={!searchTerm.trim()}
-          className="flex-1 px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
-        >
-          <ExternalLink className="w-3 h-3" />
-          Goodreads
-        </button>
-        <button
-          onClick={() => handleSearch('bookshop')}
-          disabled={!searchTerm.trim()}
-          className="flex-1 px-3 py-1.5 bg-[#4A7C59] text-white rounded-lg text-xs hover:bg-[#3d6649] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
-        >
-          <ShoppingBag className="w-3 h-3" />
-          Buy Local
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
-  const [showSearch, setShowSearch] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+function ChatMessage({ message, isUser, messageIndex }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
-
-  const handleFeedback = (type) => {
-    setFeedback(type);
-    track('recommendation_feedback', {
-      feedback_type: type,
-      message_index: messageIndex,
-      message_preview: message.substring(0, 100)
-    });
-  };
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -719,66 +633,6 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
             </p>
           )}
         </div>
-        
-        {!isUser && showSearchOption && !isStructured && (
-          <div className="mt-2">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleFeedback('up')}
-                  disabled={feedback !== null}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    feedback === 'up'
-                      ? 'text-[#5F7252] bg-[#E8EBE4]'
-                      : feedback === 'down'
-                      ? 'text-[#D4DAD0] cursor-not-allowed'
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-                  }`}
-                  title="Helpful"
-                >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${feedback === 'up' ? 'fill-current' : ''}`} />
-                </button>
-                <button
-                  onClick={() => handleFeedback('down')}
-                  disabled={feedback !== null}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    feedback === 'down'
-                      ? 'text-[#5F7252] bg-[#E8EBE4]'
-                      : feedback === 'up'
-                      ? 'text-[#D4DAD0] cursor-not-allowed'
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-                  }`}
-                  title="Not helpful"
-                >
-                  <ThumbsDown className={`w-3.5 h-3.5 ${feedback === 'down' ? 'fill-current' : ''}`} />
-                </button>
-                {feedback && (
-                  <span className="text-xs text-[#96A888] ml-1">Thanks!</span>
-                )}
-              </div>
-              
-              {!isStructured && (
-                <>
-                  <div className="w-px h-4 bg-[#D4DAD0]" />
-                  
-                  {!showSearch && (
-                    <button
-                      onClick={() => setShowSearch(true)}
-                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
-                    >
-                      <Search className="w-3.5 h-3.5" />
-                      Find this book...
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-            
-            {showSearch && !isStructured && (
-              <ChatSearchBox onClose={() => setShowSearch(false)} />
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1301,7 +1155,6 @@ export default function App() {
                 key={idx} 
                 message={msg.text} 
                 isUser={msg.isUser} 
-                showSearchOption={!msg.isUser && idx > 0}
                 messageIndex={idx}
               />
             ))}
