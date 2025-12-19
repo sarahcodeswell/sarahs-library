@@ -77,24 +77,25 @@ function parseRecommendations(text) {
   const recommendations = [];
   const lines = text.split('\n');
   let current = null;
+  const pickValue = (line) => String(line).replace(/^\s*[^:—-]+\s*[:—-]\s*/i, '').trim();
   
   for (const line of lines) {
     const trimmed = line.trim();
-    
-    if (trimmed.startsWith('Title:')) {
+
+    if (/^Title\s*[:—-]/i.test(trimmed)) {
       if (current) recommendations.push(current);
-      current = { title: trimmed.replace('Title:', '').trim() };
+      current = { title: pickValue(trimmed) };
     } else if (current) {
-      if (trimmed.startsWith('Author:')) {
-        current.author = trimmed.replace('Author:', '').trim();
-      } else if (trimmed.startsWith('Why This Fits:')) {
-        current.why = trimmed.replace('Why This Fits:', '').trim();
-      } else if (trimmed.startsWith('Why:')) {
-        current.why = trimmed.replace('Why:', '').trim();
-      } else if (trimmed.startsWith('Description:')) {
-        current.description = trimmed.replace('Description:', '').trim();
-      } else if (trimmed.startsWith('Reputation:')) {
-        current.reputation = trimmed.replace('Reputation:', '').trim();
+      if (/^Author\s*[:—-]/i.test(trimmed)) {
+        current.author = pickValue(trimmed);
+      } else if (/^Why\s+This\s+Fits\s*[:—-]/i.test(trimmed)) {
+        current.why = pickValue(trimmed);
+      } else if (/^Why\s*[:—-]/i.test(trimmed)) {
+        current.why = pickValue(trimmed);
+      } else if (/^Description\s*[:—-]/i.test(trimmed)) {
+        current.description = pickValue(trimmed);
+      } else if (/^Reputation\s*[:—-]/i.test(trimmed)) {
+        current.reputation = pickValue(trimmed);
       }
     }
   }
@@ -106,7 +107,7 @@ function parseRecommendations(text) {
 // Check if message contains structured recommendations
 function hasStructuredRecommendations(text) {
   const t = String(text || '');
-  return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
+  return (/\bTitle\s*[:—-]/i).test(t) && (/\b(Author|Why\s+This\s+Fits|Why|Description|Reputation)\s*[:—-]/i).test(t);
 }
 
 function RecommendationCard({ rec, index, messageIndex, onOpenBook }) {
@@ -711,7 +712,6 @@ export default function App() {
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isAskInputFocused, setIsAskInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
   const inFlightRequestRef = useRef(null);
@@ -994,6 +994,7 @@ export default function App() {
           ? `SARAH'S PERSONAL LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nIMPORTANT: You may recommend both from Sarah's personal library and from outside her library.\nIf a recommendation is from Sarah's library, it will be marked with a 📚 icon in the UI.\n\nUSER REQUEST:\n${userMessage}`
           : baseDiscoverContent);
 
+      const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1008,6 +1009,8 @@ export default function App() {
           ]
         })
       });
+      const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      track('chat_latency', { mode: chatMode, ms: Math.round(t1 - t0) });
 
       const rawText = await response.text();
       let data;
@@ -1075,43 +1078,6 @@ Use the same Top 3 response format.`;
       return next;
     });
   };
-
-  const askSearchMatches = React.useMemo(() => {
-    const q = String(inputValue || '').trim();
-    if (!q) return [];
-    if (q.length < 4) return [];
-
-    // Only show autocomplete when the user is likely typing a title/author.
-    // Avoid showing for full prompts/questions.
-    if (q.includes('?')) return [];
-    if (q.includes('\n')) return [];
-    if (q.length > 60) return [];
-    const wordCount = q.split(/\s+/).filter(Boolean).length;
-    if (wordCount > 5) return [];
-
-    const qTitle = normalizeTitle(q);
-    const qAuthor = normalizeAuthor(q);
-    if (!qTitle && !qAuthor) return [];
-
-    const scored = [];
-    for (const b of (bookCatalog || [])) {
-      const t = normalizeTitle(b?.title);
-      const a = normalizeAuthor(b?.author);
-      if (!t && !a) continue;
-
-      let score = 0;
-      if (qTitle && t && t.includes(qTitle)) score += 6;
-      if (qAuthor && a && a.includes(qAuthor)) score += 4;
-      if (b?.favorite) score += 0.5;
-      if (score <= 0) continue;
-      scored.push({ book: b, score });
-    }
-
-    scored.sort((x, y) => (y.score - x.score));
-    return scored.slice(0, 6).map(s => s.book);
-  }, [inputValue]);
-
-  const showAskAutocomplete = isAskInputFocused && !isLoading && String(inputValue || '').trim().length >= 4 && askSearchMatches.length > 0;
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
@@ -1436,41 +1402,6 @@ Use the same Top 3 response format.`;
           </div>
 
           <div className="relative">
-            {showAskAutocomplete && (
-              <div className="mb-2 bg-white rounded-2xl border border-[#D4DAD0] shadow-lg overflow-hidden">
-                <div className="px-4 py-2 border-b border-[#E8EBE4] bg-[#FDFBF4]">
-                  <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Top matches in my library</div>
-                </div>
-                <div className="p-2 space-y-1">
-                  {askSearchMatches.map((book) => (
-                    <button
-                      key={`${book.title}__${book.author}`}
-                      onClick={() => {
-                        setSelectedBook(book);
-                        track('ask_autocomplete_open_book', { book_title: book?.title || '', book_author: book?.author || '' });
-                      }}
-                      className="w-full text-left rounded-xl px-3 py-2 hover:bg-[#F5F7F2] transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-[#4A5940] truncate">{book.title}</span>
-                            {book.favorite && <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />}
-                          </div>
-                          <span className="block text-xs text-[#7A8F6C] font-light truncate">{book.author}</span>
-                        </div>
-                        {!!book.themes?.length && (
-                          <span className="text-xs text-[#96A888] flex-shrink-0">
-                            {book.themes.slice(0, 3).map(t => themeInfo[t]?.emoji).filter(Boolean).join(' ')}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
               <button
                 type="button"
@@ -1498,8 +1429,6 @@ Use the same Top 3 response format.`;
                 type="text"
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
-                onFocus={() => setIsAskInputFocused(true)}
-                onBlur={() => setIsAskInputFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return;
                   if (e.shiftKey) return;
