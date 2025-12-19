@@ -711,6 +711,7 @@ export default function App() {
     { text: "Hi! I'm Sarah, and this is my personal library. 📚 I'd love to help you find your next read. Tell me what you're in the mood for, or ask me anything about these books—I've read them all!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [isAskInputFocused, setIsAskInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
   const inFlightRequestRef = useRef(null);
@@ -1008,8 +1009,25 @@ export default function App() {
         })
       });
 
-      const data = await response.json();
-      const assistantMessage = data.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
+      const rawText = await response.text();
+      let data;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch (e) {
+        void e;
+        data = null;
+      }
+
+      if (!response.ok) {
+        const msg = String(data?.error || rawText || '').trim();
+        setMessages(prev => [...prev, {
+          text: msg ? `Oops — the server returned an error: ${msg}` : "Oops — I'm having trouble right now. Could you try again?",
+          isUser: false
+        }]);
+        return;
+      }
+
+      const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
@@ -1061,7 +1079,7 @@ Use the same Top 3 response format.`;
   const askSearchMatches = React.useMemo(() => {
     const q = String(inputValue || '').trim();
     if (!q) return [];
-    if (q.length < 2) return [];
+    if (q.length < 4) return [];
 
     // Only show autocomplete when the user is likely typing a title/author.
     // Avoid showing for full prompts/questions.
@@ -1069,7 +1087,7 @@ Use the same Top 3 response format.`;
     if (q.includes('\n')) return [];
     if (q.length > 60) return [];
     const wordCount = q.split(/\s+/).filter(Boolean).length;
-    if (wordCount > 7) return [];
+    if (wordCount > 5) return [];
 
     const qTitle = normalizeTitle(q);
     const qAuthor = normalizeAuthor(q);
@@ -1092,6 +1110,8 @@ Use the same Top 3 response format.`;
     scored.sort((x, y) => (y.score - x.score));
     return scored.slice(0, 6).map(s => s.book);
   }, [inputValue]);
+
+  const showAskAutocomplete = isAskInputFocused && !isLoading && String(inputValue || '').trim().length >= 4 && askSearchMatches.length > 0;
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';
@@ -1416,7 +1436,7 @@ Use the same Top 3 response format.`;
           </div>
 
           <div className="relative">
-            {!!askSearchMatches.length && !isLoading && (
+            {showAskAutocomplete && (
               <div className="mb-2 bg-white rounded-2xl border border-[#D4DAD0] shadow-lg overflow-hidden">
                 <div className="px-4 py-2 border-b border-[#E8EBE4] bg-[#FDFBF4]">
                   <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Top matches in my library</div>
@@ -1478,6 +1498,8 @@ Use the same Top 3 response format.`;
                 type="text"
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
+                onFocus={() => setIsAskInputFocused(true)}
+                onBlur={() => setIsAskInputFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return;
                   if (e.shiftKey) return;
