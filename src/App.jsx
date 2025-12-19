@@ -311,12 +311,8 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
   
-  // Generate Google Books cover URL (better coverage than Open Library)
-  const coverUrl = React.useMemo(() => {
-    if (!rec.title || !displayAuthor) return null;
-    const query = encodeURIComponent(`${rec.title} ${displayAuthor}`);
-    return `https://books.google.com/books/content?id=&printsec=frontcover&img=1&zoom=1&q=${query}`;
-  }, [rec.title, displayAuthor]);
+  // Don't show cover images - they're not loading reliably
+  const coverUrl = null;
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
