@@ -226,6 +226,14 @@ const themeInfo = {
   justice: { emoji: "⚖️", label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
 };
 
+const themeDescriptions = {
+  women: 'Women-led lives, resilience, sisterhood.',
+  emotional: 'Heartbreak, healing, and catharsis.',
+  identity: 'Belonging, reinvention, selfhood.',
+  spiritual: 'Meaning, faith, inner work.',
+  justice: 'Systems, power, and what’s unseen.',
+};
+
 // Parse structured recommendations from AI response
 function parseRecommendations(text) {
   const recommendations = [];
@@ -1207,60 +1215,19 @@ export default function App() {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="mb-3">
-            <div className="w-full max-w-sm mx-auto bg-[#E8EBE4] rounded-full p-1 border border-[#D4DAD0] shadow-sm">
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  onClick={() => setChatMode('library')}
-                  className={`w-full px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    chatMode === 'library'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  My Library
-                </button>
-                <button
-                  onClick={() => setChatMode('discover')}
-                  className={`w-full px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    chatMode === 'discover'
-                      ? 'bg-white text-[#4A5940] shadow-sm'
-                      : 'text-[#5F7252] hover:text-[#4A5940] hover:bg-white/60'
-                  }`}
-                >
-                  Anywhere
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {messages.length <= 2 && (
-            <div className="mb-3">
-              <div className="w-full max-w-2xl mx-auto rounded-2xl bg-white border border-[#D4DAD0] px-3 py-2">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider flex-shrink-0">
-                    Themes
-                  </div>
-                  <div className="flex-1 overflow-x-auto">
-                    <div className="flex gap-2 pr-2">
-                      {Object.entries(themeInfo).map(([key, info]) => (
-                        <button
-                          key={key}
-                          onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
-                          className="whitespace-nowrap px-3 py-1.5 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-xs text-[#5F7252] hover:border-[#96A888] hover:text-[#4A5940] transition-all font-medium"
-                          title={info.label}
-                        >
-                          {info.emoji} {info.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="bg-white rounded-2xl border border-[#D4DAD0] shadow-lg p-2 flex items-center gap-2">
+            <button
+              onClick={() => setChatMode(chatMode === 'discover' ? 'library' : 'discover')}
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center text-base transition-all flex-shrink-0 ${
+                chatMode === 'discover'
+                  ? 'bg-[#E8EBE4] border-[#96A888] text-[#4A5940]'
+                  : 'bg-white border-[#D4DAD0] text-[#96A888] hover:text-[#5F7252] hover:border-[#96A888]'
+              }`}
+              title={chatMode === 'discover' ? 'Anywhere (AI discovery) — click to use My Library' : 'My Library — click for Anywhere (AI discovery)'}
+              aria-label={chatMode === 'discover' ? 'Switch to My Library' : 'Switch to Anywhere'}
+            >
+              ♾️
+            </button>
             <input
               type="text"
               value={inputValue}
@@ -1294,6 +1261,28 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          {messages.length <= 2 && (
+            <div className="mt-3 sm:mt-4 w-full rounded-2xl bg-white border border-[#D4DAD0] px-4 py-3">
+              <div className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Sarah’s Curator Themes</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {Object.entries(themeInfo).map(([key, info]) => (
+                  <button
+                    key={key}
+                    onClick={() => setInputValue(`I'm in the mood for ${info.label}. Recommend something that fits.`)}
+                    className="flex items-start gap-2 px-3 py-2 rounded-xl bg-[#FDFBF4] border border-[#D4DAD0] hover:border-[#96A888] transition-colors text-left"
+                    title={info.label}
+                  >
+                    <span className="text-base leading-none">{info.emoji}</span>
+                    <span className="min-w-0">
+                      <span className="block text-xs font-medium text-[#4A5940] leading-snug">{info.label}</span>
+                      <span className="block text-[11px] text-[#7A8F6C] font-light leading-snug">{themeDescriptions[key]}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-3 sm:mt-4 w-full rounded-xl border border-dashed border-[#D4DAD0] bg-[#FDFBF4] px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 text-xs sm:text-sm font-light text-[#7A8F6C] truncate flex items-center gap-2">
