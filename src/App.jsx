@@ -1352,7 +1352,7 @@ export default function App() {
                       setSelectedThemes(prev => prev.filter(t => t !== key));
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
-                      setInputValue(`Show me options in ${info.label}.`);
+                      setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
                     }
                   }}
                   className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all ${
