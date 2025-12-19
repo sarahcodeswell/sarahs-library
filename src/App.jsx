@@ -824,23 +824,24 @@ export default function App() {
   }, []);
 
 
-  useEffect(() => {
-    if (!hasHydratedChatRef.current) return;
-    try {
-      const raw = window.localStorage.getItem(chatStorageKey);
-      const parsed = raw ? JSON.parse(raw) : null;
-      const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
-      const restored = Array.isArray(byMode?.[chatMode]) ? byMode[chatMode] : null;
-      if (restored && restored.length) {
-        setMessages(restored);
-      } else {
-        setMessages(getInitialMessagesForMode(chatMode));
-      }
-    } catch (e) {
-      void e;
-      setMessages(getInitialMessagesForMode(chatMode));
-    }
-  }, [chatMode]);
+  // Don't reset messages when switching modes - keep the conversation unified
+  // useEffect(() => {
+  //   if (!hasHydratedChatRef.current) return;
+  //   try {
+  //     const raw = window.localStorage.getItem(chatStorageKey);
+  //     const parsed = raw ? JSON.parse(raw) : null;
+  //     const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
+  //     const restored = Array.isArray(byMode?.[chatMode]) ? byMode[chatMode] : null;
+  //     if (restored && restored.length) {
+  //       setMessages(restored);
+  //     } else {
+  //       setMessages(getInitialMessagesForMode(chatMode));
+  //     }
+  //   } catch (e) {
+  //     void e;
+  //     setMessages(getInitialMessagesForMode(chatMode));
+  //   }
+  // }, [chatMode]);
 
   useEffect(() => {
     if (!hasHydratedChatRef.current) return;
