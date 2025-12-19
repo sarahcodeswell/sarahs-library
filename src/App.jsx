@@ -508,6 +508,7 @@ ${qualityGuidelines}
 IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
 Do NOT output a numbered list or bullet list of titles.
 Each recommendation MUST include a line that starts with "Title:".
+You MUST return exactly 3 recommendations (no fewer). If you cannot find 3 perfect matches, broaden slightly and still return 3.
 
 Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.
 
@@ -954,7 +955,7 @@ export default function App() {
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 320,
+          max_tokens: 380,
           system: systemPrompt,
           messages: [
             ...chatHistory,
