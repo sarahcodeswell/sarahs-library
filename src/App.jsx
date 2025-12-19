@@ -1073,12 +1073,24 @@ export default function App() {
         : '';
       const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 40).join('\n');
 
+      const discoverAvoidShortlist = chatMode === 'discover'
+        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 25).join('\n')
+        : '';
+
       const userContent = chatMode === 'library'
         ? `LIBRARY SHORTLIST:\n${limitedLibraryShortlist}\n\nUSER REQUEST:\n${userMessage}`
         : (() => {
-            if (!importedLibrary?.items?.length) return userMessage;
-            const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
-            return `USER LIBRARY (imported):\n${owned}\n\nIMPORTANT: Avoid recommending books the user already owns.\n\nUSER REQUEST:\n${userMessage}`;
+            const parts = [];
+            if (discoverAvoidShortlist) {
+              parts.push(`SARAH'S LIBRARY SHORTLIST (DO NOT RECOMMEND):\n${discoverAvoidShortlist}`);
+            }
+            if (importedLibrary?.items?.length) {
+              const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+              parts.push(`USER LIBRARY (imported):\n${owned}`);
+            }
+            parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned.');
+            parts.push(`USER REQUEST:\n${userMessage}`);
+            return parts.join('\n\n');
           })();
 
       const response = await fetch('/api/chat', {
