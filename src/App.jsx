@@ -424,7 +424,7 @@ function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, on
                 onClick={() => onDiscoverMore && onDiscoverMore(recommendations)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
               >
-                ∞ Discover More Like These
+                ✨ Show Me More Like These
               </button>
             )}
           </div>
@@ -434,12 +434,19 @@ function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, on
       {/* Step 3: After negative feedback - teach about personalization */}
       {userFeedback === 'dislike' && (
         <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4]">
-          <p className="text-sm text-[#5F7252] mb-3 text-center font-medium">Let's make these recommendations better!</p>
-          <p className="text-xs text-[#7A8F6C] mb-3 text-center">Upload your Goodreads library so I can:</p>
+          <p className="text-sm text-[#5F7252] mb-3 text-center font-medium">Let's find what you're looking for!</p>
+          <p className="text-xs text-[#7A8F6C] mb-3 text-center">This might not have worked because:</p>
           <ul className="text-xs text-[#7A8F6C] mb-3 space-y-1 text-left max-w-[280px] mx-auto">
-            <li>✓ Know what you've already read</li>
-            <li>✓ Personalize recommendations to your taste</li>
-            <li>✓ See what % of books we have in common</li>
+            <li>• You've already read these</li>
+            <li>• I need more info about your taste</li>
+            <li>• My library is too small (~200 books)</li>
+          </ul>
+          <p className="text-sm text-[#5F7252] mb-3 text-center font-medium">Upload your Goodreads library:</p>
+          <ul className="text-xs text-[#7A8F6C] mb-3 space-y-1 text-left max-w-[280px] mx-auto">
+            <li>✓ Skip books you've already read</li>
+            <li>✓ I'll learn your preferences</li>
+            <li>✓ Unlock personalized world search</li>
+            <li>✓ See our book overlap %</li>
           </ul>
           <button
             onClick={() => onUploadLibrary && onUploadLibrary()}
@@ -732,6 +739,12 @@ export default function App() {
   const [chatMode, setChatMode] = useState('library');
   const [hasEngaged, setHasEngaged] = useState(false);
   const [likedBooks, setLikedBooks] = useState([]);
+  const [tasteProfile, setTasteProfile] = useState({
+    likedBooks: [],
+    likedThemes: [],
+    likedAuthors: []
+  });
+  const [showDiscoverModal, setShowDiscoverModal] = useState(false);
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -768,17 +781,34 @@ export default function App() {
     }];
   };
 
-  const handleDiscoverMore = () => {
+  const handleShowMoreLibrary = () => {
+    // Stay in library mode, iterate with liked books as context
+    const likedTitles = tasteProfile.likedBooks.map(b => b.title).join(', ');
+    const message = `Show me more books like: ${likedTitles}`;
+    
+    setInputValue(message);
+    setShowDiscoverModal(false);
+    
+    setTimeout(() => {
+      const sendButton = document.querySelector('button[aria-label="Send message"]');
+      if (sendButton) sendButton.click();
+    }, 50);
+  };
+
+  const handleShowMoreWorld = () => {
+    // Switch to discover mode with taste profile intelligence
     setChatMode('discover');
+    setShowDiscoverModal(false);
     
-    // Build discover message with context from liked books
-    const likedTitles = likedBooks.map(b => b.title).join(', ');
-    const discoverMessage = `Find me books similar to: ${likedTitles}`;
+    const context = `
+Based on books I've liked:
+${tasteProfile.likedBooks.map(b => `- ${b.title} by ${b.author}`).join('\n')}
+
+Find similar books from beyond my library that match this taste profile.
+    `.trim();
     
-    // Set the input value so it will be sent
-    setInputValue(discoverMessage);
+    setInputValue(context);
     
-    // Trigger send after a brief delay to allow state to update
     setTimeout(() => {
       const sendButton = document.querySelector('button[aria-label="Send message"]');
       if (sendButton) sendButton.click();
@@ -1268,6 +1298,12 @@ export default function App() {
                     if (data === 'like' && chatMode === 'library') {
                       setHasEngaged(true);
                       setLikedBooks(recommendations.map(r => ({ title: r.title, author: r.author })));
+                      // Build taste profile
+                      setTasteProfile(prev => ({
+                        likedBooks: [...prev.likedBooks, ...recommendations.map(r => ({ title: r.title, author: r.author }))],
+                        likedThemes: prev.likedThemes, // TODO: extract from recommendations
+                        likedAuthors: [...new Set([...prev.likedAuthors, ...recommendations.map(r => r.author).filter(Boolean)])]
+                      }));
                     }
                   } else if (action === 'find_book') {
                     // Open all recommended books in tabs
@@ -1283,7 +1319,8 @@ export default function App() {
                       chat_mode: chatMode
                     });
                   } else if (action === 'discover_more') {
-                    handleDiscoverMore();
+                    // Show modal to choose library or world
+                    setShowDiscoverModal(true);
                   } else if (action === 'upload_library') {
                     // Trigger the file input click
                     setImportError('');
@@ -1499,6 +1536,59 @@ export default function App() {
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
 
+      {/* Discover Modal - Choose Library or World */}
+      {showDiscoverModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#E8EBE4]">
+            <h3 className="text-lg font-serif text-[#4A5940] mb-3 text-center">
+              Where should I look?
+            </h3>
+            <p className="text-sm text-[#7A8F6C] mb-6 text-center">
+              I've learned what you like. Let's find more!
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={handleShowMoreLibrary}
+                className="w-full p-4 rounded-xl border-2 border-[#E8EBE4] hover:border-[#5F7252] hover:bg-[#F8F6EE] transition-all text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">📚</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#4A5940] mb-1">More from My Library</p>
+                    <p className="text-xs text-[#7A8F6C]">Stay in my curated collection of ~200 books</p>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={handleShowMoreWorld}
+                className="w-full p-4 rounded-xl border-2 border-[#5F7252] bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] hover:border-[#4A5940] transition-all text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">∞</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#4A5940] mb-1">Search Everywhere</p>
+                    <p className="text-xs text-[#7A8F6C]">Use your taste profile to search millions of books</p>
+                    {tasteProfile.likedBooks.length > 0 && (
+                      <p className="text-xs text-[#96A888] mt-1 italic">
+                        Based on {tasteProfile.likedBooks.length} book{tasteProfile.likedBooks.length !== 1 ? 's' : ''} you liked
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </button>
+            </div>
+            
+            <button
+              onClick={() => setShowDiscoverModal(false)}
+              className="w-full mt-4 px-4 py-2 text-sm text-[#96A888] hover:text-[#5F7252] transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
