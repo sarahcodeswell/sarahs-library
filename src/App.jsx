@@ -243,8 +243,8 @@ function parseRecommendations(text) {
   for (const line of lines) {
     const trimmed = line.trim();
     
-    // Skip lines that contain [RECOMMENDATION X] markers (with or without surrounding text)
-    if (trimmed.match(/\[RECOMMENDATION\s+\d+\]/i)) {
+    // Skip lines that contain [RECOMMENDATION X] or **RECOMMENDATION X** markers
+    if (trimmed.match(/\[RECOMMENDATION\s+\d+\]/i) || trimmed.match(/\*\*RECOMMENDATION\s+\d+\*\*/i)) {
       continue;
     }
     
@@ -320,7 +320,8 @@ function RecommendationCard({ rec, chatMode }) {
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-            {catalogBook && chatMode !== 'discover' && <span className="text-xs text-[#96A888] italic">📚</span>}
+            {chatMode === 'library' && catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
+            {chatMode === 'discover' && <span className="text-xs text-[#96A888] italic">∞</span>}
           </div>
           {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
           {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
@@ -353,8 +354,11 @@ function RecommendationCard({ rec, chatMode }) {
                 <span className="font-medium">Reputation:</span> {rec.reputation}
               </p>
             )}
-            {catalogBook && chatMode !== 'discover' && (
+            {chatMode === 'library' && catalogBook && (
               <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
+            )}
+            {chatMode === 'discover' && (
+              <p className="text-xs text-[#96A888] italic">∞ All Books</p>
             )}
           </div>
         </div>
@@ -363,7 +367,7 @@ function RecommendationCard({ rec, chatMode }) {
   );
 }
 
-function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, onDiscoverMore, chatMode }) {
+function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, onDiscoverMore, onUploadLibrary, chatMode }) {
   const [userFeedback, setUserFeedback] = useState(null);
   
   const handleFeedback = (type) => {
@@ -420,17 +424,31 @@ function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, on
                 onClick={() => onDiscoverMore && onDiscoverMore(recommendations)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
               >
-                🌍 Discover More Like These
+                ∞ Discover More Like These
               </button>
             )}
           </div>
         </div>
       )}
       
-      {/* Step 3: After negative feedback */}
+      {/* Step 3: After negative feedback - teach about personalization */}
       {userFeedback === 'dislike' && (
-        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
-          <p className="text-sm text-[#5F7252] mb-2">No problem! Try being more specific about what you're looking for, or choose a different theme above.</p>
+        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4]">
+          <p className="text-sm text-[#5F7252] mb-3 text-center font-medium">Let's make these recommendations better!</p>
+          <p className="text-xs text-[#7A8F6C] mb-3 text-center">Upload your Goodreads library so I can:</p>
+          <ul className="text-xs text-[#7A8F6C] mb-3 space-y-1 text-left max-w-[280px] mx-auto">
+            <li>✓ Know what you've already read</li>
+            <li>✓ Personalize recommendations to your taste</li>
+            <li>✓ See what % of books we have in common</li>
+          </ul>
+          <button
+            onClick={() => onUploadLibrary && onUploadLibrary()}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors mb-2"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Goodreads CSV
+          </button>
+          <p className="text-xs text-[#96A888] text-center">Or try being more specific about what you're looking for</p>
         </div>
       )}
     </div>
@@ -466,6 +484,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) 
           onFeedback={(type, recs) => onActionPanelInteraction('feedback', type, recs)}
           onFindBook={(destination, recs) => onActionPanelInteraction('find_book', destination, recs)}
           onDiscoverMore={(recs) => onActionPanelInteraction('discover_more', null, recs)}
+          onUploadLibrary={() => onActionPanelInteraction('upload_library', null, recommendations)}
         />
       )}
     </div>
@@ -739,7 +758,7 @@ export default function App() {
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
       return [{
-        text: "Let's discover something new! 🌍 I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
+        text: "Let's discover something new! ∞ I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
         isUser: false
       }];
     }
@@ -1265,6 +1284,14 @@ export default function App() {
                     });
                   } else if (action === 'discover_more') {
                     handleDiscoverMore();
+                  } else if (action === 'upload_library') {
+                    // Trigger the file input click
+                    setImportError('');
+                    importFileInputRef.current?.click();
+                    track('upload_library_prompt', {
+                      source: 'negative_feedback',
+                      chat_mode: chatMode
+                    });
                   }
                 }}
               />
@@ -1406,7 +1433,7 @@ export default function App() {
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
             <div className="mb-3 px-4 py-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
-              <p className="text-xs text-[#7A8F6C] mb-2">🌍 Finding books similar to:</p>
+              <p className="text-xs text-[#7A8F6C] mb-2">∞ Finding books similar to:</p>
               <div className="flex flex-wrap gap-1.5">
                 {likedBooks.map((book, idx) => (
                   <span key={idx} className="text-xs px-2 py-1 bg-white text-[#5F7252] rounded-full border border-[#E8EBE4]">
