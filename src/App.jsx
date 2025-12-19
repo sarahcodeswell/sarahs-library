@@ -465,7 +465,10 @@ function FormattedRecommendations({ text, messageIndex, chatMode }) {
   // Extract the header (everything before the first recommendation)
   const header = React.useMemo(() => {
     const headerMatch = String(text || '').match(/^(.*?)(?=\[RECOMMENDATION|\nTitle:)/s);
-    return headerMatch ? headerMatch[1].trim() : '';
+    let headerText = headerMatch ? headerMatch[1].trim() : '';
+    // Remove any **RECOMMENDATION X** markers from the header
+    headerText = headerText.replace(/\*\*RECOMMENDATION\s+\d+\*\*/gi, '').trim();
+    return headerText;
   }, [text]);
   
   return (
