@@ -504,6 +504,10 @@ Your taste: women's stories, emotional truth, identity, spirituality, justice.
 ${responseFormat}
 ${qualityGuidelines}
 
+IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
+Do NOT output a numbered list or bullet list of titles.
+Each recommendation MUST include a line that starts with "Title:".
+
 Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.
 
 When asked for "best books of the year" or new releases, treat the current year as ${CURRENT_YEAR} unless the user specifies a different year. Prefer the best books of ${CURRENT_YEAR}.`;
