@@ -299,26 +299,34 @@ function RecommendationCard({ rec, index, messageIndex, chatMode }) {
       recommendation_index: index,
       book_title: rec?.title || '',
       book_author: rec?.author || '',
-      source: 'recommendation_card'
+      chat_mode: chatMode
     });
   };
   
   const handleLinkClick = (destination) => {
+    // Track the recommendation conversion
+    track('recommendation_taken', {
+      book_title: rec.title,
+      book_author: rec.author || '',
+      destination, // 'goodreads' or 'bookshop'
+      message_index: messageIndex,
+      chat_mode: chatMode,
+      from_catalog: !!catalogBook,
+      recommendation_position: index + 1,
+      had_feedback: feedback !== null,
+      feedback_type: feedback,
+      was_expanded: expanded
+    });
+    
+    // Also track as book link click for backwards compatibility
     track('book_link_click', {
       book_title: rec.title,
       book_author: rec.author || '',
-      destination: destination,
-      source: 'recommendation_card'
+      destination,
+      message_index: messageIndex,
+      chat_mode: chatMode,
+      from_catalog: !!catalogBook
     });
-
-    if (destination === 'goodreads') {
-      bumpLocalMetric('goodreads_link_clicks_v1', 1);
-      track('goodreads_link_click', { source: 'recommendation_card' });
-    }
-    if (destination === 'bookshop') {
-      bumpLocalMetric('bookshop_link_clicks_v1', 1);
-      track('bookshop_link_click', { source: 'recommendation_card' });
-    }
   };
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
@@ -340,9 +348,6 @@ function RecommendationCard({ rec, index, messageIndex, chatMode }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
       >
-        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white text-xs font-medium flex items-center justify-center">
-          {index + 1}
-        </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
@@ -705,7 +710,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together.", isUser: false }
+    { text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -733,7 +738,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together.",
+      text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.",
       isUser: false
     }];
   };
