@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
+import { auth, db } from './lib/supabase';
+import AuthModal from './components/AuthModal';
+import UserProfile from './components/UserProfile';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const CURRENT_YEAR = new Date().getFullYear();
@@ -801,6 +804,11 @@ export default function App() {
     likedAuthors: []
   });
   const [showDiscoverModal, setShowDiscoverModal] = useState(false);
+  
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [readingQueue, setReadingQueue] = useState([]);
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -823,6 +831,79 @@ export default function App() {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
+
+  // Auth effect - check for existing session and load user data
+  useEffect(() => {
+    const initAuth = async () => {
+      const currentUser = await auth.getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        // Load user's taste profile
+        const { data: profile } = await db.getTasteProfile(currentUser.id);
+        if (profile) {
+          setTasteProfile({
+            likedBooks: profile.liked_books || [],
+            likedThemes: profile.liked_themes || [],
+            likedAuthors: profile.liked_authors || []
+          });
+        }
+        // Load reading queue
+        const { data: queue } = await db.getReadingQueue(currentUser.id);
+        if (queue) {
+          setReadingQueue(queue);
+        }
+      }
+    };
+
+    initAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        // Load user data
+        const { data: profile } = await db.getTasteProfile(session.user.id);
+        if (profile) {
+          setTasteProfile({
+            likedBooks: profile.liked_books || [],
+            likedThemes: profile.liked_themes || [],
+            likedAuthors: profile.liked_authors || []
+          });
+        }
+        const { data: queue } = await db.getReadingQueue(session.user.id);
+        if (queue) {
+          setReadingQueue(queue);
+        }
+      } else {
+        setUser(null);
+        setReadingQueue([]);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  // Save taste profile to database when it changes (if user is logged in)
+  useEffect(() => {
+    if (user && tasteProfile.likedBooks.length > 0) {
+      db.upsertTasteProfile(user.id, tasteProfile);
+    }
+  }, [user, tasteProfile]);
+
+  const handleAuthSuccess = (authUser) => {
+    setUser(authUser);
+    setShowAuthModal(false);
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    setTasteProfile({
+      likedBooks: [],
+      likedThemes: [],
+      likedAuthors: []
+    });
+    setReadingQueue([]);
+  };
 
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
@@ -1282,6 +1363,28 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
+              {user ? (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all"
+                  title="View profile"
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2 text-sm font-medium">
+                    {user.email?.split('@')[0]}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#5F7252] text-white hover:bg-[#4A5940] transition-all"
+                  title="Sign in"
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2 text-sm font-medium">Sign In</span>
+                </button>
+              )}
+
               <button
                 onClick={handleSendHeart}
                 disabled={feedbackStatus.isSendingThanks}
@@ -1669,6 +1772,35 @@ Find similar books from beyond my library that match this taste profile.
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && !user && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {/* User Profile Modal */}
+      {showAuthModal && user && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#E8EBE4] relative">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-[#96A888]" />
+            </button>
+            <UserProfile
+              user={user}
+              tasteProfile={tasteProfile}
+              readingQueue={readingQueue}
+              onSignOut={handleSignOut}
+            />
           </div>
         </div>
       )}
