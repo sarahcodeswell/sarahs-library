@@ -1108,15 +1108,48 @@ export default function App() {
         })
       });
 
-      const data = await response.json();
-      const assistantMessage = data.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
+      const rawText = await response.text();
+      let data;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch (e) {
+        void e;
+        data = null;
+      }
+
+      if (!response.ok) {
+        const msg = (() => {
+          if (!data) return String(rawText || '').trim();
+          if (typeof data?.error === 'string') return data.error.trim();
+          if (data?.error && typeof data.error === 'object') {
+            const nested = data.error?.message || data.error?.error || data.error?.type;
+            if (nested) return String(nested).trim();
+          }
+          if (data?.message) return String(data.message).trim();
+          return String(rawText || '').trim();
+        })();
+
+        const statusLine = typeof response.status === 'number' && response.status ? ` (${response.status})` : '';
+        setMessages(prev => [...prev, {
+          text: msg ? `Oops — the server returned an error${statusLine}: ${msg}` : "Oops — I'm having trouble right now. Could you try again?",
+          isUser: false
+        }]);
+        return;
+      }
+
+      const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
-      if (!isAbort) {
-        setMessages(prev => [...prev, { 
-          text: "Oops, I'm having a moment. Let me catch my breath and try again!", 
-          isUser: false 
+      if (isAbort) {
+        setMessages(prev => [...prev, {
+          text: "That took a little too long on my end. Want to try again (or ask for something shorter)?",
+          isUser: false
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          text: "Oops, I'm having a moment. Let me catch my breath and try again!",
+          isUser: false
         }]);
       }
     } finally {
