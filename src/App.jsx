@@ -283,7 +283,6 @@ function hasStructuredRecommendations(text) {
 
 function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(false);
-  const [coverError, setCoverError] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -310,9 +309,6 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
-  
-  // Don't show cover images - they're not loading reliably
-  const coverUrl = null;
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
@@ -320,24 +316,6 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-[#F5F7F2] transition-colors"
       >
-        {/* Book cover thumbnail */}
-        {!coverError && coverUrl && (
-          <div className="w-12 h-16 flex-shrink-0 bg-[#E8EBE4] rounded overflow-hidden">
-            <img
-              src={coverUrl}
-              alt={`${rec.title} cover`}
-              className="w-full h-full object-cover"
-              onError={() => setCoverError(true)}
-              loading="lazy"
-            />
-          </div>
-        )}
-        {(coverError || !coverUrl) && (
-          <div className="w-12 h-16 flex-shrink-0 bg-gradient-to-br from-[#F8F6EE] to-[#E8EBE4] rounded flex items-center justify-center">
-            <Book className="w-6 h-6 text-[#96A888]" />
-          </div>
-        )}
-        
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
