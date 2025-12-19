@@ -435,7 +435,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex, onSeeMore }) {
+function FormattedRecommendations({ text, messageIndex }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -452,17 +452,6 @@ function FormattedRecommendations({ text, messageIndex, onSeeMore }) {
       {recommendations.map((rec, idx) => (
         <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
       ))}
-
-      {typeof onSeeMore === 'function' && recommendations.length > 0 && (
-        <div className="pt-2">
-          <button
-            onClick={() => onSeeMore({ messageIndex, recommendations })}
-            className="w-full px-4 py-2 rounded-xl bg-white border border-[#D4DAD0] text-[#5F7252] text-sm font-medium hover:text-[#4A5940] hover:border-[#96A888] transition-colors"
-          >
-            See more
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -618,7 +607,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, messageIndex, onSeeMore }) {
+function ChatMessage({ message, isUser, messageIndex }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -637,7 +626,7 @@ function ChatMessage({ message, isUser, messageIndex, onSeeMore }) {
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}> 
           {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} onSeeMore={onSeeMore} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
@@ -896,11 +885,10 @@ export default function App() {
     setImportError('');
   };
 
-  const handleSendMessage = async (overrideText) => {
-    if (isLoading) return;
-    const userMessage = String(overrideText ?? inputValue).trim();
-    if (!userMessage) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
+    const userMessage = inputValue.trim();
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
@@ -974,27 +962,6 @@ export default function App() {
       inFlightRequestRef.current = null;
       setIsLoading(false);
     }
-  };
-
-  const getLastUserMessageBeforeIndex = (idx) => {
-    for (let i = Math.min(idx - 1, messages.length - 1); i >= 0; i -= 1) {
-      const m = messages[i];
-      if (m && m.isUser) return String(m.text || '').trim();
-    }
-    return '';
-  };
-
-  const handleSeeMore = ({ messageIndex, recommendations }) => {
-    if (isLoading) return;
-    const base = getLastUserMessageBeforeIndex(messageIndex) || 'More recommendations, please.';
-    const titles = Array.isArray(recommendations)
-      ? recommendations.map(r => String(r?.title || '').trim()).filter(Boolean)
-      : [];
-    const avoidLine = titles.length ? `Avoid repeating these titles:\n- ${titles.join('\n- ')}` : '';
-
-    const prompt = `${base}\n\nPlease recommend 3 more books in the same style and format as before.${avoidLine ? `\n\n${avoidLine}` : ''}`;
-    track('see_more_click', { mode: chatMode, prior_recs: titles.length });
-    void handleSendMessage(prompt);
   };
 
   const suggestionChips = chatMode === 'library' 
@@ -1189,7 +1156,6 @@ export default function App() {
                 message={msg.text} 
                 isUser={msg.isUser} 
                 messageIndex={idx}
-                onSeeMore={handleSeeMore}
               />
             ))}
             {isLoading && (
