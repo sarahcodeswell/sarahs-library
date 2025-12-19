@@ -1064,8 +1064,13 @@ export default function App() {
           content: m.text
         }));
 
+      const libraryShortlist = chatMode === 'library'
+        ? String(buildLibraryContext(userMessage, bookCatalog) || '')
+        : '';
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 40).join('\n');
+
       const userContent = chatMode === 'library'
-        ? `LIBRARY SHORTLIST:\n${buildLibraryContext(userMessage, bookCatalog)}\n\nUSER REQUEST:\n${userMessage}`
+        ? `LIBRARY SHORTLIST:\n${limitedLibraryShortlist}\n\nUSER REQUEST:\n${userMessage}`
         : (() => {
             if (!importedLibrary?.items?.length) return userMessage;
             const owned = importedLibrary.items.slice(0, 40).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
@@ -1078,7 +1083,7 @@ export default function App() {
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
+          max_tokens: 400,
           system: systemPrompt,
           messages: [
             ...chatHistory,
