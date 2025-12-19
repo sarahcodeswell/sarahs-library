@@ -497,6 +497,12 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
 ${responseFormat}
 ${qualityGuidelines}
 
+IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
+Do NOT output a numbered list or bullet list of titles.
+Each recommendation MUST include a line that starts with "Title:".
+You MUST return exactly 3 recommendations (no fewer), chosen ONLY from the provided LIBRARY SHORTLIST.
+If the user's request is vague, still return 3 solid picks, then ask 1 short clarifying question at the very end (after the 3 recommendations).
+
 IMPORTANT: Only recommend books from the provided LIBRARY SHORTLIST (included in the user's message). If asked about books not listed, offer to switch to "Discover New" mode.`;
   } else {
     return `You are Sarah, a book curator helping discover new reads.
