@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Globe, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -263,24 +263,25 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex }) {
+function RecommendationCard({ rec, index, messageIndex, chatMode }) {
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
+    if (chatMode === 'discover') return null;
     const t = String(rec?.title || '');
     const key = normalizeTitle(t);
     if (key && CATALOG_TITLE_INDEX.has(key)) return CATALOG_TITLE_INDEX.get(key);
 
-    // Fallback for slight title mismatches (cheap partial match)
+    // Fallback for slight title mismatches (cheap partial match).
     const needle = normalizeTitle(t);
     if (!needle) return null;
     for (const [k, b] of CATALOG_TITLE_INDEX.entries()) {
       if (k.includes(needle) || needle.includes(k)) return b;
     }
     return null;
-  }, [rec.title]);
+  }, [rec.title, chatMode]);
 
   const handleFeedback = (type) => {
     setFeedback(type);
@@ -338,7 +339,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-            {catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
+            {catalogBook && chatMode !== 'discover' && <span className="text-xs text-[#96A888] italic">📚</span>}
           </div>
           {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
           {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
@@ -402,7 +403,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
                 <span className="font-medium">Reputation:</span> {rec.reputation}
               </p>
             )}
-            {catalogBook && (
+            {catalogBook && chatMode !== 'discover' && (
               <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
             )}
           </div>
@@ -435,7 +436,7 @@ function RecommendationCard({ rec, index, messageIndex }) {
   );
 }
 
-function FormattedRecommendations({ text, messageIndex }) {
+function FormattedRecommendations({ text, messageIndex, chatMode }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -450,7 +451,7 @@ function FormattedRecommendations({ text, messageIndex }) {
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} />
+        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} chatMode={chatMode} />
       ))}
     </div>
   );
@@ -611,94 +612,8 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatSearchBox({ onClose }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSearch = (destination) => {
-    if (!searchTerm.trim()) return;
-    
-    track('book_link_click', {
-      book_title: searchTerm,
-      book_author: '',
-      book_genre: 'unknown',
-      is_favorite: false,
-      destination: destination,
-      source: 'chat_search'
-    });
-
-    if (destination === 'goodreads') {
-      bumpLocalMetric('goodreads_link_clicks_v1', 1);
-      track('goodreads_link_click', { source: 'chat_search' });
-    }
-    if (destination === 'bookshop') {
-      bumpLocalMetric('bookshop_link_clicks_v1', 1);
-      track('bookshop_link_click', { source: 'chat_search' });
-    }
-
-    const url = destination === 'goodreads' 
-      ? getGoodreadsSearchUrl(searchTerm, '')
-      : getBookshopSearchUrl(searchTerm, '');
-    window.open(url, '_blank');
-  };
-
-  return (
-    <div className="mt-2 space-y-2">
-      <div className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          placeholder="Enter book title..."
-          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[#D4DAD0] focus:border-[#96A888] outline-none text-[#4A5940] placeholder-[#96A888]"
-        />
-        <button
-          onClick={onClose}
-          className="px-2 py-1.5 text-[#96A888] hover:text-[#4A5940] transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleSearch('goodreads')}
-          disabled={!searchTerm.trim()}
-          className="flex-1 px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
-        >
-          <ExternalLink className="w-3 h-3" />
-          Goodreads
-        </button>
-        <button
-          onClick={() => handleSearch('bookshop')}
-          disabled={!searchTerm.trim()}
-          className="flex-1 px-3 py-1.5 bg-[#4A7C59] text-white rounded-lg text-xs hover:bg-[#3d6649] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
-        >
-          <ShoppingBag className="w-3 h-3" />
-          Buy Local
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
-  const [showSearch, setShowSearch] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+function ChatMessage({ message, isUser, messageIndex, chatMode }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
-
-  const handleFeedback = (type) => {
-    setFeedback(type);
-    track('recommendation_feedback', {
-      feedback_type: type,
-      message_index: messageIndex,
-      message_preview: message.substring(0, 100)
-    });
-  };
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -716,73 +631,13 @@ function ChatMessage({ message, isUser, showSearchOption, messageIndex }) {
             : 'bg-white text-[#4A5940] rounded-bl-sm border border-[#D4DAD0]'
         }`}> 
           {isStructured ? (
-            <FormattedRecommendations text={message} messageIndex={messageIndex} />
+            <FormattedRecommendations text={message} messageIndex={messageIndex} chatMode={chatMode} />
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {!isUser ? <FormattedText text={message} /> : message}
             </p>
           )}
         </div>
-        
-        {!isUser && showSearchOption && !isStructured && (
-          <div className="mt-2">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleFeedback('up')}
-                  disabled={feedback !== null}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    feedback === 'up'
-                      ? 'text-[#5F7252] bg-[#E8EBE4]'
-                      : feedback === 'down'
-                      ? 'text-[#D4DAD0] cursor-not-allowed'
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-                  }`}
-                  title="Helpful"
-                >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${feedback === 'up' ? 'fill-current' : ''}`} />
-                </button>
-                <button
-                  onClick={() => handleFeedback('down')}
-                  disabled={feedback !== null}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    feedback === 'down'
-                      ? 'text-[#5F7252] bg-[#E8EBE4]'
-                      : feedback === 'up'
-                      ? 'text-[#D4DAD0] cursor-not-allowed'
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-                  }`}
-                  title="Not helpful"
-                >
-                  <ThumbsDown className={`w-3.5 h-3.5 ${feedback === 'down' ? 'fill-current' : ''}`} />
-                </button>
-                {feedback && (
-                  <span className="text-xs text-[#96A888] ml-1">Thanks!</span>
-                )}
-              </div>
-              
-              {!isStructured && (
-                <>
-                  <div className="w-px h-4 bg-[#D4DAD0]" />
-                  
-                  {!showSearch && (
-                    <button
-                      onClick={() => setShowSearch(true)}
-                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
-                    >
-                      <Search className="w-3.5 h-3.5" />
-                      Find this book...
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-            
-            {showSearch && !isStructured && (
-              <ChatSearchBox onClose={() => setShowSearch(false)} />
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1062,7 +917,7 @@ export default function App() {
 
       const chatHistory = messages
         .filter(m => m.isUser !== undefined)
-        .slice(-4)
+        .slice(-3)
         .map(m => ({
           role: m.isUser ? 'user' : 'assistant',
           content: m.text
@@ -1071,10 +926,10 @@ export default function App() {
       const libraryShortlist = chatMode === 'library'
         ? String(buildLibraryContext(userMessage, bookCatalog) || '')
         : '';
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 25).join('\n');
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 18).join('\n');
 
       const discoverAvoidShortlist = chatMode === 'discover'
-        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 15).join('\n')
+        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 18).join('\n')
         : '';
 
       const userContent = chatMode === 'library'
@@ -1085,10 +940,10 @@ export default function App() {
               parts.push(`SARAH'S LIBRARY SHORTLIST (DO NOT RECOMMEND):\n${discoverAvoidShortlist}`);
             }
             if (importedLibrary?.items?.length) {
-              const owned = importedLibrary.items.slice(0, 25).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+              const owned = importedLibrary.items.slice(0, 18).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
               parts.push(`USER LIBRARY (imported):\n${owned}`);
             }
-            parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned.');
+            parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned. Before finalizing your 3 picks, double-check that none of the 3 titles appear in the DO NOT RECOMMEND list.');
             parts.push(`USER REQUEST:\n${userMessage}`);
             return parts.join('\n\n');
           })();
@@ -1099,7 +954,7 @@ export default function App() {
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 400,
+          max_tokens: 320,
           system: systemPrompt,
           messages: [
             ...chatHistory,
@@ -1350,8 +1205,8 @@ export default function App() {
                 key={idx} 
                 message={msg.text} 
                 isUser={msg.isUser} 
-                showSearchOption={!msg.isUser && idx > 0}
                 messageIndex={idx}
+                chatMode={chatMode}
               />
             ))}
             {isLoading && (
@@ -1362,6 +1217,7 @@ export default function App() {
                   className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
                 />
                 <div className="bg-white rounded-2xl rounded-bl-sm px-5 py-3 border border-[#D4DAD0]">
+                  <div className="text-xs text-[#7A8F6C] font-light mb-1">Curating your picks…</div>
                   <div className="flex gap-1.5">
                     <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
