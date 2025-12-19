@@ -281,7 +281,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode }) {
+function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(false);
   
   // Look up full book details from local catalog
@@ -327,11 +327,27 @@ function RecommendationCard({ rec, chatMode }) {
           {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
         </div>
 
-        {expanded ? (
-          <ChevronUp className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-1" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-1" />
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleSelect) onToggleSelect(rec);
+            }}
+            className="p-1.5 rounded-lg hover:bg-[#E8EBE4] transition-colors"
+            title={isSelected ? "Remove from selection" : "Add to selection"}
+          >
+            <Heart className={`w-4 h-4 transition-colors ${
+              isSelected 
+                ? 'fill-[#5F7252] text-[#5F7252]' 
+                : 'text-[#96A888] hover:text-[#5F7252]'
+            }`} />
+          </button>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-[#96A888] flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[#96A888] flex-shrink-0" />
+          )}
+        </div>
       </button>
       
       {expanded && (
@@ -367,27 +383,42 @@ function RecommendationCard({ rec, chatMode }) {
   );
 }
 
-function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, onDiscoverMore, onUploadLibrary, chatMode }) {
+function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback, onFindBook, onDiscoverMore, onUploadLibrary, chatMode }) {
   const [userFeedback, setUserFeedback] = useState(null);
+  
+  // Use selected books if any, otherwise use all recommendations
+  const booksToUse = selectedBooks.length > 0 ? selectedBooks : recommendations;
+  const hasSelection = selectedBooks.length > 0;
   
   const handleFeedback = (type) => {
     setUserFeedback(type);
-    if (onFeedback) onFeedback(type, recommendations);
+    if (onFeedback) onFeedback(type, booksToUse);
   };
   
   return (
     <div className="mt-4 space-y-3">
+      {/* Show selection indicator if books are selected */}
+      {hasSelection && !userFeedback && (
+        <div className="px-4 py-2 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4] text-center">
+          <p className="text-xs text-[#7A8F6C]">
+            {selectedBooks.length} book{selectedBooks.length !== 1 ? 's' : ''} selected
+          </p>
+        </div>
+      )}
+      
       {/* Step 1: Get feedback */}
       {!userFeedback && (
         <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
-          <p className="text-sm text-[#5F7252] mb-3 font-medium">What did you think?</p>
+          <p className="text-sm text-[#5F7252] mb-3 font-medium">
+            {hasSelection ? 'What did you think of your selection?' : 'What did you think?'}
+          </p>
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => handleFeedback('like')}
               className="flex-1 max-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
             >
               <ThumbsUp className="w-4 h-4" />
-              I like these
+              I like {hasSelection ? 'these' : 'them'}
             </button>
             <button
               onClick={() => handleFeedback('dislike')}
@@ -403,25 +434,27 @@ function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, on
       {/* Step 2: Next actions (after positive feedback) */}
       {userFeedback === 'like' && (
         <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
-          <p className="text-sm text-[#5F7252] mb-3 font-medium">💚 Great! What's next?</p>
+          <p className="text-sm text-[#5F7252] mb-3 font-medium">
+            💚 Great! What's next?
+          </p>
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => onFindBook && onFindBook('goodreads', recommendations)}
+              onClick={() => onFindBook && onFindBook('goodreads', booksToUse)}
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
-              Find on Goodreads
+              Find {hasSelection ? 'These' : 'Them'} on Goodreads
             </button>
             <button
-              onClick={() => onFindBook && onFindBook('bookshop', recommendations)}
+              onClick={() => onFindBook && onFindBook('bookshop', booksToUse)}
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A7C59] text-white rounded-lg text-sm font-medium hover:bg-[#3d6649] transition-colors"
             >
               <ShoppingBag className="w-4 h-4" />
-              Buy Local (Bookshop)
+              Buy {hasSelection ? 'These' : 'Them'} Locally
             </button>
             {chatMode === 'library' && (
               <button
-                onClick={() => onDiscoverMore && onDiscoverMore(recommendations)}
+                onClick={() => onDiscoverMore && onDiscoverMore(booksToUse)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
               >
                 ✨ Show Me More Like These
@@ -464,6 +497,7 @@ function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, on
 
 function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
+  const [selectedBooks, setSelectedBooks] = useState([]);
   
   // Extract the header (everything before the first recommendation)
   const header = React.useMemo(() => {
@@ -474,19 +508,41 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) 
     return headerText;
   }, [text]);
   
+  const handleToggleSelect = (book) => {
+    setSelectedBooks(prev => {
+      const exists = prev.some(b => b.title === book.title);
+      if (exists) {
+        return prev.filter(b => b.title !== book.title);
+      } else {
+        return [...prev, book];
+      }
+    });
+  };
+  
+  const isBookSelected = (book) => {
+    return selectedBooks.some(b => b.title === book.title);
+  };
+  
   return (
     <div className="space-y-3">
       {header && (
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} chatMode={chatMode} />
+        <RecommendationCard 
+          key={idx} 
+          rec={rec} 
+          chatMode={chatMode}
+          isSelected={isBookSelected(rec)}
+          onToggleSelect={handleToggleSelect}
+        />
       ))}
       
       {/* Action panel appears after recommendations */}
       {recommendations.length > 0 && onActionPanelInteraction && (
         <RecommendationActionPanel 
           recommendations={recommendations}
+          selectedBooks={selectedBooks}
           chatMode={chatMode}
           onFeedback={(type, recs) => onActionPanelInteraction('feedback', type, recs)}
           onFindBook={(destination, recs) => onActionPanelInteraction('find_book', destination, recs)}
