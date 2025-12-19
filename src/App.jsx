@@ -281,9 +281,8 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, index, messageIndex, chatMode, onEngagement }) {
+function RecommendationCard({ rec, chatMode }) {
   const [expanded, setExpanded] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -301,63 +300,12 @@ function RecommendationCard({ rec, index, messageIndex, chatMode, onEngagement }
     return null;
   }, [rec.title, chatMode]);
 
-  const handleFeedback = (type) => {
-    setFeedback(type);
-    track('recommendation_feedback', {
-      feedback_type: type,
-      message_index: messageIndex,
-      recommendation_index: index,
-      book_title: rec?.title || '',
-      book_author: rec?.author || '',
-      chat_mode: chatMode
-    });
-    
-    // Track engagement for discover unlock
-    if (type === 'up' && onEngagement) {
-      onEngagement({ title: rec.title, author: rec.author });
-    }
-  };
-  
-  const handleLinkClick = (destination) => {
-    // Track the recommendation conversion
-    track('recommendation_taken', {
-      book_title: rec.title,
-      book_author: rec.author || '',
-      destination, // 'goodreads' or 'bookshop'
-      message_index: messageIndex,
-      chat_mode: chatMode,
-      from_catalog: !!catalogBook,
-      recommendation_position: index + 1,
-      had_feedback: feedback !== null,
-      feedback_type: feedback,
-      was_expanded: expanded
-    });
-    
-    // Also track as book link click for backwards compatibility
-    track('book_link_click', {
-      book_title: rec.title,
-      book_author: rec.author || '',
-      destination,
-      message_index: messageIndex,
-      chat_mode: chatMode,
-      from_catalog: !!catalogBook
-    });
-    
-    // Track engagement for discover unlock
-    if (onEngagement) {
-      onEngagement({ title: rec.title, author: rec.author });
-    }
-  };
-
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim() || (() => {
     const d = String(catalogBook?.description || '').trim();
     if (!d) return '';
     return d.length > 140 ? `${d.slice(0, 137)}…` : d;
   })();
-
-  const goodreadsUrl = `https://www.goodreads.com/search?q=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}`;
-  const bookshopUrl = `https://bookshop.org/search?keywords=${encodeURIComponent(`${rec.title} ${displayAuthor}`)}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
@@ -376,37 +324,6 @@ function RecommendationCard({ rec, index, messageIndex, chatMode, onEngagement }
           </div>
           {displayAuthor && <p className="text-xs text-[#7A8F6C]">{displayAuthor}</p>}
           {displayWhy && <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>}
-        </div>
-
-        <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFeedback('up'); }}
-            disabled={feedback !== null}
-            className={`p-1.5 rounded-lg transition-colors ${
-              feedback === 'up'
-                ? 'text-[#5F7252] bg-[#E8EBE4]'
-                : feedback === 'down'
-                ? 'text-[#D4DAD0] cursor-not-allowed'
-                : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-            }`}
-            title="Helpful"
-          >
-            <ThumbsUp className={`w-3.5 h-3.5 ${feedback === 'up' ? 'fill-current' : ''}`} />
-          </button>
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFeedback('down'); }}
-            disabled={feedback !== null}
-            className={`p-1.5 rounded-lg transition-colors ${
-              feedback === 'down'
-                ? 'text-[#5F7252] bg-[#E8EBE4]'
-                : feedback === 'up'
-                ? 'text-[#D4DAD0] cursor-not-allowed'
-                : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4]'
-            }`}
-            title="Not helpful"
-          >
-            <ThumbsDown className={`w-3.5 h-3.5 ${feedback === 'down' ? 'fill-current' : ''}`} />
-          </button>
         </div>
 
         {expanded ? (
@@ -440,36 +357,87 @@ function RecommendationCard({ rec, index, messageIndex, chatMode, onEngagement }
               <p className="text-xs text-[#96A888] italic">📚 From Sarah's Library</p>
             )}
           </div>
-          
-          <div className="flex gap-2 mt-3">
-            <a
-              href={goodreadsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => handleLinkClick('goodreads')}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#5F7252] text-white rounded-lg text-xs hover:bg-[#4A5940] transition-colors"
-            >
-              <ExternalLink className="w-3 h-3" />
-              Goodreads
-            </a>
-            <a
-              href={bookshopUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => handleLinkClick('bookshop')}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#4A7C59] text-white rounded-lg text-xs hover:bg-[#3d6649] transition-colors"
-            >
-              <ShoppingBag className="w-3 h-3" />
-              Buy Local
-            </a>
-          </div>
         </div>
       )}
     </div>
   );
 }
 
-function FormattedRecommendations({ text, messageIndex, chatMode, onEngagement }) {
+function RecommendationActionPanel({ recommendations, onFeedback, onFindBook, onDiscoverMore, chatMode }) {
+  const [userFeedback, setUserFeedback] = useState(null);
+  
+  const handleFeedback = (type) => {
+    setUserFeedback(type);
+    if (onFeedback) onFeedback(type, recommendations);
+  };
+  
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Step 1: Get feedback */}
+      {!userFeedback && (
+        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
+          <p className="text-sm text-[#5F7252] mb-3 font-medium">What did you think?</p>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => handleFeedback('like')}
+              className="flex-1 max-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              I like these
+            </button>
+            <button
+              onClick={() => handleFeedback('dislike')}
+              className="flex-1 max-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E8EBE4] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+            >
+              <ThumbsDown className="w-4 h-4" />
+              Not quite
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Step 2: Next actions (after positive feedback) */}
+      {userFeedback === 'like' && (
+        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
+          <p className="text-sm text-[#5F7252] mb-3 font-medium">💚 Great! What's next?</p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => onFindBook && onFindBook('goodreads', recommendations)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Find on Goodreads
+            </button>
+            <button
+              onClick={() => onFindBook && onFindBook('bookshop', recommendations)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A7C59] text-white rounded-lg text-sm font-medium hover:bg-[#3d6649] transition-colors"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Buy Local (Bookshop)
+            </button>
+            {chatMode === 'library' && (
+              <button
+                onClick={() => onDiscoverMore && onDiscoverMore(recommendations)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+              >
+                🌍 Discover More Like These
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Step 3: After negative feedback */}
+      {userFeedback === 'dislike' && (
+        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
+          <p className="text-sm text-[#5F7252] mb-2">No problem! Try being more specific about what you're looking for, or choose a different theme above.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -487,8 +455,19 @@ function FormattedRecommendations({ text, messageIndex, chatMode, onEngagement }
         <p className="text-sm font-medium text-[#4A5940]">{header}</p>
       )}
       {recommendations.map((rec, idx) => (
-        <RecommendationCard key={idx} rec={rec} index={idx} messageIndex={messageIndex} chatMode={chatMode} onEngagement={onEngagement} />
+        <RecommendationCard key={idx} rec={rec} chatMode={chatMode} />
       ))}
+      
+      {/* Action panel appears after recommendations */}
+      {recommendations.length > 0 && onActionPanelInteraction && (
+        <RecommendationActionPanel 
+          recommendations={recommendations}
+          chatMode={chatMode}
+          onFeedback={(type, recs) => onActionPanelInteraction('feedback', type, recs)}
+          onFindBook={(destination, recs) => onActionPanelInteraction('find_book', destination, recs)}
+          onDiscoverMore={(recs) => onActionPanelInteraction('discover_more', null, recs)}
+        />
+      )}
     </div>
   );
 }
@@ -655,7 +634,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, messageIndex, chatMode, onEngagement }) {
+function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -673,7 +652,11 @@ function ChatMessage({ message, isUser, messageIndex, chatMode, onEngagement }) 
           : 'bg-[#F8F6EE] text-[#4A5940] rounded-2xl rounded-bl-sm px-5 py-3'
       }`}>
         {isStructured ? (
-          <FormattedRecommendations text={message} messageIndex={messageIndex} chatMode={chatMode} onEngagement={onEngagement} />
+          <FormattedRecommendations 
+            text={message} 
+            chatMode={chatMode} 
+            onActionPanelInteraction={onActionPanelInteraction}
+          />
         ) : (
           <div className="text-sm leading-relaxed">
             <FormattedText text={message} />
@@ -733,7 +716,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.", isUser: false }
+    { text: "Hi, I'm Sarah. This is my personal library—every book I've loved, cried over, or couldn't put down.\n\nHere's how it works:\n1. Tell me what you're in the mood for\n2. I'll show you 3 books from my collection\n3. Let me know what resonates\n4. I can help you find them or discover similar books\n\nWhat are you in the mood for?", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -749,7 +732,6 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const hasHydratedChatRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
-  const [showDiscoverPrompt, setShowDiscoverPrompt] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
@@ -762,14 +744,13 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah. I've always been the friend people call when looking for their next read. So I've cataloged my personal library here—every book I've loved, cried over, or couldn't put down. Tell me what you're in the mood for, and let's find that perfect book together. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.",
+      text: "Hi, I'm Sarah. This is my personal library—every book I've loved, cried over, or couldn't put down.\n\nHere's how it works:\n1. Tell me what you're in the mood for\n2. I'll show you 3 books from my collection\n3. Let me know what resonates\n4. I can help you find them or discover similar books\n\nWhat are you in the mood for?",
       isUser: false
     }];
   };
 
   const handleDiscoverMore = () => {
     setChatMode('discover');
-    setShowDiscoverPrompt(false);
     
     // Build discover message with context from liked books
     const likedTitles = likedBooks.map(b => b.title).join(', ');
@@ -792,7 +773,6 @@ export default function App() {
     setInputValue('');
     setHasEngaged(false);
     setLikedBooks([]);
-    setShowDiscoverPrompt(false);
   };
 
   const handleNewSearch = () => {
@@ -1259,6 +1239,34 @@ export default function App() {
                     });
                   }
                 }}
+                onActionPanelInteraction={(action, data, recommendations) => {
+                  if (action === 'feedback') {
+                    track('recommendation_feedback_panel', {
+                      feedback_type: data,
+                      chat_mode: chatMode,
+                      recommendation_count: recommendations.length
+                    });
+                    if (data === 'like' && chatMode === 'library') {
+                      setHasEngaged(true);
+                      setLikedBooks(recommendations.map(r => ({ title: r.title, author: r.author })));
+                    }
+                  } else if (action === 'find_book') {
+                    // Open all recommended books in tabs
+                    recommendations.forEach(rec => {
+                      const url = data === 'goodreads' 
+                        ? getGoodreadsSearchUrl(rec.title, rec.author)
+                        : getBookshopSearchUrl(rec.title, rec.author);
+                      window.open(url, '_blank');
+                    });
+                    track('find_books_action', {
+                      destination: data,
+                      book_count: recommendations.length,
+                      chat_mode: chatMode
+                    });
+                  } else if (action === 'discover_more') {
+                    handleDiscoverMore();
+                  }
+                }}
               />
             ))}
             {isLoading && (
@@ -1409,19 +1417,7 @@ export default function App() {
             </div>
           )}
 
-          {hasEngaged && !showDiscoverPrompt && chatMode === 'library' && messages.length > 2 && (
-            <div className="mb-3 px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
-              <p className="text-sm text-[#5F7252] mb-2">💡 Love these recommendations?</p>
-              <button
-                onClick={handleDiscoverMore}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-              >
-                Discover More Like These
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-1.5">
+          <div className="mb-3 flex items-center justify-center gap-1.5 flex-wrap">
             {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
               return (
@@ -1433,7 +1429,6 @@ export default function App() {
                       setInputValue('');
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
-                      // Only prefill input if there are no messages yet (first interaction)
                       if (messages.length <= 2) {
                         setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
                       }
