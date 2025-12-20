@@ -1387,29 +1387,11 @@ Find similar books from beyond my library that match this taste profile.
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <img 
-                src="/sarah.png" 
-                alt="Sarah" 
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#D4DAD0] shadow-sm"
-              />
-              <div>
-                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">A Curated Collection of Infinite Possibilities</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 sm:gap-3">
-              {shareFeedback && (
-                <div className="hidden sm:block text-xs text-[#7A8F6C] font-light">
-                  {shareFeedback}
-                </div>
-              )}
-
               {/* Hamburger Menu */}
               <div className="relative" ref={navMenuRef}>
                 <button
                   onClick={() => setShowNavMenu(!showNavMenu)}
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] transition-colors"
+                  className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] transition-colors"
                   aria-label="Navigation menu"
                   aria-expanded={showNavMenu}
                 >
@@ -1417,7 +1399,7 @@ Find similar books from beyond my library that match this taste profile.
                 </button>
                 
                 {showNavMenu && (
-                  <div className="absolute top-full right-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
                     <button
                       onClick={() => {
                         setCurrentPage('home');
@@ -1474,6 +1456,19 @@ Find similar books from beyond my library that match this taste profile.
                   </div>
                 )}
               </div>
+              
+              <div>
+                <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">A Curated Collection of Infinite Possibilities</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 sm:gap-3">
+              {shareFeedback && (
+                <div className="hidden sm:block text-xs text-[#7A8F6C] font-light">
+                  {shareFeedback}
+                </div>
+              )}
 
               {user ? (
                 <button
@@ -1770,7 +1765,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="mb-6 flex items-center justify-center gap-1.5 flex-wrap">
+          <div className="mb-6 flex items-center justify-center gap-2 flex-wrap">
             {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
               return (
@@ -1787,16 +1782,17 @@ Find similar books from beyond my library that match this taste profile.
                       }
                     }
                   }}
-                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all ${
+                  className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
                     isSelected
-                      ? 'bg-[#E8EBE4] border-[#96A888] scale-110'
-                      : 'border-[#E8EBE4] bg-[#FDFBF4] hover:border-[#96A888] hover:bg-[#E8EBE4]'
+                      ? 'bg-[#5F7252] border-[#5F7252] text-white shadow-sm'
+                      : 'border-[#D4DAD0] bg-white text-[#5F7252] hover:border-[#96A888] hover:bg-[#F8F6EE]'
                   }`}
                   aria-label={`${info.label} theme filter`}
                   aria-pressed={isSelected}
                   title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
                 >
-                  {info.emoji}
+                  <span className="text-sm">{info.emoji}</span>
+                  <span>{info.label}</span>
                 </button>
               );
             })}
