@@ -284,8 +284,10 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
+function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, readingQueue, onAddToQueue }) {
   const [expanded, setExpanded] = useState(false);
+  const [addingToQueue, setAddingToQueue] = useState(false);
+  const [addedToQueue, setAddedToQueue] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -312,6 +314,25 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
 
   // Use catalog description if available, otherwise use AI-provided description
   const fullDescription = catalogBook?.description || rec.description;
+
+  // Check if book is already in queue
+  const isInQueue = readingQueue?.some(
+    queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title)
+  );
+
+  const handleAddToQueue = async (e) => {
+    e.stopPropagation();
+    if (!user || isInQueue || addingToQueue) return;
+    
+    setAddingToQueue(true);
+    const success = await onAddToQueue(rec);
+    setAddingToQueue(false);
+    
+    if (success) {
+      setAddedToQueue(true);
+      setTimeout(() => setAddedToQueue(false), 2000);
+    }
+  };
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] overflow-hidden">
@@ -379,6 +400,37 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect }) {
             {chatMode === 'discover' && (
               <p className="text-xs text-[#96A888] italic">∞ All Books</p>
             )}
+            
+            {/* Add to Queue Button */}
+            <div className="pt-2 mt-2 border-t border-[#E8EBE4]">
+              {user ? (
+                <button
+                  onClick={handleAddToQueue}
+                  disabled={isInQueue || addingToQueue}
+                  className={`w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                    isInQueue
+                      ? 'bg-[#E8EBE4] text-[#96A888] cursor-not-allowed'
+                      : addedToQueue
+                      ? 'bg-[#5F7252] text-white'
+                      : 'bg-[#4A5940] text-white hover:bg-[#5F7252]'
+                  }`}
+                >
+                  {addingToQueue ? (
+                    'Adding...'
+                  ) : isInQueue ? (
+                    '✓ In Your Queue'
+                  ) : addedToQueue ? (
+                    '✓ Added to Queue!'
+                  ) : (
+                    '+ Add to Reading Queue'
+                  )}
+                </button>
+              ) : (
+                <p className="text-xs text-[#96A888] text-center py-2">
+                  Sign in to add books to your reading queue
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -498,7 +550,7 @@ function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback,
   );
 }
 
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) {
+function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   const [selectedBooks, setSelectedBooks] = useState([]);
   
@@ -538,6 +590,9 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction }) 
           chatMode={chatMode}
           isSelected={isBookSelected(rec)}
           onToggleSelect={handleToggleSelect}
+          user={user}
+          readingQueue={readingQueue}
+          onAddToQueue={onAddToQueue}
         />
       ))}
       
@@ -741,6 +796,9 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction }) {
             text={message} 
             chatMode={chatMode} 
             onActionPanelInteraction={onActionPanelInteraction}
+            user={user}
+            readingQueue={readingQueue}
+            onAddToQueue={onAddToQueue}
           />
         ) : (
           <div className="text-sm leading-relaxed">
@@ -950,6 +1008,34 @@ Find similar books from beyond my library that match this taste profile.
       const sendButton = document.querySelector('button[aria-label="Send message"]');
       if (sendButton) sendButton.click();
     }, 50);
+  };
+
+  const handleAddToReadingQueue = async (book) => {
+    if (!user) return false;
+    
+    try {
+      const { error } = await db.addToReadingQueue(user.id, {
+        book_title: book.title,
+        book_author: book.author || '',
+        chat_mode: chatMode
+      });
+      
+      if (error) {
+        console.error('Error adding to queue:', error);
+        return false;
+      }
+      
+      // Refresh the queue
+      const { data: queue } = await db.getReadingQueue(user.id);
+      if (queue) {
+        setReadingQueue(queue);
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error adding to queue:', err);
+      return false;
+    }
   };
 
   const handleBackToLibrary = () => {
@@ -1438,6 +1524,9 @@ Find similar books from beyond my library that match this taste profile.
                 isUser={msg.isUser} 
                 messageIndex={idx}
                 chatMode={chatMode}
+                user={user}
+                readingQueue={readingQueue}
+                onAddToQueue={handleAddToReadingQueue}
                 onEngagement={(book) => {
                   if (chatMode === 'library' && !hasEngaged) {
                     setHasEngaged(true);
