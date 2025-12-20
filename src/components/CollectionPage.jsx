@@ -81,7 +81,10 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Back Button */}
         <button
-          onClick={() => onNavigate('home')}
+          onClick={() => {
+            onNavigate('home');
+            window.scrollTo(0, 0);
+          }}
           className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -224,8 +227,7 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                                 : 'border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252]'
                             }`}
                           >
-                            <Bookmark className="w-3.5 h-3.5" />
-                            {inQueue ? 'Saved' : 'Save'}
+                            {inQueue ? '✓ Saved' : '📌 Save'}
                           </button>
                         </div>
                       )}

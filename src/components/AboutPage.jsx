@@ -7,7 +7,10 @@ export default function AboutPage({ onNavigate }) {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Back Button */}
         <button
-          onClick={() => onNavigate('home')}
+          onClick={() => {
+            onNavigate('home');
+            window.scrollTo(0, 0);
+          }}
           className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -113,11 +116,11 @@ export default function AboutPage({ onNavigate }) {
                 Top recommendations that have shaped how I see the world:
               </p>
               <ul className="text-sm text-[#5F7252] space-y-1 ml-4">
-                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Tell Me How to Be</button> by Neel Patel</li>
-                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Where the Red Fern Grows</button> by Wilson Rawls</li>
-                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Loving Frank</button> by Nancy Horan</li>
-                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Just Mercy</button> by Bryan Stevenson</li>
-                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Heartland</button> by Sarah Smarsh</li>
+                <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Tell Me How to Be</button> by Neel Patel</li>
+                <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Where the Red Fern Grows</button> by Wilson Rawls</li>
+                <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Loving Frank</button> by Nancy Horan</li>
+                <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Just Mercy</button> by Bryan Stevenson</li>
+                <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Heartland</button> by Sarah Smarsh</li>
               </ul>
             </div>
           </div>

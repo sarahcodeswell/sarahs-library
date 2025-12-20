@@ -394,7 +394,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       )}
 
       {/* Action Buttons - Always Visible */}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {/* Buy Dropdown */}
         <div className="flex-1 relative">
           <button
@@ -490,7 +490,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             onClick={onShowAuthModal}
             className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#E8EBE4] text-[#4A5940] hover:bg-[#D4DAD0] border border-[#D4DAD0]"
           >
-            🔒 Save
+            � Save
           </button>
         )}
 
@@ -1432,6 +1432,7 @@ Find similar books from beyond my library that match this taste profile.
                       onClick={() => {
                         setCurrentPage('home');
                         setShowNavMenu(false);
+                        window.scrollTo(0, 0);
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
@@ -1442,6 +1443,7 @@ Find similar books from beyond my library that match this taste profile.
                       onClick={() => {
                         setCurrentPage('about');
                         setShowNavMenu(false);
+                        window.scrollTo(0, 0);
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
@@ -1452,6 +1454,7 @@ Find similar books from beyond my library that match this taste profile.
                       onClick={() => {
                         setCurrentPage('collection');
                         setShowNavMenu(false);
+                        window.scrollTo(0, 0);
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
