@@ -1492,25 +1492,6 @@ Find similar books from beyond my library that match this taste profile.
                 </button>
               )}
 
-              <button
-                onClick={handleSendHeart}
-                disabled={feedbackStatus.isSendingThanks}
-                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#FDFBF4] border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Say thanks"
-              >
-                <span className="hidden sm:inline ml-2 text-sm font-medium">
-                  Thanks ❤️{typeof thanksCount === 'number' ? ` ${thanksCount}` : ''}
-                </span>
-              </button>
-
-              <button
-                onClick={handleShare}
-                className="hidden sm:inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-white border border-[#D4DAD0] text-[#5F7252] hover:text-[#4A5940] hover:border-[#96A888] transition-all"
-                title="Share this page"
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline ml-2 text-sm font-medium">Share</span>
-              </button>
             </div>
           </div>
         </div>
@@ -1805,7 +1786,6 @@ Find similar books from beyond my library that match this taste profile.
 
           <div className="mt-16 sm:mt-20 text-xs text-[#7A8F6C] font-light text-center">
             <div>For the ❤️ of reading.</div>
-            <div className="mt-1">hello@sarahsbooks.com</div>
           </div>
 
         </main>

@@ -113,11 +113,11 @@ export default function AboutPage({ onNavigate }) {
                 Top recommendations that have shaped how I see the world:
               </p>
               <ul className="text-sm text-[#5F7252] space-y-1 ml-4">
-                <li>• <span className="font-medium">Tell Me How to Be</span> by Neel Patel</li>
-                <li>• <span className="font-medium">Where the Red Fern Grows</span> by Wilson Rawls</li>
-                <li>• <span className="font-medium">Loving Frank</span> by Nancy Horan</li>
-                <li>• <span className="font-medium">Just Mercy</span> by Bryan Stevenson</li>
-                <li>• <span className="font-medium">Heartland</span> by Sarah Smarsh</li>
+                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Tell Me How to Be</button> by Neel Patel</li>
+                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Where the Red Fern Grows</button> by Wilson Rawls</li>
+                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Loving Frank</button> by Nancy Horan</li>
+                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Just Mercy</button> by Bryan Stevenson</li>
+                <li>• <button onClick={() => onNavigate('collection')} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Heartland</button> by Sarah Smarsh</li>
               </ul>
             </div>
           </div>
