@@ -369,7 +369,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               <button
                 onClick={onShowAuthModal}
                 className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
-                title="To bookmark for future reading, create a profile so we can build a personalized reading queue"
+                title="Sign in to save books for later"
               >
                 <Bookmark className="w-4 h-4" />
               </button>
@@ -877,7 +877,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 💌 Share with a friend\n• 🔖 Bookmark for future reading", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• � Share with a friend\n• 🔖 Bookmark for future reading", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1008,7 +1008,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 💌 Share with a friend\n• 🔖 Bookmark for future reading",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• � Share with a friend\n• 🔖 Bookmark for future reading",
       isUser: false
     }];
   };
