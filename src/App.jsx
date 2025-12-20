@@ -523,8 +523,9 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
   );
 }
 
-function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback, onFindBook, onDiscoverMore, onUploadLibrary, chatMode }) {
+function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback, onFindBook, onDiscoverMore, onUploadLibrary, chatMode, user, readingQueue, onAddToQueue, onShowAuthModal }) {
   const [userFeedback, setUserFeedback] = useState(null);
+  const [showBuyOptions, setShowBuyOptions] = useState(false);
   
   // Use selected books if any, otherwise use all recommendations
   const booksToUse = selectedBooks.length > 0 ? selectedBooks : recommendations;
@@ -573,25 +574,95 @@ function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback,
       
       {/* Step 2: Next actions (after positive feedback) */}
       {userFeedback === 'like' && (
-        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4] text-center">
-          <p className="text-sm text-[#5F7252] mb-3 font-medium">
+        <div className="px-4 py-3 bg-gradient-to-r from-[#F8F6EE] to-[#F5EFDC] rounded-xl border border-[#E8EBE4]">
+          <p className="text-sm text-[#5F7252] mb-3 font-medium text-center">
             💚 Great! What's next?
           </p>
           <div className="flex flex-col gap-2">
-            <button
-              onClick={() => onFindBook && onFindBook('goodreads', booksToUse)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Find {hasSelection ? 'These' : 'Them'} on Goodreads
-            </button>
-            <button
-              onClick={() => onFindBook && onFindBook('bookshop', booksToUse)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A7C59] text-white rounded-lg text-sm font-medium hover:bg-[#3d6649] transition-colors"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Buy {hasSelection ? 'These' : 'Them'} Locally
-            </button>
+            {/* Save to Queue */}
+            {user ? (
+              <button
+                onClick={async () => {
+                  for (const book of booksToUse) {
+                    await onAddToQueue(book);
+                  }
+                }}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A5940] text-white rounded-lg text-sm font-medium hover:bg-[#5F7252] transition-colors"
+              >
+                <Heart className="w-4 h-4" />
+                💚 Save to Reading Queue
+              </button>
+            ) : (
+              <button
+                onClick={onShowAuthModal}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E8EBE4] text-[#4A5940] rounded-lg text-sm font-medium hover:bg-[#D4DAD0] border border-[#D4DAD0] transition-colors"
+              >
+                🔒 Sign in to save to queue
+              </button>
+            )}
+            
+            {/* Where to Buy - Expandable */}
+            <div>
+              <button
+                onClick={() => setShowBuyOptions(!showBuyOptions)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#D4DAD0] text-[#4A5940] rounded-lg text-sm font-medium hover:bg-[#F5F7F2] transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                🛒 Where to Buy
+                {showBuyOptions ? (
+                  <ChevronUp className="w-4 h-4 ml-auto" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-auto" />
+                )}
+              </button>
+              
+              {showBuyOptions && (
+                <div className="mt-2 space-y-2 pl-2">
+                  <button
+                    onClick={() => onFindBook && onFindBook('bookshop', booksToUse)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] rounded-lg transition-colors"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Physical Book - Local Bookstore</span>
+                    <ExternalLink className="w-3 h-3 ml-auto" />
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Open Kindle links for all selected books
+                      booksToUse.forEach(book => {
+                        const url = getAmazonKindleUrl(book.title, book.author);
+                        window.open(url, '_blank');
+                        track('kindle_link_click', { 
+                          source: 'action_panel',
+                          book_title: book.title 
+                        });
+                      });
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] rounded-lg transition-colors"
+                  >
+                    <Book className="w-3.5 h-3.5" />
+                    <span>Kindle Edition - Amazon</span>
+                    <ExternalLink className="w-3 h-3 ml-auto" />
+                  </button>
+                  
+                  <button
+                    onClick={() => onFindBook && onFindBook('goodreads', booksToUse)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] rounded-lg transition-colors"
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    <span>Reviews - Goodreads</span>
+                    <ExternalLink className="w-3 h-3 ml-auto" />
+                  </button>
+                  
+                  <p className="text-[10px] text-[#96A888] italic mt-2 text-center">
+                    * Affiliate links help support this site
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Show More Like These (Library mode only) */}
             {chatMode === 'library' && (
               <button
                 onClick={() => onDiscoverMore && onDiscoverMore(booksToUse)}
@@ -688,6 +759,10 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
           recommendations={recommendations}
           selectedBooks={selectedBooks}
           chatMode={chatMode}
+          user={user}
+          readingQueue={readingQueue}
+          onAddToQueue={onAddToQueue}
+          onShowAuthModal={onShowAuthModal}
           onFeedback={(type, recs) => onActionPanelInteraction('feedback', type, recs)}
           onFindBook={(destination, recs) => onActionPanelInteraction('find_book', destination, recs)}
           onDiscoverMore={(recs) => onActionPanelInteraction('discover_more', null, recs)}
