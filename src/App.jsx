@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -265,11 +265,11 @@ function FormattedText({ text }) {
 }
 
 const themeInfo = {
-  women: { emoji: "📚", label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  emotional: { emoji: "💔", label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  identity: { emoji: "🎭", label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
-  spiritual: { emoji: "🕯", label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
-  justice: { emoji: "⚖️", label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+  women: { icon: BookHeart, label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
+  emotional: { icon: Heart, label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  identity: { icon: Users, label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
+  spiritual: { icon: Sparkles, label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
+  justice: { icon: Scale, label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
 };
 
 const themeDescriptions = {
@@ -467,11 +467,15 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             <div>
               <p className="text-xs font-medium text-[#4A5940] mb-1">Themes:</p>
               <div className="flex flex-wrap gap-1.5">
-                {catalogBook.themes.slice(0, 5).map(theme => (
-                  <span key={theme} className="text-xs px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] rounded-full">
-                    {themeInfo[theme]?.emoji} {themeInfo[theme]?.label}
-                  </span>
-                ))}
+                {catalogBook.themes.slice(0, 5).map(theme => {
+                  const ThemeIcon = themeInfo[theme]?.icon;
+                  return (
+                    <span key={theme} className="text-xs px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] rounded-full flex items-center gap-1">
+                      {ThemeIcon && <ThemeIcon className="w-3 h-3" />}
+                      {themeInfo[theme]?.label}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -784,14 +788,18 @@ function BookDetail({ book, onClose }) {
           <div className="mb-6">
             <span className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Themes</span>
             <div className="flex flex-wrap gap-2 mt-2">
-              {book.themes.map(theme => (
-                <span 
-                  key={theme} 
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium border ${themeInfo[theme]?.color}`}
-                >
-                  {themeInfo[theme]?.emoji} {themeInfo[theme]?.label}
-                </span>
-              ))}
+              {book.themes.map(theme => {
+                const ThemeIcon = themeInfo[theme]?.icon;
+                return (
+                  <span 
+                    key={theme} 
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border ${themeInfo[theme]?.color} flex items-center gap-1.5`}
+                  >
+                    {ThemeIcon && <ThemeIcon className="w-4 h-4" />}
+                    {themeInfo[theme]?.label}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -1925,7 +1933,7 @@ Find similar books from beyond my library that match this taste profile.
                   aria-pressed={isSelected}
                   title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
                 >
-                  <span className="text-sm">{info.emoji}</span>
+                  {info.icon && <info.icon className="w-4 h-4" />}
                   <span>{info.label}</span>
                 </button>
               );
