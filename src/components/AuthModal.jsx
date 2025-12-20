@@ -44,10 +44,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setError('');
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: window.location.origin
-        }
+        provider: provider
       });
       
       if (error) {
