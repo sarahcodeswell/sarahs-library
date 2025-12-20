@@ -96,9 +96,9 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
           </p>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar with Inline Alphabet Navigation */}
         <div className="mb-6">
-          <div className="relative">
+          <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
             <input
               type="text"
@@ -108,25 +108,23 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
             />
           </div>
-        </div>
-
-        {/* Alphabet Navigation - Compact */}
-        {!searchQuery && (
-          <div className="mb-6 bg-white rounded-lg border border-[#D4DAD0] p-3">
-            <div className="text-xs text-[#7A8F6C] font-light mb-2 text-center">Jump to letter:</div>
-            <div className="flex flex-wrap gap-1 justify-center">
+          
+          {/* Inline Alphabet Links */}
+          {!searchQuery && (
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              <span className="text-xs text-[#7A8F6C] font-light">Jump to:</span>
               {availableLetters.map(letter => (
                 <button
                   key={letter}
                   onClick={() => scrollToLetter(letter)}
-                  className="w-6 h-6 rounded text-[#5F7252] hover:bg-[#5F7252] hover:text-white text-xs font-medium transition-colors"
+                  className="text-xs text-[#5F7252] hover:text-[#4A5940] hover:underline font-medium transition-colors"
                 >
                   {letter}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Books Grouped by Letter */}
         <div className="space-y-8">
