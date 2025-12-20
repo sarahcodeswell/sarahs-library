@@ -464,7 +464,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             }}
             className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           >
-            🛒 Buy
+            <ShoppingBag className="w-3.5 h-3.5" />
+            Buy
             {showBuyOptions ? (
               <ChevronUp className="w-3 h-3" />
             ) : (
@@ -522,7 +523,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           }}
           className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
-          ⭐ Reviews
+          <Star className="w-3.5 h-3.5" />
+          Reviews
         </a>
 
         {/* Share Button */}
@@ -550,7 +552,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           }}
           className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
-          💌 Share
+          <Share2 className="w-3.5 h-3.5" />
+          Share
         </button>
       </div>
     </div>
