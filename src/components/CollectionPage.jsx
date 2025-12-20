@@ -161,38 +161,55 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                   
                   return (
                     <div key={idx} className="px-5 py-4">
-                      <button
-                        onClick={() => {
-                          const newState = isExpanded ? null : `${letter}-${idx}`;
-                          setExpandedBook(newState);
-                          
-                          // Track collection book expansion
-                          if (newState) {
-                            track('collection_book_expanded', {
-                              book_title: book.title,
-                              book_author: book.author,
-                              letter: letter
-                            });
-                          }
-                        }}
-                        className="w-full text-left group"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-[#4A5940] group-hover:text-[#5F7252] transition-colors">
-                              {book.title}
-                            </div>
-                            {book.author && (
-                              <div className="text-xs text-[#7A8F6C] font-light mt-1">
-                                {book.author}
-                              </div>
-                            )}
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <button
+                          onClick={() => {
+                            const newState = isExpanded ? null : `${letter}-${idx}`;
+                            setExpandedBook(newState);
+                            
+                            // Track collection book expansion
+                            if (newState) {
+                              track('collection_book_expanded', {
+                                book_title: book.title,
+                                book_author: book.author,
+                                letter: letter
+                              });
+                            }
+                          }}
+                          className="flex-1 min-w-0 text-left group"
+                        >
+                          <div className="text-sm font-medium text-[#4A5940] group-hover:text-[#5F7252] transition-colors">
+                            {book.title}
                           </div>
-                          {book.favorite && (
-                            <span className="text-amber-400 text-sm flex-shrink-0">⭐</span>
+                          {book.author && (
+                            <div className="text-xs text-[#7A8F6C] font-light mt-1">
+                              {book.author}
+                            </div>
+                          )}
+                        </button>
+                        
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Save Bookmark Icon */}
+                          {user ? (
+                            <button
+                              onClick={(e) => handleAddToQueue(book, e)}
+                              disabled={inQueue}
+                              className={`p-1 rounded transition-colors ${inQueue ? 'text-[#5F7252]' : 'text-[#96A888] hover:text-[#5F7252]'}`}
+                              title={inQueue ? 'Saved to queue' : 'Save to reading queue'}
+                            >
+                              <Bookmark className={`w-4 h-4 ${inQueue ? 'fill-current' : ''}`} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={onShowAuthModal}
+                              className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
+                              title="Sign in to save"
+                            >
+                              <Bookmark className="w-4 h-4" />
+                            </button>
                           )}
                         </div>
-                      </button>
+                      </div>
 
                       {/* Action Buttons */}
                       {isExpanded && (
@@ -246,19 +263,6 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                             <Star className="w-3.5 h-3.5" />
                             Reviews
                           </a>
-
-                          {/* Save Button */}
-                          <button
-                            onClick={(e) => handleAddToQueue(book, e)}
-                            disabled={inQueue}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
-                              inQueue
-                                ? 'border-[#96A888] bg-[#E8EBE4] text-[#7A8F6C] cursor-default'
-                                : 'border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252]'
-                            }`}
-                          >
-                            {inQueue ? '✓ Saved' : '📌 Save'}
-                          </button>
                         </div>
                       )}
                     </div>
