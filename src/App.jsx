@@ -284,7 +284,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, readingQueue, onAddToQueue }) {
+function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, readingQueue, onAddToQueue, onShowAuthModal }) {
   const [expanded, setExpanded] = useState(false);
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
@@ -426,9 +426,12 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
                   )}
                 </button>
               ) : (
-                <p className="text-xs text-[#96A888] text-center py-2">
-                  Sign in to add books to your reading queue
-                </p>
+                <button
+                  onClick={onShowAuthModal}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#E8EBE4] text-[#4A5940] hover:bg-[#D4DAD0] border border-[#D4DAD0]"
+                >
+                  🔒 Sign in to add to your queue
+                </button>
               )}
             </div>
           </div>
@@ -550,7 +553,7 @@ function RecommendationActionPanel({ recommendations, selectedBooks, onFeedback,
   );
 }
 
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue }) {
+function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onShowAuthModal }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   const [selectedBooks, setSelectedBooks] = useState([]);
   
@@ -593,6 +596,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
           user={user}
           readingQueue={readingQueue}
           onAddToQueue={onAddToQueue}
+          onShowAuthModal={onShowAuthModal}
         />
       ))}
       
@@ -774,7 +778,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue }) {
+function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onShowAuthModal }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -799,6 +803,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
             user={user}
             readingQueue={readingQueue}
             onAddToQueue={onAddToQueue}
+            onShowAuthModal={onShowAuthModal}
           />
         ) : (
           <div className="text-sm leading-relaxed">
@@ -1527,6 +1532,7 @@ Find similar books from beyond my library that match this taste profile.
                 user={user}
                 readingQueue={readingQueue}
                 onAddToQueue={handleAddToReadingQueue}
+                onShowAuthModal={() => setShowAuthModal(true)}
                 onEngagement={(book) => {
                   if (chatMode === 'library' && !hasEngaged) {
                     setHasEngaged(true);
