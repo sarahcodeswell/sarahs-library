@@ -8,6 +8,7 @@ import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
+const AMAZON_AFFILIATE_TAG = 'sarahsbooks-20'; // TODO: Replace with your actual Amazon Associates tag after approval
 const CURRENT_YEAR = new Date().getFullYear();
 
 const STOP_WORDS = new Set([
@@ -288,6 +289,7 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
   const [expanded, setExpanded] = useState(false);
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
+  const [showBuyOptions, setShowBuyOptions] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -401,8 +403,8 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
               <p className="text-xs text-[#96A888] italic">∞ All Books</p>
             )}
             
-            {/* Add to Queue Button */}
-            <div className="pt-2 mt-2 border-t border-[#E8EBE4]">
+            {/* Save to Queue Section */}
+            <div className="pt-3 mt-3 border-t border-[#E8EBE4] space-y-2">
               {user ? (
                 <button
                   onClick={handleAddToQueue}
@@ -416,13 +418,13 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
                   }`}
                 >
                   {addingToQueue ? (
-                    'Adding...'
+                    '💚 Adding...'
                   ) : isInQueue ? (
                     '✓ In Your Queue'
                   ) : addedToQueue ? (
-                    '✓ Added to Queue!'
+                    '✓ Saved to Queue!'
                   ) : (
-                    '+ Add to Reading Queue'
+                    '💚 Save to Reading Queue'
                   )}
                 </button>
               ) : (
@@ -430,9 +432,89 @@ function RecommendationCard({ rec, chatMode, isSelected, onToggleSelect, user, r
                   onClick={onShowAuthModal}
                   className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#E8EBE4] text-[#4A5940] hover:bg-[#D4DAD0] border border-[#D4DAD0]"
                 >
-                  🔒 Sign in to add to your queue
+                  🔒 Sign in to save to queue
                 </button>
               )}
+              
+              {/* Where to Buy Section */}
+              <div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowBuyOptions(!showBuyOptions);
+                  }}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-between"
+                >
+                  <span>🛒 Where to Buy</span>
+                  {showBuyOptions ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                
+                {showBuyOptions && (
+                  <div className="mt-2 space-y-2 pl-2">
+                    <a
+                      href={getBookshopSearchUrl(rec.title, displayAuthor)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        track('bookshop_link_click', { 
+                          source: 'recommendation_card',
+                          book_title: rec.title 
+                        });
+                      }}
+                      className="flex items-center gap-2 text-xs text-[#4A5940] hover:text-[#5F7252] transition-colors"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Physical Book - Local Bookstore</span>
+                      <ExternalLink className="w-3 h-3 ml-auto" />
+                    </a>
+                    
+                    <a
+                      href={getAmazonKindleUrl(rec.title, displayAuthor)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        track('kindle_link_click', { 
+                          source: 'recommendation_card',
+                          book_title: rec.title 
+                        });
+                      }}
+                      className="flex items-center gap-2 text-xs text-[#4A5940] hover:text-[#5F7252] transition-colors"
+                    >
+                      <Book className="w-3.5 h-3.5" />
+                      <span>Kindle Edition - Amazon</span>
+                      <ExternalLink className="w-3 h-3 ml-auto" />
+                    </a>
+                    
+                    <a
+                      href={getGoodreadsSearchUrl(rec.title, displayAuthor)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        track('goodreads_link_click', { 
+                          source: 'recommendation_card',
+                          book_title: rec.title 
+                        });
+                      }}
+                      className="flex items-center gap-2 text-xs text-[#4A5940] hover:text-[#5F7252] transition-colors"
+                    >
+                      <Star className="w-3.5 h-3.5" />
+                      <span>Reviews - Goodreads</span>
+                      <ExternalLink className="w-3 h-3 ml-auto" />
+                    </a>
+                    
+                    <p className="text-[10px] text-[#96A888] italic mt-2">
+                      * Affiliate links help support this site
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -619,6 +701,11 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
 const getBookshopSearchUrl = (title, author) => {
   const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
   return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
+};
+
+const getAmazonKindleUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''} kindle`);
+  return `https://www.amazon.com/s?k=${searchQuery}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`;
 };
 
 const getGoodreadsSearchUrl = (title, author) => {
