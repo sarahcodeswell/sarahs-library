@@ -329,6 +329,20 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     if (success) {
       setAddedToQueue(true);
       setTimeout(() => setAddedToQueue(false), 2000);
+      
+      // Track successful save
+      track('recommendation_saved', {
+        book_title: rec.title,
+        book_author: displayAuthor,
+        chat_mode: chatMode,
+        has_catalog_match: !!catalogBook
+      });
+    } else {
+      // Track failed save
+      track('recommendation_save_failed', {
+        book_title: rec.title,
+        chat_mode: chatMode
+      });
     }
   };
 
@@ -345,7 +359,21 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </div>
           {/* Expand/Collapse Button */}
           <button
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => {
+              const newExpandedState = !expanded;
+              setExpanded(newExpandedState);
+              
+              // Track card expansion
+              if (newExpandedState) {
+                track('recommendation_expanded', {
+                  book_title: rec.title,
+                  book_author: displayAuthor,
+                  chat_mode: chatMode,
+                  has_description: !!fullDescription,
+                  has_themes: !!(catalogBook?.themes?.length)
+                });
+              }
+            }}
             className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
             aria-label={expanded ? "Show less" : "Show more"}
           >
@@ -398,7 +426,18 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         {/* Buy Dropdown */}
         <div className="flex-1 relative">
           <button
-            onClick={() => setShowBuyOptions(!showBuyOptions)}
+            onClick={() => {
+              const newState = !showBuyOptions;
+              setShowBuyOptions(newState);
+              
+              // Track buy dropdown open
+              if (newState) {
+                track('buy_dropdown_opened', {
+                  book_title: rec.title,
+                  chat_mode: chatMode
+                });
+              }
+            }}
             className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           >
             🛒 Buy
@@ -870,6 +909,31 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [showNavMenu, setShowNavMenu] = useState(false);
   const navMenuRef = useRef(null);
+
+  // Session tracking
+  useEffect(() => {
+    const sessionStart = Date.now();
+    
+    // Track session start
+    track('session_start', {
+      timestamp: new Date().toISOString(),
+      user_agent: navigator.userAgent,
+      screen_width: window.innerWidth,
+      screen_height: window.innerHeight
+    });
+    
+    // Track session end on page unload
+    const handleUnload = () => {
+      const sessionDuration = Math.round((Date.now() - sessionStart) / 1000);
+      track('session_end', {
+        duration_seconds: sessionDuration,
+        timestamp: new Date().toISOString()
+      });
+    };
+    
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, []);
 
   // Auth effect - check for existing session and load user data
   useEffect(() => {
@@ -1433,6 +1497,12 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('home');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        
+                        // Track page navigation
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'home'
+                        });
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
@@ -1444,6 +1514,12 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('about');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        
+                        // Track page navigation
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'about'
+                        });
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
@@ -1455,6 +1531,12 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('collection');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        
+                        // Track page navigation
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'collection'
+                        });
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
@@ -1781,9 +1863,22 @@ Find similar books from beyond my library that match this taste profile.
                     if (isSelected) {
                       setSelectedThemes(prev => prev.filter(t => t !== key));
                       setInputValue('');
+                      
+                      // Track theme deselection
+                      track('theme_filter_removed', {
+                        theme: key,
+                        theme_label: info.label
+                      });
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
                       setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
+                      
+                      // Track theme selection
+                      track('theme_filter_selected', {
+                        theme: key,
+                        theme_label: info.label,
+                        chat_mode: chatMode
+                      });
                     }
                   }}
                   className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${

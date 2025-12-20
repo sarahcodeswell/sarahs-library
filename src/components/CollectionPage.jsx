@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { ArrowLeft, Search, ShoppingCart, Star, Bookmark, ChevronDown } from 'lucide-react';
+import { track } from '@vercel/analytics';
 import bookCatalog from '../books.json';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
@@ -59,6 +60,12 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
 
   const scrollToLetter = (letter) => {
     letterRefs.current[letter]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Track alphabet navigation usage
+    track('alphabet_navigation_click', {
+      letter: letter,
+      total_books_in_letter: booksByLetter[letter]?.length || 0
+    });
   };
 
   const handleAddToQueue = async (book, e) => {
@@ -106,7 +113,18 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                const query = e.target.value;
+                setSearchQuery(query);
+                
+                // Track search queries (debounced via timeout)
+                if (query.length >= 3) {
+                  track('collection_search', {
+                    query: query,
+                    query_length: query.length
+                  });
+                }
+              }}
               placeholder="Search by title or author..."
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
             />
@@ -144,7 +162,19 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                   return (
                     <div key={idx} className="px-5 py-4">
                       <button
-                        onClick={() => setExpandedBook(isExpanded ? null : `${letter}-${idx}`)}
+                        onClick={() => {
+                          const newState = isExpanded ? null : `${letter}-${idx}`;
+                          setExpandedBook(newState);
+                          
+                          // Track collection book expansion
+                          if (newState) {
+                            track('collection_book_expanded', {
+                              book_title: book.title,
+                              book_author: book.author,
+                              letter: letter
+                            });
+                          }
+                        }}
                         className="w-full text-left group"
                       >
                         <div className="flex items-start justify-between gap-4">
