@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { auth, db } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
+import AboutPage from './components/AboutPage';
+import CollectionPage from './components/CollectionPage';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -816,7 +818,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -835,6 +837,11 @@ export default function App() {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
+  
+  // Navigation state
+  const [currentPage, setCurrentPage] = useState('home');
+  const [showNavMenu, setShowNavMenu] = useState(false);
+  const navMenuRef = useRef(null);
 
   // Auth effect - check for existing session and load user data
   useEffect(() => {
@@ -917,7 +924,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save",
       isUser: false
     }];
   };
@@ -1009,6 +1016,9 @@ Find similar books from beyond my library that match this taste profile.
     const handleClickOutside = (event) => {
       if (attachmentMenuRef.current && !attachmentMenuRef.current.contains(event.target)) {
         setShowAttachmentMenu(false);
+      }
+      if (navMenuRef.current && !navMenuRef.current.contains(event.target)) {
+        setShowNavMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -1395,6 +1405,76 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
+              {/* Hamburger Menu */}
+              <div className="relative" ref={navMenuRef}>
+                <button
+                  onClick={() => setShowNavMenu(!showNavMenu)}
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] transition-colors"
+                  aria-label="Navigation menu"
+                  aria-expanded={showNavMenu}
+                >
+                  <Menu className="w-5 h-5 text-[#5F7252]" />
+                </button>
+                
+                {showNavMenu && (
+                  <div className="absolute top-full right-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
+                    <button
+                      onClick={() => {
+                        setCurrentPage('home');
+                        setShowNavMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <Home className="w-4 h-4" />
+                      Home
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('about');
+                        setShowNavMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      About the Reader
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('collection');
+                        setShowNavMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <Library className="w-4 h-4" />
+                      My Collection
+                    </button>
+                    {user && (
+                      <>
+                        <div className="border-t border-[#E8EBE4] my-1"></div>
+                        <button
+                          onClick={() => {
+                            setShowAuthModal(true);
+                            setShowNavMenu(false);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                        >
+                          <UserIcon className="w-4 h-4" />
+                          Profile
+                        </button>
+                      </>
+                    )}
+                    <div className="border-t border-[#E8EBE4] my-1"></div>
+                    <a
+                      href="mailto:hello@sarahsbooks.com"
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Contact
+                    </a>
+                  </div>
+                )}
+              </div>
+
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -1440,6 +1520,20 @@ Find similar books from beyond my library that match this taste profile.
           </div>
         </div>
       </header>
+
+      {/* Page Routing */}
+      {currentPage === 'about' && (
+        <AboutPage onNavigate={setCurrentPage} />
+      )}
+      
+      {currentPage === 'collection' && (
+        <CollectionPage 
+          onNavigate={setCurrentPage}
+          onBookClick={setSelectedBook}
+        />
+      )}
+
+      {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
           <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
             <div className="bg-[#FDFBF4]">
@@ -1456,7 +1550,7 @@ Find similar books from beyond my library that match this taste profile.
                   Find Your Next Read
                 </h2>
                 <p className="text-[#7A8F6C] text-sm sm:text-base font-light leading-relaxed">
-                  Explore curated recommendations from my collection, or search the world's library.
+                  Curated recommendations with honest assessments to guide your choice.
                 </p>
               </div>
             </div>
@@ -1726,6 +1820,7 @@ Find similar books from beyond my library that match this taste profile.
           </div>
 
         </main>
+      )}
 
       {selectedBook && (
         <BookDetail book={selectedBook} onClose={() => setSelectedBook(null)} />
