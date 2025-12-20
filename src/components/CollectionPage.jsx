@@ -203,7 +203,7 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                             <button
                               onClick={onShowAuthModal}
                               className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
-                              title="To bookmark this for later, create a profile"
+                              title="To bookmark for future reading, create a profile so we can build a personalized reading queue"
                             >
                               <Bookmark className="w-4 h-4" />
                             </button>
