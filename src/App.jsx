@@ -774,7 +774,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction }) {
+function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
