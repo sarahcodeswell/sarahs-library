@@ -7,11 +7,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Only create client if we have valid credentials
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Auth helpers
 export const auth = {
   signUp: async (email, password) => {
+    if (!supabase) return { data: null, error: { message: 'Auth not configured' } };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -20,6 +24,7 @@ export const auth = {
   },
 
   signIn: async (email, password) => {
+    if (!supabase) return { data: null, error: { message: 'Auth not configured' } };
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -28,16 +33,19 @@ export const auth = {
   },
 
   signOut: async () => {
+    if (!supabase) return { error: null };
     const { error } = await supabase.auth.signOut();
     return { error };
   },
 
   getUser: async () => {
+    if (!supabase) return null;
     const { data: { user } } = await supabase.auth.getUser();
     return user;
   },
 
   onAuthStateChange: (callback) => {
+    if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } };
     return supabase.auth.onAuthStateChange(callback);
   },
 };
@@ -46,6 +54,7 @@ export const auth = {
 export const db = {
   // Taste Profile operations
   getTasteProfile: async (userId) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from('taste_profiles')
       .select('*')
@@ -55,6 +64,7 @@ export const db = {
   },
 
   upsertTasteProfile: async (userId, profile) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from('taste_profiles')
       .upsert({
@@ -69,6 +79,7 @@ export const db = {
 
   // Reading Queue operations
   getReadingQueue: async (userId) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from('reading_queue')
       .select('*')
@@ -78,6 +89,7 @@ export const db = {
   },
 
   addToReadingQueue: async (userId, book) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from('reading_queue')
       .insert({
@@ -91,6 +103,7 @@ export const db = {
   },
 
   removeFromReadingQueue: async (id) => {
+    if (!supabase) return { error: null };
     const { error } = await supabase
       .from('reading_queue')
       .delete()
@@ -99,6 +112,7 @@ export const db = {
   },
 
   updateReadingQueueStatus: async (id, status) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from('reading_queue')
       .update({ status })
