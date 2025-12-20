@@ -36,7 +36,7 @@ export default function AboutPage({ onNavigate }) {
                 <p>
                   So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
                 </p>
-                <p className="text-[#7A8F6C] italic">
+                <p className="text-[#7A8F6C]">
                   Happy reading, friend. 📚
                 </p>
               </div>

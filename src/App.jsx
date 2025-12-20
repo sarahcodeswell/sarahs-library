@@ -1534,25 +1534,13 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
-          <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg relative">
-            <div className="bg-[#FDFBF4]">
-              <img
-                src="/books.jpg"
-                alt="Open book on desk"
-                loading="lazy"
-                className="block w-full h-[clamp(120px,16vh,220px)] object-cover object-center"
-              />
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm border-t border-[#E8EBE4]">
-              <div className="px-5 sm:px-8 py-4">
-                <h2 className="text-[#4A5940] font-serif text-base sm:text-xl mb-1 leading-snug break-words">
-                  Find Your Next Read
-                </h2>
-                <p className="text-[#7A8F6C] text-sm sm:text-base font-light leading-relaxed">
-                  Curated recommendations with honest assessments to guide your choice.
-                </p>
-              </div>
-            </div>
+          <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <img
+              src="/books.jpg"
+              alt="Open book on desk"
+              loading="lazy"
+              className="block w-full h-[clamp(120px,16vh,220px)] object-cover object-center"
+            />
           </div>
 
           <div className="mb-4 min-h-[120px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-4" role="log" aria-live="polite" aria-label="Chat conversation">
