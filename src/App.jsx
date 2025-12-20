@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, Link } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -548,9 +548,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               method: navigator.share ? 'native' : 'clipboard'
             });
           }}
-          className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2]"
+          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
-          📤 Share
+          <Link className="w-3.5 h-3.5" />
+          Share
         </button>
       </div>
     </div>
