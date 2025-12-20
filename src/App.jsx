@@ -506,7 +506,7 @@ function RecommendationActionPanel({ chatMode, onDiscoverMore }) {
         onClick={() => onDiscoverMore && onDiscoverMore()}
         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
       >
-        ✨ Show Me More Like These
+        🪄 Show Me More Like These
       </button>
     </div>
   );
