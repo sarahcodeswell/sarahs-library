@@ -1771,9 +1771,7 @@ Find similar books from beyond my library that match this taste profile.
                       setInputValue('');
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
-                      if (messages.length <= 2) {
-                        setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
-                      }
+                      setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
                     }
                   }}
                   className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
