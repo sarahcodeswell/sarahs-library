@@ -1769,8 +1769,13 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="mb-6 flex items-center justify-center gap-2 flex-wrap">
-            {Object.entries(themeInfo).map(([key, info]) => {
+          {/* Theme Filter Section */}
+          <div className="mb-6">
+            <p className="text-center text-sm text-[#7A8F6C] font-light mb-3">
+              Ask me a question or search by my curator themes
+            </p>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
               return (
                 <button
@@ -1800,6 +1805,7 @@ Find similar books from beyond my library that match this taste profile.
                 </button>
               );
             })}
+            </div>
           </div>
 
           <input
