@@ -237,7 +237,7 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                                   onClick={(e) => e.stopPropagation()}
                                   className="block px-4 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
                                 >
-                                  📚 Buy Local
+                                  Physical Book
                                 </a>
                                 <a
                                   href={getAmazonKindleUrl(book.title, book.author)}
@@ -246,7 +246,7 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
                                   onClick={(e) => e.stopPropagation()}
                                   className="block px-4 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
                                 >
-                                  📱 Kindle
+                                  Kindle Edition
                                 </a>
                               </div>
                             )}

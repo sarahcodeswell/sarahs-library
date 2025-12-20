@@ -532,7 +532,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
-                📚 Physical
+                Physical Book
               </a>
               <a
                 href={getAmazonKindleUrl(rec.title, displayAuthor)}
@@ -547,7 +547,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
-                📱 Kindle
+                Kindle Edition
               </a>
             </div>
           )}
@@ -680,7 +680,7 @@ const getSystemPrompt = (mode) => {
 RESPONSE FORMAT:
 When recommending books, always respond with exactly this structure:
 
-📚 My Top 3 Picks for You
+My Top 3 Picks for You
 
 [RECOMMENDATION 1]
 Title: [Book Title]
@@ -822,7 +822,7 @@ function BookDetail({ book, onClose }) {
               className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#4A7C59] text-white rounded-xl hover:bg-[#3d6649] transition-colors font-medium text-sm"
             >
               <ShoppingBag className="w-4 h-4" />
-              Buy Local 🌱
+              Buy Local
             </a>
           </div>
         </div>
@@ -928,7 +928,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• [shopping-bag] Buy your next read\n• [star] Read reviews\n• [share] Share with a friend\n• [bookmark] Bookmark for future reading", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1054,12 +1054,12 @@ export default function App() {
   const getInitialMessagesForMode = (mode) => {
     if (mode === 'discover') {
       return [{
-        text: "Let's discover something new! 🔍 I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
+        text: "Let's discover something new! I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
         isUser: false
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• [shopping-bag] Buy your next read\n• [star] Read reviews\n• [share] Share with a friend\n• [bookmark] Bookmark for future reading",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading",
       isUser: false
     }];
   };
@@ -1867,19 +1867,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {selectedThemes.length > 0 && chatMode === 'library' && (
-            <div className="mb-2 flex items-center justify-center gap-2 text-xs text-[#7A8F6C]">
-              <span>
-                Filtering: {selectedThemes.map(t => themeInfo[t]?.label).join(', ')}
-              </span>
-              <button
-                onClick={() => setSelectedThemes([])}
-                className="text-[#96A888] hover:text-[#5F7252] font-medium"
-              >
-                Clear
-              </button>
-            </div>
-          )}
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
             <div className="mb-3 px-4 py-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
@@ -1983,7 +1970,7 @@ Find similar books from beyond my library that match this taste profile.
                 className="w-full p-4 rounded-xl border-2 border-[#E8EBE4] hover:border-[#5F7252] hover:bg-[#F8F6EE] transition-all text-left group"
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl">📚</span>
+                  <Library className="w-6 h-6 text-[#5F7252]" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-[#4A5940] mb-1">More from My Library</p>
                     <p className="text-xs text-[#7A8F6C]">Stay in my curated collection of ~200 books</p>
