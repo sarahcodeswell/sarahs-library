@@ -369,7 +369,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               <button
                 onClick={onShowAuthModal}
                 className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
-                title="Sign in to save"
+                title="To bookmark this for later, create a profile"
               >
                 <Bookmark className="w-4 h-4" />
               </button>
@@ -520,7 +520,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               book_title: rec.title 
             });
           }}
-          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
+          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
           ⭐ Reviews
         </a>
