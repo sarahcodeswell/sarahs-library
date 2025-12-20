@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -353,7 +353,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
-            {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
           <div className="flex items-center gap-2">
             {/* Save Bookmark Icon */}
@@ -412,6 +411,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       {/* Expanded Details */}
       {expanded && (
         <div className="mb-3 pb-3 border-b border-[#E8EBE4]">
+          {catalogBook?.favorite && (
+            <div className="mb-2 flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
+            </div>
+          )}
           {fullDescription && (
             <div className="mb-2">
               <p className="text-xs font-medium text-[#4A5940] mb-1">Description:</p>
