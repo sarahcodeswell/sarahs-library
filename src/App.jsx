@@ -289,6 +289,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [showBuyOptions, setShowBuyOptions] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -307,11 +308,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   }, [rec.title, chatMode]);
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
-  const displayWhy = String(rec?.why || '').trim() || (() => {
-    const d = String(catalogBook?.description || '').trim();
-    if (!d) return '';
-    return d.length > 140 ? `${d.slice(0, 137)}…` : d;
-  })();
+  const displayWhy = String(rec?.why || '').trim();
+  const fullDescription = catalogBook?.description || rec.description;
 
   // Check if book is already in queue
   const isInQueue = readingQueue?.some(
@@ -336,15 +334,65 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
       {/* Book Info */}
       <div className="mb-3">
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
-          {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-          {chatMode === 'library' && catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
-          {chatMode === 'discover' && <span className="text-xs text-[#96A888] italic">∞</span>}
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
+            {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
+            {chatMode === 'library' && catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
+            {chatMode === 'discover' && <span className="text-xs text-[#96A888] italic">∞</span>}
+          </div>
+          {/* Expand/Collapse Button */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+            aria-label={expanded ? "Show less" : "Show more"}
+          >
+            {expanded ? (
+              <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
+            )}
+          </button>
         </div>
         {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
-        {displayWhy && <p className="text-xs text-[#5F7252]">{displayWhy}</p>}
       </div>
+
+      {/* Expanded Details */}
+      {expanded && (
+        <div className="mb-3 pb-3 border-b border-[#E8EBE4]">
+          {displayWhy && (
+            <div className="mb-2">
+              <p className="text-xs font-medium text-[#4A5940] mb-1">Why This Fits:</p>
+              <p className="text-xs text-[#5F7252]">{displayWhy}</p>
+            </div>
+          )}
+          {fullDescription && (
+            <div className="mb-2">
+              <p className="text-xs font-medium text-[#4A5940] mb-1">Description:</p>
+              <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
+            </div>
+          )}
+          {catalogBook?.themes && (
+            <div>
+              <p className="text-xs font-medium text-[#4A5940] mb-1">Themes:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {catalogBook.themes.slice(0, 5).map(theme => (
+                  <span key={theme} className="text-xs px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] rounded-full">
+                    {themeInfo[theme]?.emoji} {themeInfo[theme]?.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {rec.reputation && (
+            <div className="mt-2">
+              <p className="text-xs text-[#7A8F6C]">
+                <span className="font-medium">Reputation:</span> {rec.reputation}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Action Buttons - Always Visible */}
       <div className="flex gap-2">
