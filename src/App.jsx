@@ -413,7 +413,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             ) : addedToQueue ? (
               '✓ Saved!'
             ) : (
-              '� Save'
+              '🔖 Save'
             )}
           </button>
         ) : (
