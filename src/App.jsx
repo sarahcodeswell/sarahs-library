@@ -407,7 +407,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           }}
           className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
         >
-          📖 Read Reviews
+          📖 Reviews
         </a>
 
         {/* Save Button */}
@@ -816,7 +816,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Read Reviews  📌 Save  🛒 Buy", isUser: false }
+    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Reviews  📌 Save  and 🛒 Buy", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -917,7 +917,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Read Reviews  📌 Save  🛒 Buy",
+      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Reviews  📌 Save  and 🛒 Buy",
       isUser: false
     }];
   };
