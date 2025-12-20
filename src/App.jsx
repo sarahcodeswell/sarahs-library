@@ -354,35 +354,54 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
             {catalogBook?.favorite && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-            {chatMode === 'library' && catalogBook && <span className="text-xs text-[#96A888] italic">📚</span>}
-            {chatMode === 'discover' && <span className="text-xs text-[#96A888] italic">∞</span>}
           </div>
-          {/* Expand/Collapse Button */}
-          <button
-            onClick={() => {
-              const newExpandedState = !expanded;
-              setExpanded(newExpandedState);
-              
-              // Track card expansion
-              if (newExpandedState) {
-                track('recommendation_expanded', {
-                  book_title: rec.title,
-                  book_author: displayAuthor,
-                  chat_mode: chatMode,
-                  has_description: !!fullDescription,
-                  has_themes: !!(catalogBook?.themes?.length)
-                });
-              }
-            }}
-            className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
-            aria-label={expanded ? "Show less" : "Show more"}
-          >
-            {expanded ? (
-              <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
+          <div className="flex items-center gap-2">
+            {/* Save Bookmark Icon */}
+            {user ? (
+              <button
+                onClick={handleAddToQueue}
+                disabled={isInQueue || addingToQueue}
+                className={`p-1 rounded transition-colors ${isInQueue ? 'text-[#5F7252]' : 'text-[#96A888] hover:text-[#5F7252]'}`}
+                title={isInQueue ? 'Saved to queue' : 'Save to reading queue'}
+              >
+                <Bookmark className={`w-4 h-4 ${isInQueue ? 'fill-current' : ''}`} />
+              </button>
             ) : (
-              <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
+              <button
+                onClick={onShowAuthModal}
+                className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
+                title="Sign in to save"
+              >
+                <Bookmark className="w-4 h-4" />
+              </button>
             )}
-          </button>
+            {/* Expand/Collapse Button */}
+            <button
+              onClick={() => {
+                const newExpandedState = !expanded;
+                setExpanded(newExpandedState);
+                
+                // Track card expansion
+                if (newExpandedState) {
+                  track('recommendation_expanded', {
+                    book_title: rec.title,
+                    book_author: displayAuthor,
+                    chat_mode: chatMode,
+                    has_description: !!fullDescription,
+                    has_themes: !!(catalogBook?.themes?.length)
+                  });
+                }
+              }}
+              className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+              aria-label={expanded ? "Show less" : "Show more"}
+            >
+              {expanded ? (
+                <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
+              )}
+            </button>
+          </div>
         </div>
         {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
         {displayWhy && (
@@ -422,9 +441,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       )}
 
       {/* Action Buttons - Always Visible */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {/* Buy Dropdown */}
-        <div className="flex-1 relative">
+        <div className="relative">
           <button
             onClick={() => {
               const newState = !showBuyOptions;
@@ -496,42 +515,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               book_title: rec.title 
             });
           }}
-          className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
+          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
         >
           ⭐ Reviews
         </a>
-
-        {/* Save Button */}
-        {user ? (
-          <button
-            onClick={handleAddToQueue}
-            disabled={isInQueue || addingToQueue}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
-              isInQueue
-                ? 'bg-[#E8EBE4] text-[#96A888] cursor-not-allowed'
-                : addedToQueue
-                ? 'bg-[#5F7252] text-white'
-                : 'bg-[#4A5940] text-white hover:bg-[#5F7252]'
-            }`}
-          >
-            {addingToQueue ? (
-              '...'
-            ) : isInQueue ? (
-              '✓ Saved'
-            ) : addedToQueue ? (
-              '✓ Saved!'
-            ) : (
-              '📌 Save'
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={onShowAuthModal}
-            className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#E8EBE4] text-[#4A5940] hover:bg-[#D4DAD0] border border-[#D4DAD0]"
-          >
-            � Save
-          </button>
-        )}
 
         {/* Share Button */}
         <button
