@@ -457,7 +457,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
           
           {showBuyOptions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 overflow-hidden min-w-full">
               <a
                 href={getBookshopSearchUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -469,7 +469,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title 
                   });
                 }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors"
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
                 📚 Physical
               </a>
@@ -484,7 +484,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title 
                   });
                 }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4]"
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
                 📱 Kindle
               </a>
