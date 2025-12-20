@@ -393,6 +393,56 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
       {/* Action Buttons - Always Visible */}
       <div className="flex gap-2">
+        {/* Buy Dropdown */}
+        <div className="flex-1 relative">
+          <button
+            onClick={() => setShowBuyOptions(!showBuyOptions)}
+            className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+          >
+            🛒 Buy
+            {showBuyOptions ? (
+              <ChevronUp className="w-3 h-3" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+          
+          {showBuyOptions && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max">
+              <a
+                href={getBookshopSearchUrl(rec.title, displayAuthor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('bookshop_link_click', { 
+                    source: 'recommendation_card',
+                    book_title: rec.title 
+                  });
+                }}
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
+              >
+                📚 Physical
+              </a>
+              <a
+                href={getAmazonKindleUrl(rec.title, displayAuthor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('kindle_link_click', { 
+                    source: 'recommendation_card',
+                    book_title: rec.title 
+                  });
+                }}
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
+              >
+                📱 Kindle
+              </a>
+            </div>
+          )}
+        </div>
+
         {/* Reviews Button */}
         <a
           href={getGoodreadsSearchUrl(rec.title, displayAuthor)}
@@ -441,56 +491,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             🔒 Save
           </button>
         )}
-
-        {/* Buy Dropdown */}
-        <div className="flex-1 relative">
-          <button
-            onClick={() => setShowBuyOptions(!showBuyOptions)}
-            className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
-          >
-            🛒 Buy
-            {showBuyOptions ? (
-              <ChevronUp className="w-3 h-3" />
-            ) : (
-              <ChevronDown className="w-3 h-3" />
-            )}
-          </button>
-          
-          {showBuyOptions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 overflow-hidden min-w-full">
-              <a
-                href={getBookshopSearchUrl(rec.title, displayAuthor)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  track('bookshop_link_click', { 
-                    source: 'recommendation_card',
-                    book_title: rec.title 
-                  });
-                }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
-              >
-                📚 Physical
-              </a>
-              <a
-                href={getAmazonKindleUrl(rec.title, displayAuthor)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  track('kindle_link_click', { 
-                    source: 'recommendation_card',
-                    book_title: rec.title 
-                  });
-                }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
-              >
-                📱 Kindle
-              </a>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -816,7 +816,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• ⭐ Read reviews\n• 📌 Save\n• 🛒 Buy your next read", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -917,7 +917,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• ⭐ Read reviews\n• 📌 Save\n• 🛒 Buy your next read",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save",
       isUser: false
     }];
   };
