@@ -812,7 +812,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n🎯 Curate your own taste in books that you can share with others\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah. This is my personal library—every book I've loved, cried over, or couldn't put down.\n\nHere's how it works:\n1. Tell me what you're in the mood for\n2. I'll show you 3 books from my collection\n3. Let me know what resonates\n4. I can help you find them or discover similar books\n\nWhat are you in the mood for?", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -913,7 +913,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n🎯 Curate your own taste in books that you can share with others\n\nTell me what you're in the mood for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah. This is my personal library—every book I've loved, cried over, or couldn't put down.\n\nHere's how it works:\n1. Tell me what you're in the mood for\n2. I'll show you 3 books from my collection\n3. Let me know what resonates\n4. I can help you find them or discover similar books\n\nWhat are you in the mood for?",
       isUser: false
     }];
   };
@@ -1430,7 +1430,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           </div>
 
-          <div className="mb-8 min-h-[160px] overflow-y-auto rounded-2xl bg-gradient-to-br from-white to-[#F8F6EE] border border-[#E8EBE4] shadow-sm p-6 sm:p-8" role="log" aria-live="polite" aria-label="Chat conversation">
+          <div className="mb-4 min-h-[120px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-4" role="log" aria-live="polite" aria-label="Chat conversation">
             {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
@@ -1512,7 +1512,7 @@ Find similar books from beyond my library that match this taste profile.
             <div ref={chatEndRef} />
           </div>
 
-          <div className="bg-white rounded-2xl border-2 border-[#E8EBE4] shadow-lg p-4 sm:p-5 flex items-center gap-3 transition-all duration-200 hover:shadow-xl hover:border-[#D4DAD0]">
+          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <div className="relative" ref={attachmentMenuRef}>
                 <button
                   onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
@@ -1565,7 +1565,7 @@ Find similar books from beyond my library that match this taste profile.
                 value={inputValue}
                 onChange={e => {
                   setInputValue(e.target.value);
-                  e.target.style.height = '28px';
+                  e.target.style.height = '24px';
                   const newHeight = Math.min(e.target.scrollHeight, 200);
                   e.target.style.height = newHeight + 'px';
                 }}
@@ -1575,17 +1575,17 @@ Find similar books from beyond my library that match this taste profile.
                   handleSendMessage();
                 }}
                 placeholder="What are you in the mood for?"
-                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-normal text-base sm:text-lg resize-none overflow-hidden bg-transparent leading-relaxed"
+                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
-                style={{ minHeight: '28px', maxHeight: '200px', height: '28px' }}
+                style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !inputValue.trim()}
-                className="w-10 h-10 sm:w-11 sm:h-11 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0 flex items-center justify-center shadow-md hover:shadow-lg"
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
                 aria-label="Send message"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
               </button>
             </div>
 
@@ -1640,7 +1640,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="mb-8 flex items-center justify-center gap-2.5 flex-wrap">
+          <div className="mb-6 flex items-center justify-center gap-1.5 flex-wrap">
             {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
               return (
@@ -1657,18 +1657,16 @@ Find similar books from beyond my library that match this taste profile.
                       }
                     }
                   }}
-                  className={`w-12 h-12 rounded-2xl border-2 flex items-center justify-center text-lg transition-all duration-200 ${
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-sm transition-all ${
                     isSelected
-                      ? 'bg-[#5F7252] border-[#5F7252] scale-105 shadow-md'
-                      : 'border-[#E8EBE4] bg-white hover:border-[#5F7252] hover:scale-105 hover:shadow-sm'
+                      ? 'bg-[#E8EBE4] border-[#96A888] scale-110'
+                      : 'border-[#E8EBE4] bg-[#FDFBF4] hover:border-[#96A888] hover:bg-[#E8EBE4]'
                   }`}
                   aria-label={`${info.label} theme filter`}
                   aria-pressed={isSelected}
                   title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
                 >
-                  <span className={isSelected ? 'filter brightness-0 invert' : ''}>
-                    {info.emoji}
-                  </span>
+                  {info.emoji}
                 </button>
               );
             })}
