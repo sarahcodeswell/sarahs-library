@@ -393,6 +393,23 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
       {/* Action Buttons - Always Visible */}
       <div className="flex gap-2">
+        {/* Reviews Button */}
+        <a
+          href={getGoodreadsSearchUrl(rec.title, displayAuthor)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => {
+            e.stopPropagation();
+            track('goodreads_link_click', { 
+              source: 'recommendation_card',
+              book_title: rec.title 
+            });
+          }}
+          className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
+        >
+          📖 Read Reviews
+        </a>
+
         {/* Save Button */}
         {user ? (
           <button
@@ -413,7 +430,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             ) : addedToQueue ? (
               '✓ Saved!'
             ) : (
-              '� Save'
+              '📌 Save'
             )}
           </button>
         ) : (
@@ -424,23 +441,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             🔒 Save
           </button>
         )}
-
-        {/* Reviews Button */}
-        <a
-          href={getGoodreadsSearchUrl(rec.title, displayAuthor)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            e.stopPropagation();
-            track('goodreads_link_click', { 
-              source: 'recommendation_card',
-              book_title: rec.title 
-            });
-          }}
-          className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] text-center"
-        >
-          📖 Reviews
-        </a>
 
         {/* Buy Dropdown */}
         <div className="flex-1 relative">
@@ -816,7 +816,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 📌 Save to your reading queue\n   • 📖 Read reviews on Goodreads\n   • 🛒 Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Read Reviews  📌 Save  🛒 Buy", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -917,7 +917,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 📌 Save to your reading queue\n   • 📖 Read reviews on Goodreads\n   • 🛒 Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library. Every book here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books with reasons why they fit.\n\nYou can then: 📖 Read Reviews  📌 Save  🛒 Buy",
       isUser: false
     }];
   };
