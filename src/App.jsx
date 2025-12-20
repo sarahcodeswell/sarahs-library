@@ -493,6 +493,34 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             🔒 Save
           </button>
         )}
+
+        {/* Share Button */}
+        <button
+          onClick={() => {
+            const shareText = `Check out "${rec.title}"${displayAuthor ? ` by ${displayAuthor}` : ''} - recommended by Sarah's Books`;
+            const shareUrl = window.location.origin;
+            
+            if (navigator.share) {
+              navigator.share({
+                title: rec.title,
+                text: shareText,
+                url: shareUrl
+              }).catch(() => {});
+            } else {
+              navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                // Could add feedback here
+              });
+            }
+            
+            track('share_recommendation', { 
+              book_title: rec.title,
+              method: navigator.share ? 'native' : 'clipboard'
+            });
+          }}
+          className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2]"
+        >
+          📤 Share
+        </button>
       </div>
     </div>
   );
@@ -818,7 +846,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save\n• 📤 Share with a friend", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -924,7 +952,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save\n• 📤 Share with a friend",
       isUser: false
     }];
   };
