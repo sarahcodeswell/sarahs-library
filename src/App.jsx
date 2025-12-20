@@ -1640,7 +1640,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="mb-3 flex items-center justify-center gap-1.5 flex-wrap">
+          <div className="mb-6 flex items-center justify-center gap-1.5 flex-wrap">
             {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
               return (
