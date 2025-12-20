@@ -448,7 +448,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             onClick={() => setShowBuyOptions(!showBuyOptions)}
             className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           >
-            � Buy
+            🛒 Buy
             {showBuyOptions ? (
               <ChevronUp className="w-3 h-3" />
             ) : (
@@ -816,7 +816,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • Save to your reading queue\n   • Read reviews on Goodreads\n   • Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 💚 Save to your reading queue\n   • 📖 Read reviews on Goodreads\n   • 🛒 Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -917,7 +917,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • Save to your reading queue\n   • Read reviews on Goodreads\n   • Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 💚 Save to your reading queue\n   • 📖 Read reviews on Goodreads\n   • 🛒 Buy from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\nTell me what you're looking for, and let's find something amazing together!",
       isUser: false
     }];
   };
