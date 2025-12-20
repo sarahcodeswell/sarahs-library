@@ -1346,7 +1346,7 @@ Find similar books from beyond my library that match this taste profile.
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 380,
+          max_tokens: 600,
           system: systemPrompt,
           messages: [
             ...chatHistory,
