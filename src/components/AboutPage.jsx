@@ -113,11 +113,11 @@ export default function AboutPage({ onNavigate }) {
                 Top recommendations that have shaped how I see the world:
               </p>
               <ul className="text-sm text-[#5F7252] space-y-1 ml-4">
-                <li>• <span className="font-medium">The Nightingale</span> by Kristin Hannah</li>
-                <li>• <span className="font-medium">Lessons in Chemistry</span> by Bonnie Garmus</li>
-                <li>• <span className="font-medium">The Midnight Library</span> by Matt Haig</li>
+                <li>• <span className="font-medium">Tell Me How to Be</span> by Neel Patel</li>
+                <li>• <span className="font-medium">Where the Red Fern Grows</span> by Wilson Rawls</li>
+                <li>• <span className="font-medium">Loving Frank</span> by Nancy Horan</li>
                 <li>• <span className="font-medium">Just Mercy</span> by Bryan Stevenson</li>
-                <li>• <span className="font-medium">The Personal Librarian</span> by Marie Benedict</li>
+                <li>• <span className="font-medium">Heartland</span> by Sarah Smarsh</li>
               </ul>
             </div>
           </div>
