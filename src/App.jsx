@@ -1525,6 +1525,10 @@ Find similar books from beyond my library that match this taste profile.
         <CollectionPage 
           onNavigate={setCurrentPage}
           onBookClick={setSelectedBook}
+          user={user}
+          readingQueue={readingQueue}
+          onAddToQueue={handleAddToReadingQueue}
+          onShowAuthModal={() => setShowAuthModal(true)}
         />
       )}
 

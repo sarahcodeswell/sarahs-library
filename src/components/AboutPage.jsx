@@ -28,7 +28,7 @@ export default function AboutPage({ onNavigate }) {
               className="w-24 h-24 rounded-full object-cover border-4 border-[#E8EBE4] shadow-sm"
             />
             <div className="flex-1 text-center sm:text-left">
-              <h2 className="font-serif text-2xl text-[#4A5940] mb-3">Hi, I'm Sarah</h2>
+              <h2 className="font-serif text-2xl text-[#4A5940] mb-3">Hi, I'm Sarah!</h2>
               <div className="space-y-3 text-sm text-[#5F7252] leading-relaxed">
                 <p>
                   I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ✨.
