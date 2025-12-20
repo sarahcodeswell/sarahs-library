@@ -812,7 +812,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n🎯 Curate your own taste in books that you can share with others\n∞ Search the world's library when you're ready to explore beyond my shelf\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -913,7 +913,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n🎯 Curate your own taste in books that you can share with others\n∞ Search the world's library when you're ready to explore beyond my shelf\n\nTell me what you're in the mood for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about books and the local bookstores that are the heart of our communities. Here, I'll help you:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores (supporting the places we love!)\n Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!",
       isUser: false
     }];
   };
