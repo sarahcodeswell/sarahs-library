@@ -812,7 +812,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading for fun, and supporting local bookstores that are the heart of our communities. Here is what I can do:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading, sharing knowledge and supporting local bookstores that are the heart of our local communities. Here is what I can do:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -913,7 +913,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading for fun, and supporting local bookstores that are the heart of our communities. Here is what I can do:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading, sharing knowledge and supporting local bookstores that are the heart of our local communities. Here is what I can do:\n\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!",
       isUser: false
     }];
   };
