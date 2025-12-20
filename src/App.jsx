@@ -355,17 +355,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
         </div>
         {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
+        {displayWhy && (
+          <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>
+        )}
       </div>
 
       {/* Expanded Details */}
       {expanded && (
         <div className="mb-3 pb-3 border-b border-[#E8EBE4]">
-          {displayWhy && (
-            <div className="mb-2">
-              <p className="text-xs font-medium text-[#4A5940] mb-1">Why This Fits:</p>
-              <p className="text-xs text-[#5F7252]">{displayWhy}</p>
-            </div>
-          )}
           {fullDescription && (
             <div className="mb-2">
               <p className="text-xs font-medium text-[#4A5940] mb-1">Description:</p>
@@ -451,7 +448,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             onClick={() => setShowBuyOptions(!showBuyOptions)}
             className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           >
-            🛒 Buy
+            � Buy
             {showBuyOptions ? (
               <ChevronUp className="w-3 h-3" />
             ) : (
@@ -819,7 +816,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading, sharing books with friends, and supporting local bookstores that are the heart of our local communities.\n\nHere is what I can help you with:\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!", isUser: false }
+    { text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 💚 **Save** - Add to your reading queue\n   • 📖 **Reviews** - Read what others think on Goodreads\n   • 💚 **Buy** - Get it from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\n**What I can help with:**\n✨ Discover your next favorite from my collection\n🔍 Search the world's library for new reads\n💚 Find books at local bookstores\n\nTell me what you're looking for, and let's find something amazing together!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -920,7 +917,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah! 📚 Welcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\nI'm passionate about reading, sharing books with friends, and supporting local bookstores that are the heart of our local communities.\n\nHere is what I can help you with:\n✨ Discover your next favorite read from my collection\n💚 Find books at local bookstores\n🔍 Recommend books from the world's library\n\nTell me what you're in the mood for, and let's find something amazing together!",
+      text: "Hi, I'm Sarah! 📚\n\nWelcome to my personal library—every book here has moved me, challenged me, or changed how I see the world.\n\n**How it works:**\n1. Tell me what you're in the mood for\n2. I'll recommend 3 books with reasons why they fit\n3. For each book, you can:\n   • 💚 **Save** - Add to your reading queue\n   • 📖 **Reviews** - Read what others think on Goodreads\n   • 💚 **Buy** - Get it from a local bookstore or Kindle\n   • Click ▼ to see full details and themes\n\n**What I can help with:**\n✨ Discover your next favorite from my collection\n🔍 Search the world's library for new reads\n💚 Find books at local bookstores\n\nTell me what you're looking for, and let's find something amazing together!",
       isUser: false
     }];
   };
