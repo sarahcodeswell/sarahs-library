@@ -154,7 +154,7 @@ export default function CollectionPage({ onNavigate, onBookClick, user, readingQ
               <h2 className="font-serif text-2xl text-[#4A5940] mb-3 sticky top-0 bg-[#FDFBF4] py-2 z-10">
                 {letter}
               </h2>
-              <div className="bg-white rounded-xl border border-[#D4DAD0] shadow-sm divide-y divide-[#E8EBE4]">
+              <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] shadow-sm divide-y divide-[#E8EBE4]">
                 {booksByLetter[letter].map((book, idx) => {
                   const isExpanded = expandedBook === `${letter}-${idx}`;
                   const inQueue = isInQueue(book);

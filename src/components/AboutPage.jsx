@@ -23,7 +23,7 @@ export default function AboutPage({ onNavigate }) {
         </div>
 
         {/* Profile Section */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <img
               src="/sarah.png"
@@ -48,7 +48,7 @@ export default function AboutPage({ onNavigate }) {
         </div>
 
         {/* Curator's Note */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
             📝 Curator's Note
           </h2>
