@@ -878,7 +878,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save\n• 📤 Share with a friend", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• � Share with a friend\n• 🔖 Bookmark for future reading", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1009,7 +1009,7 @@ export default function App() {
       }];
     }
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• 📌 Save\n• 📤 Share with a friend",
+      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. 📚 Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\nYou can then:\n• 🛒 Buy your next read\n• ⭐ Read reviews\n• � Share with a friend\n• 🔖 Bookmark for future reading",
       isUser: false
     }];
   };
