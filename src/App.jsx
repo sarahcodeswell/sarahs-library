@@ -8,7 +8,7 @@ import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
-const AMAZON_AFFILIATE_TAG = 'sarahsbooks-20'; // TODO: Replace with your actual Amazon Associates tag after approval
+const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
 const CURRENT_YEAR = new Date().getFullYear();
 
 const STOP_WORDS = new Set([
