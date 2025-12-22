@@ -1037,12 +1037,33 @@ export default function App() {
     }
   }, [user, tasteProfile]);
 
-  const handleAuthSuccess = (authUser) => {
+  const handleAuthSuccess = async (authUser) => {
     setUser(authUser);
     setShowAuthModal(false);
+    
+    // Load user data after successful auth
+    if (authUser) {
+      const { data: profile } = await db.getTasteProfile(authUser.id);
+      if (profile) {
+        setTasteProfile({
+          likedBooks: profile.liked_books || [],
+          likedThemes: profile.liked_themes || [],
+          likedAuthors: profile.liked_authors || []
+        });
+      }
+      
+      const { data: queue } = await db.getReadingQueue(authUser.id);
+      if (queue) {
+        setReadingQueue(queue);
+      }
+    }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    // Sign out from Supabase
+    await auth.signOut();
+    
+    // Clear local state
     setUser(null);
     setTasteProfile({
       likedBooks: [],
@@ -1050,6 +1071,7 @@ export default function App() {
       likedAuthors: []
     });
     setReadingQueue([]);
+    setShowAuthModal(false);
   };
 
   const getInitialMessagesForMode = (mode) => {
@@ -2110,6 +2132,14 @@ Find similar books from beyond my library that match this taste profile.
               tasteProfile={tasteProfile}
               readingQueue={readingQueue}
               onSignOut={handleSignOut}
+              onQueueUpdate={async () => {
+                if (user) {
+                  const { data: queue } = await db.getReadingQueue(user.id);
+                  if (queue) {
+                    setReadingQueue(queue);
+                  }
+                }
+              }}
             />
           </div>
         </div>
