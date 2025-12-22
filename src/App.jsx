@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -947,6 +947,7 @@ export default function App() {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
+  const lastActivityRef = useRef(Date.now());
   
   // Navigation state
   const [currentPage, setCurrentPage] = useState('home');
@@ -1139,13 +1140,58 @@ Find similar books from beyond my library that match this taste profile.
     setMessages(getInitialMessagesForMode(chatMode));
     setSelectedThemes([]);
     setInputValue('');
+    lastActivityRef.current = Date.now();
+    
+    // Track new search event
+    track('new_search_started', {
+      chat_mode: chatMode,
+      previous_message_count: messages.length
+    });
   };
 
   const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
 
+  // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      requestAnimationFrame(() => {
+        chatEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+      });
+    }
   }, [messages]);
+
+  // Handle mobile keyboard resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (document.activeElement.tagName === 'INPUT' || 
+          document.activeElement.tagName === 'TEXTAREA') {
+        setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Auto-clear chat after 30 minutes of inactivity
+  useEffect(() => {
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    
+    const checkInactivity = () => {
+      const timeSinceLastActivity = Date.now() - lastActivityRef.current;
+      if (timeSinceLastActivity >= INACTIVITY_TIMEOUT && messages.length > 2) {
+        handleNewSearch();
+      }
+    };
+    
+    const intervalId = setInterval(checkInactivity, 60000); // Check every minute
+    return () => clearInterval(intervalId);
+  }, [messages.length]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1332,6 +1378,7 @@ Find similar books from beyond my library that match this taste profile.
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
+    lastActivityRef.current = Date.now(); // Track activity
 
     track('chat_message', {
       mode: chatMode,
@@ -1856,12 +1903,19 @@ Find similar books from beyond my library that match this taste profile.
           )}
 
           {messages.length > 2 && chatMode === 'library' && (
-            <div className="mb-2 flex items-center justify-center gap-2">
+            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
+                <span className="text-xs text-[#5F7252] font-medium">
+                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
+                </span>
+              </div>
               <button
                 onClick={handleNewSearch}
-                className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
                 aria-label="Start new search"
               >
+                <RotateCcw className="w-3.5 h-3.5" />
                 New Search
               </button>
             </div>
