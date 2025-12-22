@@ -1124,11 +1124,21 @@ Find similar books from beyond my library that match this taste profile.
   const handleAddToReadingQueue = async (book) => {
     if (!user) return false;
     
+    console.log('Adding book to queue:', book);
+    
+    // Extract title and author from book object
+    const title = book.title || book.book_title || '';
+    const author = book.author || book.book_author || '';
+    
+    if (!title) {
+      console.error('Cannot add book without title:', book);
+      return false;
+    }
+    
     try {
       const { error } = await db.addToReadingQueue(user.id, {
-        book_title: book.title,
-        book_author: book.author || '',
-        chat_mode: chatMode
+        title: title,
+        author: author
       });
       
       if (error) {
