@@ -22,7 +22,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
 
   const handleMarkAsRead = async (bookId) => {
     console.log('Marking book as read:', bookId);
-    const { data, error } = await db.updateReadingQueueStatus(bookId, 'read');
+    const { data, error } = await db.updateReadingQueueStatus(bookId, 'finished');
     
     if (error) {
       console.error('Error marking book as read:', error);
@@ -66,7 +66,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
             <span className="text-xs text-[#7A8F6C] font-medium">Books Read</span>
           </div>
           <p className="text-2xl font-serif text-[#4A5940]">
-            {readingQueue?.filter(book => book.status === 'read').length || 0}
+            {readingQueue?.filter(book => book.status === 'finished').length || 0}
           </p>
         </div>
         <div className="p-4 bg-[#F8F6EE] rounded-xl">
@@ -110,7 +110,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
                   {book.book_author && (
                     <p className="text-[#96A888] truncate">{book.book_author}</p>
                   )}
-                  {book.status === 'read' && (
+                  {book.status === 'finished' && (
                     <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-[#5F7252] font-medium">
                       <BookCheck className="w-3 h-3" />
                       Read
@@ -118,7 +118,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {book.status !== 'read' && (
+                  {book.status !== 'finished' && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
