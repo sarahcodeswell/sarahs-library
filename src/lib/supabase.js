@@ -125,7 +125,8 @@ export const db = {
     const { data, error } = await supabase
       .from('reading_queue')
       .update({ status })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     return { data, error };
   },
 };

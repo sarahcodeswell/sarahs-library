@@ -21,14 +21,20 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
   };
 
   const handleMarkAsRead = async (bookId) => {
-    const { error } = await db.updateReadingQueueStatus(bookId, 'read');
+    console.log('Marking book as read:', bookId);
+    const { data, error } = await db.updateReadingQueueStatus(bookId, 'read');
+    
     if (error) {
       console.error('Error marking book as read:', error);
       return;
     }
     
+    console.log('Book marked as read successfully:', data);
+    
     if (onQueueUpdate) {
+      console.log('Refreshing queue...');
       await onQueueUpdate();
+      console.log('Queue refreshed');
     }
   };
 
