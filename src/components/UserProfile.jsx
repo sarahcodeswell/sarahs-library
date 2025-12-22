@@ -61,20 +61,20 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="p-4 bg-[#F8F6EE] rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <BookCheck className="w-4 h-4 text-[#5F7252]" />
-            <span className="text-xs text-[#7A8F6C] font-medium">Books Read</span>
+          <div className="flex items-center gap-2 mb-3">
+            <BookCheck className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
+            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Books Read</span>
           </div>
-          <p className="text-2xl font-serif text-[#4A5940]">
+          <p className="text-2xl font-serif text-[#4A5940] leading-none">
             {readingQueue?.filter(book => book.status === 'finished').length || 0}
           </p>
         </div>
         <div className="p-4 bg-[#F8F6EE] rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="w-4 h-4 text-[#5F7252]" />
-            <span className="text-xs text-[#7A8F6C] font-medium">Reading Queue</span>
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
+            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Reading Queue</span>
           </div>
-          <p className="text-2xl font-serif text-[#4A5940]">
+          <p className="text-2xl font-serif text-[#4A5940] leading-none">
             {readingQueue?.length || 0}
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
                         e.preventDefault();
                         handleMarkAsRead(book.id);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] rounded transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-[#5F7252] text-white active:bg-[#4A5940] rounded transition-colors touch-manipulation"
                       title="Mark as read"
                     >
                       <BookCheck className="w-3 h-3" />
@@ -138,7 +138,7 @@ export default function UserProfile({ user, tasteProfile, readingQueue, onSignOu
                       e.preventDefault();
                       handleRemoveFromQueue(book.id);
                     }}
-                    className="p-2 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 active:bg-red-50 rounded transition-colors touch-manipulation"
                     title="Remove from queue"
                   >
                     <X className="w-4 h-4 text-red-500" />

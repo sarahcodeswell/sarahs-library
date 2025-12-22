@@ -400,7 +400,11 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               <button
                 onClick={handleAddToQueue}
                 disabled={isInQueue || addingToQueue}
-                className={`p-1 rounded transition-colors ${isInQueue ? 'text-[#5F7252]' : 'text-[#96A888] hover:text-[#5F7252]'}`}
+                className={`p-2 rounded transition-colors touch-manipulation ${
+                  isInQueue ? 'text-[#5F7252]' : 
+                  addingToQueue ? 'text-[#5F7252] bg-[#F8F6EE]' : 
+                  'text-[#96A888] active:text-[#5F7252] active:bg-[#F8F6EE]'
+                }`}
                 title={isInQueue ? 'Saved to queue' : 'Save to reading queue'}
               >
                 <Bookmark className={`w-4 h-4 ${isInQueue ? 'fill-current' : ''}`} />
@@ -408,7 +412,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             ) : (
               <button
                 onClick={onShowAuthModal}
-                className="p-1 rounded text-[#96A888] hover:text-[#5F7252] transition-colors"
+                className="p-2 rounded text-[#96A888] active:text-[#5F7252] active:bg-[#F8F6EE] transition-colors touch-manipulation"
                 title="Sign in to save books for later"
               >
                 <Bookmark className="w-4 h-4" />
