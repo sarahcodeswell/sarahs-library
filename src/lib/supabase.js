@@ -107,7 +107,8 @@ export const db = {
         book_author: book.author,
         status: 'want_to_read',
         added_at: new Date().toISOString(),
-      });
+      })
+      .select();
     return { data, error };
   },
 
