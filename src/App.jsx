@@ -122,9 +122,33 @@ function parseGoodreadsCsv(text) {
   return items;
 }
 
-function buildLibraryContext(userMessage, catalog) {
+function buildLibraryContext(userMessage, catalog, readingQueue = []) {
   const q = String(userMessage || '').toLowerCase();
   const tokens = tokenizeForSearch(userMessage);
+
+  // Extract user preferences from finished books
+  const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+  const finishedTitles = new Set(finishedBooks.map(item => 
+    String(item.book_title || '').toLowerCase().trim()
+  ));
+  
+  // Collect themes, genres, and authors from finished books for preference boosting
+  const preferredThemes = new Set();
+  const preferredGenres = new Set();
+  const preferredAuthors = new Set();
+  
+  finishedBooks.forEach(item => {
+    const matchingBook = catalog.find(b => 
+      String(b.title || '').toLowerCase().trim() === String(item.book_title || '').toLowerCase().trim()
+    );
+    if (matchingBook) {
+      if (matchingBook.genre) preferredGenres.add(String(matchingBook.genre).toLowerCase());
+      if (Array.isArray(matchingBook.themes)) {
+        matchingBook.themes.forEach(t => preferredThemes.add(String(t).toLowerCase()));
+      }
+      if (matchingBook.author) preferredAuthors.add(String(matchingBook.author).toLowerCase());
+    }
+  });
 
   // Score books by simple lexical overlap. This is intentionally cheap and deterministic.
   const scored = (catalog || []).map((b, idx) => {
@@ -140,6 +164,11 @@ function buildLibraryContext(userMessage, catalog) {
     const descLc = description.toLowerCase();
     const themesLc = themes.map(t => String(t || '').toLowerCase());
 
+    // Skip books the user has already finished
+    if (finishedTitles.has(titleLc.trim())) {
+      return { book: b, score: -1000, idx }; // Exclude finished books
+    }
+
     let score = 0;
     if (q && titleLc.includes(q)) score += 18;
     if (q && authorLc.includes(q)) score += 10;
@@ -154,6 +183,13 @@ function buildLibraryContext(userMessage, catalog) {
     }
 
     if (b.favorite) score += 0.75;
+    
+    // Boost books matching user's reading preferences
+    if (preferredGenres.has(genreLc)) score += 2;
+    if (preferredAuthors.has(authorLc)) score += 3;
+    themesLc.forEach(theme => {
+      if (preferredThemes.has(theme)) score += 1.5;
+    });
 
     return { book: b, score, idx };
   });
@@ -679,7 +715,7 @@ const getGoodreadsSearchUrl = (title, author) => {
   return `https://www.goodreads.com/search?q=${searchQuery}`;
 };
 
-const getSystemPrompt = (mode) => {
+const getSystemPrompt = (mode, readingQueue = []) => {
   const responseFormat = `
 RESPONSE FORMAT:
 When recommending books, always respond with exactly this structure:
@@ -704,10 +740,16 @@ Keep responses concise. Be direct and helpful.`;
   const qualityGuidelines = `
 Be specific about WHY each book matches their request. If vague, ask one clarifying question first.`;
 
+  // Build user preference context from finished books
+  const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+  const preferenceContext = finishedBooks.length > 0
+    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and avoid recommending books they've already read.`
+    : '';
+
   if (mode === 'library') {
     return `You are Sarah, a book curator sharing recommendations from your personal library.
 ${responseFormat}
-${qualityGuidelines}
+${qualityGuidelines}${preferenceContext}
 
 IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
 Do NOT output a numbered list or bullet list of titles.
@@ -721,7 +763,7 @@ IMPORTANT: Only recommend books from the provided LIBRARY SHORTLIST (included in
 
 Your taste: women's stories, emotional truth, identity, spirituality, justice.
 ${responseFormat}
-${qualityGuidelines}
+${qualityGuidelines}${preferenceContext}
 
 IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
 Do NOT output a numbered list or bullet list of titles.
@@ -1185,7 +1227,7 @@ Find similar books from beyond my library that match this taste profile.
     });
   };
 
-  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode), [chatMode]);
+  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode, readingQueue), [chatMode, readingQueue]);
 
   // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
@@ -1442,12 +1484,12 @@ Find similar books from beyond my library that match this taste profile.
         }));
 
       const libraryShortlist = chatMode === 'library'
-        ? String(buildLibraryContext(userMessage, bookCatalog) || '')
+        ? String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '')
         : '';
       const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 18).join('\n');
 
       const discoverAvoidShortlist = chatMode === 'discover'
-        ? String(buildLibraryContext(userMessage, bookCatalog) || '').split('\n').slice(0, 18).join('\n')
+        ? String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '').split('\n').slice(0, 18).join('\n')
         : '';
 
       const themeFilterText = selectedThemes.length > 0
