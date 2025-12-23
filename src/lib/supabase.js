@@ -98,18 +98,31 @@ export const db = {
   },
 
   addToReadingQueue: async (userId, book) => {
-    if (!supabase) return { data: null, error: null };
-    const { data, error } = await supabase
-      .from('reading_queue')
-      .insert({
-        user_id: userId,
-        book_title: book.title,
-        book_author: book.author,
-        status: 'want_to_read',
-        added_at: new Date().toISOString(),
-      })
-      .select();
-    return { data, error };
+    if (!supabase) {
+      console.error('addToReadingQueue: Supabase client not initialized');
+      return { data: null, error: { message: 'Supabase not configured' } };
+    }
+    
+    console.log('addToReadingQueue: Starting insert for', { userId, book });
+    
+    try {
+      const { data, error } = await supabase
+        .from('reading_queue')
+        .insert({
+          user_id: userId,
+          book_title: book.title,
+          book_author: book.author,
+          status: 'want_to_read',
+          added_at: new Date().toISOString(),
+        })
+        .select();
+      
+      console.log('addToReadingQueue: Insert complete', { data, error });
+      return { data, error };
+    } catch (err) {
+      console.error('addToReadingQueue: Exception during insert', err);
+      return { data: null, error: { message: err.message || 'Insert failed' } };
+    }
   },
 
   removeFromReadingQueue: async (id) => {
