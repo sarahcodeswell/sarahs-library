@@ -764,10 +764,16 @@ Keep responses concise. Be direct and helpful.`;
   const qualityGuidelines = `
 Be specific about WHY each book matches their request. If vague, ask one clarifying question first.`;
 
-  // Build user preference context from finished books
+  // Build user preference context from reading queue
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+  const queuedBooks = readingQueue.filter(item => item.status === 'want_to_read');
+  
   const preferenceContext = finishedBooks.length > 0
     ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and NEVER recommend books they've already read.`
+    : '';
+    
+  const queueContext = queuedBooks.length > 0
+    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.slice(0, 5).map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}${queuedBooks.length > 5 ? ` and ${queuedBooks.length - 5} more` : ''}.\nDO NOT recommend any of these books again.`
     : '';
 
   return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
@@ -782,7 +788,7 @@ RECOMMENDATION STRATEGY:
 - Prioritize: Goodreads 4.0+, award winners, Indie Next picks, beloved classics, staff favorites
 
 ${responseFormat}
-${qualityGuidelines}${preferenceContext}
+${qualityGuidelines}${preferenceContext}${queueContext}
 
 IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
 Do NOT output a numbered list or bullet list of titles.
