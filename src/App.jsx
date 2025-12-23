@@ -793,7 +793,7 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
     : '';
     
   const queueContext = queuedBooks.length > 0
-    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.slice(0, 5).map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}${queuedBooks.length > 5 ? ` and ${queuedBooks.length - 5} more` : ''}.\nDO NOT recommend any of these books again.`
+    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nDO NOT recommend any of these books again.`
     : '';
 
   return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
