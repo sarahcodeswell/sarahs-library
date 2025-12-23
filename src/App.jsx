@@ -679,10 +679,24 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
   
   // Extract the header (everything before the first recommendation)
   const header = React.useMemo(() => {
-    const headerMatch = String(text || '').match(/^(.*?)(?=\[RECOMMENDATION|\nTitle:)/s);
-    let headerText = headerMatch ? headerMatch[1].trim() : '';
-    // Remove any **RECOMMENDATION X** markers from the header
+    const lines = String(text || '').split('\n');
+    const headerLines = [];
+    for (const line of lines) {
+      // Stop at the first recommendation indicator
+      if (line.includes('Title:') || line.match(/^\*\*[^*]+\*\*$/) || line.includes('[RECOMMENDATION')) {
+        break;
+      }
+      // Skip lines that look like book titles (bold text at start)
+      if (line.match(/^\*\*[^*]+\*\*/)) {
+        break;
+      }
+      headerLines.push(line);
+    }
+    let headerText = headerLines.join('\n').trim();
+    // Remove any recommendation markers
     headerText = headerText.replace(/\*\*RECOMMENDATION\s+\d+\*\*/gi, '').trim();
+    // Remove any trailing book titles that got captured
+    headerText = headerText.replace(/\*\*[^*]+\*\*\s*$/, '').trim();
     return headerText;
   }, [text]);
   
