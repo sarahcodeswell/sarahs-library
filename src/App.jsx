@@ -424,6 +424,20 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
+      {/* Source Badge */}
+      <div className="flex items-center gap-2 mb-2">
+        {catalogBook ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium">
+            <Library className="w-3 h-3" />
+            From My Library
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium">
+            <Sparkles className="w-3 h-3" />
+            World Discovery
+          </span>
+        )}
+      </div>
       {/* Book Info */}
       <div className="mb-3">
         <div className="flex items-center justify-between gap-2 mb-1">
