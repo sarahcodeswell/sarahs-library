@@ -658,17 +658,15 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   );
 }
 
-function RecommendationActionPanel({ chatMode, onDiscoverMore }) {
-  // Simplified - just show "Show Me More" button for library mode
-  if (chatMode !== 'library') return null;
-  
+function RecommendationActionPanel({ onShowMore }) {
   return (
     <div className="mt-4">
       <button
-        onClick={() => onDiscoverMore && onDiscoverMore()}
+        onClick={() => onShowMore && onShowMore()}
         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
       >
-        🪄 Show Me More Like These
+        <Sparkles className="w-4 h-4" />
+        Show Me More Like These
       </button>
     </div>
   );
@@ -720,8 +718,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
       {/* Action panel appears after recommendations */}
       {recommendations.length > 0 && onActionPanelInteraction && (
         <RecommendationActionPanel 
-          chatMode={chatMode}
-          onDiscoverMore={() => onActionPanelInteraction('discover_more', null, recommendations)}
+          onShowMore={() => onActionPanelInteraction('show_more', null, recommendations)}
         />
       )}
     </div>
@@ -1902,9 +1899,17 @@ Find similar books from beyond my library that match this taste profile.
                       book_count: recommendations.length,
                       chat_mode: chatMode
                     });
-                  } else if (action === 'discover_more') {
-                    // Show modal to choose library or world
-                    setShowDiscoverModal(true);
+                  } else if (action === 'show_more') {
+                    // Direct "show more" - use the recommended books as context
+                    const titles = recommendations.map(r => r.title).join(', ');
+                    setInputValue(`Show me more books like: ${titles}`);
+                    setTimeout(() => {
+                      const sendButton = document.querySelector('button[aria-label="Send message"]');
+                      if (sendButton) sendButton.click();
+                    }, 50);
+                    track('show_more_clicked', {
+                      recommendation_count: recommendations.length
+                    });
                   } else if (action === 'upload_library') {
                     // Trigger the file input click
                     setImportError('');
