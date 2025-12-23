@@ -715,7 +715,7 @@ const getGoodreadsSearchUrl = (title, author) => {
   return `https://www.goodreads.com/search?q=${searchQuery}`;
 };
 
-const getSystemPrompt = (mode, readingQueue = []) => {
+const getSystemPrompt = (readingQueue = []) => {
   const responseFormat = `
 RESPONSE FORMAT:
 When recommending books, always respond with exactly this structure:
@@ -743,25 +743,20 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
   // Build user preference context from finished books
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
   const preferenceContext = finishedBooks.length > 0
-    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and avoid recommending books they've already read.`
+    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and NEVER recommend books they've already read.`
     : '';
 
-  if (mode === 'library') {
-    return `You are Sarah, a book curator sharing recommendations from your personal library.
-${responseFormat}
-${qualityGuidelines}${preferenceContext}
+  return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
 
-IMPORTANT: The UI that displays your recommendations ONLY works if you follow the RESPONSE FORMAT exactly.
-Do NOT output a numbered list or bullet list of titles.
-Each recommendation MUST include a line that starts with "Title:".
-You MUST return exactly 3 recommendations (no fewer), chosen ONLY from the provided LIBRARY SHORTLIST.
-If the user's request is vague, still return 3 solid picks, then ask 1 short clarifying question at the very end (after the 3 recommendations).
+Your taste centers on: women's stories, emotional truth, identity, spirituality, and justice.
 
-IMPORTANT: Only recommend books from the provided LIBRARY SHORTLIST (included in the user's message). If asked about books not listed, offer to switch to "Discover New" mode.`;
-  } else {
-    return `You are Sarah, a book curator helping discover new reads.
+RECOMMENDATION STRATEGY:
+- First, check if any books from MY LIBRARY SHORTLIST (provided below) are excellent matches for the user's request
+- If my library has great matches, prefer those - they're personally vetted and loved
+- If the request calls for something outside my library (specific genres, new releases, niche topics), recommend the BEST books from the broader world of literature
+- Always give the user the BEST possible recommendations, regardless of source
+- Prioritize: Goodreads 4.0+, award winners, Indie Next picks, beloved classics, staff favorites
 
-Your taste: women's stories, emotional truth, identity, spirituality, justice.
 ${responseFormat}
 ${qualityGuidelines}${preferenceContext}
 
@@ -769,11 +764,9 @@ IMPORTANT: The UI that displays your recommendations ONLY works if you follow th
 Do NOT output a numbered list or bullet list of titles.
 Each recommendation MUST include a line that starts with "Title:".
 You MUST return exactly 3 recommendations (no fewer). If you cannot find 3 perfect matches, broaden slightly and still return 3.
+If the user's request is vague, still return 3 solid picks, then ask 1 short clarifying question at the very end.
 
-Prioritize: Goodreads 4.0+, award winners, Indie Next picks, staff favorites.
-
-When asked for "best books of the year" or new releases, treat the current year as ${CURRENT_YEAR} unless the user specifies a different year. Prefer the best books of ${CURRENT_YEAR}.`;
-  }
+When asked for "best books of the year" or new releases, treat the current year as ${CURRENT_YEAR} unless the user specifies a different year.`;
 };
 
 function BookDetail({ book, onClose }) {
@@ -1141,15 +1134,9 @@ export default function App() {
     setShowAuthModal(false);
   };
 
-  const getInitialMessagesForMode = (mode) => {
-    if (mode === 'discover') {
-      return [{
-        text: "Let's discover something new! I'll recommend books from beyond my personal collection. Tell me what you're in the mood for—a specific genre, theme, or vibe—and I'll suggest some titles you might love.",
-        isUser: false
-      }];
-    }
+  const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my personal library. Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading",
+      text: "Hi, I'm Sarah!\n\nWelcome to my curated collection. I'll recommend the perfect book for you—whether from my personal library of 200+ beloved titles, or discoveries from the wider world of literature.\n\nTell me what you're in the mood for and I'll find your next great read.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading",
       isUser: false
     }];
   };
@@ -1246,9 +1233,8 @@ Find similar books from beyond my library that match this taste profile.
     }
   };
 
-  const handleBackToLibrary = () => {
-    setChatMode('library');
-    setMessages(getInitialMessagesForMode('library'));
+  const handleNewConversation = () => {
+    setMessages(getInitialMessages());
     setSelectedThemes([]);
     setInputValue('');
     setHasEngaged(false);
@@ -1256,7 +1242,7 @@ Find similar books from beyond my library that match this taste profile.
   };
 
   const handleNewSearch = () => {
-    setMessages(getInitialMessagesForMode(chatMode));
+    setMessages(getInitialMessages());
     setSelectedThemes([]);
     setInputValue('');
     lastActivityRef.current = Date.now();
@@ -1268,7 +1254,7 @@ Find similar books from beyond my library that match this taste profile.
     });
   };
 
-  const systemPrompt = React.useMemo(() => getSystemPrompt(chatMode, readingQueue), [chatMode, readingQueue]);
+  const systemPrompt = React.useMemo(() => getSystemPrompt(readingQueue), [readingQueue]);
 
   // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
@@ -1354,8 +1340,7 @@ Find similar books from beyond my library that match this taste profile.
         setChatMode(mode);
         setMessages(restored);
       } else {
-        setChatMode(mode);
-        setMessages(getInitialMessagesForMode(mode));
+        setMessages(getInitialMessages());
       }
     } catch (e) {
       void e;
@@ -1524,37 +1509,29 @@ Find similar books from beyond my library that match this taste profile.
           content: m.text
         }));
 
-      const libraryShortlist = chatMode === 'library'
-        ? String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '')
-        : '';
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 18).join('\n');
-
-      const discoverAvoidShortlist = chatMode === 'discover'
-        ? String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '').split('\n').slice(0, 18).join('\n')
-        : '';
+      // Build library shortlist for hybrid recommendations
+      const libraryShortlist = String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '');
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 20).join('\n');
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
         : '';
 
-      const userContent = chatMode === 'library'
-        ? `LIBRARY SHORTLIST:\n${limitedLibraryShortlist}${themeFilterText}\n\nUSER REQUEST:\n${userMessage}`
-        : (() => {
-            const parts = [];
-            if (discoverAvoidShortlist) {
-              parts.push(`SARAH'S LIBRARY SHORTLIST (DO NOT RECOMMEND):\n${discoverAvoidShortlist}`);
-            }
-            if (importedLibrary?.items?.length) {
-              const owned = importedLibrary.items.slice(0, 18).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
-              parts.push(`USER LIBRARY (imported):\n${owned}`);
-            }
-            parts.push('IMPORTANT: Recommend books outside Sarah\'s library. Do not recommend any titles listed above as already-owned. Before finalizing your 3 picks, double-check that none of the 3 titles appear in the DO NOT RECOMMEND list.');
-            if (themeFilterText) {
-              parts.push(themeFilterText.trim());
-            }
-            parts.push(`USER REQUEST:\n${userMessage}`);
-            return parts.join('\n\n');
-          })();
+      // Unified hybrid content - always provide library context
+      const parts = [];
+      parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${limitedLibraryShortlist}`);
+      
+      if (importedLibrary?.items?.length) {
+        const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
+        parts.push(`USER'S OWNED BOOKS (do not recommend these):\n${owned}`);
+      }
+      
+      if (themeFilterText) {
+        parts.push(themeFilterText.trim());
+      }
+      
+      parts.push(`USER REQUEST:\n${userMessage}`);
+      const userContent = parts.join('\n\n');
 
       const response = await fetch('/api/chat', {
         method: 'POST',
