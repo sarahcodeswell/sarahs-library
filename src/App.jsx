@@ -363,7 +363,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, onShowAuthModal }) {
+function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [showBuyOptions, setShowBuyOptions] = useState(false);
@@ -395,7 +395,26 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
   const handleAddToQueue = async (e) => {
     e.stopPropagation();
-    if (!user || isInQueue || addingToQueue) return;
+    if (!user || addingToQueue) return;
+    
+    // If already in queue, remove it
+    if (isInQueue) {
+      const queueItem = readingQueue.find(
+        queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title)
+      );
+      
+      if (queueItem && onRemoveFromQueue) {
+        const success = await onRemoveFromQueue(queueItem.id);
+        if (success) {
+          track('recommendation_removed_from_queue', {
+            book_title: rec.title,
+            book_author: displayAuthor,
+            chat_mode: chatMode
+          });
+        }
+      }
+      return;
+    }
     
     setAddingToQueue(true);
     const success = await onAddToQueue(rec);
@@ -448,13 +467,13 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             {user ? (
               <button
                 onClick={handleAddToQueue}
-                disabled={isInQueue || addingToQueue}
+                disabled={addingToQueue}
                 className={`p-2 rounded transition-colors touch-manipulation ${
                   isInQueue ? 'text-[#5F7252]' : 
                   addingToQueue ? 'text-[#5F7252] bg-[#F8F6EE]' : 
                   'text-[#96A888] active:text-[#5F7252] active:bg-[#F8F6EE]'
                 }`}
-                title={isInQueue ? 'Saved to queue' : 'Save to reading queue'}
+                title={isInQueue ? 'Remove from reading queue' : 'Save to reading queue'}
               >
                 <Bookmark className={`w-4 h-4 ${isInQueue ? 'fill-current' : ''}`} />
               </button>
@@ -671,7 +690,7 @@ function RecommendationActionPanel({ onShowMore }) {
   );
 }
 
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onShowAuthModal }) {
+function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -710,6 +729,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
           user={user}
           readingQueue={readingQueue}
           onAddToQueue={onAddToQueue}
+          onRemoveFromQueue={onRemoveFromQueue}
           onShowAuthModal={onShowAuthModal}
         />
       ))}
@@ -900,7 +920,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onShowAuthModal }) {
+function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -925,6 +945,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
             user={user}
             readingQueue={readingQueue}
             onAddToQueue={onAddToQueue}
+            onRemoveFromQueue={onRemoveFromQueue}
             onShowAuthModal={onShowAuthModal}
           />
         ) : (
@@ -1278,9 +1299,9 @@ Find similar books from beyond my library that match this taste profile.
       }
       
       // Replace optimistic update with real data
-      if (data) {
+      if (data && data[0]) {
         setReadingQueue(prev => 
-          prev.map(book => book.id === optimisticBook.id ? data : book)
+          prev.map(book => book.id === optimisticBook.id ? data[0] : book)
         );
       }
       
@@ -1290,6 +1311,40 @@ Find similar books from beyond my library that match this taste profile.
       // Remove optimistic update on error
       setReadingQueue(prev => prev.filter(book => book.id !== optimisticBook.id));
       alert('Something went wrong. Please try again.');
+      return false;
+    }
+  };
+
+  const handleRemoveFromReadingQueue = async (queueItemId) => {
+    if (!user || !queueItemId) return false;
+    
+    try {
+      console.log('Removing book from queue:', { queueItemId, userId: user.id });
+      
+      // Optimistic update - remove from UI immediately
+      setReadingQueue(prev => prev.filter(book => book.id !== queueItemId));
+      
+      const { error } = await db.removeFromReadingQueue(queueItemId);
+      
+      if (error) {
+        console.error('Error removing from queue:', error.message || error);
+        // Refresh queue to restore correct state
+        const { data: queue } = await db.getReadingQueue(user.id);
+        if (queue) {
+          setReadingQueue(queue);
+        }
+        return false;
+      }
+      
+      console.log('Successfully removed from queue');
+      return true;
+    } catch (err) {
+      console.error('Exception in handleRemoveFromReadingQueue:', err);
+      // Refresh queue to restore correct state
+      const { data: queue } = await db.getReadingQueue(user.id);
+      if (queue) {
+        setReadingQueue(queue);
+      }
       return false;
     }
   };
@@ -1897,19 +1952,6 @@ Find similar books from beyond my library that match this taste profile.
                 isUser={msg.isUser} 
                 messageIndex={idx}
                 chatMode={chatMode}
-                user={user}
-                readingQueue={readingQueue}
-                onAddToQueue={handleAddToReadingQueue}
-                onShowAuthModal={() => setShowAuthModal(true)}
-                onEngagement={(book) => {
-                  if (chatMode === 'library' && !hasEngaged) {
-                    setHasEngaged(true);
-                    setLikedBooks(prev => {
-                      const exists = prev.some(b => b.title === book.title);
-                      return exists ? prev : [...prev, book];
-                    });
-                  }
-                }}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -1961,6 +2003,11 @@ Find similar books from beyond my library that match this taste profile.
                     });
                   }
                 }}
+                user={user}
+                readingQueue={readingQueue}
+                onAddToQueue={handleAddToReadingQueue}
+                onRemoveFromQueue={handleRemoveFromReadingQueue}
+                onShowAuthModal={() => setShowAuthModal(true)}
               />
             ))}
             {isLoading && (
