@@ -1028,48 +1028,69 @@ export default function App() {
   // Auth effect - check for existing session and load user data
   useEffect(() => {
     const initAuth = async () => {
-      const currentUser = await auth.getUser();
-      if (currentUser) {
-        setUser(currentUser);
-        // Load user's taste profile
-        const { data: profile } = await db.getTasteProfile(currentUser.id);
-        if (profile) {
-          setTasteProfile({
-            likedBooks: profile.liked_books || [],
-            likedThemes: profile.liked_themes || [],
-            likedAuthors: profile.liked_authors || []
-          });
+      try {
+        console.log('initAuth: Checking for existing session...');
+        const currentUser = await auth.getUser();
+        console.log('initAuth: Current user:', currentUser ? currentUser.email : 'none');
+        
+        if (currentUser) {
+          setUser(currentUser);
+          // Load user's taste profile
+          const { data: profile } = await db.getTasteProfile(currentUser.id);
+          if (profile) {
+            setTasteProfile({
+              likedBooks: profile.liked_books || [],
+              likedThemes: profile.liked_themes || [],
+              likedAuthors: profile.liked_authors || []
+            });
+          }
+          // Load reading queue
+          const { data: queue } = await db.getReadingQueue(currentUser.id);
+          if (queue) {
+            setReadingQueue(queue);
+            console.log('initAuth: Loaded queue with', queue.length, 'items');
+          }
         }
-        // Load reading queue
-        const { data: queue } = await db.getReadingQueue(currentUser.id);
-        if (queue) {
-          setReadingQueue(queue);
-        }
+      } catch (err) {
+        console.error('initAuth error:', err);
       }
     };
 
     initAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes (including OAuth callbacks)
     const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
+      console.log('onAuthStateChange:', event, session?.user?.email || 'no user');
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('User signed in:', session.user.email);
         setUser(session.user);
+        
         // Load user data
-        const { data: profile } = await db.getTasteProfile(session.user.id);
-        if (profile) {
-          setTasteProfile({
-            likedBooks: profile.liked_books || [],
-            likedThemes: profile.liked_themes || [],
-            likedAuthors: profile.liked_authors || []
-          });
+        try {
+          const { data: profile } = await db.getTasteProfile(session.user.id);
+          if (profile) {
+            setTasteProfile({
+              likedBooks: profile.liked_books || [],
+              likedThemes: profile.liked_themes || [],
+              likedAuthors: profile.liked_authors || []
+            });
+          }
+          const { data: queue } = await db.getReadingQueue(session.user.id);
+          if (queue) {
+            setReadingQueue(queue);
+          }
+        } catch (err) {
+          console.error('Error loading user data after sign in:', err);
         }
-        const { data: queue } = await db.getReadingQueue(session.user.id);
-        if (queue) {
-          setReadingQueue(queue);
-        }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
         setUser(null);
         setReadingQueue([]);
+        setTasteProfile({ likedBooks: [], likedThemes: [], likedAuthors: [] });
+      } else if (session?.user) {
+        // Handle other events with active session (TOKEN_REFRESHED, etc.)
+        setUser(session.user);
       }
     });
 
@@ -1168,13 +1189,23 @@ Find similar books from beyond my library that match this taste profile.
   };
 
   const handleAddToReadingQueue = async (book) => {
-    if (!user) return false;
+    // Validate user is logged in
+    if (!user) {
+      console.warn('handleAddToReadingQueue: No user logged in');
+      setShowAuthModal(true); // Prompt user to sign in
+      return false;
+    }
     
-    console.log('Adding book to queue:', book);
+    if (!user.id) {
+      console.error('handleAddToReadingQueue: User object missing id', user);
+      return false;
+    }
+    
+    console.log('Adding book to queue:', { book, userId: user.id });
     
     // Extract title and author from book object
-    const title = book.title || book.book_title || '';
-    const author = book.author || book.book_author || '';
+    const title = String(book.title || book.book_title || '').trim();
+    const author = String(book.author || book.book_author || '').trim();
     
     if (!title) {
       console.error('Cannot add book without title:', book);
@@ -1182,25 +1213,35 @@ Find similar books from beyond my library that match this taste profile.
     }
     
     try {
-      const { error } = await db.addToReadingQueue(user.id, {
+      console.log('Calling db.addToReadingQueue...');
+      const { data, error } = await db.addToReadingQueue(user.id, {
         title: title,
         author: author
       });
       
+      console.log('DB addToReadingQueue response:', { data, error });
+      
       if (error) {
-        console.error('Error adding to queue:', error);
+        console.error('Error adding to queue:', error.message || error);
         return false;
       }
       
       // Refresh the queue
-      const { data: queue } = await db.getReadingQueue(user.id);
+      console.log('Refreshing reading queue...');
+      const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
+      
+      if (queueError) {
+        console.error('Error refreshing queue:', queueError);
+      }
+      
       if (queue) {
         setReadingQueue(queue);
+        console.log('Queue updated successfully, items:', queue.length);
       }
       
       return true;
     } catch (err) {
-      console.error('Error adding to queue:', err);
+      console.error('Exception in handleAddToReadingQueue:', err);
       return false;
     }
   };
