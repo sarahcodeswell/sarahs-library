@@ -1224,8 +1224,6 @@ Find similar books from beyond my library that match this taste profile.
       return false;
     }
     
-    console.log('Adding book to queue:', { book, userId: user.id });
-    
     // Extract title and author from book object
     const title = String(book.title || book.book_title || '').trim();
     const author = String(book.author || book.book_author || '').trim();
@@ -1234,6 +1232,28 @@ Find similar books from beyond my library that match this taste profile.
       console.error('Cannot add book without title:', book);
       return false;
     }
+    
+    // Check for duplicates client-side for instant feedback
+    const isDuplicate = readingQueue?.some(
+      queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(title)
+    );
+    
+    if (isDuplicate) {
+      console.log('Book already in queue (client check)');
+      return true; // Return success since it's already saved
+    }
+    
+    // Optimistic update - add to UI immediately
+    const optimisticBook = {
+      id: `temp-${Date.now()}`,
+      user_id: user.id,
+      book_title: title,
+      book_author: author,
+      status: 'want_to_read',
+      added_at: new Date().toISOString()
+    };
+    
+    setReadingQueue(prev => [...prev, optimisticBook]);
     
     try {
       console.log('Calling db.addToReadingQueue...');
@@ -1246,29 +1266,24 @@ Find similar books from beyond my library that match this taste profile.
       
       if (error) {
         console.error('Error adding to queue:', error.message || error);
-        // Show user feedback for error
+        // Remove optimistic update on error
+        setReadingQueue(prev => prev.filter(book => book.id !== optimisticBook.id));
         alert('Failed to save book. Please try again.');
         return false;
       }
       
-      // Only refresh queue if insert was successful
+      // Replace optimistic update with real data
       if (data) {
-        console.log('Refreshing reading queue...');
-        const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
-        
-        if (queueError) {
-          console.error('Error refreshing queue:', queueError);
-          // Still update with optimistic data if refresh fails
-          setReadingQueue(prev => [...prev, data]);
-        } else if (queue) {
-          setReadingQueue(queue);
-          console.log('Queue updated successfully, items:', queue.length);
-        }
+        setReadingQueue(prev => 
+          prev.map(book => book.id === optimisticBook.id ? data : book)
+        );
       }
       
       return true;
     } catch (err) {
       console.error('Exception in handleAddToReadingQueue:', err);
+      // Remove optimistic update on error
+      setReadingQueue(prev => prev.filter(book => book.id !== optimisticBook.id));
       alert('Something went wrong. Please try again.');
       return false;
     }

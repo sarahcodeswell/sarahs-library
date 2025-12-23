@@ -133,20 +133,6 @@ export const db = {
       return { data: null, error: { message: 'Supabase not configured' } };
     }
     
-    // Check for duplicates first
-    const { data: existing } = await supabase
-      .from('reading_queue')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('book_title', book.title)
-      .eq('book_author', book.author)
-      .single();
-    
-    if (existing) {
-      console.log('addToReadingQueue: Book already in queue');
-      return { data: existing, error: null };
-    }
-    
     console.log('addToReadingQueue: Starting insert for', { userId, book });
     
     try {
