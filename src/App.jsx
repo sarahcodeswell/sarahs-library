@@ -987,6 +987,7 @@ export default function App() {
   
   // Auth state
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // Loading state for auth
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [readingQueue, setReadingQueue] = useState([]);
   const [importedLibrary, setImportedLibrary] = useState(null);
@@ -1071,6 +1072,8 @@ export default function App() {
         }
       } catch (err) {
         console.error('initAuth error:', err);
+      } finally {
+        setAuthLoading(false);
       }
     };
 
@@ -1805,6 +1808,11 @@ Find similar books from beyond my library that match this taste profile.
                     {user.email?.split('@')[0]}
                   </span>
                 </button>
+              ) : authLoading ? (
+                <div className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 rounded-full bg-[#96A888] text-white">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="hidden sm:inline ml-2 text-sm font-medium">Loading...</span>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
