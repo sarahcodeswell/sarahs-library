@@ -89,18 +89,62 @@ export const db = {
   // Reading Queue operations
   getReadingQueue: async (userId) => {
     if (!supabase) return { data: null, error: null };
-    const { data, error } = await supabase
-      .from('reading_queue')
-      .select('*')
-      .eq('user_id', userId)
-      .order('added_at', { ascending: false });
-    return { data, error };
+    
+    // Add retry logic for network issues
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const { data, error } = await supabase
+          .from('reading_queue')
+          .select('*')
+          .eq('user_id', userId)
+          .order('added_at', { ascending: false });
+        
+        if (!error || error.code !== 'PGRST301') {
+          return { data, error };
+        }
+        
+        console.log(`getReadingQueue: Retry attempt ${attempts + 1}/${maxAttempts}`);
+        attempts++;
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        
+      } catch (err) {
+        console.error(`getReadingQueue: Attempt ${attempts + 1} failed:`, err);
+        attempts++;
+        
+        if (attempts >= maxAttempts) {
+          return { data: null, error: { message: 'Network error after retries' } };
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+      }
+    }
+    
+    return { data: null, error: { message: 'Max retry attempts exceeded' } };
   },
 
   addToReadingQueue: async (userId, book) => {
     if (!supabase) {
       console.error('addToReadingQueue: Supabase client not initialized');
       return { data: null, error: { message: 'Supabase not configured' } };
+    }
+    
+    // Check for duplicates first
+    const { data: existing } = await supabase
+      .from('reading_queue')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('book_title', book.title)
+      .eq('book_author', book.author)
+      .single();
+    
+    if (existing) {
+      console.log('addToReadingQueue: Book already in queue');
+      return { data: existing, error: null };
     }
     
     console.log('addToReadingQueue: Starting insert for', { userId, book });

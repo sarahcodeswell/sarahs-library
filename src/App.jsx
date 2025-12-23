@@ -1044,6 +1044,45 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
+  // Load user data helper function
+  const loadUserData = async (user) => {
+    if (!user) return;
+    
+    try {
+      console.log('Loading user data for:', user.email);
+      
+      // Load both profile and queue in parallel
+      const [profileResult, queueResult] = await Promise.allSettled([
+        db.getTasteProfile(user.id),
+        db.getReadingQueue(user.id)
+      ]);
+      
+      // Handle profile data
+      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+        const profile = profileResult.value.data;
+        setTasteProfile({
+          likedBooks: profile.liked_books || [],
+          likedThemes: profile.liked_themes || [],
+          likedAuthors: profile.liked_authors || []
+        });
+        console.log('Profile loaded successfully');
+      } else if (profileResult.status === 'rejected') {
+        console.error('Failed to load profile:', profileResult.reason);
+      }
+      
+      // Handle queue data
+      if (queueResult.status === 'fulfilled' && queueResult.value.data) {
+        setReadingQueue(queueResult.value.data);
+        console.log('Queue loaded with', queueResult.value.data.length, 'items');
+      } else if (queueResult.status === 'rejected') {
+        console.error('Failed to load queue:', queueResult.reason);
+      }
+      
+    } catch (err) {
+      console.error('Error loading user data:', err);
+    }
+  };
+
   // Auth effect - check for existing session and load user data
   useEffect(() => {
     const initAuth = async () => {
@@ -1054,21 +1093,7 @@ export default function App() {
         
         if (currentUser) {
           setUser(currentUser);
-          // Load user's taste profile
-          const { data: profile } = await db.getTasteProfile(currentUser.id);
-          if (profile) {
-            setTasteProfile({
-              likedBooks: profile.liked_books || [],
-              likedThemes: profile.liked_themes || [],
-              likedAuthors: profile.liked_authors || []
-            });
-          }
-          // Load reading queue
-          const { data: queue } = await db.getReadingQueue(currentUser.id);
-          if (queue) {
-            setReadingQueue(queue);
-            console.log('initAuth: Loaded queue with', queue.length, 'items');
-          }
+          await loadUserData(currentUser);
         }
       } catch (err) {
         console.error('initAuth error:', err);
@@ -1086,24 +1111,7 @@ export default function App() {
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('User signed in:', session.user.email);
         setUser(session.user);
-        
-        // Load user data
-        try {
-          const { data: profile } = await db.getTasteProfile(session.user.id);
-          if (profile) {
-            setTasteProfile({
-              likedBooks: profile.liked_books || [],
-              likedThemes: profile.liked_themes || [],
-              likedAuthors: profile.liked_authors || []
-            });
-          }
-          const { data: queue } = await db.getReadingQueue(session.user.id);
-          if (queue) {
-            setReadingQueue(queue);
-          }
-        } catch (err) {
-          console.error('Error loading user data after sign in:', err);
-        }
+        await loadUserData(session.user);
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         setUser(null);
@@ -1238,25 +1246,30 @@ Find similar books from beyond my library that match this taste profile.
       
       if (error) {
         console.error('Error adding to queue:', error.message || error);
+        // Show user feedback for error
+        alert('Failed to save book. Please try again.');
         return false;
       }
       
-      // Refresh the queue
-      console.log('Refreshing reading queue...');
-      const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
-      
-      if (queueError) {
-        console.error('Error refreshing queue:', queueError);
-      }
-      
-      if (queue) {
-        setReadingQueue(queue);
-        console.log('Queue updated successfully, items:', queue.length);
+      // Only refresh queue if insert was successful
+      if (data) {
+        console.log('Refreshing reading queue...');
+        const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
+        
+        if (queueError) {
+          console.error('Error refreshing queue:', queueError);
+          // Still update with optimistic data if refresh fails
+          setReadingQueue(prev => [...prev, data]);
+        } else if (queue) {
+          setReadingQueue(queue);
+          console.log('Queue updated successfully, items:', queue.length);
+        }
       }
       
       return true;
     } catch (err) {
       console.error('Exception in handleAddToReadingQueue:', err);
+      alert('Something went wrong. Please try again.');
       return false;
     }
   };
