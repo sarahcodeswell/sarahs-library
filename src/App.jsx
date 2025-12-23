@@ -371,7 +371,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
-    if (chatMode === 'discover') return null;
     const t = String(rec?.title || '');
     const key = normalizeTitle(t);
     if (key && CATALOG_TITLE_INDEX.has(key)) return CATALOG_TITLE_INDEX.get(key);
@@ -383,7 +382,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       if (k.includes(needle) || needle.includes(k)) return b;
     }
     return null;
-  }, [rec.title, chatMode]);
+  }, [rec.title]);
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim();
