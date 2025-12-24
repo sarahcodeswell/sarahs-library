@@ -447,7 +447,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
       {/* Source Badge */}
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-3">
         {catalogBook ? (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium">
             <Library className="w-3 h-3" />
@@ -461,7 +461,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         )}
       </div>
       {/* Book Info */}
-      <div className="mb-3">
+      <div className="mb-4">
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
@@ -526,23 +526,23 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="mb-3 pb-3 border-b border-[#E8EBE4]">
+        <div className="mb-4 pb-4 border-b border-[#E8EBE4]">
           {catalogBook?.favorite && (
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
               <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
             </div>
           )}
           {fullDescription && (
-            <div className="mb-2">
-              <p className="text-xs font-medium text-[#4A5940] mb-1">Description:</p>
+            <div className="mb-3">
+              <p className="text-xs font-medium text-[#4A5940] mb-1.5">Description:</p>
               <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
             </div>
           )}
           {catalogBook?.themes && (
             <div>
-              <p className="text-xs font-medium text-[#4A5940] mb-1">Themes:</p>
-              <div className="flex flex-wrap gap-1.5">
+              <p className="text-xs font-medium text-[#4A5940] mb-2">Themes:</p>
+              <div className="flex flex-wrap gap-2">
                 {catalogBook.themes.slice(0, 5).map(theme => {
                   const ThemeIcon = themeInfo[theme]?.icon;
                   return (
