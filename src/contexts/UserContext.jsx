@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../lib/supabase';
+import { setUserContext, clearUserContext } from '../lib/sentry';
 
 const UserContext = createContext(null);
 
@@ -16,6 +17,9 @@ export function UserProvider({ children }) {
         const currentUser = await auth.getUser();
         if (mounted) {
           setUser(currentUser);
+          if (currentUser) {
+            setUserContext(currentUser);
+          }
           setAuthLoading(false);
         }
       } catch (error) {
@@ -30,7 +34,13 @@ export function UserProvider({ children }) {
 
     const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
       if (mounted) {
-        setUser(session?.user ?? null);
+        const newUser = session?.user ?? null;
+        setUser(newUser);
+        if (newUser) {
+          setUserContext(newUser);
+        } else {
+          clearUserContext();
+        }
       }
     });
 
@@ -43,6 +53,7 @@ export function UserProvider({ children }) {
   const signOut = async () => {
     await auth.signOut();
     setUser(null);
+    clearUserContext();
   };
 
   const value = {
