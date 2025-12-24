@@ -28,7 +28,7 @@ export default function UserProfile({ tasteProfile }) {
     .sort((a, b) => new Date(b.added_at) - new Date(a.added_at)) || [];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8EBE4] p-6 shadow-sm">
+    <div className="space-y-6">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] flex items-center justify-center">

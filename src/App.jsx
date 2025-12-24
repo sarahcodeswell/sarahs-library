@@ -2181,19 +2181,23 @@ Find similar books from beyond my library that match this taste profile.
 
       {/* User Profile Modal */}
       {showAuthModal && user && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#E8EBE4] relative">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-[#96A888]" />
-            </button>
-            <Suspense fallback={<LoadingFallback message="Loading Profile..." />}>
-              <UserProfile
-                tasteProfile={tasteProfile}
-              />
-            </Suspense>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full my-8 border border-[#E8EBE4] relative max-h-[calc(100vh-4rem)]">
+            <div className="sticky top-0 bg-white rounded-t-2xl z-10 px-6 pt-6 pb-3 border-b border-[#E8EBE4]">
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-[#96A888]" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(100vh-8rem)] px-6 pb-6">
+              <Suspense fallback={<LoadingFallback message="Loading Profile..." />}>
+                <UserProfile
+                  tasteProfile={tasteProfile}
+                />
+              </Suspense>
+            </div>
           </div>
         </div>
       )}
