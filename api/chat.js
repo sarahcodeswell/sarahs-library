@@ -28,7 +28,7 @@ export default async function handler(req) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(req);
-    const rateLimitResult = await rateLimit(clientId, {
+    const rateLimitResult = rateLimit(clientId, {
       maxRequests: 30, // 30 requests per minute
       windowMs: 60 * 1000,
     });
