@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, BookOpen, LogOut, X, BookCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, BookOpen, LogOut, X, BookCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 
 export default function UserProfile({ tasteProfile }) {
@@ -17,6 +17,10 @@ export default function UserProfile({ tasteProfile }) {
   const handleMarkAsRead = async (bookId) => {
     await updateQueueStatus(bookId, 'finished');
   };
+
+  // Collapse/expand state
+  const [isWantToReadExpanded, setIsWantToReadExpanded] = useState(true);
+  const [isFinishedExpanded, setIsFinishedExpanded] = useState(false);
 
   // Separate and sort books
   const wantToRead = readingQueue
@@ -88,8 +92,19 @@ export default function UserProfile({ tasteProfile }) {
       {/* Want to Read Section */}
       {wantToRead.length > 0 && (
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-[#5F7252] mb-2">Want to Read ({wantToRead.length})</h4>
-          <div className="space-y-2">
+          <button
+            onClick={() => setIsWantToReadExpanded(!isWantToReadExpanded)}
+            className="flex items-center justify-between w-full text-sm font-medium text-[#5F7252] mb-2 hover:text-[#4A5940] transition-colors"
+          >
+            <span>Want to Read ({wantToRead.length})</span>
+            {isWantToReadExpanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+          {isWantToReadExpanded && (
+            <div className="space-y-2">
             {wantToRead.map((book) => (
               <div
                 key={book.id}
@@ -128,7 +143,8 @@ export default function UserProfile({ tasteProfile }) {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -144,8 +160,19 @@ export default function UserProfile({ tasteProfile }) {
       {/* Finished Books Section */}
       {finishedBooks.length > 0 && (
         <div className="mt-6 pt-6 border-t border-[#E8EBE4]">
-          <h4 className="text-sm font-medium text-[#5F7252] mb-2">Finished ({finishedBooks.length})</h4>
-          <div className="space-y-2">
+          <button
+            onClick={() => setIsFinishedExpanded(!isFinishedExpanded)}
+            className="flex items-center justify-between w-full text-sm font-medium text-[#5F7252] mb-2 hover:text-[#4A5940] transition-colors"
+          >
+            <span>Finished ({finishedBooks.length})</span>
+            {isFinishedExpanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+          {isFinishedExpanded && (
+            <div className="space-y-2">
             {finishedBooks.map((book) => (
               <div
                 key={book.id}
@@ -176,7 +203,8 @@ export default function UserProfile({ tasteProfile }) {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
