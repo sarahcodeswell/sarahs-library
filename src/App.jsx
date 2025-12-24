@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
 import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
@@ -1046,6 +1046,43 @@ export default function App() {
   const [showNavMenu, setShowNavMenu] = useState(false);
   const navMenuRef = useRef(null);
 
+  // Memoize expensive computations
+  const systemPrompt = useMemo(() => getSystemPrompt(readingQueue), [readingQueue]);
+
+  // Memoize imported library overlap calculation
+  const importedOverlap = useMemo(() => {
+    if (!importedLibrary?.items?.length) return null;
+
+    const libByTitle = new Map();
+    const libByTitleAuthor = new Map();
+
+    for (const b of bookCatalog) {
+      const t = normalizeTitle(b?.title);
+      const a = normalizeAuthor(b?.author);
+      if (!t) continue;
+      if (!libByTitle.has(t)) libByTitle.set(t, b);
+      if (a) {
+        const key = `${t}__${a}`;
+        if (!libByTitleAuthor.has(key)) libByTitleAuthor.set(key, b);
+      }
+    }
+
+    const shared = [];
+    const seen = new Set();
+    for (const it of importedLibrary.items) {
+      const t = normalizeTitle(it?.title);
+      const a = normalizeAuthor(it?.author);
+      if (!t) continue;
+      const key = a ? `${t}__${a}` : t;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const match = (a && libByTitleAuthor.has(`${t}__${a}`)) ? libByTitleAuthor.get(`${t}__${a}`) : libByTitle.get(t);
+      if (match) shared.push(match);
+    }
+
+    return { shared, total: importedLibrary.items.length };
+  }, [importedLibrary]);
+
   // Session tracking
   useEffect(() => {
     const sessionStart = Date.now();
@@ -1159,7 +1196,7 @@ Find similar books from beyond my library that match this taste profile.
     }, 50);
   };
 
-  const handleAddToReadingQueue = async (book) => {
+  const handleAddToReadingQueue = useCallback(async (book) => {
     if (!user) {
       console.warn('handleAddToReadingQueue: No user logged in');
       setShowAuthModal(true);
@@ -1191,14 +1228,14 @@ Find similar books from beyond my library that match this taste profile.
     }
     
     return true;
-  };
+  }, [user, readingQueue, addToQueue, setShowAuthModal]);
 
-  const handleRemoveFromReadingQueue = async (queueItemId) => {
+  const handleRemoveFromReadingQueue = useCallback(async (queueItemId) => {
     if (!user || !queueItemId) return false;
     
     const result = await removeFromQueue(queueItemId);
     return result.success;
-  };
+  }, [user, removeFromQueue]);
 
   const handleNewConversation = () => {
     setMessages(getInitialMessages());
@@ -1220,8 +1257,6 @@ Find similar books from beyond my library that match this taste profile.
       previous_message_count: messages.length
     });
   };
-
-  const systemPrompt = React.useMemo(() => getSystemPrompt(readingQueue), [readingQueue]);
 
   // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
@@ -1371,40 +1406,6 @@ Find similar books from beyond my library that match this taste profile.
       void e;
     }
   }, [messages, chatMode]);
-
-  const importedOverlap = React.useMemo(() => {
-    const imported = importedLibrary?.items;
-    if (!Array.isArray(imported) || imported.length === 0) return { total: 0, shared: [] };
-
-    const libByTitle = new Map();
-    const libByTitleAuthor = new Map();
-
-    for (const b of bookCatalog) {
-      const t = normalizeTitle(b?.title);
-      const a = normalizeAuthor(b?.author);
-      if (!t) continue;
-      if (!libByTitle.has(t)) libByTitle.set(t, b);
-      if (a) libByTitleAuthor.set(`${t}__${a}`, b);
-    }
-
-    const shared = [];
-    const seen = new Set();
-    for (const it of imported) {
-      const t = normalizeTitle(it?.title);
-      const a = normalizeAuthor(it?.author);
-      if (!t) continue;
-      const key = a ? `${t}__${a}` : t;
-      if (seen.has(key)) continue;
-
-      const match = (a && libByTitleAuthor.get(`${t}__${a}`)) || libByTitle.get(t);
-      if (match) {
-        shared.push(match);
-        seen.add(key);
-      }
-    }
-
-    return { total: imported.length, shared };
-  }, [importedLibrary]);
 
   const handleImportGoodreadsCsv = async (file) => {
     setImportError('');
