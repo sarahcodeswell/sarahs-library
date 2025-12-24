@@ -805,11 +805,13 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
 Your taste centers on: women's stories, emotional truth, identity, spirituality, and justice.
 
 RECOMMENDATION STRATEGY:
-- First, check if any books from MY LIBRARY SHORTLIST (provided below) are excellent matches for the user's request
-- If my library has great matches, prefer those - they're personally vetted and loved
-- If the request calls for something outside my library (specific genres, new releases, niche topics), recommend the BEST books from the broader world of literature
-- Always give the user the BEST possible recommendations, regardless of source
-- Prioritize: Goodreads 4.0+, award winners, Indie Next picks, beloved classics, staff favorites
+- You have access to MY LIBRARY SHORTLIST (30 books I personally love that match the request)
+- If 2-3 books from my library are EXCELLENT matches (8/10 or better fit), recommend those
+- If my library has only 1 good match, include it alongside 2 books from the wider world
+- For specific requests (new releases, bestsellers, specific genres I don't cover, trending topics), prioritize books from the broader world of literature
+- For vague requests ("something good", "surprise me"), feel free to mix library and world recommendations
+- Always prioritize BEST FIT over source - the user wants the perfect book, not necessarily from my library
+- When recommending from the world: Prioritize Goodreads 4.0+, award winners, Indie Next picks, beloved classics, staff favorites
 
 ${responseFormat}
 ${qualityGuidelines}${preferenceContext}${queueContext}
@@ -1479,7 +1481,7 @@ Find similar books from beyond my library that match this taste profile.
 
       // Build library shortlist for hybrid recommendations
       const libraryShortlist = String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '');
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 20).join('\n');
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 30).join('\n');
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
