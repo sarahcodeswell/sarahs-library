@@ -449,12 +449,18 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       {/* Source Badge */}
       <div className="flex items-center gap-2 mb-3">
         {catalogBook ? (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium">
+          <span 
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium"
+            title="From my personal collection—a book I've read and love!"
+          >
             <Library className="w-3 h-3" />
             From My Library
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium">
+          <span 
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium"
+            title="From the wider world—the best match for your request!"
+          >
             <Sparkles className="w-3 h-3" />
             World Discovery
           </span>
@@ -1022,7 +1028,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nWelcome to my personal library. Every book in here has moved me, challenged me, and changed how I see the world.\n\nTell me what you're in the mood for and I'll recommend a few books that I think you'll love.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world. Look for the **From My Library** 📚 or **World Discovery** ✨ badges to see the source!\n\nTell me what you're in the mood for and I'll find your next great read.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1159,7 +1165,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nWelcome to my curated collection. I'll recommend the perfect book for you—whether from my personal library of 200+ beloved titles, or discoveries from the wider world of literature.\n\nTell me what you're in the mood for and I'll find your next great read.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading",
+      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world. Look for the **From My Library** 📚 or **World Discovery** ✨ badges to see the source!\n\nTell me what you're in the mood for and I'll find your next great read.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[share] Share with a friend\n[bookmark] Bookmark for future reading",
       isUser: false
     }];
   };
