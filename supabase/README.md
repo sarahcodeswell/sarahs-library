@@ -18,9 +18,21 @@ This directory contains database migrations and setup instructions for the Supab
 
 ## Setup Instructions
 
-### 1. Run the Migration
+### 1. Run Database Migrations
 
+**Performance Optimization (Required):**
 In your Supabase dashboard:
+1. Go to SQL Editor
+2. Copy the contents of `migrations/001_add_indexes.sql`
+3. Run the SQL script
+
+This adds critical indexes for:
+- Faster reading queue queries
+- Optimized user profile lookups
+- Better query performance at scale
+
+**Analytics Schema (Optional):**
+If you want analytics tracking:
 1. Go to SQL Editor
 2. Copy the contents of `migrations/001_analytics_schema.sql`
 3. Run the SQL script
