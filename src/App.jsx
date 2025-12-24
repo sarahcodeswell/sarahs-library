@@ -3,11 +3,12 @@ import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag,
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
-import { auth, db } from './lib/supabase';
+import { db } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 import UserProfile from './components/UserProfile';
 import AboutPage from './components/AboutPage';
 import CollectionPage from './components/CollectionPage';
+import { useUser, useReadingQueue } from './contexts';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1000,6 +1001,9 @@ function AboutSection({ onShare }) {
 }
 
 export default function App() {
+  const { user, authLoading, showAuthModal, setShowAuthModal, signOut } = useUser();
+  const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
+  
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
   const [hasEngaged, setHasEngaged] = useState(false);
@@ -1010,12 +1014,6 @@ export default function App() {
     likedAuthors: []
   });
   const [showDiscoverModal, setShowDiscoverModal] = useState(false);
-  
-  // Auth state
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // Loading state for auth
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [readingQueue, setReadingQueue] = useState([]);
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
@@ -1070,87 +1068,30 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', handleUnload);
   }, []);
 
-  // Load user data helper function
-  const loadUserData = async (user) => {
-    if (!user) return;
-    
-    try {
-      console.log('Loading user data for:', user.email);
-      
-      // Load both profile and queue in parallel
-      const [profileResult, queueResult] = await Promise.allSettled([
-        db.getTasteProfile(user.id),
-        db.getReadingQueue(user.id)
-      ]);
-      
-      // Handle profile data
-      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-        const profile = profileResult.value.data;
-        setTasteProfile({
-          likedBooks: profile.liked_books || [],
-          likedThemes: profile.liked_themes || [],
-          likedAuthors: profile.liked_authors || []
-        });
-        console.log('Profile loaded successfully');
-      } else if (profileResult.status === 'rejected') {
-        console.error('Failed to load profile:', profileResult.reason);
-      }
-      
-      // Handle queue data
-      if (queueResult.status === 'fulfilled' && queueResult.value.data) {
-        setReadingQueue(queueResult.value.data);
-        console.log('Queue loaded with', queueResult.value.data.length, 'items');
-      } else if (queueResult.status === 'rejected') {
-        console.error('Failed to load queue:', queueResult.reason);
-      }
-      
-    } catch (err) {
-      console.error('Error loading user data:', err);
-    }
-  };
-
-  // Auth effect - check for existing session and load user data
+  // Load taste profile when user changes
   useEffect(() => {
-    const initAuth = async () => {
+    const loadTasteProfile = async () => {
+      if (!user) {
+        setTasteProfile({ likedBooks: [], likedThemes: [], likedAuthors: [] });
+        return;
+      }
+      
       try {
-        console.log('initAuth: Checking for existing session...');
-        const currentUser = await auth.getUser();
-        console.log('initAuth: Current user:', currentUser ? currentUser.email : 'none');
-        
-        if (currentUser) {
-          setUser(currentUser);
-          await loadUserData(currentUser);
+        const { data: profile } = await db.getTasteProfile(user.id);
+        if (profile) {
+          setTasteProfile({
+            likedBooks: profile.liked_books || [],
+            likedThemes: profile.liked_themes || [],
+            likedAuthors: profile.liked_authors || []
+          });
         }
       } catch (err) {
-        console.error('initAuth error:', err);
-      } finally {
-        setAuthLoading(false);
+        console.error('Error loading taste profile:', err);
       }
     };
-
-    initAuth();
-
-    // Listen for auth changes (including OAuth callbacks)
-    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
-      console.log('onAuthStateChange:', event, session?.user?.email || 'no user');
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log('User signed in:', session.user.email);
-        setUser(session.user);
-        await loadUserData(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
-        setUser(null);
-        setReadingQueue([]);
-        setTasteProfile({ likedBooks: [], likedThemes: [], likedAuthors: [] });
-      } else if (session?.user) {
-        // Handle other events with active session (TOKEN_REFRESHED, etc.)
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription?.unsubscribe();
-  }, []);
+    
+    loadTasteProfile();
+  }, [user]);
 
   // Save taste profile to database when it changes (if user is logged in)
   useEffect(() => {
@@ -1159,40 +1100,18 @@ export default function App() {
     }
   }, [user, tasteProfile]);
 
-  const handleAuthSuccess = async (authUser) => {
-    setUser(authUser);
+  const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-    
-    // Load user data after successful auth
-    if (authUser) {
-      const { data: profile } = await db.getTasteProfile(authUser.id);
-      if (profile) {
-        setTasteProfile({
-          likedBooks: profile.liked_books || [],
-          likedThemes: profile.liked_themes || [],
-          likedAuthors: profile.liked_authors || []
-        });
-      }
-      
-      const { data: queue } = await db.getReadingQueue(authUser.id);
-      if (queue) {
-        setReadingQueue(queue);
-      }
-    }
+    // User and queue are now handled by contexts
   };
 
   const handleSignOut = async () => {
-    // Sign out from Supabase
-    await auth.signOut();
-    
-    // Clear local state
-    setUser(null);
+    await signOut();
     setTasteProfile({
       likedBooks: [],
       likedThemes: [],
       likedAuthors: []
     });
-    setReadingQueue([]);
     setShowAuthModal(false);
   };
 
@@ -1238,19 +1157,12 @@ Find similar books from beyond my library that match this taste profile.
   };
 
   const handleAddToReadingQueue = async (book) => {
-    // Validate user is logged in
     if (!user) {
       console.warn('handleAddToReadingQueue: No user logged in');
-      setShowAuthModal(true); // Prompt user to sign in
+      setShowAuthModal(true);
       return false;
     }
     
-    if (!user.id) {
-      console.error('handleAddToReadingQueue: User object missing id', user);
-      return false;
-    }
-    
-    // Extract title and author from book object
     const title = String(book.title || book.book_title || '').trim();
     const author = String(book.author || book.book_author || '').trim();
     
@@ -1259,94 +1171,30 @@ Find similar books from beyond my library that match this taste profile.
       return false;
     }
     
-    // Check for duplicates client-side for instant feedback
     const isDuplicate = readingQueue?.some(
       queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(title)
     );
     
     if (isDuplicate) {
       console.log('Book already in queue (client check)');
-      return true; // Return success since it's already saved
+      return true;
     }
     
-    // Optimistic update - add to UI immediately
-    const optimisticBook = {
-      id: `temp-${Date.now()}`,
-      user_id: user.id,
-      book_title: title,
-      book_author: author,
-      status: 'want_to_read',
-      added_at: new Date().toISOString()
-    };
+    const result = await addToQueue({ title, author });
     
-    setReadingQueue(prev => [...prev, optimisticBook]);
-    
-    try {
-      console.log('Calling db.addToReadingQueue...');
-      const { data, error } = await db.addToReadingQueue(user.id, {
-        title: title,
-        author: author
-      });
-      
-      console.log('DB addToReadingQueue response:', { data, error });
-      
-      if (error) {
-        console.error('Error adding to queue:', error.message || error);
-        // Remove optimistic update on error
-        setReadingQueue(prev => prev.filter(book => book.id !== optimisticBook.id));
-        alert('Failed to save book. Please try again.');
-        return false;
-      }
-      
-      // Replace optimistic update with real data
-      if (data && data[0]) {
-        setReadingQueue(prev => 
-          prev.map(book => book.id === optimisticBook.id ? data[0] : book)
-        );
-      }
-      
-      return true;
-    } catch (err) {
-      console.error('Exception in handleAddToReadingQueue:', err);
-      // Remove optimistic update on error
-      setReadingQueue(prev => prev.filter(book => book.id !== optimisticBook.id));
-      alert('Something went wrong. Please try again.');
+    if (!result.success) {
+      alert('Failed to save book. Please try again.');
       return false;
     }
+    
+    return true;
   };
 
   const handleRemoveFromReadingQueue = async (queueItemId) => {
     if (!user || !queueItemId) return false;
     
-    try {
-      console.log('Removing book from queue:', { queueItemId, userId: user.id });
-      
-      // Optimistic update - remove from UI immediately
-      setReadingQueue(prev => prev.filter(book => book.id !== queueItemId));
-      
-      const { error } = await db.removeFromReadingQueue(queueItemId);
-      
-      if (error) {
-        console.error('Error removing from queue:', error.message || error);
-        // Refresh queue to restore correct state
-        const { data: queue } = await db.getReadingQueue(user.id);
-        if (queue) {
-          setReadingQueue(queue);
-        }
-        return false;
-      }
-      
-      console.log('Successfully removed from queue');
-      return true;
-    } catch (err) {
-      console.error('Exception in handleRemoveFromReadingQueue:', err);
-      // Refresh queue to restore correct state
-      const { data: queue } = await db.getReadingQueue(user.id);
-      if (queue) {
-        setReadingQueue(queue);
-      }
-      return false;
-    }
+    const result = await removeFromQueue(queueItemId);
+    return result.success;
   };
 
   const handleNewConversation = () => {
@@ -2324,18 +2172,7 @@ Find similar books from beyond my library that match this taste profile.
               <X className="w-5 h-5 text-[#96A888]" />
             </button>
             <UserProfile
-              user={user}
               tasteProfile={tasteProfile}
-              readingQueue={readingQueue}
-              onSignOut={handleSignOut}
-              onQueueUpdate={async () => {
-                if (user) {
-                  const { data: queue } = await db.getReadingQueue(user.id);
-                  if (queue) {
-                    setReadingQueue(queue);
-                  }
-                }
-              }}
             />
           </div>
         </div>

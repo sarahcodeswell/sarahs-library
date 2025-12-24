@@ -1,41 +1,21 @@
 import React from 'react';
 import { User, BookOpen, LogOut, X, BookCheck } from 'lucide-react';
-import { auth, db } from '../lib/supabase';
+import { useUser, useReadingQueue } from '../contexts';
 
-export default function UserProfile({ user, tasteProfile, readingQueue, onSignOut, onQueueUpdate }) {
+export default function UserProfile({ tasteProfile }) {
+  const { user, signOut } = useUser();
+  const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
+
   const handleSignOut = async () => {
-    await auth.signOut();
-    onSignOut();
+    await signOut();
   };
 
   const handleRemoveFromQueue = async (bookId) => {
-    const { error } = await db.removeFromReadingQueue(bookId);
-    if (error) {
-      console.error('Error removing from queue:', error);
-      return;
-    }
-    
-    if (onQueueUpdate) {
-      await onQueueUpdate();
-    }
+    await removeFromQueue(bookId);
   };
 
   const handleMarkAsRead = async (bookId) => {
-    console.log('Marking book as read:', bookId);
-    const { data, error } = await db.updateReadingQueueStatus(bookId, 'finished');
-    
-    if (error) {
-      console.error('Error marking book as read:', error);
-      return;
-    }
-    
-    console.log('Book marked as read successfully:', data);
-    
-    if (onQueueUpdate) {
-      console.log('Refreshing queue...');
-      await onQueueUpdate();
-      console.log('Queue refreshed');
-    }
+    await updateQueueStatus(bookId, 'finished');
   };
 
   return (
