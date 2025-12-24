@@ -1,14 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import AuthModal from './components/AuthModal';
-import UserProfile from './components/UserProfile';
-import AboutPage from './components/AboutPage';
-import CollectionPage from './components/CollectionPage';
+import LoadingFallback from './components/LoadingFallback';
 import { useUser, useReadingQueue } from './contexts';
+
+// Lazy load heavy components
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const AboutPage = lazy(() => import('./components/AboutPage'));
+const CollectionPage = lazy(() => import('./components/CollectionPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1777,18 +1780,22 @@ Find similar books from beyond my library that match this taste profile.
 
       {/* Page Routing */}
       {currentPage === 'about' && (
-        <AboutPage onNavigate={setCurrentPage} />
+        <Suspense fallback={<LoadingFallback message="Loading About..." />}>
+          <AboutPage onNavigate={setCurrentPage} />
+        </Suspense>
       )}
       
       {currentPage === 'collection' && (
-        <CollectionPage 
-          onNavigate={setCurrentPage}
-          onBookClick={setSelectedBook}
-          user={user}
-          readingQueue={readingQueue}
-          onAddToQueue={handleAddToReadingQueue}
-          onShowAuthModal={() => setShowAuthModal(true)}
-        />
+        <Suspense fallback={<LoadingFallback message="Loading Collection..." />}>
+          <CollectionPage 
+            onNavigate={setCurrentPage}
+            onBookClick={setSelectedBook}
+            user={user}
+            readingQueue={readingQueue}
+            onAddToQueue={handleAddToReadingQueue}
+            onShowAuthModal={() => setShowAuthModal(true)}
+          />
+        </Suspense>
       )}
 
       {currentPage === 'home' && (
@@ -2181,9 +2188,11 @@ Find similar books from beyond my library that match this taste profile.
             >
               <X className="w-5 h-5 text-[#96A888]" />
             </button>
-            <UserProfile
-              tasteProfile={tasteProfile}
-            />
+            <Suspense fallback={<LoadingFallback message="Loading Profile..." />}>
+              <UserProfile
+                tasteProfile={tasteProfile}
+              />
+            </Suspense>
           </div>
         </div>
       )}
