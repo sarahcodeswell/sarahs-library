@@ -1522,6 +1522,16 @@ Find similar books from beyond my library that match this taste profile.
       }
 
       if (!response.ok) {
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          const resetIn = data?.resetIn ? Math.ceil(data.resetIn / 1000) : 60;
+          setMessages(prev => [...prev, {
+            text: `I'm getting a lot of requests right now! Please wait ${resetIn} seconds and try again. 🙏`,
+            isUser: false
+          }]);
+          return;
+        }
+
         const msg = (() => {
           if (!data) return String(rawText || '').trim();
           if (typeof data?.error === 'string') return data.error.trim();
