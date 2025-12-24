@@ -18,6 +18,15 @@ export default function UserProfile({ tasteProfile }) {
     await updateQueueStatus(bookId, 'finished');
   };
 
+  // Separate and sort books
+  const wantToRead = readingQueue
+    ?.filter(book => book.status === 'want_to_read')
+    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at)) || [];
+  
+  const finishedBooks = readingQueue
+    ?.filter(book => book.status === 'finished')
+    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at)) || [];
+
   return (
     <div className="bg-white rounded-2xl border border-[#E8EBE4] p-6 shadow-sm">
       <div className="mb-6">
@@ -46,16 +55,16 @@ export default function UserProfile({ tasteProfile }) {
             <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Books Read</span>
           </div>
           <p className="text-2xl font-serif text-[#4A5940] leading-none">
-            {readingQueue?.filter(book => book.status === 'finished').length || 0}
+            {finishedBooks.length}
           </p>
         </div>
         <div className="p-4 bg-[#F8F6EE] rounded-xl">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
-            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Reading Queue</span>
+            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Want to Read</span>
           </div>
           <p className="text-2xl font-serif text-[#4A5940] leading-none">
-            {readingQueue?.length || 0}
+            {wantToRead.length}
           </p>
         </div>
       </div>
@@ -76,11 +85,12 @@ export default function UserProfile({ tasteProfile }) {
         </div>
       )}
 
-      {readingQueue?.length > 0 && (
-        <div>
-          <h4 className="text-sm font-medium text-[#5F7252] mb-2">Reading Queue</h4>
+      {/* Want to Read Section */}
+      {wantToRead.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-[#5F7252] mb-2">Want to Read ({wantToRead.length})</h4>
           <div className="space-y-2">
-            {readingQueue.map((book) => (
+            {wantToRead.map((book) => (
               <div
                 key={book.id}
                 className="p-3 bg-[#F8F6EE] rounded-lg text-xs flex items-start justify-between gap-2"
@@ -90,28 +100,68 @@ export default function UserProfile({ tasteProfile }) {
                   {book.book_author && (
                     <p className="text-[#96A888] truncate">{book.book_author}</p>
                   )}
-                  {book.status === 'finished' && (
-                    <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-[#5F7252] font-medium">
-                      <BookCheck className="w-3 h-3" />
-                      Read
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {book.status !== 'finished' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleMarkAsRead(book.id);
-                      }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-[#5F7252] text-white active:bg-[#4A5940] rounded transition-colors touch-manipulation"
-                      title="Mark as read"
-                    >
-                      <BookCheck className="w-3 h-3" />
-                      Read
-                    </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleMarkAsRead(book.id);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-[#5F7252] text-white active:bg-[#4A5940] rounded transition-colors touch-manipulation"
+                    title="Mark as read"
+                  >
+                    <BookCheck className="w-3 h-3" />
+                    Read
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleRemoveFromQueue(book.id);
+                    }}
+                    className="p-2 active:bg-red-50 rounded transition-colors touch-manipulation"
+                    title="Remove from queue"
+                  >
+                    <X className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state for Want to Read */}
+      {wantToRead.length === 0 && finishedBooks.length === 0 && (
+        <div className="text-center py-8">
+          <BookOpen className="w-12 h-12 text-[#D4DAD0] mx-auto mb-3" />
+          <p className="text-sm text-[#96A888] mb-1">No books in your queue yet</p>
+          <p className="text-xs text-[#B8C4AC]">Bookmark recommendations to add them here</p>
+        </div>
+      )}
+
+      {/* Finished Books Section */}
+      {finishedBooks.length > 0 && (
+        <div className="mt-6 pt-6 border-t border-[#E8EBE4]">
+          <h4 className="text-sm font-medium text-[#5F7252] mb-2">Finished ({finishedBooks.length})</h4>
+          <div className="space-y-2">
+            {finishedBooks.map((book) => (
+              <div
+                key={book.id}
+                className="p-3 bg-[#F8F6EE] rounded-lg text-xs flex items-start justify-between gap-2 opacity-75"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-[#4A5940] truncate">{book.book_title}</p>
+                  {book.book_author && (
+                    <p className="text-[#96A888] truncate">{book.book_author}</p>
                   )}
+                  <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-[#5F7252] font-medium">
+                    <BookCheck className="w-3 h-3" />
+                    Read
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
