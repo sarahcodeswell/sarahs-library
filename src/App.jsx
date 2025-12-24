@@ -535,7 +535,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           )}
           {fullDescription && (
             <div className="mb-3">
-              <p className="text-xs font-medium text-[#4A5940] mb-1.5">Description:</p>
+              <p className="text-xs font-medium text-[#4A5940] mb-2">Description:</p>
               <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
             </div>
           )}
