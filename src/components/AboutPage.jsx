@@ -94,9 +94,10 @@ export default function AboutPage({ onNavigate }) {
           </h2>
           <div className="space-y-4">
             {/* Job 1: Discover */}
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
               <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                📚 Discover Your Next Read
+                <Home className="w-4 h-4 text-[#5F7252]" />
+                Discover Your Next Read
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed">
                 Chat with me to get personalized recommendations from 200 curated books
@@ -104,9 +105,10 @@ export default function AboutPage({ onNavigate }) {
             </div>
             
             {/* Job 2: Build Library */}
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
               <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                📖 Build Your Personal Library
+                <Library className="w-4 h-4 text-[#5F7252]" />
+                Build Your Personal Library
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
                 Add your books, track your reading, and improve future recommendations
@@ -132,12 +134,13 @@ export default function AboutPage({ onNavigate }) {
             </div>
             
             {/* Job 3: Share (Coming Soon) */}
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4] relative overflow-hidden">
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4] relative overflow-hidden">
               <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded-full">
                 Coming Soon
               </div>
               <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                💬 Share with Friends
+                <Share2 className="w-4 h-4 text-[#5F7252]" />
+                Share with Friends
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed">
                 Recommend your favorite books to others

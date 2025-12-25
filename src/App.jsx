@@ -1720,6 +1720,10 @@ Find similar books from beyond my library that match this taste profile.
                     </button>
                     {user && (
                       <>
+                        <div className="border-t border-[#E8EBE4] my-1"></div>
+                        <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                          My Library
+                        </div>
                         <button
                           onClick={() => {
                             setCurrentPage('reading-queue');
