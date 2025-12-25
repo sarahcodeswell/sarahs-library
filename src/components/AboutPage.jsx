@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function AboutPage({ onNavigate }) {
@@ -176,25 +176,37 @@ export default function AboutPage({ onNavigate }) {
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📸 Add Books</h3>
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
+                <Upload className="w-4 h-4 text-[#5F7252]" />
+                Add Books
+              </h3>
               <p className="text-xs text-[#7A8F6C] leading-relaxed">
                 Upload photos of your books and let AI recognize them automatically.
               </p>
             </div>
             <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📖 Reading Queue</h3>
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
+                <BookMarked className="w-4 h-4 text-[#5F7252]" />
+                My Reading Queue
+              </h3>
               <p className="text-xs text-[#7A8F6C] leading-relaxed">
                 Track books you want to read and mark them as finished when done.
               </p>
             </div>
             <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">✅ My Collection</h3>
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
+                <Library className="w-4 h-4 text-[#5F7252]" />
+                My Collection
+              </h3>
               <p className="text-xs text-[#7A8F6C] leading-relaxed">
                 Build your personal library of books you've read and loved.
               </p>
             </div>
             <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">💭 Reading Preferences</h3>
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
+                <User className="w-4 h-4 text-[#5F7252]" />
+                Reading Preferences
+              </h3>
               <p className="text-xs text-[#7A8F6C] leading-relaxed">
                 Share your reading tastes to get better personalized recommendations.
               </p>
