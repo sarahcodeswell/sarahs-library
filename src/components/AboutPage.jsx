@@ -74,80 +74,7 @@ export default function AboutPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
-          <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
-            🔍 How It Works
-          </h2>
-          <div className="space-y-4 text-sm text-[#5F7252] leading-relaxed">
-            <div className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">1</span>
-              <div>
-                <p className="font-medium text-[#4A5940] mb-1">Start with Sarah's Foundation</p>
-                <p>Browse 200 carefully curated books that power the recommendation engine for everyone.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">2</span>
-              <div>
-                <p className="font-medium text-[#4A5940] mb-1">Add Your Own Books</p>
-                <p>Upload photos of your book spines or covers—AI will recognize them and add them to your staging area.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">3</span>
-              <div>
-                <p className="font-medium text-[#4A5940] mb-1">Build Your Reading Journey</p>
-                <p>Mark books as "Want to Read" or "Finished" to create your personal reading queue and collection.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">4</span>
-              <div>
-                <p className="font-medium text-[#4A5940] mb-1">Get Personalized Recommendations</p>
-                <p>Chat with the AI to discover your next read based on Sarah's curation and your own reading preferences.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Your Journey */}
-        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
-          <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
-            📚 Your Reading Journey
-          </h2>
-          <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
-            Create your own personalized library alongside Sarah's curated collection:
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📸 Add Books</h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Upload photos of your books and let AI recognize them automatically.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📖 Reading Queue</h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Track books you want to read and mark them as finished when done.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">✅ My Collection</h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Build your personal library of books you've read and loved.
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">💭 Reading Preferences</h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Share your reading tastes to get better personalized recommendations.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Curator's Note */}
+        {/* Curator's Note - Moved up for prominence */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
             📝 Curator's Note
@@ -222,6 +149,42 @@ export default function AboutPage({ onNavigate }) {
                 <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Just Mercy</button> by Bryan Stevenson</li>
                 <li>• <button onClick={() => { onNavigate('collection'); window.scrollTo(0, 0); }} className="font-medium hover:underline hover:text-[#4A5940] transition-colors">Heartland</button> by Sarah Smarsh</li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+          <h2 className="font-serif text-2xl text-[#4A5940] mb-4">
+            How It Works
+          </h2>
+          <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
+            Build your own personalized library alongside Sarah's curated collection:
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📸 Add Books</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Upload photos of your books and let AI recognize them automatically.
+              </p>
+            </div>
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📖 Reading Queue</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Track books you want to read and mark them as finished when done.
+              </p>
+            </div>
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">✅ My Collection</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Build your personal library of books you've read and loved.
+              </p>
+            </div>
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">💭 Reading Preferences</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Share your reading tastes to get better personalized recommendations.
+              </p>
             </div>
           </div>
         </div>
