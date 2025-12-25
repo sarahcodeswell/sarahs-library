@@ -1878,12 +1878,6 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
-          {/* Discover Tagline */}
-          <div className="mb-4 text-center">
-            <h2 className="text-lg sm:text-xl font-serif text-[#4A5940] mb-1">Discover your next great read</h2>
-            <p className="text-xs sm:text-sm text-[#7A8F6C] font-light">from my curated collection of 200 books</p>
-          </div>
-
           <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
             <img
               src="/books.jpg"
