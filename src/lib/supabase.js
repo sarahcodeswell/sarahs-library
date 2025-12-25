@@ -142,7 +142,7 @@ export const db = {
           user_id: userId,
           book_title: book.title,
           book_author: book.author,
-          status: 'want_to_read',
+          status: book.status || 'want_to_read',
           added_at: new Date().toISOString(),
         })
         .select();
