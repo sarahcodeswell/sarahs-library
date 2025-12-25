@@ -144,7 +144,15 @@ export function ReadingQueueProvider({ children }) {
 export function useReadingQueue() {
   const context = useContext(ReadingQueueContext);
   if (!context) {
-    throw new Error('useReadingQueue must be used within a ReadingQueueProvider');
+    // Return safe defaults instead of throwing to prevent crashes
+    return {
+      readingQueue: [],
+      isLoadingQueue: false,
+      addToQueue: async () => ({ success: false, error: 'Context not available' }),
+      removeFromQueue: async () => ({ success: false, error: 'Context not available' }),
+      updateQueueStatus: async () => ({ success: false, error: 'Context not available' }),
+      refreshQueue: async () => {}
+    };
   }
   return context;
 }
