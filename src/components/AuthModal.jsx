@@ -45,7 +45,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setLoading(true);
     
     try {
-      console.log('Starting OAuth sign in with:', provider);
+      if (import.meta.env.DEV) {
+        console.log('Starting OAuth sign in with:', provider);
+      }
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
@@ -53,7 +55,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         }
       });
       
-      console.log('OAuth response:', { data, error });
+      if (import.meta.env.DEV) {
+        console.log('OAuth response:', { data, error });
+      }
       
       if (error) {
         console.error('OAuth error:', error);

@@ -106,7 +106,9 @@ export const db = {
           return { data, error };
         }
         
-        console.log(`getReadingQueue: Retry attempt ${attempts + 1}/${maxAttempts}`);
+        if (import.meta.env.DEV) {
+          console.log(`getReadingQueue: Retry attempt ${attempts + 1}/${maxAttempts}`);
+        }
         attempts++;
         
         // Wait before retry
@@ -133,7 +135,9 @@ export const db = {
       return { data: null, error: { message: 'Supabase not configured' } };
     }
     
-    console.log('addToReadingQueue: Starting insert for', { userId, book });
+    if (import.meta.env.DEV) {
+      console.log('addToReadingQueue: Starting insert for', { userId, book });
+    }
     
     try {
       const { data, error } = await supabase
@@ -147,7 +151,9 @@ export const db = {
         })
         .select();
       
-      console.log('addToReadingQueue: Insert complete', { data, error });
+      if (import.meta.env.DEV) {
+        console.log('addToReadingQueue: Insert complete', { data, error });
+      }
       return { data, error };
     } catch (err) {
       console.error('addToReadingQueue: Exception during insert', err);
@@ -198,7 +204,9 @@ export const db = {
       return { data: null, error: { message: 'Supabase not configured' } };
     }
     
-    console.log('addUserBook: Starting insert for', { userId, book });
+    if (import.meta.env.DEV) {
+      console.log('addUserBook: Starting insert for', { userId, book });
+    }
     
     try {
       const { data, error } = await supabase
@@ -215,7 +223,9 @@ export const db = {
         })
         .select();
       
-      console.log('addUserBook: Insert complete', { data, error });
+      if (import.meta.env.DEV) {
+        console.log('addUserBook: Insert complete', { data, error });
+      }
       return { data, error };
     } catch (err) {
       console.error('addUserBook: Exception during insert', err);

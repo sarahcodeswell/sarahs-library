@@ -1227,7 +1227,6 @@ Find similar books from beyond my library that match this taste profile.
     );
     
     if (isDuplicate) {
-      console.log('Book already in queue (client check)');
       return true;
     }
     
@@ -1831,33 +1830,39 @@ Find similar books from beyond my library that match this taste profile.
       )}
       
       {currentPage === 'collection' && (
-        <Suspense fallback={<LoadingFallback message="Loading My Collection..." />}>
-          <MyCollectionPage 
-            onNavigate={setCurrentPage}
-            user={user}
-            onShowAuthModal={() => setShowAuthModal(true)}
-          />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading My Collection..." />}>
+            <MyCollectionPage 
+              onNavigate={setCurrentPage}
+              user={user}
+              onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {currentPage === 'my-books' && (
-        <Suspense fallback={<LoadingFallback message="Loading Add Books..." />}>
-          <MyBooksPage 
-            onNavigate={setCurrentPage}
-            user={user}
-            onShowAuthModal={() => setShowAuthModal(true)}
-          />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Add Books..." />}>
+            <MyBooksPage 
+              onNavigate={setCurrentPage}
+              user={user}
+              onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {currentPage === 'reading-queue' && (
-        <Suspense fallback={<LoadingFallback message="Loading Reading Queue..." />}>
-          <MyReadingQueuePage 
-            onNavigate={setCurrentPage}
-            user={user}
-            onShowAuthModal={() => setShowAuthModal(true)}
-          />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Reading Queue..." />}>
+            <MyReadingQueuePage 
+              onNavigate={setCurrentPage}
+              user={user}
+              onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {currentPage === 'home' && (

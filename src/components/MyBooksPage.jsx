@@ -165,6 +165,20 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
     }
 
     setGoodreadsError('');
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      setGoodreadsError('File size must be less than 10MB. Please choose a smaller CSV file.');
+      return;
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      setGoodreadsError('Please upload a CSV file exported from Goodreads.');
+      return;
+    }
+
     setIsUploadingGoodreads(true);
 
     try {
