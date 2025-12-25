@@ -1,15 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookMarked } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookMarked, Share2 } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import { useRecommendations } from '../contexts/RecommendationContext';
+import RecommendationModal from './RecommendationModal';
 import booksData from '../books.json';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
+  const { createRecommendation } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [showRecommendModal, setShowRecommendModal] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -132,6 +137,27 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       });
     } else {
       alert('Failed to remove book. Please try again.');
+    }
+  };
+
+  const handleRecommend = (book) => {
+    setSelectedBook(book);
+    setShowRecommendModal(true);
+    
+    track('recommend_button_clicked', {
+      book_title: book.book_title,
+    });
+  };
+
+  const handleCreateRecommendation = async (book, note) => {
+    const result = await createRecommendation(book, note);
+    
+    if (result.success) {
+      track('recommendation_created', {
+        book_title: book.book_title,
+      });
+    } else {
+      throw new Error(result.error || 'Failed to create recommendation');
     }
   };
 
@@ -262,6 +288,14 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                   
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => handleRecommend(book)}
+                      className="px-2 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+                      title="Recommend this book to friends"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      Recommend
+                    </button>
+                    <button
                       onClick={() => handleMoveToReadAgain(book)}
                       className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center gap-1"
                       title="Move to reading queue to read again"
@@ -283,6 +317,17 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           </div>
         )}
       </div>
+
+      {/* Recommendation Modal */}
+      <RecommendationModal
+        isOpen={showRecommendModal}
+        onClose={() => {
+          setShowRecommendModal(false);
+          setSelectedBook(null);
+        }}
+        book={selectedBook}
+        onSubmit={handleCreateRecommendation}
+      />
     </div>
   );
 }

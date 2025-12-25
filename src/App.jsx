@@ -15,6 +15,7 @@ const AboutPage = lazy(() => import('./components/AboutPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
+const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1727,6 +1728,22 @@ Find similar books from beyond my library that match this taste profile.
                           <Library className="w-4 h-4" />
                           My Collection
                         </button>
+                        <button
+                          onClick={() => {
+                            setCurrentPage('recommendations');
+                            setShowNavMenu(false);
+                            window.scrollTo(0, 0);
+                            
+                            track('page_navigation', {
+                              from: currentPage,
+                              to: 'recommendations'
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          My Recommendations
+                        </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         <button
                           onClick={() => {
@@ -1832,6 +1849,18 @@ Find similar books from beyond my library that match this taste profile.
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback message="Loading Reading Queue..." />}>
             <MyReadingQueuePage 
+              onNavigate={setCurrentPage}
+              user={user}
+              onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentPage === 'recommendations' && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading My Recommendations..." />}>
+            <MyRecommendationsPage 
               onNavigate={setCurrentPage}
               user={user}
               onShowAuthModal={() => setShowAuthModal(true)}
