@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, GripVertical } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, ChevronUp, ChevronDown } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
-  const [draggedIndex, setDraggedIndex] = useState(null);
   const [localOrder, setLocalOrder] = useState([]);
 
   // Filter to only show books marked as "want_to_read"
@@ -79,27 +78,32 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
-  const handleDragStart = (e, index) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    
     const items = [...filteredBooks];
-    const draggedItem = items[draggedIndex];
-    items.splice(draggedIndex, 1);
-    items.splice(index, 0, draggedItem);
-
+    const temp = items[index];
+    items[index] = items[index - 1];
+    items[index - 1] = temp;
+    
     setLocalOrder(items.map(item => item.id));
-    setDraggedIndex(index);
+    track('reading_queue_reordered', {
+      direction: 'up',
+      queue_length: filteredBooks.length
+    });
   };
 
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
+  const handleMoveDown = (index) => {
+    if (index === filteredBooks.length - 1) return;
+    
+    const items = [...filteredBooks];
+    const temp = items[index];
+    items[index] = items[index + 1];
+    items[index + 1] = temp;
+    
+    setLocalOrder(items.map(item => item.id));
     track('reading_queue_reordered', {
+      direction: 'down',
       queue_length: filteredBooks.length
     });
   };
@@ -167,17 +171,34 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
             {filteredBooks.map((book, index) => (
               <div
                 key={book.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow cursor-move ${
-                  draggedIndex === index ? 'opacity-50' : ''
-                }`}
+                className="bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start gap-3">
-                  <div className="pt-1 cursor-grab active:cursor-grabbing" title="Drag to reorder">
-                    <GripVertical className="w-5 h-5 text-[#96A888]" />
+                  <div className="flex flex-col gap-1 pt-1">
+                    <button
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                      className={`p-1 rounded transition-colors ${
+                        index === 0 
+                          ? 'text-[#D4DAD0] cursor-not-allowed' 
+                          : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
+                      }`}
+                      title="Move up"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === filteredBooks.length - 1}
+                      className={`p-1 rounded transition-colors ${
+                        index === filteredBooks.length - 1
+                          ? 'text-[#D4DAD0] cursor-not-allowed' 
+                          : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
+                      }`}
+                      title="Move down"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
                   </div>
                   <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
