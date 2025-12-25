@@ -6,12 +6,13 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
-import { useUser, useReadingQueue } from './contexts';
+import { useUser, useReadingQueue, UserBooksProvider } from './contexts';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
-const CollectionPage = lazy(() => import('./components/CollectionPage'));
+const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
+const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1151,6 +1152,7 @@ export default function App() {
   const handleAuthSuccess = async () => {
     setShowAuthModal(false);
     // User and queue are now handled by contexts
+    // Stay on current page after auth
   };
 
   const handleSignOut = async () => {
@@ -1715,6 +1717,23 @@ Find similar books from beyond my library that match this taste profile.
                       <Library className="w-4 h-4" />
                       My Collection
                     </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('my-books');
+                        setShowNavMenu(false);
+                        window.scrollTo(0, 0);
+                        
+                        // Track page navigation
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'my-books'
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Add Books
+                    </button>
                     {user && (
                       <>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
@@ -1795,13 +1814,20 @@ Find similar books from beyond my library that match this taste profile.
       )}
       
       {currentPage === 'collection' && (
-        <Suspense fallback={<LoadingFallback message="Loading Collection..." />}>
-          <CollectionPage 
+        <Suspense fallback={<LoadingFallback message="Loading My Collection..." />}>
+          <MyCollectionPage 
             onNavigate={setCurrentPage}
-            onBookClick={setSelectedBook}
             user={user}
-            readingQueue={readingQueue}
-            onAddToQueue={handleAddToReadingQueue}
+            onShowAuthModal={() => setShowAuthModal(true)}
+          />
+        </Suspense>
+      )}
+
+      {currentPage === 'my-books' && (
+        <Suspense fallback={<LoadingFallback message="Loading Add Books..." />}>
+          <MyBooksPage 
+            onNavigate={setCurrentPage}
+            user={user}
             onShowAuthModal={() => setShowAuthModal(true)}
           />
         </Suspense>

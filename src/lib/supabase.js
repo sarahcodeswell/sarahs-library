@@ -173,4 +173,92 @@ export const db = {
       .select();
     return { data, error };
   },
+
+  // User Books operations
+  getUserBooks: async (userId) => {
+    if (!supabase) return { data: null, error: null };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_books')
+        .select('*')
+        .eq('user_id', userId)
+        .order('added_at', { ascending: false });
+      
+      return { data, error };
+    } catch (err) {
+      console.error('getUserBooks: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
+  addUserBook: async (userId, book) => {
+    if (!supabase) {
+      console.error('addUserBook: Supabase client not initialized');
+      return { data: null, error: { message: 'Supabase not configured' } };
+    }
+    
+    console.log('addUserBook: Starting insert for', { userId, book });
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_books')
+        .insert({
+          user_id: userId,
+          book_title: book.title,
+          book_author: book.author,
+          isbn: book.isbn || null,
+          cover_image_url: book.coverImageUrl || null,
+          added_via: book.addedVia || 'manual',
+          notes: book.notes || null,
+          added_at: new Date().toISOString(),
+        })
+        .select();
+      
+      console.log('addUserBook: Insert complete', { data, error });
+      return { data, error };
+    } catch (err) {
+      console.error('addUserBook: Exception during insert', err);
+      return { data: null, error: { message: err.message || 'Insert failed' } };
+    }
+  },
+
+  removeUserBook: async (id) => {
+    if (!supabase) return { error: null };
+    
+    try {
+      const { error } = await supabase
+        .from('user_books')
+        .delete()
+        .eq('id', id);
+      
+      return { error };
+    } catch (err) {
+      console.error('removeUserBook: Exception', err);
+      return { error: { message: err.message || 'Delete failed' } };
+    }
+  },
+
+  updateUserBook: async (id, updates) => {
+    if (!supabase) return { data: null, error: null };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_books')
+        .update({
+          book_title: updates.title,
+          book_author: updates.author,
+          isbn: updates.isbn,
+          cover_image_url: updates.coverImageUrl,
+          notes: updates.notes,
+        })
+        .eq('id', id)
+        .select();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateUserBook: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
+  },
 };
