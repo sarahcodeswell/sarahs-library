@@ -1887,7 +1887,7 @@ Find similar books from beyond my library that match this taste profile.
             />
           </div>
 
-          <div className="mb-4 min-h-[120px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-4" role="log" aria-live="polite" aria-label="Chat conversation">
+          <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
             {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
@@ -2107,8 +2107,9 @@ Find similar books from beyond my library that match this taste profile.
             }}
           />
 
-          <div className="mt-16 sm:mt-20 text-xs text-[#7A8F6C] font-light text-center">
-            <div>For the ❤️ of reading.</div>
+          <div className="mt-16 sm:mt-20 text-center">
+            <div className="text-xs font-medium text-[#5F7252] tracking-wide mb-1">Discover. Collect. Share.</div>
+            <div className="text-xs text-[#7A8F6C] font-light">For the ❤️ of reading.</div>
           </div>
 
         </main>
