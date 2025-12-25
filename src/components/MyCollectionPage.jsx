@@ -237,7 +237,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             </p>
             {!searchQuery && (
               <p className="text-[#96A888] text-xs mt-2">
-                Mark books as "Read" from Add Books to build your collection
+                Mark books as "Finished" from Add Books or your Reading Queue.
               </p>
             )}
           </div>

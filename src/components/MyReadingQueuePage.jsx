@@ -113,16 +113,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
         {filteredBooks.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#96A888] mb-4">
-              {searchQuery ? 'No books found matching your search.' : 'Your reading queue is empty.'}
+            <p className="text-[#7A8F6C] text-sm">
+              {searchQuery ? `No books found matching "${searchQuery}"` : 'No books in your reading queue yet'}
             </p>
             {!searchQuery && (
-              <button
-                onClick={() => onNavigate('home')}
-                className="text-[#5F7252] hover:text-[#4A5940] underline"
-              >
-                Discover books to add
-              </button>
+              <p className="text-[#96A888] text-xs mt-2">Add books you want to read from the Add Books page.</p>
             )}
           </div>
         ) : (

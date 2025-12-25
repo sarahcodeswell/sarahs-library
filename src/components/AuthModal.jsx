@@ -92,8 +92,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         <p className="text-sm text-[#7A8F6C] mb-6">
           {mode === 'signin'
-            ? 'Save books and build your personalized reading queue'
-            : 'Create a profile to save books and track your reading'}
+            ? 'Save books, track your reading, and build your personal library'
+            : 'Create a profile to save books, track your reading, and build your personal library'}
         </p>
 
         {/* OAuth Buttons */}
