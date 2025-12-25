@@ -9,6 +9,7 @@ const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLetter, setSelectedLetter] = useState(null);
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -55,13 +56,39 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   }, [readBooks]);
 
   const filteredBooks = useMemo(() => {
-    if (!searchQuery.trim()) return sortedBooks;
-    const query = searchQuery.toLowerCase();
-    return sortedBooks.filter(book => 
-      book.book_title?.toLowerCase().includes(query) || 
-      book.book_author?.toLowerCase().includes(query)
-    );
-  }, [sortedBooks, searchQuery]);
+    let books = sortedBooks;
+    
+    // Filter by selected letter
+    if (selectedLetter) {
+      books = books.filter(book => {
+        const firstLetter = (book.book_title || '').charAt(0).toUpperCase();
+        return firstLetter === selectedLetter;
+      });
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      books = books.filter(book => 
+        book.book_title?.toLowerCase().includes(query) || 
+        book.book_author?.toLowerCase().includes(query)
+      );
+    }
+    
+    return books;
+  }, [sortedBooks, searchQuery, selectedLetter]);
+
+  // Get available letters from books
+  const availableLetters = useMemo(() => {
+    const letters = new Set();
+    sortedBooks.forEach(book => {
+      const firstLetter = (book.book_title || '').charAt(0).toUpperCase();
+      if (firstLetter.match(/[A-Z]/)) {
+        letters.add(firstLetter);
+      }
+    });
+    return Array.from(letters).sort();
+  }, [sortedBooks]);
 
   const handleMoveToWantToRead = async (book) => {
     if (!user) {
@@ -161,7 +188,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           </p>
         </div>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
           <input
             type="text"
@@ -171,6 +198,37 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
           />
         </div>
+
+        {/* A-Z Letter Navigation */}
+        {availableLetters.length > 0 && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedLetter(null)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  selectedLetter === null
+                    ? 'bg-[#5F7252] text-white'
+                    : 'bg-white text-[#7A8F6C] border border-[#E8EBE4] hover:bg-[#F8F6EE]'
+                }`}
+              >
+                All
+              </button>
+              {availableLetters.map(letter => (
+                <button
+                  key={letter}
+                  onClick={() => setSelectedLetter(letter)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    selectedLetter === letter
+                      ? 'bg-[#5F7252] text-white'
+                      : 'bg-white text-[#7A8F6C] border border-[#E8EBE4] hover:bg-[#F8F6EE]'
+                  }`}
+                >
+                  {letter}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {filteredBooks.length === 0 ? (
           <div className="text-center py-12">
