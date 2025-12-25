@@ -90,7 +90,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     return Array.from(letters).sort();
   }, [sortedBooks]);
 
-  const handleMoveToWantToRead = async (book) => {
+  const handleMoveToReadAgain = async (book) => {
     if (!user) {
       onShowAuthModal();
       return;
@@ -105,7 +105,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     const result = await updateQueueStatus(book.id, 'want_to_read');
     
     if (result.success) {
-      track('book_moved_to_want_to_read', {
+      track('book_moved_to_read_again', {
         book_title: book.book_title,
       });
     } else {
@@ -262,12 +262,12 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                   
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleMoveToWantToRead(book)}
+                      onClick={() => handleMoveToReadAgain(book)}
                       className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center gap-1"
-                      title="Move to Want to Read"
+                      title="Move to reading queue to read again"
                     >
                       <BookMarked className="w-3.5 h-3.5" />
-                      Want to Read
+                      Read Again
                     </button>
                     <button
                       onClick={() => handleRemoveBook(book)}
