@@ -100,11 +100,11 @@ export default function AboutPage({ onNavigate }) {
                 Discover Your Next Read
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
-                Chat with me to get personalized recommendations from my curated collection of 200 books—or discoveries from the wider world.
+                Chat with me to get personalized recommendations from my curated collection of 200 books—or discoveries from the world's library.
               </p>
-              <div className="bg-white rounded-lg p-3 border border-[#E8EBE4]">
+              <div className="bg-[#F8F6EE] rounded-lg p-3 border border-[#D4DAD0]">
                 <div className="flex items-start gap-2">
-                  <Upload className="w-4 h-4 text-[#5F7252] mt-0.5 flex-shrink-0" />
+                  <div className="px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded uppercase tracking-wide flex-shrink-0">Pro Tip</div>
                   <div>
                     <p className="text-xs font-medium text-[#5F7252] mb-1">Add Your Books</p>
                     <p className="text-xs text-[#96A888] leading-relaxed">
@@ -122,39 +122,32 @@ export default function AboutPage({ onNavigate }) {
                 Build Your Personal Library
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
-                Add your books, track your reading, and improve future recommendations
+                Track books you want to read, mark them as finished, and keep your library up to date
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="text-xs text-[#96A888] flex items-center gap-1">
-                  <Upload className="w-3 h-3" />
-                  Add Books
+              <div className="space-y-2">
+                <div className="text-xs text-[#96A888] flex items-center gap-2">
+                  <BookMarked className="w-3.5 h-3.5" />
+                  View My Reading Queue
                 </div>
-                <div className="text-xs text-[#96A888] flex items-center gap-1">
-                  <BookMarked className="w-3 h-3" />
-                  Reading Queue
+                <div className="text-xs text-[#96A888] flex items-center gap-2">
+                  <Library className="w-3.5 h-3.5" />
+                  Add to My Collection
                 </div>
-                <div className="text-xs text-[#96A888] flex items-center gap-1">
-                  <Library className="w-3 h-3" />
-                  My Collection
-                </div>
-                <div className="text-xs text-[#96A888] flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  Preferences
+                <div className="text-xs text-[#96A888] flex items-center gap-2">
+                  <Upload className="w-3.5 h-3.5" />
+                  Add Books anytime to keep your library up to date
                 </div>
               </div>
             </div>
             
-            {/* Job 3: Share (Coming Soon) */}
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4] relative overflow-hidden">
-              <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded-full">
-                Coming Soon
-              </div>
+            {/* Job 3: Share */}
+            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
               <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-[#5F7252]" />
                 Share with Friends
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed">
-                Recommend your favorite books to others
+                Recommend your favorite books to others with personalized notes
               </p>
             </div>
           </div>
