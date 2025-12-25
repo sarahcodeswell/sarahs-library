@@ -2,15 +2,49 @@ import React, { useState, useMemo } from 'react';
 import { ArrowLeft, Search, Trash2, BookMarked } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import booksData from '../books.json';
+
+const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Check if current user is master admin (Sarah)
+  const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
+
   // Filter to only show books marked as "finished"
   const readBooks = useMemo(() => {
-    return readingQueue.filter(item => item.status === 'finished');
-  }, [readingQueue]);
+    const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+    
+    // If master admin, merge with all 200 curated books from books.json
+    if (isMasterAdmin) {
+      // Convert books.json to same format as reading queue
+      const curatedBooks = booksData.map((book, index) => ({
+        id: `curated-${index}`,
+        book_title: book.title,
+        book_author: book.author,
+        status: 'finished',
+        isCurated: true, // Flag to identify curated books
+      }));
+      
+      // Merge curated books with user's reading queue (avoid duplicates)
+      const allBooks = [...curatedBooks];
+      finishedBooks.forEach(book => {
+        const isDuplicate = curatedBooks.some(
+          cb => cb.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
+                cb.book_author?.toLowerCase() === book.book_author?.toLowerCase()
+        );
+        if (!isDuplicate) {
+          allBooks.push(book);
+        }
+      });
+      
+      return allBooks;
+    }
+    
+    return finishedBooks;
+  }, [readingQueue, isMasterAdmin]);
 
   const sortedBooks = useMemo(() => {
     return [...readBooks].sort((a, b) => {
@@ -35,6 +69,12 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       return;
     }
 
+    // Prevent modifying curated books for master admin
+    if (book.isCurated) {
+      alert('This is part of your curated collection and cannot be modified.');
+      return;
+    }
+
     const result = await updateQueueStatus(book.id, 'want_to_read');
     
     if (result.success) {
@@ -47,6 +87,12 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   const handleRemoveBook = async (book) => {
+    // Prevent removing curated books for master admin
+    if (book.isCurated) {
+      alert('This is part of your curated collection and cannot be removed.');
+      return;
+    }
+
     if (!confirm(`Remove "${book.book_title}" from your collection?`)) {
       return;
     }
