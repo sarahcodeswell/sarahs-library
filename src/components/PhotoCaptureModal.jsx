@@ -1,60 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { X, Camera, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2 } from 'lucide-react';
 
 export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) {
   const [capturedImage, setCapturedImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const [stream, setStream] = useState(null);
-  const [showCamera, setShowCamera] = useState(false);
 
-  const startCamera = async () => {
-    try {
-      setError('');
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-      
-      setStream(mediaStream);
-      setShowCamera(true);
-    } catch (err) {
-      console.error('Camera access error:', err);
-      setError('Unable to access camera. Please use file upload instead.');
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setShowCamera(false);
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0);
-    
-    canvas.toBlob((blob) => {
-      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-      const imageUrl = URL.createObjectURL(blob);
-      
-      setCapturedImage({ file, url: imageUrl });
-      stopCamera();
-    }, 'image/jpeg', 0.9);
-  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -121,7 +73,6 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
   };
 
   const handleClose = () => {
-    stopCamera();
     setCapturedImage(null);
     setError('');
     setIsProcessing(false);
@@ -155,35 +106,18 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
             </div>
           )}
 
-          {!capturedImage && !showCamera && (
+          {!capturedImage && (
             <div className="space-y-4">
               <p className="text-sm text-[#7A8F6C] mb-4">
-                Take a photo of your book spines or covers, and we'll automatically recognize them.
+                Upload a photo of your book spines or covers, and we'll automatically recognize them.
               </p>
 
               <button
-                onClick={startCamera}
+                onClick={() => fileInputRef.current?.click()}
                 className="w-full py-3 px-4 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2 font-medium"
               >
-                <Camera className="w-5 h-5" />
-                Open Camera
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#E8EBE4]"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-[#96A888]">Or</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-3 px-4 border-2 border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 font-medium text-[#5F7252]"
-              >
                 <Upload className="w-5 h-5" />
-                Upload from Gallery
+                Upload Photo
               </button>
 
               <input
@@ -193,34 +127,6 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
                 onChange={handleFileSelect}
                 className="hidden"
               />
-            </div>
-          )}
-
-          {showCamera && (
-            <div className="space-y-4">
-              <div className="relative rounded-lg overflow-hidden bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={stopCamera}
-                  className="flex-1 py-2.5 px-4 border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors text-[#5F7252] font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={capturePhoto}
-                  className="flex-1 py-2.5 px-4 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors font-medium"
-                >
-                  Capture Photo
-                </button>
-              </div>
             </div>
           )}
 

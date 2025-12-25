@@ -45,7 +45,7 @@ export function ReadingQueueProvider({ children }) {
       user_id: user.id,
       book_title: book.title,
       book_author: book.author,
-      status: 'want_to_read',
+      status: book.status || 'want_to_read',
       added_at: new Date().toISOString(),
     };
 
