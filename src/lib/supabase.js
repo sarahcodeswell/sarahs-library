@@ -16,7 +16,8 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
         detectSessionInUrl: true,
         storage: window.localStorage,
         storageKey: 'sarahs-books-auth',
-        flowType: 'pkce'
+        flowType: 'pkce',
+        debug: import.meta.env.DEV // Enable debug logging in dev mode
       }
     })
   : null;

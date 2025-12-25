@@ -51,7 +51,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: `${window.location.origin}${window.location.pathname}`
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: false
         }
       });
       
