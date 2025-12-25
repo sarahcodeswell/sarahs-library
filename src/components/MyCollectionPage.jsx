@@ -150,13 +150,16 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   const handleCreateRecommendation = async (book, note) => {
+    console.log('Creating recommendation for:', book, 'with note:', note);
     const result = await createRecommendation(book, note);
+    console.log('Recommendation result:', result);
     
     if (result.success) {
       track('recommendation_created', {
         book_title: book.book_title,
       });
     } else {
+      console.error('Failed to create recommendation:', result.error);
       throw new Error(result.error || 'Failed to create recommendation');
     }
   };
