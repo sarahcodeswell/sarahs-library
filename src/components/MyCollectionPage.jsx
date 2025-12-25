@@ -289,32 +289,31 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    {/* Mobile: Icon-only, Desktop: Icon + Text */}
                     <button
                       onClick={() => handleRecommend(book)}
-                      className="px-3 py-2 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-1.5"
+                      className="p-2 sm:px-3 sm:py-2 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-1.5"
                       title="Recommend this book to friends"
                     >
-                      <Share2 className="w-3.5 h-3.5" />
-                      Recommend
+                      <Share2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                      <span className="hidden sm:inline">Recommend</span>
                     </button>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleMoveToReadAgain(book)}
-                        className="flex-1 px-3 py-2 rounded text-xs font-medium text-[#5F7252] bg-white border border-[#D4DAD0] hover:bg-[#E8EBE4] transition-colors flex items-center justify-center gap-1.5"
-                        title="Move to reading queue to read again"
-                      >
-                        <BookMarked className="w-3.5 h-3.5" />
-                        Read Again
-                      </button>
-                      <button
-                        onClick={() => handleRemoveBook(book)}
-                        className="p-2 rounded text-[#96A888] bg-white border border-[#D4DAD0] hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Remove from collection"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleMoveToReadAgain(book)}
+                      className="p-2 sm:px-3 sm:py-2 rounded text-xs font-medium text-[#5F7252] bg-white border border-[#D4DAD0] hover:bg-[#E8EBE4] transition-colors flex items-center justify-center gap-1.5"
+                      title="Move to reading queue to read again"
+                    >
+                      <BookMarked className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                      <span className="hidden sm:inline">Read Again</span>
+                    </button>
+                    <button
+                      onClick={() => handleRemoveBook(book)}
+                      className="p-2 rounded text-[#96A888] bg-white border border-[#D4DAD0] hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Remove from collection"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
