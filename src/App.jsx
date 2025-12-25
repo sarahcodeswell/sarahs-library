@@ -638,51 +638,21 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           )}
         </div>
 
-        {/* Reviews Button */}
-        <a
-          href={getGoodreadsSearchUrl(rec.title, displayAuthor)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            e.stopPropagation();
-            track('goodreads_link_click', { 
-              source: 'recommendation_card',
-              book_title: rec.title 
+        {/* Read Reviews Button */}
+        <button
+          onClick={() => {
+            const reviewUrl = rec.goodreadsUrl || getGoodreadsSearchUrl(rec.title, displayAuthor);
+            window.open(reviewUrl, '_blank');
+            
+            track('read_reviews_clicked', { 
+              book_title: rec.title,
+              book_author: displayAuthor
             });
           }}
           className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
           <Star className="w-3.5 h-3.5" />
-          Reviews
-        </a>
-
-        {/* Share Button */}
-        <button
-          onClick={() => {
-            const shareText = `Check out "${rec.title}"${displayAuthor ? ` by ${displayAuthor}` : ''} - recommended by Sarah's Books`;
-            const shareUrl = window.location.origin;
-            
-            if (navigator.share) {
-              navigator.share({
-                title: rec.title,
-                text: shareText,
-                url: shareUrl
-              }).catch(() => {});
-            } else {
-              navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
-                // Could add feedback here
-              });
-            }
-            
-            track('share_recommendation', { 
-              book_title: rec.title,
-              method: navigator.share ? 'native' : 'clipboard'
-            });
-          }}
-          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          Share
+          Read Reviews
         </button>
       </div>
     </div>
