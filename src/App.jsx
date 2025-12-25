@@ -6,6 +6,7 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useUser, useReadingQueue, UserBooksProvider } from './contexts';
 
 // Lazy load heavy components
