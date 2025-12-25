@@ -306,8 +306,8 @@ export const db = {
         .from('user_recommendations')
         .insert({
           user_id: userId,
-          book_title: book.title,
-          book_author: book.author,
+          book_title: book.book_title || book.title,
+          book_author: book.book_author || book.author,
           book_isbn: book.isbn || null,
           recommendation_note: note,
           is_from_collection: true
