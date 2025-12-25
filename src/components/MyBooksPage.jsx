@@ -346,7 +346,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
               {searchQuery ? `No books found matching "${searchQuery}"` : 'No books waiting to be added'}
             </p>
             {!searchQuery && (
-              <p className="text-[#96A888] text-xs mt-2">Add books manually or take a photo to get started. Mark them as "Read" or "Want to Read" to move them to your reading queue.</p>
+              <p className="text-[#96A888] text-xs mt-2">Add books manually or take a photo to get started. Mark them as "Finished" to add to My Collection, or "Want to Read" to add to My Reading Queue.</p>
             )}
           </div>
         ) : (
