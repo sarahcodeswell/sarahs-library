@@ -1958,54 +1958,6 @@ Find similar books from beyond my library that match this taste profile.
           </div>
 
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
-              <div className="relative" ref={attachmentMenuRef}>
-                <button
-                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                  className="w-8 h-8 rounded-lg border border-[#E8EBE4] bg-white hover:bg-[#F8F6EE] transition-colors flex-shrink-0 flex items-center justify-center text-[#7A8F6C] hover:text-[#5F7252]"
-                  aria-label={importedLibrary?.items?.length ? 'Manage Goodreads library' : 'Upload Goodreads CSV'}
-                  aria-expanded={showAttachmentMenu}
-                >
-                  {importedLibrary?.items?.length ? (
-                    <Library className="w-4 h-4" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                </button>
-                {showAttachmentMenu && (
-                  <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
-                    <button
-                      onClick={() => {
-                        setImportError('');
-                        importFileInputRef.current?.click();
-                        setShowAttachmentMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
-                    >
-                      <Upload className="w-4 h-4" />
-                      Upload Goodreads CSV
-                    </button>
-                    {importedLibrary?.items?.length && (
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Clear imported Goodreads library (${importedOverlap.total} books)?`)) {
-                            handleClearImport();
-                          }
-                          setShowAttachmentMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
-                      >
-                        <X className="w-4 h-4" />
-                        Clear library ({importedOverlap.total} books)
-                      </button>
-                    )}
-                  </div>
-                )}
-                {importError && (
-                  <div className="absolute top-full left-0 mt-1 text-xs text-red-700 bg-white px-2 py-1 rounded border border-red-200 shadow-sm whitespace-nowrap">
-                    {importError}
-                  </div>
-                )}
-              </div>
               <textarea
                 value={inputValue}
                 onChange={e => {

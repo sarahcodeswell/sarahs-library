@@ -1,9 +1,55 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useUserBooks } from '../contexts/UserBooksContext';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import PhotoCaptureModal from './PhotoCaptureModal';
+
+// CSV parsing helper
+function parseCsvLine(line) {
+  const out = [];
+  let current = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuote && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuote = !inQuote;
+      }
+    } else if (c === ',' && !inQuote) {
+      out.push(current);
+      current = '';
+    } else {
+      current += c;
+    }
+  }
+  out.push(current);
+  return out;
+}
+
+function parseGoodreadsCsv(text) {
+  const raw = String(text || '').replace(/^\uFEFF/, '');
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  if (!lines.length) return [];
+
+  const headers = parseCsvLine(lines[0]).map(h => String(h || '').trim());
+  const idxTitle = headers.findIndex(h => h.toLowerCase() === 'title');
+  const idxAuthor = headers.findIndex(h => h.toLowerCase() === 'author' || h.toLowerCase() === 'author l-f');
+  if (idxTitle < 0) return [];
+
+  const items = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCsvLine(lines[i]);
+    const title = String(cols[idxTitle] || '').trim();
+    const author = idxAuthor >= 0 ? String(cols[idxAuthor] || '').trim() : '';
+    if (!title) continue;
+    items.push({ title, author });
+  }
+  return items;
+}
 
 export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   const { userBooks, isLoadingBooks, addBook, removeBook } = useUserBooks();
@@ -13,6 +59,9 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [recognizedBooks, setRecognizedBooks] = useState([]);
   const [newBook, setNewBook] = useState({ title: '', author: '', notes: '' });
+  const [isUploadingGoodreads, setIsUploadingGoodreads] = useState(false);
+  const [goodreadsError, setGoodreadsError] = useState('');
+  const goodreadsInputRef = useRef(null);
 
   const sortedBooks = useMemo(() => {
     return [...userBooks].sort((a, b) => {
@@ -102,10 +151,59 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       successfully_added: successCount,
     });
 
+    setShowPhotoModal(false);
+    
     if (successCount > 0) {
-      alert(`Successfully added ${successCount} book${successCount > 1 ? 's' : ''} to your collection!`);
-    } else {
-      alert('Failed to add books. Please try again.');
+      alert(`Added ${successCount} book${successCount !== 1 ? 's' : ''} to your collection!`);
+    }
+  };
+
+  const handleGoodreadsUpload = async (file) => {
+    if (!user) {
+      onShowAuthModal();
+      return;
+    }
+
+    setGoodreadsError('');
+    setIsUploadingGoodreads(true);
+
+    try {
+      const text = await file.text();
+      const books = parseGoodreadsCsv(text);
+      
+      if (!books.length) {
+        setGoodreadsError('Could not find any books in that CSV. Make sure it is a Goodreads library export.');
+        setIsUploadingGoodreads(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (const book of books) {
+        const result = await addBook({
+          title: book.title,
+          author: book.author || '',
+          addedVia: 'goodreads',
+        });
+        
+        if (result.success) {
+          successCount++;
+        }
+      }
+
+      track('books_added_from_goodreads', {
+        total_in_csv: books.length,
+        successfully_added: successCount,
+      });
+
+      setIsUploadingGoodreads(false);
+      
+      if (successCount > 0) {
+        alert(`Added ${successCount} book${successCount !== 1 ? 's' : ''} from Goodreads to your collection!`);
+      }
+    } catch (error) {
+      console.error('Error processing Goodreads CSV:', error);
+      setGoodreadsError('Could not read that file. Please try exporting your Goodreads library again.');
+      setIsUploadingGoodreads(false);
     }
   };
 
@@ -211,7 +309,21 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             <Camera className="w-4 h-4" />
             Add from Photo
           </button>
+          <button
+            onClick={() => goodreadsInputRef.current?.click()}
+            disabled={isUploadingGoodreads}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Upload className="w-4 h-4" />
+            {isUploadingGoodreads ? 'Uploading...' : 'Upload Goodreads CSV'}
+          </button>
         </div>
+
+        {goodreadsError && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {goodreadsError}
+          </div>
+        )}
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
@@ -368,6 +480,20 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
         isOpen={showPhotoModal}
         onClose={() => setShowPhotoModal(false)}
         onPhotoCaptured={handlePhotoCaptured}
+      />
+
+      <input
+        ref={goodreadsInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            handleGoodreadsUpload(file);
+          }
+          e.target.value = '';
+        }}
       />
     </div>
   );
