@@ -13,6 +13,7 @@ const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
+const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1736,6 +1737,22 @@ Find similar books from beyond my library that match this taste profile.
                     </button>
                     {user && (
                       <>
+                        <button
+                          onClick={() => {
+                            setCurrentPage('reading-queue');
+                            setShowNavMenu(false);
+                            window.scrollTo(0, 0);
+                            
+                            track('page_navigation', {
+                              from: currentPage,
+                              to: 'reading-queue'
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                        >
+                          <BookMarked className="w-4 h-4" />
+                          My Reading Queue
+                        </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         <button
                           onClick={() => {
@@ -1826,6 +1843,16 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'my-books' && (
         <Suspense fallback={<LoadingFallback message="Loading Add Books..." />}>
           <MyBooksPage 
+            onNavigate={setCurrentPage}
+            user={user}
+            onShowAuthModal={() => setShowAuthModal(true)}
+          />
+        </Suspense>
+      )}
+
+      {currentPage === 'reading-queue' && (
+        <Suspense fallback={<LoadingFallback message="Loading Reading Queue..." />}>
+          <MyReadingQueuePage 
             onNavigate={setCurrentPage}
             user={user}
             onShowAuthModal={() => setShowAuthModal(true)}

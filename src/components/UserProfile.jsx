@@ -1,35 +1,13 @@
-import React, { useState } from 'react';
-import { User, BookOpen, LogOut, X, BookCheck, ChevronDown, ChevronUp } from 'lucide-react';
-import { useUser, useReadingQueue } from '../contexts';
+import React from 'react';
+import { User, LogOut } from 'lucide-react';
+import { useUser } from '../contexts';
 
 export default function UserProfile({ tasteProfile }) {
   const { user, signOut } = useUser();
-  const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
 
   const handleSignOut = async () => {
     await signOut();
   };
-
-  const handleRemoveFromQueue = async (bookId) => {
-    await removeFromQueue(bookId);
-  };
-
-  const handleMarkAsRead = async (bookId) => {
-    await updateQueueStatus(bookId, 'finished');
-  };
-
-  // Collapse/expand state
-  const [isWantToReadExpanded, setIsWantToReadExpanded] = useState(true);
-  const [isFinishedExpanded, setIsFinishedExpanded] = useState(false);
-
-  // Separate and sort books
-  const wantToRead = readingQueue
-    ?.filter(book => book.status === 'want_to_read')
-    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at)) || [];
-  
-  const finishedBooks = readingQueue
-    ?.filter(book => book.status === 'finished')
-    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at)) || [];
 
   return (
     <div className="space-y-6">
@@ -52,29 +30,17 @@ export default function UserProfile({ tasteProfile }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-4 bg-[#F8F6EE] rounded-xl">
-          <div className="flex items-center gap-2 mb-3">
-            <BookCheck className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
-            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Books Read</span>
-          </div>
-          <p className="text-2xl font-serif text-[#4A5940] leading-none">
-            {finishedBooks.length}
-          </p>
-        </div>
-        <div className="p-4 bg-[#F8F6EE] rounded-xl">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
-            <span className="text-xs text-[#7A8F6C] font-medium leading-tight">Want to Read</span>
-          </div>
-          <p className="text-2xl font-serif text-[#4A5940] leading-none">
-            {wantToRead.length}
-          </p>
-        </div>
+      {/* Future: Reading taste preferences will go here */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2">Reading Preferences</h4>
+        <p className="text-xs text-[#96A888]">
+          Coming soon: Define your reading tastes and preferences here.
+        </p>
       </div>
 
+
       {tasteProfile?.likedAuthors?.length > 0 && (
-        <div className="mb-4">
+        <div className="mt-4">
           <h4 className="text-sm font-medium text-[#5F7252] mb-2">Favorite Authors</h4>
           <div className="flex flex-wrap gap-2">
             {tasteProfile.likedAuthors.slice(0, 5).map((author, idx) => (
@@ -86,125 +52,6 @@ export default function UserProfile({ tasteProfile }) {
               </span>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Want to Read Section */}
-      {wantToRead.length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => setIsWantToReadExpanded(!isWantToReadExpanded)}
-            className="flex items-center justify-between w-full text-sm font-medium text-[#5F7252] mb-2 hover:text-[#4A5940] transition-colors"
-          >
-            <span>Want to Read ({wantToRead.length})</span>
-            {isWantToReadExpanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-          {isWantToReadExpanded && (
-            <div className="space-y-2">
-            {wantToRead.map((book) => (
-              <div
-                key={book.id}
-                className="p-3 bg-[#F8F6EE] rounded-lg text-xs flex items-start justify-between gap-2"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[#4A5940] truncate">{book.book_title}</p>
-                  {book.book_author && (
-                    <p className="text-[#96A888] truncate">{book.book_author}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleMarkAsRead(book.id);
-                    }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-[#5F7252] text-white active:bg-[#4A5940] rounded transition-colors touch-manipulation"
-                    title="Mark as read"
-                  >
-                    <BookCheck className="w-3 h-3" />
-                    Read
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleRemoveFromQueue(book.id);
-                    }}
-                    className="p-2 active:bg-red-50 rounded transition-colors touch-manipulation"
-                    title="Remove from queue"
-                  >
-                    <X className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Empty state for Want to Read */}
-      {wantToRead.length === 0 && finishedBooks.length === 0 && (
-        <div className="text-center py-8">
-          <BookOpen className="w-12 h-12 text-[#D4DAD0] mx-auto mb-3" />
-          <p className="text-sm text-[#96A888] mb-1">No books in your queue yet</p>
-          <p className="text-xs text-[#B8C4AC]">Bookmark recommendations to add them here</p>
-        </div>
-      )}
-
-      {/* Finished Books Section */}
-      {finishedBooks.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-[#E8EBE4]">
-          <button
-            onClick={() => setIsFinishedExpanded(!isFinishedExpanded)}
-            className="flex items-center justify-between w-full text-sm font-medium text-[#5F7252] mb-2 hover:text-[#4A5940] transition-colors"
-          >
-            <span>Finished ({finishedBooks.length})</span>
-            {isFinishedExpanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-          {isFinishedExpanded && (
-            <div className="space-y-2">
-            {finishedBooks.map((book) => (
-              <div
-                key={book.id}
-                className="p-3 bg-[#F8F6EE] rounded-lg text-xs flex items-start justify-between gap-2 opacity-75"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[#4A5940] truncate">{book.book_title}</p>
-                  {book.book_author && (
-                    <p className="text-[#96A888] truncate">{book.book_author}</p>
-                  )}
-                  <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-[#5F7252] font-medium">
-                    <BookCheck className="w-3 h-3" />
-                    Read
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      handleRemoveFromQueue(book.id);
-                    }}
-                    className="p-2 active:bg-red-50 rounded transition-colors touch-manipulation"
-                    title="Remove from queue"
-                  >
-                    <X className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            </div>
-          )}
         </div>
       )}
     </div>
