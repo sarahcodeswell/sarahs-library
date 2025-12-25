@@ -271,4 +271,158 @@ export const db = {
       return { data: null, error: { message: err.message || 'Update failed' } };
     }
   },
+
+  // Recommendations functions
+  getUserRecommendations: async (userId) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_recommendations')
+        .select(`
+          *,
+          shared_recommendations (
+            share_token,
+            view_count,
+            last_viewed_at
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      return { data, error };
+    } catch (err) {
+      console.error('getUserRecommendations: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
+  createRecommendation: async (userId, book, note) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_recommendations')
+        .insert({
+          user_id: userId,
+          book_title: book.title,
+          book_author: book.author,
+          book_isbn: book.isbn || null,
+          recommendation_note: note,
+          is_from_collection: true
+        })
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('createRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Create failed' } };
+    }
+  },
+
+  updateRecommendation: async (id, note) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_recommendations')
+        .update({ recommendation_note: note })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
+  },
+
+  deleteRecommendation: async (id) => {
+    if (!supabase) return { error: null };
+    
+    try {
+      const { error } = await supabase
+        .from('user_recommendations')
+        .delete()
+        .eq('id', id);
+      
+      return { error };
+    } catch (err) {
+      console.error('deleteRecommendation: Exception', err);
+      return { error: { message: err.message || 'Delete failed' } };
+    }
+  },
+
+  createShareLink: async (recommendationId) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      // Generate unique token
+      const shareToken = Math.random().toString(36).substring(2, 15) + 
+                        Math.random().toString(36).substring(2, 15);
+      
+      const { data, error } = await supabase
+        .from('shared_recommendations')
+        .insert({
+          recommendation_id: recommendationId,
+          share_token: shareToken
+        })
+        .select()
+        .single();
+      
+      if (data) {
+        return {
+          data: {
+            ...data,
+            shareUrl: `${window.location.origin}/r/${shareToken}`
+          },
+          error: null
+        };
+      }
+      
+      return { data: null, error };
+    } catch (err) {
+      console.error('createShareLink: Exception', err);
+      return { data: null, error: { message: err.message || 'Share link creation failed' } };
+    }
+  },
+
+  getSharedRecommendation: async (shareToken) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('shared_recommendations')
+        .select(`
+          *,
+          user_recommendations (
+            book_title,
+            book_author,
+            book_isbn,
+            recommendation_note,
+            created_at
+          )
+        `)
+        .eq('share_token', shareToken)
+        .single();
+      
+      // Increment view count
+      if (data) {
+        await supabase
+          .from('shared_recommendations')
+          .update({
+            view_count: (data.view_count || 0) + 1,
+            last_viewed_at: new Date().toISOString()
+          })
+          .eq('id', data.id);
+      }
+      
+      return { data, error };
+    } catch (err) {
+      console.error('getSharedRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
 };
