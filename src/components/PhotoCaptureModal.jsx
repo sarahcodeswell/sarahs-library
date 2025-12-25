@@ -77,16 +77,31 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('image', capturedImage.file);
+      // Convert image to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(capturedImage.file);
+      });
+
+      const base64Image = await base64Promise;
+      const mediaType = capturedImage.file.type || 'image/jpeg';
 
       const response = await fetch('/api/recognize-books', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+          mediaType: mediaType,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process image');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to process image');
       }
 
       const result = await response.json();
@@ -99,7 +114,7 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
       }
     } catch (err) {
       console.error('Image processing error:', err);
-      setError('Failed to process image. Please try again.');
+      setError(err.message || 'Failed to process image. Please try again.');
     } finally {
       setIsProcessing(false);
     }

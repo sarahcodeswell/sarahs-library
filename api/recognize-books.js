@@ -10,24 +10,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get the image from the request
-    const contentType = req.headers['content-type'] || '';
-    
-    if (!contentType.includes('multipart/form-data')) {
-      return res.status(400).json({ error: 'Invalid content type' });
-    }
+    // Expect JSON body with base64 encoded image
+    const { image, mediaType } = req.body;
 
-    // Parse multipart form data
-    const formData = await parseMultipartForm(req);
-    const imageBuffer = formData.image;
-
-    if (!imageBuffer) {
+    if (!image) {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    // Convert image to base64
-    const base64Image = imageBuffer.toString('base64');
-    const mediaType = getMediaType(formData.imageType || 'image/jpeg');
+    // Remove data URL prefix if present
+    const base64Image = image.replace(/^data:image\/\w+;base64,/, '');
+    const imageMediaType = mediaType || 'image/jpeg';
 
     // Call Claude Vision API
     const message = await anthropic.messages.create({
@@ -41,7 +33,7 @@ export default async function handler(req, res) {
               type: 'image',
               source: {
                 type: 'base64',
-                media_type: mediaType,
+                media_type: imageMediaType,
                 data: base64Image,
               },
             },
@@ -110,65 +102,4 @@ Do not include any other text, explanations, or markdown formatting. Only return
       message: error.message 
     });
   }
-}
-
-// Helper function to parse multipart form data
-async function parseMultipartForm(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    let imageBuffer = null;
-    let imageType = 'image/jpeg';
-
-    req.on('data', (chunk) => {
-      chunks.push(chunk);
-    });
-
-    req.on('end', () => {
-      try {
-        const buffer = Buffer.concat(chunks);
-        const boundary = getBoundary(req.headers['content-type']);
-        
-        if (!boundary) {
-          return reject(new Error('No boundary found'));
-        }
-
-        const parts = buffer.toString('binary').split(boundary);
-        
-        for (const part of parts) {
-          if (part.includes('Content-Disposition: form-data; name="image"')) {
-            // Extract content type
-            const contentTypeMatch = part.match(/Content-Type: (image\/[a-z]+)/i);
-            if (contentTypeMatch) {
-              imageType = contentTypeMatch[1];
-            }
-
-            // Find the start of the image data (after double CRLF)
-            const dataStart = part.indexOf('\r\n\r\n') + 4;
-            const dataEnd = part.lastIndexOf('\r\n');
-            
-            if (dataStart > 3 && dataEnd > dataStart) {
-              const imageData = part.substring(dataStart, dataEnd);
-              imageBuffer = Buffer.from(imageData, 'binary');
-            }
-          }
-        }
-
-        resolve({ image: imageBuffer, imageType });
-      } catch (error) {
-        reject(error);
-      }
-    });
-
-    req.on('error', reject);
-  });
-}
-
-function getBoundary(contentType) {
-  const match = contentType.match(/boundary=(.+)$/);
-  return match ? '--' + match[1] : null;
-}
-
-function getMediaType(type) {
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  return validTypes.includes(type) ? type : 'image/jpeg';
 }
