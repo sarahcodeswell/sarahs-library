@@ -32,7 +32,7 @@ export default function AboutPage({ onNavigate }) {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">About Sarah's Books</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-sm text-[#7A8F6C] leading-relaxed">
             Discover your next great read, build your personal library, and share recommendations with friends.
           </p>
@@ -90,7 +90,7 @@ export default function AboutPage({ onNavigate }) {
         {/* How It Works - 3 Jobs */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4">
-            How It Works
+            Three Ways to Use Sarah's Books
           </h2>
           <div className="space-y-4">
             {/* Job 1: Discover */}
@@ -99,9 +99,20 @@ export default function AboutPage({ onNavigate }) {
                 <Home className="w-4 h-4 text-[#5F7252]" />
                 Discover Your Next Read
               </h3>
-              <p className="text-sm text-[#7A8F6C] leading-relaxed">
-                Chat with me to get personalized recommendations from 200 curated books
+              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
+                Chat with me to get personalized recommendations from my curated collection of 200 books—or discoveries from the wider world.
               </p>
+              <div className="bg-white rounded-lg p-3 border border-[#E8EBE4]">
+                <div className="flex items-start gap-2">
+                  <Upload className="w-4 h-4 text-[#5F7252] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-[#5F7252] mb-1">Add Your Books</p>
+                    <p className="text-xs text-[#96A888] leading-relaxed">
+                      Upload photos of books you've read so I never recommend something you've already finished—and to improve your recommendations based on your taste.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Job 2: Build Library */}

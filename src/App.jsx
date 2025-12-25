@@ -1638,13 +1638,16 @@ Find similar books from beyond my library that match this taste profile.
                 
                 {showNavMenu && (
                   <div className="absolute top-full left-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
+                    {/* DISCOVER Section */}
+                    <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                      Discover
+                    </div>
                     <button
                       onClick={() => {
                         setCurrentPage('home');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
                         
-                        // Track page navigation
                         track('page_navigation', {
                           from: currentPage,
                           to: 'home'
@@ -1653,24 +1656,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
                       <Home className="w-4 h-4" />
-                      Discover
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentPage('about');
-                        setShowNavMenu(false);
-                        window.scrollTo(0, 0);
-                        
-                        // Track page navigation
-                        track('page_navigation', {
-                          from: currentPage,
-                          to: 'about'
-                        });
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                    >
-                      <BookHeart className="w-4 h-4" />
-                      About Sarah's Books
+                      Next Read
                     </button>
                     <button
                       onClick={() => {
@@ -1678,7 +1664,6 @@ Find similar books from beyond my library that match this taste profile.
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
                         
-                        // Track page navigation
                         track('page_navigation', {
                           from: currentPage,
                           to: 'my-books'
@@ -1689,6 +1674,7 @@ Find similar books from beyond my library that match this taste profile.
                       <Upload className="w-4 h-4" />
                       Add Books
                     </button>
+                    <div className="border-t border-[#E8EBE4] my-1"></div>
                     {user && (
                       <>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
@@ -1728,6 +1714,11 @@ Find similar books from beyond my library that match this taste profile.
                           <Library className="w-4 h-4" />
                           My Collection
                         </button>
+                        <div className="border-t border-[#E8EBE4] my-1"></div>
+                        {/* MY RECOMMENDATIONS Section */}
+                        <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                          My Recommendations
+                        </div>
                         <button
                           onClick={() => {
                             setCurrentPage('recommendations');
@@ -1742,7 +1733,7 @@ Find similar books from beyond my library that match this taste profile.
                           className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                         >
                           <Share2 className="w-4 h-4" />
-                          My Recommendations
+                          View All
                         </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         <button
@@ -1757,6 +1748,22 @@ Find similar books from beyond my library that match this taste profile.
                         </button>
                       </>
                     )}
+                    <button
+                      onClick={() => {
+                        setCurrentPage('about');
+                        setShowNavMenu(false);
+                        window.scrollTo(0, 0);
+                        
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'about'
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <BookHeart className="w-4 h-4" />
+                      How It Works
+                    </button>
                     <div className="border-t border-[#E8EBE4] my-1"></div>
                     <a
                       href="mailto:hello@sarahsbooks.com"
