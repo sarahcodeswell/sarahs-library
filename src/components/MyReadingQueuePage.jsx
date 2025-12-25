@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, GripVertical } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [localOrder, setLocalOrder] = useState([]);
 
   // Filter to only show books marked as "want_to_read"
   const queueBooks = useMemo(() => {
@@ -13,12 +15,25 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   }, [readingQueue]);
 
   const sortedBooks = useMemo(() => {
-    return [...queueBooks].sort((a, b) => {
+    const books = [...queueBooks].sort((a, b) => {
       const dateA = new Date(a.added_at || 0);
       const dateB = new Date(b.added_at || 0);
       return dateB - dateA; // Most recent first
     });
-  }, [queueBooks]);
+    
+    // Apply local order if exists
+    if (localOrder.length > 0) {
+      return books.sort((a, b) => {
+        const indexA = localOrder.indexOf(a.id);
+        const indexB = localOrder.indexOf(b.id);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+    }
+    
+    return books;
+  }, [queueBooks, localOrder]);
 
   const filteredBooks = useMemo(() => {
     if (!searchQuery.trim()) return sortedBooks;
@@ -57,9 +72,36 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       track('book_removed_from_queue', {
         book_title: book.book_title,
       });
+      // Update local order
+      setLocalOrder(prev => prev.filter(id => id !== book.id));
     } else {
       alert('Failed to remove book. Please try again.');
     }
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const items = [...filteredBooks];
+    const draggedItem = items[draggedIndex];
+    items.splice(draggedIndex, 1);
+    items.splice(index, 0, draggedItem);
+
+    setLocalOrder(items.map(item => item.id));
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    track('reading_queue_reordered', {
+      queue_length: filteredBooks.length
+    });
   };
 
   if (!user) {
@@ -122,13 +164,23 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredBooks.map((book) => (
+            {filteredBooks.map((book, index) => (
               <div
                 key={book.id}
-                className="bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow"
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow cursor-move ${
+                  draggedIndex === index ? 'opacity-50' : ''
+                }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-3">
+                  <div className="pt-1 cursor-grab active:cursor-grabbing" title="Drag to reorder">
+                    <GripVertical className="w-5 h-5 text-[#96A888]" />
+                  </div>
+                  <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-[#4A5940] mb-1 truncate">
                       {book.book_title}
                     </h3>
@@ -140,24 +192,25 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     <p className="text-xs text-[#96A888]">
                       Added {new Date(book.added_at).toLocaleDateString()}
                     </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleMarkAsRead(book)}
-                      className="px-3 py-1.5 rounded text-sm font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-                      title="Mark as Read"
-                    >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      Finished
-                    </button>
-                    <button
-                      onClick={() => handleRemoveBook(book)}
-                      className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
-                      title="Remove from queue"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleMarkAsRead(book)}
+                        className="px-3 py-1.5 rounded text-sm font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+                        title="Mark as Read"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Finished
+                      </button>
+                      <button
+                        onClick={() => handleRemoveBook(book)}
+                        className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+                        title="Remove from queue"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
