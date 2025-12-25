@@ -34,7 +34,7 @@ export default function AboutPage({ onNavigate }) {
         <div className="mb-8">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">About Sarah's Books</h1>
           <p className="text-sm text-[#7A8F6C] leading-relaxed">
-            A curated collection of 200 beloved books—plus the tools to build your own personal library.
+            Discover your next great read, build your personal library, and share recommendations with friends.
           </p>
         </div>
 
@@ -87,49 +87,60 @@ export default function AboutPage({ onNavigate }) {
 
         {/* Curator's Note removed from here - moved to after collection */}
 
-        {/* How It Works */}
+        {/* How It Works - 3 Jobs */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4">
             How It Works
           </h2>
-          <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
-            Build your own personalized library alongside Sarah's curated collection:
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
-                <Upload className="w-4 h-4 text-[#5F7252]" />
-                Add Books
+          <div className="space-y-4">
+            {/* Job 1: Discover */}
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
+                📚 Discover Your Next Read
               </h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Upload photos of your books and let AI recognize them automatically.
+              <p className="text-sm text-[#7A8F6C] leading-relaxed">
+                Chat with me to get personalized recommendations from 200 curated books
               </p>
             </div>
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
-                <BookMarked className="w-4 h-4 text-[#5F7252]" />
-                My Reading Queue
+            
+            {/* Job 2: Build Library */}
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
+                📖 Build Your Personal Library
               </h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Track books you want to read and mark them as finished when done.
+              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
+                Add your books, track your reading, and improve future recommendations
               </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-xs text-[#96A888] flex items-center gap-1">
+                  <Upload className="w-3 h-3" />
+                  Add Books
+                </div>
+                <div className="text-xs text-[#96A888] flex items-center gap-1">
+                  <BookMarked className="w-3 h-3" />
+                  Reading Queue
+                </div>
+                <div className="text-xs text-[#96A888] flex items-center gap-1">
+                  <Library className="w-3 h-3" />
+                  My Collection
+                </div>
+                <div className="text-xs text-[#96A888] flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  Preferences
+                </div>
+              </div>
             </div>
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
-                <Library className="w-4 h-4 text-[#5F7252]" />
-                My Collection
+            
+            {/* Job 3: Share (Coming Soon) */}
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4] relative overflow-hidden">
+              <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded-full">
+                Coming Soon
+              </div>
+              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
+                💬 Share with Friends
               </h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Build your personal library of books you've read and loved.
-              </p>
-            </div>
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-sm flex items-center gap-2">
-                <User className="w-4 h-4 text-[#5F7252]" />
-                Reading Preferences
-              </h3>
-              <p className="text-xs text-[#7A8F6C] leading-relaxed">
-                Share your reading tastes to get better personalized recommendations.
+              <p className="text-sm text-[#7A8F6C] leading-relaxed">
+                Recommend your favorite books to others
               </p>
             </div>
           </div>
