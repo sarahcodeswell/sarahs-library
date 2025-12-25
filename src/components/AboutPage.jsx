@@ -104,9 +104,12 @@ export default function AboutPage({ onNavigate }) {
               </p>
               <div className="bg-[#F8F6EE] rounded-lg p-3 border border-[#D4DAD0]">
                 <div className="flex items-start gap-2">
-                  <div className="px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded uppercase tracking-wide flex-shrink-0">Pro Tip</div>
-                  <div>
-                    <p className="text-xs font-medium text-[#5F7252] mb-1">Add Your Books</p>
+                  <Upload className="w-4 h-4 text-[#5F7252] mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs font-medium text-[#5F7252]">Add Your Books</p>
+                      <div className="px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded uppercase tracking-wide">Pro Tip</div>
+                    </div>
                     <p className="text-xs text-[#96A888] leading-relaxed">
                       Upload photos of books you've read so I never recommend something you've already finished—and to improve your recommendations based on your taste.
                     </p>

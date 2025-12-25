@@ -1002,7 +1002,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and soon you'll be able to **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[bookmark] Save to your reading queue", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1140,7 +1140,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and soon you'll be able to **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.\n\n**You can then:**\n[shopping-bag] Buy your next read\n[star] Read reviews\n[bookmark] Save to your reading queue",
+      text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.",
       isUser: false
     }];
   };
