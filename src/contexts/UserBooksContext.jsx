@@ -147,7 +147,15 @@ export function UserBooksProvider({ children }) {
 export function useUserBooks() {
   const context = useContext(UserBooksContext);
   if (!context) {
-    throw new Error('useUserBooks must be used within a UserBooksProvider');
+    // Return safe defaults instead of throwing to prevent crashes
+    return {
+      userBooks: [],
+      isLoadingBooks: false,
+      addBook: async () => ({ success: false, error: 'Context not available' }),
+      removeBook: async () => ({ success: false, error: 'Context not available' }),
+      updateBook: async () => ({ success: false, error: 'Context not available' }),
+      refreshBooks: async () => {}
+    };
   }
   return context;
 }
