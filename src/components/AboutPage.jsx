@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function AboutPage({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCuratorNoteExpanded, setIsCuratorNoteExpanded] = useState(false);
 
   const filteredBooks = useMemo(() => {
     if (!searchQuery.trim()) return bookCatalog;
@@ -76,13 +77,24 @@ export default function AboutPage({ onNavigate }) {
 
         {/* Curator's Note - Moved up for prominence */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
-          <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
-            📝 Curator's Note
-          </h2>
+          <button
+            onClick={() => setIsCuratorNoteExpanded(!isCuratorNoteExpanded)}
+            className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+          >
+            <h2 className="font-serif text-2xl text-[#4A5940] flex items-center gap-2">
+              📝 Curator's Note
+            </h2>
+            {isCuratorNoteExpanded ? (
+              <ChevronUp className="w-5 h-5 text-[#5F7252] flex-shrink-0" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-[#5F7252] flex-shrink-0" />
+            )}
+          </button>
           <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
             A few common themes you'll see in my collection:
           </p>
 
+          {isCuratorNoteExpanded && (
           <div className="space-y-6">
             {/* Women's Interior Lives */}
             <div>
@@ -151,10 +163,11 @@ export default function AboutPage({ onNavigate }) {
               </ul>
             </div>
           </div>
+          )}
         </div>
 
         {/* How It Works */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4">
             How It Works
           </h2>
