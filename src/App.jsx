@@ -1699,7 +1699,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                     >
                       <BookHeart className="w-4 h-4" />
-                      About the Reader
+                      About Sarah's Books
                     </button>
                     <button
                       onClick={() => {

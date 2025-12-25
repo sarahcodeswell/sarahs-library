@@ -31,7 +31,10 @@ export default function AboutPage({ onNavigate }) {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">About the Reader</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">About Sarah's Books</h1>
+          <p className="text-sm text-[#7A8F6C] leading-relaxed">
+            A curated collection of 200 beloved books—plus the tools to build your own personal library.
+          </p>
         </div>
 
         {/* Profile Section */}
@@ -49,7 +52,10 @@ export default function AboutPage({ onNavigate }) {
                   I've always been the friend people call when they need a book recommendation. "Something that'll make me feel deeply," they say. Or "I need to escape but not too far." I get it—finding the right book at the right moment is a small kind of magic ✨.
                 </p>
                 <p>
-                  So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. It's a living library that grows as I read, with a discovery engine to help us both find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
+                  So I built this: a digital version of my bookshelves, searchable and powered by AI that knows my taste. My 200 curated books are the foundation, but now you can build your own library too—upload photos of your books, track what you want to read, and get personalized recommendations based on both our collections.
+                </p>
+                <p>
+                  It's a living library that grows as we both read, with a discovery engine to help us find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
                 </p>
                 <p className="text-[#7A8F6C]">
                   Happy reading, friend. 📚
@@ -62,8 +68,81 @@ export default function AboutPage({ onNavigate }) {
                 className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#5F7252] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
               >
                 <Library className="w-4 h-4" />
-                Browse My Collection
+                Browse Sarah's Collection
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+          <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
+            🔍 How It Works
+          </h2>
+          <div className="space-y-4 text-sm text-[#5F7252] leading-relaxed">
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">1</span>
+              <div>
+                <p className="font-medium text-[#4A5940] mb-1">Start with Sarah's Foundation</p>
+                <p>Browse 200 carefully curated books that power the recommendation engine for everyone.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">2</span>
+              <div>
+                <p className="font-medium text-[#4A5940] mb-1">Add Your Own Books</p>
+                <p>Upload photos of your book spines or covers—AI will recognize them and add them to your staging area.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">3</span>
+              <div>
+                <p className="font-medium text-[#4A5940] mb-1">Build Your Reading Journey</p>
+                <p>Mark books as "Want to Read" or "Finished" to create your personal reading queue and collection.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-xs font-medium">4</span>
+              <div>
+                <p className="font-medium text-[#4A5940] mb-1">Get Personalized Recommendations</p>
+                <p>Chat with the AI to discover your next read based on Sarah's curation and your own reading preferences.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Your Journey */}
+        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
+          <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
+            📚 Your Reading Journey
+          </h2>
+          <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
+            Create your own personalized library alongside Sarah's curated collection:
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📸 Add Books</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Upload photos of your books and let AI recognize them automatically.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">📖 Reading Queue</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Track books you want to read and mark them as finished when done.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">✅ My Collection</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Build your personal library of books you've read and loved.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-[#E8EBE4]">
+              <h3 className="font-medium text-[#4A5940] mb-2 text-sm">💭 Reading Preferences</h3>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed">
+                Share your reading tastes to get better personalized recommendations.
+              </p>
             </div>
           </div>
         </div>
@@ -147,14 +226,14 @@ export default function AboutPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Sarah's 200 Books */}
+        {/* Sarah's Curated Collection */}
         <div id="browse-collection" className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Library className="w-5 h-5 text-[#5F7252]" />
-            <h2 className="font-serif text-2xl text-[#4A5940]">My Collection</h2>
+            <h2 className="font-serif text-2xl text-[#4A5940]">Sarah's Curated Collection</h2>
           </div>
           <p className="text-sm text-[#7A8F6C] mb-6">
-            All 200 books I've read and loved. This collection powers the recommendation engine for everyone.
+            All 200 books Sarah has read and loved. This foundation collection powers the recommendation engine for everyone.
           </p>
 
           <div className="relative mb-4">
