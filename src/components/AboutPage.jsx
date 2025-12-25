@@ -125,7 +125,7 @@ export default function AboutPage({ onNavigate }) {
                 Build Your Personal Library
               </h3>
               <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
-                Track books you want to read, mark them as finished, and keep your library up to date
+                Track books you want to read, mark them as finished, and keep your library up to date.
               </p>
               <div className="space-y-2">
                 <div className="text-xs text-[#96A888] flex items-center gap-2">
@@ -138,7 +138,7 @@ export default function AboutPage({ onNavigate }) {
                 </div>
                 <div className="text-xs text-[#96A888] flex items-center gap-2">
                   <Upload className="w-3.5 h-3.5" />
-                  Add Books anytime to keep your library up to date
+                  <p className="text-xs text-[#96A888]">Add Books anytime</p>
                 </div>
               </div>
             </div>

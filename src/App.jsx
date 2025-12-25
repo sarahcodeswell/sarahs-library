@@ -1002,7 +1002,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection—or discoveries from the world's library, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1140,7 +1140,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection of 200 books, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.",
+      text: "Hi, I'm Sarah!\n\nI'll help you **discover your next great read** from my curated collection—or discoveries from the world's library, **build your personal library** to track your reading, and **share recommendations** with friends.\n\nTell me what you're in the mood for and I'll find the perfect book for you.",
       isUser: false
     }];
   };
