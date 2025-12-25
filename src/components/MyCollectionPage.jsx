@@ -7,9 +7,9 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter to only show books marked as "read"
+  // Filter to only show books marked as "finished"
   const readBooks = useMemo(() => {
-    return readingQueue.filter(item => item.status === 'read');
+    return readingQueue.filter(item => item.status === 'finished');
   }, [readingQueue]);
 
   const sortedBooks = useMemo(() => {

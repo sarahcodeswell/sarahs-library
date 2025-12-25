@@ -136,7 +136,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       // Remove from staging area (user_books) after successfully adding to reading queue
       await removeBook(book.id);
       
-      const statusText = status === 'read' ? 'read books' : 'reading queue';
+      const statusText = status === 'finished' ? 'read books' : 'reading queue';
       alert(`Added "${book.book_title}" to ${statusText}!`);
       
       track('book_added_to_queue_from_my_books', {
@@ -271,7 +271,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
                       Want to Read
                     </button>
                     <button
-                      onClick={() => handleAddToReadingQueue(book, 'read')}
+                      onClick={() => handleAddToReadingQueue(book, 'finished')}
                       className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center gap-1"
                       title="Mark as Read"
                     >
