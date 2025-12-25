@@ -172,23 +172,23 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopyLink(recommendation)}
-                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center justify-center gap-2"
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-white border border-[#D4DAD0] text-[#5F7252] hover:bg-[#F8F6EE] flex items-center justify-center gap-2"
                     >
                       {copyFeedback[recommendation.id] ? (
                         <>
-                          <Copy className="w-3.5 h-3.5" />
-                          {copyFeedback[recommendation.id]}
+                          <Copy className="w-3.5 h-3.5 text-[#5F7252]" />
+                          <span className="text-[#5F7252]">Copied!</span>
                         </>
                       ) : (
                         <>
                           <Share2 className="w-3.5 h-3.5" />
-                          Copy Link
+                          Share Link
                         </>
                       )}
                     </button>
                     <button
                       onClick={() => handleDelete(recommendation)}
-                      className="p-2 rounded-lg text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+                      className="p-2 rounded-lg text-[#96A888] hover:text-red-600 hover:bg-red-50 transition-colors"
                       title="Delete recommendation"
                     >
                       <Trash2 className="w-4 h-4" />
