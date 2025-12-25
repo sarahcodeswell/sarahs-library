@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User, Home, Share2 } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function AboutPage({ onNavigate }) {
