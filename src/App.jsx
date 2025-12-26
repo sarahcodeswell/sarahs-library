@@ -483,29 +483,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
           </div>
           <div className="flex items-center gap-2">
-            {/* Save Bookmark Icon */}
-            {user ? (
-              <button
-                onClick={handleAddToQueue}
-                disabled={addingToQueue}
-                className={`p-2 rounded transition-colors touch-manipulation ${
-                  isInQueue ? 'text-[#5F7252]' : 
-                  addingToQueue ? 'text-[#5F7252] bg-[#F8F6EE]' : 
-                  'text-[#96A888] active:text-[#5F7252] active:bg-[#F8F6EE]'
-                }`}
-                title={isInQueue ? 'Remove from reading queue' : 'Save to reading queue'}
-              >
-                <Bookmark className={`w-4 h-4 ${isInQueue ? 'fill-current' : ''}`} />
-              </button>
-            ) : (
-              <button
-                onClick={onShowAuthModal}
-                className="p-2 rounded text-[#96A888] active:text-[#5F7252] active:bg-[#F8F6EE] transition-colors touch-manipulation"
-                title="Sign in to save books for later"
-              >
-                <Bookmark className="w-4 h-4" />
-              </button>
-            )}
             {/* Expand/Collapse Button */}
             <button
               onClick={() => {
