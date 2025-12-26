@@ -2019,7 +2019,7 @@ Find similar books from beyond my library that match this taste profile.
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter' || e.shiftKey) return;
                   e.preventDefault();
-                  handleSendMessage();
+                  handleClearImport();
                 }}
                 placeholder="Describe your perfect next read..."
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
@@ -2027,7 +2027,7 @@ Find similar books from beyond my library that match this taste profile.
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
               />
               <button
-                onClick={handleSendMessage}
+                onClick={handleClearImport}
                 disabled={isLoading || !inputValue.trim()}
                 className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
                 aria-label="Send message"
