@@ -5,6 +5,7 @@ import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
+import { buildOptimizedLibraryContext, shouldPrioritizeWorldSearch } from './lib/semanticSearch';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1431,9 +1432,9 @@ Find similar books from beyond my library that match this taste profile.
           content: m.text
         }));
 
-      // Build library shortlist for hybrid recommendations
-      const libraryShortlist = String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '');
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 15).join('\n');
+      // Build optimized library shortlist using semantic search
+      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, 10);
+      const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
@@ -1441,7 +1442,7 @@ Find similar books from beyond my library that match this taste profile.
 
       // Unified hybrid content - always provide library context
       const parts = [];
-      parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${limitedLibraryShortlist}`);
+      parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
       
       if (importedLibrary?.items?.length) {
         const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
