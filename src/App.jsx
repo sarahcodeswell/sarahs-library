@@ -811,8 +811,11 @@ const getAmazonKindleUrl = (title, author) => {
 };
 
 const getLibbyUrl = (title, author) => {
+  // Libby doesn't have a reliable deep-link search URL
+  // Instead, open the main app and let users search manually
+  // Alternative: use OverDrive search which Libby is built on
   const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://libbyapp.com/search/${searchQuery}/all/page-1`;
+  return `https://www.overdrive.com/search?q=${searchQuery}`;
 };
 
 const getLibroFmUrl = (title, author) => {
