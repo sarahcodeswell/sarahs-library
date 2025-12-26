@@ -1471,8 +1471,9 @@ Find similar books from beyond my library that match this taste profile.
       parts.push(`USER REQUEST:\n${userMessage}`);
       const userContent = parts.join('\n\n');
 
-      // Update progress: searching world
+      // Update progress: searching world, then finding matches
       setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 2000);
+      setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 3000);
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -1975,7 +1976,7 @@ Find similar books from beyond my library that match this taste profile.
                     </div>
 
                     {/* World Search */}
-                    {(loadingProgress.step === 'world' || loadingProgress.step === 'preparing') && (
+                    {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
                       <div className="flex items-center gap-2">
                         {loadingProgress.step === 'world' ? (
                           <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
@@ -1988,6 +1989,24 @@ Find similar books from beyond my library that match this taste profile.
                         )}
                         <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
                           Searching the world's library
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Finding Best Matches */}
+                    {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                      <div className="flex items-center gap-2">
+                        {loadingProgress.step === 'matching' ? (
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                          Finding your best matches
                         </span>
                       </div>
                     )}
