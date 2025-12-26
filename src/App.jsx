@@ -786,13 +786,11 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
 Your taste centers on: women's stories, emotional truth, identity, spirituality, and justice.
 
 RECOMMENDATION STRATEGY:
-- You have access to MY LIBRARY SHORTLIST (30 books I personally love that match the request)
-- If 2-3 books from my library are EXCELLENT matches (8/10 or better fit), recommend those
-- If my library has only 1 good match, include it alongside 2 books from the wider world
-- For specific requests (new releases, bestsellers, specific genres I don't cover, trending topics), prioritize books from the broader world of literature
-- For vague requests ("something good", "surprise me"), feel free to mix library and world recommendations
-- Always prioritize BEST FIT over source - the user wants the perfect book, not necessarily from my library
-- When recommending from the world: Prioritize Goodreads 4.0+, award winners, Indie Next picks, beloved classics, staff favorites
+- You have MY LIBRARY SHORTLIST (15 books I personally love that match the request)
+- Recommend from my library when there are excellent matches
+- For specific requests (new releases, bestsellers, niche genres), prioritize world recommendations
+- Always prioritize BEST FIT - the user wants the perfect book
+- World recommendations: Prioritize Goodreads 4.0+, award winners, Indie Next picks, classics
 
 ${responseFormat}
 ${qualityGuidelines}${preferenceContext}${queueContext}
@@ -1423,7 +1421,7 @@ Find similar books from beyond my library that match this taste profile.
       inFlightRequestRef.current = controller;
       timeoutId = setTimeout(() => {
         try { controller.abort(); } catch (e) { void e; }
-      }, 25000);
+      }, 15000);
 
       const chatHistory = messages
         .filter(m => m.isUser !== undefined)
@@ -1435,7 +1433,7 @@ Find similar books from beyond my library that match this taste profile.
 
       // Build library shortlist for hybrid recommendations
       const libraryShortlist = String(buildLibraryContext(userMessage, bookCatalog, readingQueue) || '');
-      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 30).join('\n');
+      const limitedLibraryShortlist = libraryShortlist.split('\n').slice(0, 15).join('\n');
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
@@ -1462,7 +1460,7 @@ Find similar books from beyond my library that match this taste profile.
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-3-5-haiku-20241022',
           max_tokens: 600,
           system: systemPrompt,
           messages: [
@@ -1517,7 +1515,7 @@ Find similar books from beyond my library that match this taste profile.
       const isAbort = error?.name === 'AbortError';
       if (isAbort) {
         setMessages(prev => [...prev, {
-          text: "That took a little too long on my end. Want to try again (or ask for something shorter)?",
+          text: "That took longer than expected. Please try again - I'll be faster this time!",
           isUser: false
         }]);
       } else {
