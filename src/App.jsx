@@ -623,8 +623,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                   });
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
+                title="Opens Libby app - search for this book in your library"
               >
-                📖 Library (Free)
+                📖 Check Your Library
               </a>
               
               {/* Bookshop - Physical */}
@@ -811,11 +812,9 @@ const getAmazonKindleUrl = (title, author) => {
 };
 
 const getLibbyUrl = (title, author) => {
-  // Libby doesn't have a reliable deep-link search URL
-  // Instead, open the main app and let users search manually
-  // Alternative: use OverDrive search which Libby is built on
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://www.overdrive.com/search?q=${searchQuery}`;
+  // Libby app deep link - opens app if installed, otherwise directs to app store
+  // Note: This doesn't search automatically, but opens the app for manual search
+  return `https://libbyapp.com/library`;
 };
 
 const getLibroFmUrl = (title, author) => {
