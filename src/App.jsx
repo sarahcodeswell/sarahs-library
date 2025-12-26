@@ -2041,7 +2041,8 @@ Find similar books from beyond my library that match this taste profile.
                       });
                     } else {
                       setSelectedThemes(prev => [...prev, key]);
-                      setInputValue(`Show me options in ${info.label.toLowerCase()}.`);
+                      const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                      setInputValue(themeText);
                       
                       // Track theme selection
                       track('theme_filter_selected', {
@@ -2049,6 +2050,16 @@ Find similar books from beyond my library that match this taste profile.
                         theme_label: info.label,
                         chat_mode: chatMode
                       });
+                      
+                      // Auto-resize textarea after setting value
+                      setTimeout(() => {
+                        const textarea = document.querySelector('textarea[placeholder="Describe your perfect next read..."]');
+                        if (textarea) {
+                          textarea.style.height = '24px';
+                          const newHeight = Math.min(textarea.scrollHeight, 200);
+                          textarea.style.height = newHeight + 'px';
+                        }
+                      }, 0);
                     }
                   }}
                   className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
