@@ -1452,7 +1452,7 @@ Find similar books from beyond my library that match this taste profile.
     }
   };
 
-  const handleClearImport = () => {
+  const handleClearImport = async () => {
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage = inputValue.trim();
@@ -1462,7 +1462,7 @@ Find similar books from beyond my library that match this taste profile.
     lastActivityRef.current = Date.now(); // Track activity
 
     // Save user message to database
-    saveChatMessage(userMessage, true);
+    await saveChatMessage(userMessage, true);
 
     track('chat_message', {
       mode: chatMode,
@@ -1571,7 +1571,7 @@ Find similar books from beyond my library that match this taste profile.
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
       
       // Save AI response to database
-      saveChatMessage(assistantMessage, false);
+      await saveChatMessage(assistantMessage, false);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
       if (isAbort) {
