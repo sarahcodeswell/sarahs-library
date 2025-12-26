@@ -426,4 +426,71 @@ export const db = {
       return { data: null, error: { message: err.message || 'Fetch failed' } };
     }
   },
+
+  // Chat History operations
+  getChatHistory: async (userId, sessionId = null) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      let query = supabase
+        .from('chat_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      
+      if (sessionId) {
+        query = query.eq('session_id', sessionId);
+      }
+      
+      const { data, error } = await query;
+      return { data, error };
+    } catch (err) {
+      console.error('getChatHistory: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
+  saveChatMessage: async (userId, sessionId, messageText, isUserMessage, chatMode) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('chat_history')
+        .insert({
+          user_id: userId,
+          session_id: sessionId,
+          message_text: messageText,
+          is_user_message: isUserMessage,
+          chat_mode: chatMode
+        })
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('saveChatMessage: Exception', err);
+      return { data: null, error: { message: err.message || 'Save failed' } };
+    }
+  },
+
+  deleteChatHistory: async (userId, sessionId = null) => {
+    if (!supabase) return { error: null };
+    
+    try {
+      let query = supabase
+        .from('chat_history')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (sessionId) {
+        query = query.eq('session_id', sessionId);
+      }
+      
+      const { error } = await query;
+      return { error };
+    } catch (err) {
+      console.error('deleteChatHistory: Exception', err);
+      return { error: { message: err.message || 'Delete failed' } };
+    }
+  },
 };

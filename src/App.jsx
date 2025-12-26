@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { db } from './lib/supabase';
+import { extractThemes } from './lib/themeExtractor';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1906,9 +1907,10 @@ Find similar books from beyond my library that match this taste profile.
                       setHasEngaged(true);
                       setLikedBooks(recommendations.map(r => ({ title: r.title, author: r.author })));
                       // Build taste profile
+                      const newThemes = extractThemes(recommendations);
                       setTasteProfile(prev => ({
                         likedBooks: [...prev.likedBooks, ...recommendations.map(r => ({ title: r.title, author: r.author }))],
-                        likedThemes: prev.likedThemes, // TODO: extract from recommendations
+                        likedThemes: [...new Set([...prev.likedThemes, ...newThemes])],
                         likedAuthors: [...new Set([...prev.likedAuthors, ...recommendations.map(r => r.author).filter(Boolean)])]
                       }));
                     }
