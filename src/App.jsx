@@ -1007,6 +1007,7 @@ export default function App() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ step: '', progress: 0 });
   const chatEndRef = useRef(null);
   const inFlightRequestRef = useRef(null);
   const importFileInputRef = useRef(null);
@@ -1409,6 +1410,7 @@ Find similar books from beyond my library that match this taste profile.
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
+    setLoadingProgress({ step: 'library', progress: 0 });
     lastActivityRef.current = Date.now(); // Track activity
 
     track('chat_message', {
@@ -1440,6 +1442,10 @@ Find similar books from beyond my library that match this taste profile.
       const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, 10);
       const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
       const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
+      
+      // Update progress: library checked
+      setTimeout(() => setLoadingProgress({ step: 'library', progress: 100 }), 500);
+      setTimeout(() => setLoadingProgress({ step: 'world', progress: 0 }), 1000);
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
@@ -1465,6 +1471,9 @@ Find similar books from beyond my library that match this taste profile.
       parts.push(`USER REQUEST:\n${userMessage}`);
       const userContent = parts.join('\n\n');
 
+      // Update progress: searching world
+      setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 2000);
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1519,6 +1528,9 @@ Find similar books from beyond my library that match this taste profile.
         return;
       }
 
+      // Update progress: preparing recommendations
+      setLoadingProgress({ step: 'preparing', progress: 100 });
+      
       const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
     } catch (error) {
@@ -1538,6 +1550,7 @@ Find similar books from beyond my library that match this taste profile.
       if (timeoutId) clearTimeout(timeoutId);
       inFlightRequestRef.current = null;
       setIsLoading(false);
+      setLoadingProgress({ step: '', progress: 0 });
     }
   };
 
@@ -1943,12 +1956,51 @@ Find similar books from beyond my library that match this taste profile.
                   alt="Sarah"
                   className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
                 />
-                <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-3 border border-[#E8EBE4]">
-                  <div className="text-xs text-[#7A8F6C] font-light mb-1">Curating your picks…</div>
-                  <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-[#96A888] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
+                  <div className="space-y-2.5">
+                    {/* Library Check */}
+                    <div className="flex items-center gap-2">
+                      {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
+                        <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                        Checking my library
+                      </span>
+                    </div>
+
+                    {/* World Search */}
+                    {(loadingProgress.step === 'world' || loadingProgress.step === 'preparing') && (
+                      <div className="flex items-center gap-2">
+                        {loadingProgress.step === 'world' ? (
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                          Searching the world's library
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Preparing */}
+                    {loadingProgress.step === 'preparing' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs text-[#5F7252] font-medium">
+                          Preparing your picks
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
