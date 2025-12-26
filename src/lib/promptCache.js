@@ -30,10 +30,7 @@ RECOMMENDATION STRATEGY:
 - Always prioritize BEST FIT - the user wants the perfect book
 - World recommendations: Prioritize Goodreads 4.0+, award winners, Indie Next picks, classics
 
-CRITICAL EXCLUSION RULES:
-- If the user mentions they've "read all" or "listened to all" books by a specific author, DO NOT recommend ANY books by that author
-- If the user says they "enjoy" or "like" an author but have read all their books, recommend SIMILAR authors instead
-- Pay close attention to phrases like "but have read/listened to all their books" - this means EXCLUDE that author completely`,
+IMPORTANT: When the user mentions authors they've already read (e.g., "I enjoy Jack Carr but have read all his books"), recommend books by DIFFERENT authors with similar styles. Do not recommend books by the mentioned authors.`,
     cache_control: { type: 'ephemeral' }
   };
 
