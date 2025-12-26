@@ -22,6 +22,8 @@ const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsP
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
+const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks'; // TODO: Replace with actual affiliate ID when available
+const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20'; // Uses Amazon Associates
 const CURRENT_YEAR = new Date().getFullYear();
 
 const STOP_WORDS = new Set([
@@ -607,7 +609,25 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
           
           {showBuyOptions && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[160px]">
+              {/* Libby - Free Library */}
+              <a
+                href={getLibbyUrl(rec.title, displayAuthor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('libby_link_click', { 
+                    source: 'recommendation_card',
+                    book_title: rec.title 
+                  });
+                }}
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
+              >
+                📖 Library (Free)
+              </a>
+              
+              {/* Bookshop - Physical */}
               <a
                 href={getBookshopSearchUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -619,24 +639,73 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title 
                   });
                 }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
-                Physical Book
+                📚 Physical Book
               </a>
+              
+              {/* Kindle - iOS browser-forced */}
               <a
                 href={getAmazonKindleUrl(rec.title, displayAuthor)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
+                  
+                  const url = getAmazonKindleUrl(rec.title, displayAuthor);
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                  
+                  // Force browser on iOS to preserve affiliate attribution
+                  if (isIOS) {
+                    window.location.href = url;
+                  } else {
+                    window.open(url, '_blank');
+                  }
+                  
                   track('kindle_link_click', { 
+                    source: 'recommendation_card',
+                    book_title: rec.title,
+                    is_ios: isIOS
+                  });
+                }}
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
+              >
+                📱 Kindle Edition
+              </a>
+              
+              {/* Libro.fm - Audiobook */}
+              <a
+                href={getLibroFmUrl(rec.title, displayAuthor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('librofm_link_click', { 
                     source: 'recommendation_card',
                     book_title: rec.title 
                   });
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
-                Kindle Edition
+                🎧 Audiobook (Libro.fm)
+              </a>
+              
+              {/* Audible - Audiobook */}
+              <a
+                href={getAudibleUrl(rec.title, displayAuthor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  track('audible_link_click', { 
+                    source: 'recommendation_card',
+                    book_title: rec.title 
+                  });
+                }}
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
+              >
+                🎧 Audiobook (Audible)
               </a>
             </div>
           )}
@@ -739,6 +808,21 @@ const getBookshopSearchUrl = (title, author) => {
 const getAmazonKindleUrl = (title, author) => {
   const searchQuery = encodeURIComponent(`${title} ${author || ''} kindle`);
   return `https://www.amazon.com/s?k=${searchQuery}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`;
+};
+
+const getLibbyUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  return `https://libbyapp.com/search/${searchQuery}/all/page-1`;
+};
+
+const getLibroFmUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  return `https://libro.fm/search?q=${searchQuery}&affiliate=${LIBRO_FM_AFFILIATE_ID}`;
+};
+
+const getAudibleUrl = (title, author) => {
+  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
+  return `https://www.audible.com/search?keywords=${searchQuery}&tag=${AUDIBLE_AFFILIATE_TAG}`;
 };
 
 const getGoodreadsSearchUrl = (title, author) => {
