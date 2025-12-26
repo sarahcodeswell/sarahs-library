@@ -1408,9 +1408,6 @@ Find similar books from beyond my library that match this taste profile.
     setIsLoading(true);
     lastActivityRef.current = Date.now(); // Track activity
 
-    // Save user message to database
-    await saveChatMessage(userMessage, true);
-
     track('chat_message', {
       mode: chatMode,
       message_length: userMessage.length
@@ -1516,9 +1513,6 @@ Find similar books from beyond my library that match this taste profile.
 
       const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
-      
-      // Save AI response to database
-      await saveChatMessage(assistantMessage, false);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
       if (isAbort) {
