@@ -595,19 +595,19 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 });
               }
             }}
-            className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+            className="w-full py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Buy
+            <ShoppingBag className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="whitespace-nowrap">Buy</span>
             {showBuyOptions ? (
-              <ChevronUp className="w-3 h-3" />
+              <ChevronUp className="w-3 h-3 flex-shrink-0" />
             ) : (
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
             )}
           </button>
           
           {showBuyOptions && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
               <a
                 href={getBookshopSearchUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -653,10 +653,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               book_author: displayAuthor
             });
           }}
-          className="py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+          className="py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
         >
-          <Star className="w-3.5 h-3.5" />
-          Read Reviews
+          <Star className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="whitespace-nowrap">Reviews</span>
         </button>
       </div>
     </div>
