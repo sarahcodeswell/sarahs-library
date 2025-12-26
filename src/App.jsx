@@ -1002,7 +1002,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll help you find your next read from my curated collection—or from the world's library.\n\nTell me what you're in the mood for.", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI recommend books from my personal collection—or help you discover something new from the world's library.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1140,7 +1140,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll help you find your next read from my curated collection—or from the world's library.\n\nTell me what you're in the mood for.",
+      text: "Hi, I'm Sarah!\n\nI recommend books from my personal collection—or help you discover something new from the world's library.",
       isUser: false
     }];
   };
@@ -1987,7 +1987,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="Romance? Mystery? Cozy reads?"
+                placeholder="What are you in the mood for?"
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
