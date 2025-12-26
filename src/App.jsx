@@ -1156,9 +1156,32 @@ export default function App() {
     return { shared, total: importedLibrary.items.length };
   }, [importedLibrary]);
 
-  // Session tracking
+  // Performance measurement and session tracking
   useEffect(() => {
     const sessionStart = Date.now();
+    
+    // Measure initial load performance
+    if (window.performance && window.performance.timing) {
+      const timing = window.performance.timing;
+      const loadTime = timing.loadEventEnd - timing.navigationStart;
+      const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
+      const firstPaint = timing.responseEnd - timing.navigationStart;
+      
+      // Track performance metrics
+      track('performance_metrics', {
+        load_time_ms: loadTime,
+        dom_ready_ms: domReady,
+        first_paint_ms: firstPaint,
+        page: 'home'
+      });
+      
+      // Log to console for debugging
+      console.log('📊 Performance Metrics:', {
+        'Total Load Time': `${loadTime}ms`,
+        'DOM Ready': `${domReady}ms`,
+        'First Paint': `${firstPaint}ms`
+      });
+    }
     
     // Track session start
     track('session_start', {
