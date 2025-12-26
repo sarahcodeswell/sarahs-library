@@ -6,6 +6,7 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
 import { buildOptimizedLibraryContext, shouldPrioritizeWorldSearch } from './lib/semanticSearch';
+import { buildCachedSystemPrompt } from './lib/promptCache';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1028,8 +1029,11 @@ export default function App() {
   const [showNavMenu, setShowNavMenu] = useState(false);
   const navMenuRef = useRef(null);
 
-  // Memoize expensive computations
-  const systemPrompt = useMemo(() => getSystemPrompt(readingQueue), [readingQueue]);
+  // Memoize expensive computations - use structured cacheable system prompt
+  const systemPrompt = useMemo(() => buildCachedSystemPrompt({
+    readingQueue,
+    currentYear: CURRENT_YEAR
+  }), [readingQueue]);
 
   // Memoize imported library overlap calculation
   const importedOverlap = useMemo(() => {
