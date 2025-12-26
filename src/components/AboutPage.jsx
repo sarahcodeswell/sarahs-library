@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User, Home, Share2 } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User, Home, Share2, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function AboutPage({ onNavigate }) {
@@ -200,7 +200,8 @@ export default function AboutPage({ onNavigate }) {
         {/* Curator Themes - Moved after collection */}
         <div id="curator-themes" className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
-            📝 Curator Themes
+            <BookText className="w-5 h-5 text-[#5F7252]" />
+            Curator Themes
           </h2>
           <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
             A few common themes you'll see in my collection:
@@ -210,7 +211,8 @@ export default function AboutPage({ onNavigate }) {
             {/* Women's Interior Lives */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                💗 Women's Interior Lives and Untold Stories
+                <BookHeart className="w-5 h-5 text-[#5F7252]" />
+                Women's Interior Lives and Untold Stories
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
                 This collection is dominated by female authors and female protagonists—not just in quantity, but in type. The reader gravitates toward books that excavate women's hidden contributions (The Personal Librarian, First Ladies), women's survival under impossible conditions (Kristin Hannah's catalog), and women navigating systems that weren't built for them (Lessons in Chemistry, The Female Persuasion). Five Kristin Hannah novels, four Paula McLain, three Marie Benedict—authors who specialize in giving voice to women history overlooked.
@@ -220,7 +222,8 @@ export default function AboutPage({ onNavigate }) {
             {/* Emotional Truth */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                📖 Reading for Emotional Truth, Not Escapism
+                <Heart className="w-5 h-5 text-[#5F7252]" />
+                Reading for Emotional Truth, Not Escapism
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
                 Even the "lighter" genres here aren't light. The thrillers are psychological (Gone Girl, Verity) rather than procedural. The romances are laced with grief, suicide, and identity crisis (The Midnight Library, A Man Called Ove). These are books that cost something to read—that leave the reader changed rather than simply entertained.
@@ -230,7 +233,8 @@ export default function AboutPage({ onNavigate }) {
             {/* Identity & Belonging */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                🔍 Grappling with Questions of Identity and Belonging
+                <Users className="w-5 h-5 text-[#5F7252]" />
+                Grappling with Questions of Identity and Belonging
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
                 The collection reveals deep interest in who we are versus who we present ourselves to be: racial identity (Vanishing Half, The Personal Librarian), class performance (Such a Fun Age), gender identity (This Is How It Always Is, The Danish Girl), and cultural identity across diaspora (Homegoing, Vanishing Half). A persistent draw toward characters navigating the gap between their authentic selves and the selves the world expects.
@@ -240,7 +244,8 @@ export default function AboutPage({ onNavigate }) {
             {/* Spiritual Seeker */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                ✨ A Spiritual Seeker with Eclectic Tastes
+                <Sparkles className="w-5 h-5 text-[#5F7252]" />
+                A Spiritual Seeker with Eclectic Tastes
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
                 The spirituality shelf is notably pluralistic: multiple Dalai Lama books, Thich Nhat Hanh, Pema Chödrön (Buddhism), Saraswati (Theravada), but also Ramakrishna (Hindu), Brené Brown (secular vulnerability research), and Baltasar Gracián (17th-century Jesuit). Not looking for one answer—collecting wisdom across traditions. The presence of "no-self" texts and Brené Brown's work on authenticity suggests warring through the tension between ego dissolution and showing up vulnerably as oneself.
@@ -250,7 +255,8 @@ export default function AboutPage({ onNavigate }) {
             {/* Justice */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                ⚖️ A Deep Care for Justice—Especially Invisible Injustices
+                <Scale className="w-5 h-5 text-[#5F7252]" />
+                A Deep Care for Justice—Especially Invisible Injustices
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
                 The criminal justice cluster is telling: Just Mercy, The Sun Does Shine, An American Marriage, The Master Plan. Beyond that, a draw toward systems that fail people quietly: orphan trains, the treatment of Vietnam nurses, the erasure of women scientists, Guatemala's suppressed history. Particular interest in how power operates invisibly and how ordinary people become complicit.
@@ -260,7 +266,8 @@ export default function AboutPage({ onNavigate }) {
             {/* All-Time Favorites */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                ⭐ All-Time Favorites
+                <Star className="w-5 h-5 text-[#5F7252]" />
+                All-Time Favorites
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
                 Top recommendations that have shaped how I see the world:
