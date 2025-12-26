@@ -625,7 +625,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
           
           {showBuyOptions && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
+            <div className="absolute top-full left-0 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
               <a
                 href={getBookshopSearchUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -699,7 +699,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
           
           {showListenOptions && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
+            <div className="absolute top-full left-0 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
               <a
                 href={getLibroFmUrl(rec.title, displayAuthor)}
                 target="_blank"
