@@ -637,7 +637,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
-                📚 Physical Book
+                📚 Local bookstore
               </a>
               <a
                 href={getAmazonKindleUrl(rec.title, displayAuthor)}
@@ -664,7 +664,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
-                📱 Kindle Edition
+                📱 Kindle
               </a>
             </div>
           )}
