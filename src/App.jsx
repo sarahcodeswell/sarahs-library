@@ -1067,33 +1067,6 @@ export default function App() {
     return { shared, total: importedLibrary.items.length };
   }, [importedLibrary]);
 
-  // Load chat history on mount (if user is signed in)
-  useEffect(() => {
-    if (!user || hasHydratedChatRef.current) return;
-
-    const loadChatHistory = async () => {
-      try {
-        const { data, error } = await db.getChatHistory(user.id, sessionIdRef.current);
-        
-        if (!error && data && data.length > 0) {
-          const historicalMessages = data.map(msg => ({
-            text: msg.message_text,
-            isUser: msg.is_user_message
-          }));
-          
-          // Prepend initial message if not already there
-          const initialMessage = getInitialMessages()[0];
-          setMessages([initialMessage, ...historicalMessages]);
-          hasHydratedChatRef.current = true;
-        }
-      } catch (err) {
-        console.error('Failed to load chat history:', err);
-      }
-    };
-
-    loadChatHistory();
-  }, [user]);
-
   // Session tracking
   useEffect(() => {
     const sessionStart = Date.now();
