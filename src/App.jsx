@@ -380,6 +380,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [showBuyOptions, setShowBuyOptions] = useState(false);
+  const [showListenOptions, setShowListenOptions] = useState(false);
   const [expanded, setExpanded] = useState(false);
   
   // Look up full book details from local catalog
@@ -577,11 +578,47 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               </p>
             </div>
           )}
+          
+          {/* Reviews Link */}
+          <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+            <a
+              href={rec.goodreadsUrl || getGoodreadsSearchUrl(rec.title, displayAuthor)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.stopPropagation();
+                track('read_reviews_clicked', { 
+                  book_title: rec.title,
+                  book_author: displayAuthor
+                });
+              }}
+              className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+            >
+              <Star className="w-3.5 h-3.5" />
+              Read Reviews on Goodreads
+            </a>
+          </div>
         </div>
       )}
 
-      {/* Action Buttons - Always Visible */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Action Buttons - World-Class Acquisition UX */}
+      <div className="grid grid-cols-4 gap-2">
+        {/* Library Button */}
+        <button
+          onClick={() => {
+            window.open(getLibbyUrl(rec.title, displayAuthor), '_blank');
+            track('libby_link_click', { 
+              source: 'recommendation_card',
+              book_title: rec.title 
+            });
+          }}
+          className="py-2 px-2 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+          title="Borrow free from your library"
+        >
+          <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="hidden sm:inline whitespace-nowrap">Library</span>
+        </button>
+
         {/* Buy Dropdown */}
         <div className="relative">
           <button
@@ -589,7 +626,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               const newState = !showBuyOptions;
               setShowBuyOptions(newState);
               
-              // Track buy dropdown open
               if (newState) {
                 track('buy_dropdown_opened', {
                   book_title: rec.title,
@@ -597,10 +633,11 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 });
               }
             }}
-            className="w-full py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+            className="w-full py-2 px-2 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+            title="Purchase physical or digital"
           >
             <ShoppingBag className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="whitespace-nowrap">Buy</span>
+            <span className="hidden sm:inline whitespace-nowrap">Buy</span>
             {showBuyOptions ? (
               <ChevronUp className="w-3 h-3 flex-shrink-0" />
             ) : (
@@ -609,26 +646,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </button>
           
           {showBuyOptions && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[160px]">
-              {/* Libby - Free Library */}
-              <a
-                href={getLibbyUrl(rec.title, displayAuthor)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  track('libby_link_click', { 
-                    source: 'recommendation_card',
-                    book_title: rec.title 
-                  });
-                }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
-                title="Opens Libby app - search for this book in your library"
-              >
-                📖 Check Your Library
-              </a>
-              
-              {/* Bookshop - Physical */}
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
               <a
                 href={getBookshopSearchUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -640,12 +658,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title 
                   });
                 }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
                 📚 Physical Book
               </a>
-              
-              {/* Kindle - iOS browser-forced */}
               <a
                 href={getAmazonKindleUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -657,7 +673,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                   const url = getAmazonKindleUrl(rec.title, displayAuthor);
                   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                   
-                  // Force browser on iOS to preserve affiliate attribution
                   if (isIOS) {
                     window.location.href = url;
                   } else {
@@ -674,8 +689,38 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               >
                 📱 Kindle Edition
               </a>
+            </div>
+          )}
+        </div>
+
+        {/* Listen Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              const newState = !showListenOptions;
+              setShowListenOptions(newState);
               
-              {/* Libro.fm - Audiobook */}
+              if (newState) {
+                track('listen_dropdown_opened', {
+                  book_title: rec.title,
+                  chat_mode: chatMode
+                });
+              }
+            }}
+            className="w-full py-2 px-2 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+            title="Listen as audiobook"
+          >
+            <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap">Listen</span>
+            {showListenOptions ? (
+              <ChevronUp className="w-3 h-3 flex-shrink-0" />
+            ) : (
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
+            )}
+          </button>
+          
+          {showListenOptions && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg z-10 w-max min-w-[140px]">
               <a
                 href={getLibroFmUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -687,12 +732,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title 
                   });
                 }}
-                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
+                className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
-                🎧 Audiobook (Libro.fm)
+                🎧 Libro.fm
               </a>
-              
-              {/* Audible - Audiobook */}
               <a
                 href={getAudibleUrl(rec.title, displayAuthor)}
                 target="_blank"
@@ -706,27 +749,25 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
-                🎧 Audiobook (Audible)
+                🎧 Audible
               </a>
             </div>
           )}
         </div>
 
-        {/* Read Reviews Button */}
+        {/* Save Button (Bookmark) */}
         <button
-          onClick={() => {
-            const reviewUrl = rec.goodreadsUrl || getGoodreadsSearchUrl(rec.title, displayAuthor);
-            window.open(reviewUrl, '_blank');
-            
-            track('read_reviews_clicked', { 
-              book_title: rec.title,
-              book_author: displayAuthor
-            });
-          }}
-          className="py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
+          onClick={handleAddToQueue}
+          disabled={addingToQueue}
+          className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1 ${
+            isInQueue 
+              ? 'bg-[#5F7252] border-[#5F7252] text-white' 
+              : 'bg-white border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2]'
+          }`}
+          title={isInQueue ? 'Saved to reading queue' : 'Save to reading queue'}
         >
-          <Star className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="whitespace-nowrap">Reviews</span>
+          <Bookmark className={`w-3.5 h-3.5 flex-shrink-0 ${isInQueue ? 'fill-current' : ''}`} />
+          <span className="hidden sm:inline whitespace-nowrap">Save</span>
         </button>
       </div>
     </div>
