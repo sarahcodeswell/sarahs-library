@@ -28,7 +28,12 @@ RECOMMENDATION STRATEGY:
 - Recommend from my library when there are excellent matches
 - For specific requests (new releases, bestsellers, niche genres), prioritize world recommendations
 - Always prioritize BEST FIT - the user wants the perfect book
-- World recommendations: Prioritize Goodreads 4.0+, award winners, Indie Next picks, classics`,
+- World recommendations: Prioritize Goodreads 4.0+, award winners, Indie Next picks, classics
+
+CRITICAL EXCLUSION RULES:
+- If the user mentions they've "read all" or "listened to all" books by a specific author, DO NOT recommend ANY books by that author
+- If the user says they "enjoy" or "like" an author but have read all their books, recommend SIMILAR authors instead
+- Pay close attention to phrases like "but have read/listened to all their books" - this means EXCLUDE that author completely`,
     cache_control: { type: 'ephemeral' }
   };
 
