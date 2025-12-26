@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -687,7 +687,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             className="w-full py-2 px-2 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
             title="Listen as audiobook"
           >
-            <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <Headphones className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="hidden sm:inline whitespace-nowrap">Listen</span>
             {showListenOptions ? (
               <ChevronUp className="w-3 h-3 flex-shrink-0" />
@@ -734,14 +734,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
         {/* Save Button (Bookmark) */}
         <button
-          onClick={handleAddToQueue}
+          onClick={user ? handleAddToQueue : onShowAuthModal}
           disabled={addingToQueue}
           className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1 ${
             isInQueue 
               ? 'bg-[#5F7252] border-[#5F7252] text-white' 
               : 'bg-white border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2]'
           }`}
-          title={isInQueue ? 'Saved to reading queue' : 'Save to reading queue'}
+          title={user ? (isInQueue ? 'Saved to reading queue' : 'Save to reading queue') : 'Sign in to save books'}
         >
           <Bookmark className={`w-3.5 h-3.5 flex-shrink-0 ${isInQueue ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline whitespace-nowrap">Save</span>
