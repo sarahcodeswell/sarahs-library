@@ -8,7 +8,7 @@ import { extractThemes } from './lib/themeExtractor';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useUser, useReadingQueue, UserBooksProvider } from './contexts';
+import { useUser, useReadingQueue } from './contexts';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
@@ -1348,26 +1348,6 @@ Find similar books from beyond my library that match this taste profile.
       });
     return () => { alive = false; };
   }, []);
-
-
-  // Don't reset messages when switching modes - keep the conversation unified
-  // useEffect(() => {
-  //   if (!hasHydratedChatRef.current) return;
-  //   try {
-  //     const raw = window.localStorage.getItem(chatStorageKey);
-  //     const parsed = raw ? JSON.parse(raw) : null;
-  //     const byMode = parsed?.byMode && typeof parsed.byMode === 'object' ? parsed.byMode : {};
-  //     const restored = Array.isArray(byMode?.[chatMode]) ? byMode[chatMode] : null;
-  //     if (restored && restored.length) {
-  //       setMessages(restored);
-  //     } else {
-  //       setMessages(getInitialMessagesForMode(chatMode));
-  //     }
-  //   } catch (e) {
-  //     void e;
-  //     setMessages(getInitialMessagesForMode(chatMode));
-  //   }
-  // }, [chatMode]);
 
   useEffect(() => {
     try {
