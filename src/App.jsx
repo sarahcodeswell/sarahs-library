@@ -1987,7 +1987,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {messages.length > 2 && chatMode === 'library' && (
+          {messages.length > 1 && chatMode === 'library' && (
             <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
