@@ -1023,6 +1023,7 @@ export default function App() {
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
   const lastActivityRef = useRef(Date.now());
+  const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
   // Navigation state
   const [currentPage, setCurrentPage] = useState('home');
@@ -1065,6 +1066,33 @@ export default function App() {
 
     return { shared, total: importedLibrary.items.length };
   }, [importedLibrary]);
+
+  // Load chat history on mount (if user is signed in)
+  useEffect(() => {
+    if (!user || hasHydratedChatRef.current) return;
+
+    const loadChatHistory = async () => {
+      try {
+        const { data, error } = await db.getChatHistory(user.id, sessionIdRef.current);
+        
+        if (!error && data && data.length > 0) {
+          const historicalMessages = data.map(msg => ({
+            text: msg.message_text,
+            isUser: msg.is_user_message
+          }));
+          
+          // Prepend initial message if not already there
+          const initialMessage = getInitialMessages()[0];
+          setMessages([initialMessage, ...historicalMessages]);
+          hasHydratedChatRef.current = true;
+        }
+      } catch (err) {
+        console.error('Failed to load chat history:', err);
+      }
+    };
+
+    loadChatHistory();
+  }, [user]);
 
   // Session tracking
   useEffect(() => {
@@ -1226,6 +1254,10 @@ Find similar books from beyond my library that match this taste profile.
     setInputValue('');
     setHasEngaged(false);
     setLikedBooks([]);
+    
+    // Generate new session ID for new conversation
+    sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    hasHydratedChatRef.current = false;
   };
 
   const handleNewSearch = () => {
@@ -1421,12 +1453,6 @@ Find similar books from beyond my library that match this taste profile.
   };
 
   const handleClearImport = () => {
-    try { window.localStorage.removeItem('imported_goodreads_library_v1'); } catch (e) { void e; }
-    setImportedLibrary(null);
-    setImportError('');
-  };
-
-  const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage = inputValue.trim();
@@ -1434,6 +1460,9 @@ Find similar books from beyond my library that match this taste profile.
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
     lastActivityRef.current = Date.now(); // Track activity
+
+    // Save user message to database
+    saveChatMessage(userMessage, true);
 
     track('chat_message', {
       mode: chatMode,
@@ -1540,6 +1569,9 @@ Find similar books from beyond my library that match this taste profile.
 
       const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
       setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
+      
+      // Save AI response to database
+      saveChatMessage(assistantMessage, false);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
       if (isAbort) {
