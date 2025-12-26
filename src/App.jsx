@@ -597,7 +597,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         </button>
 
         {/* Buy Dropdown */}
-        <div className="relative">
+        <div className="relative" onMouseLeave={() => setShowBuyOptions(false)}>
           <button
             onClick={() => {
               const newState = !showBuyOptions;
@@ -671,7 +671,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         </div>
 
         {/* Listen Dropdown */}
-        <div className="relative">
+        <div className="relative" onMouseLeave={() => setShowListenOptions(false)}>
           <button
             onClick={() => {
               const newState = !showListenOptions;
