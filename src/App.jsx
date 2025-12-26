@@ -1439,14 +1439,19 @@ Find similar books from beyond my library that match this taste profile.
       // Build optimized library shortlist using semantic search
       const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, 10);
       const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
+      const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
 
       const themeFilterText = selectedThemes.length > 0
         ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
         : '';
 
-      // Unified hybrid content - always provide library context
+      // Smart context building - skip library for world-focused queries
       const parts = [];
-      parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
+      
+      // Only include library context if we have good matches and not prioritizing world
+      if (hasLibraryMatches && !prioritizeWorld) {
+        parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
+      }
       
       if (importedLibrary?.items?.length) {
         const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
