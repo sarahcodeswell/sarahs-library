@@ -19,12 +19,14 @@ const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
 const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks'; // TODO: Replace with actual affiliate ID when available
 const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20'; // Uses Amazon Associates
 const CURRENT_YEAR = new Date().getFullYear();
+const ADMIN_EMAIL = 'sarah@darkridge.com'; // Admin access
 
 const STOP_WORDS = new Set([
   'a','an','and','are','as','at','be','but','by','for','from','has','have','i','if','in','into','is','it','its','me','my','of','on','or','our','s','so','that','the','their','them','then','there','these','they','this','to','was','we','were','what','when','where','which','who','why','with','you','your'
@@ -1893,6 +1895,25 @@ Find similar books from beyond my library that match this taste profile.
                       How It Works
                     </button>
                     <div className="border-t border-[#E8EBE4] my-1"></div>
+                    {user?.email === ADMIN_EMAIL && (
+                      <button
+                        onClick={() => {
+                          setCurrentPage('admin');
+                          setShowNavMenu(false);
+                          window.scrollTo(0, 0);
+                          window.history.pushState({}, '', '/admin');
+                          
+                          track('page_navigation', {
+                            from: currentPage,
+                            to: 'admin'
+                          });
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                      >
+                        <Activity className="w-4 h-4" />
+                        Admin Dashboard
+                      </button>
+                    )}
                     <a
                       href="mailto:hello@sarahsbooks.com"
                       className="w-full px-4 py-2.5 text-left text-sm text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
@@ -1999,6 +2020,17 @@ Find similar books from beyond my library that match this taste profile.
               onNavigate={setCurrentPage}
               user={user}
               onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentPage === 'admin' && user?.email === ADMIN_EMAIL && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
+            <AdminDashboard 
+              onNavigate={setCurrentPage}
+              user={user}
             />
           </Suspense>
         </ErrorBoundary>
