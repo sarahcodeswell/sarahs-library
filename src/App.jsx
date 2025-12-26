@@ -1730,6 +1730,7 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('home');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        window.history.pushState({}, '', '/');
                         
                         track('page_navigation', {
                           from: currentPage,
@@ -1746,6 +1747,7 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('my-books');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        window.history.pushState({}, '', '/add-books');
                         
                         track('page_navigation', {
                           from: currentPage,
@@ -1757,7 +1759,6 @@ Find similar books from beyond my library that match this taste profile.
                       <Upload className="w-4 h-4" />
                       Add Books
                     </button>
-                    <div className="border-t border-[#E8EBE4] my-1"></div>
                     {user && (
                       <>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
@@ -1769,6 +1770,7 @@ Find similar books from beyond my library that match this taste profile.
                             setCurrentPage('reading-queue');
                             setShowNavMenu(false);
                             window.scrollTo(0, 0);
+                            window.history.pushState({}, '', '/reading-queue');
                             
                             track('page_navigation', {
                               from: currentPage,
@@ -1785,6 +1787,7 @@ Find similar books from beyond my library that match this taste profile.
                             setCurrentPage('collection');
                             setShowNavMenu(false);
                             window.scrollTo(0, 0);
+                            window.history.pushState({}, '', '/collection');
                             
                             // Track page navigation
                             track('page_navigation', {
@@ -1807,6 +1810,7 @@ Find similar books from beyond my library that match this taste profile.
                             setCurrentPage('recommendations');
                             setShowNavMenu(false);
                             window.scrollTo(0, 0);
+                            window.history.pushState({}, '', '/recommendations');
                             
                             track('page_navigation', {
                               from: currentPage,
@@ -1836,6 +1840,7 @@ Find similar books from beyond my library that match this taste profile.
                         setCurrentPage('about');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
+                        window.history.pushState({}, '', '/how-it-works');
                         
                         track('page_navigation', {
                           from: currentPage,
