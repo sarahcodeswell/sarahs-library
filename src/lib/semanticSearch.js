@@ -74,15 +74,13 @@ export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors
     return [];
   }
   
-  // Get titles to exclude (only books marked as finished)
-  const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+  // Get titles to exclude (ALL books in user's reading queue - finished, want_to_read, reading)
   const excludeTitles = new Set(
-    finishedBooks.map(item => (item.book_title || '').toLowerCase().trim())
+    readingQueue.map(item => (item.book_title || '').toLowerCase().trim())
   );
   
   console.log('[SemanticSearch] searchLibrary called');
   console.log('[SemanticSearch] Reading queue total:', readingQueue.length);
-  console.log('[SemanticSearch] Finished books:', finishedBooks.length);
   console.log('[SemanticSearch] Titles to exclude:', Array.from(excludeTitles).slice(0, 10), '...');
   console.log('[SemanticSearch] Catalog size:', catalog.length);
   

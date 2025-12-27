@@ -391,7 +391,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [showBuyOptions, setShowBuyOptions] = useState(false);
@@ -471,9 +471,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
-      {/* Source Badge */}
+      {/* Source Badge - only show "From My Library" if we had library matches AND book is in catalog */}
       <div className="flex items-center gap-2 mb-3">
-        {catalogBook ? (
+        {catalogBook && hasLibraryMatches !== false ? (
           <span 
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium"
             title="From my personal collection—a book I've read and love!"
@@ -780,7 +780,7 @@ function RecommendationActionPanel({ onShowMore }) {
   );
 }
 
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -816,6 +816,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
           key={idx} 
           rec={rec} 
           chatMode={chatMode}
+          hasLibraryMatches={hasLibraryMatches}
           user={user}
           readingQueue={readingQueue}
           onAddToQueue={onAddToQueue}
@@ -1026,7 +1027,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -1047,6 +1048,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
           <FormattedRecommendations 
             text={message} 
             chatMode={chatMode} 
+            hasLibraryMatches={hasLibraryMatches}
             onActionPanelInteraction={onActionPanelInteraction}
             user={user}
             readingQueue={readingQueue}
@@ -1693,7 +1695,7 @@ Find similar books from beyond my library that match this taste profile.
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
       const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
-      setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
+      setMessages(prev => [...prev, { text: assistantMessage, isUser: false, hasLibraryMatches }]);
     } catch (error) {
       const isAbort = error?.name === 'AbortError';
       if (isAbort) {
@@ -2092,6 +2094,7 @@ Find similar books from beyond my library that match this taste profile.
                 key={idx} 
                 message={msg.text} 
                 isUser={msg.isUser} 
+                hasLibraryMatches={msg.hasLibraryMatches}
                 messageIndex={idx}
                 chatMode={chatMode}
                 onActionPanelInteraction={(action, data, recommendations) => {
