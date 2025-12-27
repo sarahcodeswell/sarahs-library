@@ -1438,10 +1438,15 @@ Find similar books from beyond my library that match this taste profile.
   }, [user, removeFromQueue]);
 
   // Track dismissed recommendations in current session for immediate UI updates
-  const [sessionDismissedTitles, setSessionDismissedTitles] = useState(new Set());
+  const [sessionDismissedTitles, setSessionDismissedTitles] = useState([]);
 
   const handleDismissRecommendation = useCallback(async (rec) => {
     if (!user) return;
+    
+    const normalizedTitle = normalizeTitle(rec.title);
+    
+    // Add to session dismissed titles immediately for UI update
+    setSessionDismissedTitles(prev => [...prev, normalizedTitle]);
     
     const { data, error } = await db.dismissRecommendation(user.id, {
       title: rec.title,
@@ -1450,14 +1455,13 @@ Find similar books from beyond my library that match this taste profile.
     
     if (error) {
       console.error('Failed to dismiss recommendation:', error);
+      // Remove from session dismissed if DB save failed
+      setSessionDismissedTitles(prev => prev.filter(t => t !== normalizedTitle));
       return;
     }
     
     // Update dismissed recommendations list
     setDismissedRecommendations(prev => [...prev, data]);
-    
-    // Add to session dismissed titles for immediate UI filtering
-    setSessionDismissedTitles(prev => new Set([...prev, normalizeTitle(rec.title)]));
   }, [user]);
 
   const handleNewConversation = () => {
