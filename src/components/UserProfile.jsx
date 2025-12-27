@@ -46,18 +46,25 @@ export default function UserProfile({ tasteProfile }) {
     if (!user) return;
     
     try {
-      // Get user books count (collection)
-      const { data: userBooks } = await db.getUserBooks(user.id);
-      
-      // Get reading queue count
+      // Get reading queue data
       const { data: queue } = await db.getReadingQueue(user.id);
+      
+      // Collection = books marked as 'finished' or 'read'
+      const finishedBooks = queue?.filter(item => 
+        item.status === 'finished' || item.status === 'read'
+      ) || [];
+      
+      // Queue = books marked as 'want_to_read' or 'reading'
+      const queueBooks = queue?.filter(item => 
+        item.status === 'want_to_read' || item.status === 'reading'
+      ) || [];
       
       // Get recommendations count
       const { data: recommendations } = await db.getUserRecommendations(user.id);
       
       setStats({
-        collectionCount: userBooks?.length || 0,
-        queueCount: queue?.length || 0,
+        collectionCount: finishedBooks.length,
+        queueCount: queueBooks.length,
         recommendationsCount: recommendations?.length || 0
       });
     } catch (error) {
@@ -181,11 +188,16 @@ export default function UserProfile({ tasteProfile }) {
     setSaveMessage('');
 
     try {
-      const { error } = await db.supabase.auth.updateUser({
+      const { data, error } = await db.supabase.auth.updateUser({
         data: { reading_preferences: readingPreferences }
       });
 
       if (error) throw error;
+
+      // Update the user context with new metadata
+      if (updateUserMetadata && data?.user) {
+        await updateUserMetadata(data.user.user_metadata);
+      }
 
       setSaveMessage('Saved successfully!');
       setTimeout(() => setSaveMessage(''), 3000);
