@@ -58,6 +58,12 @@ export const auth = {
     if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } };
     return supabase.auth.onAuthStateChange(callback);
   },
+
+  updateUser: async (updates) => {
+    if (!supabase) return { data: null, error: { message: 'Auth not configured' } };
+    const { data, error } = await supabase.auth.updateUser(updates);
+    return { data, error };
+  },
 };
 
 // Database helpers

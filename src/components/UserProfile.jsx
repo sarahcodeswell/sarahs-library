@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
-import { db } from '../lib/supabase';
+import { db, supabase, auth } from '../lib/supabase';
 
 export default function UserProfile({ tasteProfile }) {
   const { user, signOut, updateUserMetadata } = useUser();
@@ -113,7 +113,7 @@ export default function UserProfile({ tasteProfile }) {
 
       // Upload to Supabase Storage
       console.log('[Profile] Uploading to storage:', fileName);
-      const { error: uploadError } = await db.supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(fileName, file, { upsert: true });
 
@@ -124,7 +124,7 @@ export default function UserProfile({ tasteProfile }) {
       console.log('[Profile] Storage upload successful');
 
       // Get public URL
-      const { data: { publicUrl } } = db.supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(fileName);
 
@@ -207,7 +207,7 @@ export default function UserProfile({ tasteProfile }) {
 
     try {
       console.log('[Profile] Saving reading preferences:', readingPreferences.substring(0, 50) + '...');
-      const { data, error } = await db.supabase.auth.updateUser({
+      const { data, error } = await auth.updateUser({
         data: { reading_preferences: readingPreferences }
       });
 
