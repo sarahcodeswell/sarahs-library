@@ -47,15 +47,24 @@ export default function UserProfile({ tasteProfile }) {
     
     try {
       console.log('[Profile] Loading stats for user:', user.id);
+      
+      // Get user_books (books added to collection via photo/manual entry)
+      const { data: userBooks, error: userBooksError } = await db.getUserBooks(user.id);
+      if (userBooksError) {
+        console.error('[Profile] Error loading user_books:', userBooksError);
+      }
+      console.log('[Profile] User books loaded:', { total: userBooks?.length });
+      
       // Get reading queue data
       const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
       if (queueError) {
         console.error('[Profile] Error loading reading queue:', queueError);
       }
-      console.log('[Profile] Reading queue loaded:', { total: queue?.length, queue });
+      console.log('[Profile] Reading queue loaded:', { total: queue?.length });
       
-      // Collection = books marked as 'finished' (matches My Collection page logic)
+      // Collection = user_books + books marked as 'finished' in reading_queue
       const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
+      const collectionCount = (userBooks?.length || 0) + finishedBooks.length;
       
       // Queue = books marked as 'want_to_read' or 'reading'
       const queueBooks = queue?.filter(item => 
@@ -66,13 +75,12 @@ export default function UserProfile({ tasteProfile }) {
       const { data: recommendations } = await db.getUserRecommendations(user.id);
       
       const stats = {
-        collectionCount: finishedBooks.length,
+        collectionCount: collectionCount,
         queueCount: queueBooks.length,
         recommendationsCount: recommendations?.length || 0
       };
       console.log('[Profile] Stats calculated:', stats);
-      console.log('[Profile] Finished books:', finishedBooks.map(b => ({ title: b.book_title, status: b.status })));
-      console.log('[Profile] Queue books:', queueBooks.map(b => ({ title: b.book_title, status: b.status })));
+      console.log('[Profile] User books:', userBooks?.length || 0, 'Finished:', finishedBooks.length);
       setStats(stats);
     } catch (error) {
       console.error('[Profile] Error loading stats:', error);
@@ -137,7 +145,13 @@ export default function UserProfile({ tasteProfile }) {
       });
       console.log('[Profile] Taste profile update result:', result);
 
-      setProfilePhotoUrl(publicUrl);
+      if (result.error) {
+        throw result.error;
+      }
+
+      // Reload profile data to ensure persistence
+      await loadProfileData();
+      
       setSaveMessage('Photo uploaded successfully!');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
@@ -165,10 +179,20 @@ export default function UserProfile({ tasteProfile }) {
 
     try {
       const currentProfile = tasteProfile || {};
-      await db.upsertTasteProfile(user.id, {
+      console.log('[Profile] Adding author, current profile:', currentProfile);
+      const result = await db.upsertTasteProfile(user.id, {
         ...currentProfile,
         favorite_authors: updatedAuthors
       });
+      console.log('[Profile] Author add result:', result);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      // Reload profile data to ensure persistence
+      await loadProfileData();
+      
       setSaveMessage('Author added!');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
@@ -186,10 +210,19 @@ export default function UserProfile({ tasteProfile }) {
 
     try {
       const currentProfile = tasteProfile || {};
-      await db.upsertTasteProfile(user.id, {
+      console.log('[Profile] Removing author, current profile:', currentProfile);
+      const result = await db.upsertTasteProfile(user.id, {
         ...currentProfile,
         favorite_authors: updatedAuthors
       });
+      console.log('[Profile] Author remove result:', result);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      // Reload profile data to ensure persistence
+      await loadProfileData();
     } catch (error) {
       console.error('Error removing author:', error);
     }
