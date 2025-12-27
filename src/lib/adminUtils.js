@@ -58,7 +58,7 @@ export async function populateMasterAdminReadingQueue(userId, userEmail) {
           status: 'finished'
         });
 
-        if (result.success) {
+        if (!result.error) {
           addedCount++;
         } else {
           errorCount++;
