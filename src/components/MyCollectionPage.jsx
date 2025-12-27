@@ -32,6 +32,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         book_author: book.author,
         status: 'finished',
         isCurated: true, // Flag to identify curated books
+        added_at: null, // Curated books don't have an added date
       }));
       
       // Merge curated books with user's reading queue (avoid duplicates)
@@ -281,9 +282,11 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                         {book.book_author}
                       </div>
                     )}
-                    <div className="text-xs text-[#96A888] mt-2">
-                      Added {new Date(book.added_at).toLocaleDateString()}
-                    </div>
+                    {book.added_at && (
+                      <div className="text-xs text-[#96A888] mt-2">
+                        Added {new Date(book.added_at).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2">
