@@ -17,31 +17,14 @@ export default function AdminDashboard({ onNavigate, user }) {
 
   const loadMetrics = async () => {
     try {
-      // Get total users count
-      const { count: userCount } = await db.supabase
-        .from('taste_profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Get total reading queue items
-      const { count: queueCount } = await db.supabase
-        .from('reading_queue')
-        .select('*', { count: 'exact', head: true });
-
-      // Get total user books
-      const { count: booksCount } = await db.supabase
-        .from('user_books')
-        .select('*', { count: 'exact', head: true });
-
-      // Get total chat messages (from session tracking)
-      const { count: chatCount } = await db.supabase
-        .from('chat_history')
-        .select('*', { count: 'exact', head: true });
-
+      // Note: Database counts require admin RLS policies or service role
+      // For now, showing note to use Supabase dashboard for detailed DB metrics
+      
       setMetrics({
-        totalUsers: userCount || 0,
-        totalReadingQueueItems: queueCount || 0,
-        totalUserBooks: booksCount || 0,
-        totalChatMessages: chatCount || 0,
+        totalUsers: 'See Supabase',
+        totalReadingQueueItems: 'See Supabase',
+        totalUserBooks: 'See Supabase',
+        totalChatMessages: 'See Vercel Analytics',
         loading: false
       });
     } catch (error) {
@@ -78,56 +61,46 @@ export default function AdminDashboard({ onNavigate, user }) {
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {/* Total Users */}
+          {/* Supabase Database */}
           <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-[#5F7252]/10 rounded-lg">
                 <Users className="w-6 h-6 text-[#5F7252]" />
               </div>
-              <TrendingUp className="w-4 h-4 text-[#96A888]" />
             </div>
-            <div className="text-3xl font-semibold text-[#4A5940] mb-1">{metrics.totalUsers}</div>
-            <div className="text-sm text-[#7A8F6C]">Total Users</div>
-            <div className="text-xs text-[#96A888] mt-2">Accounts created</div>
+            <div className="text-lg font-semibold text-[#4A5940] mb-2">Database Metrics</div>
+            <div className="text-xs text-[#7A8F6C] leading-relaxed mb-3">
+              View user accounts, saved books, reading queues, and user-generated content in your Supabase dashboard.
+            </div>
+            <a 
+              href="https://supabase.com/dashboard/project/nibaydimofsavkkepnku/editor" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] font-medium underline"
+            >
+              Open Supabase Dashboard →
+            </a>
           </div>
 
-          {/* Chat Messages */}
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-[#5F7252]/10 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-[#5F7252]" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-[#96A888]" />
-            </div>
-            <div className="text-3xl font-semibold text-[#4A5940] mb-1">{metrics.totalChatMessages}</div>
-            <div className="text-sm text-[#7A8F6C]">Chat Messages</div>
-            <div className="text-xs text-[#96A888] mt-2">Total recommendations requested</div>
-          </div>
-
-          {/* Books Saved */}
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-[#5F7252]/10 rounded-lg">
-                <BookMarked className="w-6 h-6 text-[#5F7252]" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-[#96A888]" />
-            </div>
-            <div className="text-3xl font-semibold text-[#4A5940] mb-1">{metrics.totalReadingQueueItems}</div>
-            <div className="text-sm text-[#7A8F6C]">Books Saved</div>
-            <div className="text-xs text-[#96A888] mt-2">Added to reading queues</div>
-          </div>
-
-          {/* User Books Added */}
+          {/* Vercel Analytics */}
           <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-[#5F7252]/10 rounded-lg">
                 <Activity className="w-6 h-6 text-[#5F7252]" />
               </div>
-              <TrendingUp className="w-4 h-4 text-[#96A888]" />
             </div>
-            <div className="text-3xl font-semibold text-[#4A5940] mb-1">{metrics.totalUserBooks}</div>
-            <div className="text-sm text-[#7A8F6C]">Books Added</div>
-            <div className="text-xs text-[#96A888] mt-2">Via photo/manual entry</div>
+            <div className="text-lg font-semibold text-[#4A5940] mb-2">User Analytics</div>
+            <div className="text-xs text-[#7A8F6C] leading-relaxed mb-3">
+              View page views, sessions, chat messages, and custom event tracking in your Vercel Analytics dashboard.
+            </div>
+            <a 
+              href="https://vercel.com/sarahcodeswell/sarahs-library/analytics" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] font-medium underline"
+            >
+              Open Vercel Analytics →
+            </a>
           </div>
 
           {/* Vercel Analytics Note */}
