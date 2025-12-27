@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload } from 'lucide-react';
 import { track } from '@vercel/analytics';
-import { useUserBooks } from '../contexts/UserBooksContext';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import PhotoCaptureModal from './PhotoCaptureModal';
 
@@ -52,8 +51,8 @@ function parseGoodreadsCsv(text) {
 }
 
 export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
-  const { userBooks, isLoadingBooks, addBook, removeBook } = useUserBooks();
   const { readingQueue, addToQueue } = useReadingQueue();
+  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -63,13 +62,14 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   const [goodreadsError, setGoodreadsError] = useState('');
   const goodreadsInputRef = useRef(null);
 
+  // Use reading queue as the books source
+  const books = useMemo(() => {
+    return readingQueue.filter(item => item.status !== 'finished');
+  }, [readingQueue]);
+
   const sortedBooks = useMemo(() => {
-    return [...userBooks].sort((a, b) => {
-      const titleA = (a.book_title || '').toLowerCase();
-      const titleB = (b.book_title || '').toLowerCase();
-      return titleA.localeCompare(titleB);
-    });
-  }, [userBooks]);
+    return [...books].sort((a, b) => new Date(b.added_at || 0) - new Date(a.added_at || 0));
+  }, [books]);
 
   const filteredBooks = useMemo(() => {
     if (!searchQuery.trim()) return sortedBooks;
@@ -93,11 +93,11 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       return;
     }
 
-    const result = await addBook({
+    // Add directly to reading queue as "want_to_read"
+    const result = await addToQueue({
       title: newBook.title.trim(),
       author: newBook.author.trim(),
-      notes: newBook.notes.trim(),
-      addedVia: 'manual',
+      status: 'want_to_read',
     });
 
     if (result.success) {
@@ -113,32 +113,32 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   };
 
   const handleRemoveBook = async (bookId, bookTitle) => {
-    if (!confirm(`Remove "${bookTitle}" from your collection?`)) {
+    if (!confirm(`Remove "${bookTitle}" from your reading queue?`)) {
       return;
     }
 
-    const result = await removeBook(bookId);
+    const { db } = await import('../lib/supabase');
+    const { error } = await db.removeFromReadingQueue(bookId);
     
-    if (result.success) {
+    if (error) {
+      alert('Failed to remove book. Please try again.');
+    } else {
       track('book_removed', {
         book_title: bookTitle,
       });
-    } else {
-      alert('Failed to remove book. Please try again.');
     }
   };
 
   const handlePhotoCaptured = async (books) => {
     setRecognizedBooks(books);
     
-    // Automatically add all recognized books
+    // Automatically add all recognized books to reading queue
     let successCount = 0;
     for (const book of books) {
-      const result = await addBook({
+      const result = await addToQueue({
         title: book.title,
         author: book.author || '',
-        isbn: book.isbn || '',
-        addedVia: 'photo',
+        status: 'want_to_read',
       });
       
       if (result.success) {
@@ -193,10 +193,10 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
 
       let successCount = 0;
       for (const book of books) {
-        const result = await addBook({
+        const result = await addToQueue({
           title: book.title,
           author: book.author || '',
-          addedVia: 'goodreads',
+          status: 'want_to_read',
         });
         
         if (result.success) {
@@ -221,42 +221,41 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
     }
   };
 
-  const handleAddToReadingQueue = async (book, status) => {
+  const handleMarkAsReading = async (book) => {
     if (!user) {
       onShowAuthModal();
       return;
     }
 
-    // Check if already in reading queue
-    const alreadyInQueue = readingQueue.some(item => 
-      item.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
-      item.book_author?.toLowerCase() === book.book_author?.toLowerCase()
-    );
+    // Update the book status to 'reading'
+    const { db } = await import('../lib/supabase');
+    const { error } = await db.updateReadingQueueStatus(book.id, 'reading');
+    
+    if (error) {
+      alert('Failed to update book status. Please try again.');
+    } else {
+      track('book_marked_as_reading', {
+        book_title: book.book_title,
+      });
+    }
+  };
 
-    if (alreadyInQueue) {
-      alert('This book is already in your reading queue');
+  const handleMarkAsFinished = async (book) => {
+    if (!user) {
+      onShowAuthModal();
       return;
     }
 
-    const result = await addToQueue({
-      title: book.book_title,
-      author: book.book_author,
-      status: status,
-    });
-
-    if (result.success) {
-      // Remove from staging area (user_books) after successfully adding to reading queue
-      await removeBook(book.id);
-      
-      const statusText = status === 'finished' ? 'read books' : 'reading queue';
-      alert(`Added "${book.book_title}" to ${statusText}!`);
-      
-      track('book_added_to_queue_from_my_books', {
-        book_title: book.book_title,
-        status: status,
-      });
+    // Update the book status to 'finished'
+    const { db } = await import('../lib/supabase');
+    const { error } = await db.updateReadingQueueStatus(book.id, 'finished');
+    
+    if (error) {
+      alert('Failed to update book status. Please try again.');
     } else {
-      alert('Failed to add to reading queue. Please try again.');
+      track('book_marked_as_finished', {
+        book_title: book.book_title,
+      });
     }
   };
 
@@ -377,27 +376,24 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
                         {book.book_author}
                       </div>
                     )}
-                    {book.notes && (
-                      <div className="text-xs text-[#96A888] mt-2 italic">
-                        {book.notes}
-                      </div>
-                    )}
                     <div className="text-xs text-[#96A888] mt-2">
-                      Added {new Date(book.added_at).toLocaleDateString()} via {book.added_via}
+                      Added {new Date(book.added_at).toLocaleDateString()}
+                      {book.status === 'reading' && ' • Currently reading'}
+                      {book.status === 'want_to_read' && ' • To read'}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleAddToReadingQueue(book, 'want_to_read')}
+                      onClick={() => handleMarkAsReading(book)}
                       className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center gap-1"
-                      title="Add to Want to Read"
+                      title="Mark as Currently Reading"
                     >
                       <BookMarked className="w-3.5 h-3.5" />
-                      Want to Read
+                      {book.status === 'reading' ? 'Reading' : 'Start Reading'}
                     </button>
                     <button
-                      onClick={() => handleAddToReadingQueue(book, 'finished')}
+                      onClick={() => handleMarkAsFinished(book)}
                       className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center gap-1"
                       title="Mark as Read"
                     >

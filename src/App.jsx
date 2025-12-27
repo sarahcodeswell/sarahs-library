@@ -891,17 +891,9 @@ Keep responses concise. Be direct and helpful.`;
   const qualityGuidelines = `
 Be specific about WHY each book matches their request. If vague, ask one clarifying question first.`;
 
-  // Build user preference context from reading queue
-  const finishedBooks = readingQueue.filter(item => item.status === 'finished');
-  const queuedBooks = readingQueue.filter(item => item.status === 'want_to_read');
-  
-  const preferenceContext = finishedBooks.length > 0
-    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and NEVER recommend books they've already read.`
-    : '';
-    
-  const queueContext = queuedBooks.length > 0
-    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nDO NOT recommend any of these books again.`
-    : '';
+  // Don't include reading queue in system prompt - we'll pass it in user content instead
+  const preferenceContext = '';
+  const queueContext = '';
 
   return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
 
@@ -1623,14 +1615,28 @@ Find similar books from beyond my library that match this taste profile.
         parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
       }
       
-      // ALWAYS tell Claude about books to avoid (user's collection)
+      // ALWAYS tell Claude about books to avoid (user's collection) - FIRST in the prompt
       if (readingQueue.length > 0) {
         const userBooks = readingQueue
           .map(item => item.book_title)
-          .filter(Boolean)
-          .slice(0, 100); // Limit to avoid token overflow
+          .filter(Boolean);
         if (userBooks.length > 0) {
-          parts.push(`CRITICAL: DO NOT RECOMMEND ANY OF THESE BOOKS - USER ALREADY HAS THEM:\n${userBooks.join(', ')}\n\nIf you recommend any of these books, it's a critical error. Choose different books that are NOT on this list.`);
+          // Put exclusion list at the TOP of user content for maximum visibility
+          const exclusionList = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 CRITICAL: BOOKS TO NEVER RECOMMEND 🚫
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The user ALREADY OWNS these ${userBooks.length} books. DO NOT recommend ANY of them:
+
+${userBooks.join('\n')}
+
+⚠️ Recommending ANY book from this list is a CRITICAL ERROR ⚠️
+You MUST choose completely different books that are NOT on this list.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+          
+          // Insert at the beginning of parts array
+          parts.unshift(exclusionList);
         }
       }
       
