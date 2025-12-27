@@ -1621,6 +1621,17 @@ Find similar books from beyond my library that match this taste profile.
         parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
       }
       
+      // ALWAYS tell Claude about books to avoid (user's collection)
+      if (readingQueue.length > 0) {
+        const userBooks = readingQueue
+          .map(item => item.book_title)
+          .filter(Boolean)
+          .slice(0, 100); // Limit to avoid token overflow
+        if (userBooks.length > 0) {
+          parts.push(`BOOKS TO AVOID (user already has these - DO NOT recommend any):\n${userBooks.join(', ')}`);
+        }
+      }
+      
       if (importedLibrary?.items?.length) {
         const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
         parts.push(`USER'S OWNED BOOKS (do not recommend these):\n${owned}`);
