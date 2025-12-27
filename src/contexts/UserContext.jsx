@@ -56,12 +56,25 @@ export function UserProvider({ children }) {
     clearUserContext();
   };
 
+  const updateUserMetadata = async (metadata) => {
+    if (user) {
+      setUser({
+        ...user,
+        user_metadata: {
+          ...user.user_metadata,
+          ...metadata
+        }
+      });
+    }
+  };
+
   const value = {
     user,
     authLoading,
     showAuthModal,
     setShowAuthModal,
     signOut,
+    updateUserMetadata,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

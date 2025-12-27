@@ -49,10 +49,8 @@ export default function UserProfile({ tasteProfile }) {
       // Get reading queue data
       const { data: queue } = await db.getReadingQueue(user.id);
       
-      // Collection = books marked as 'finished' or 'read'
-      const finishedBooks = queue?.filter(item => 
-        item.status === 'finished' || item.status === 'read'
-      ) || [];
+      // Collection = books marked as 'finished' (matches My Collection page logic)
+      const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
       
       // Queue = books marked as 'want_to_read' or 'reading'
       const queueBooks = queue?.filter(item => 
@@ -188,15 +186,15 @@ export default function UserProfile({ tasteProfile }) {
     setSaveMessage('');
 
     try {
-      const { data, error } = await db.supabase.auth.updateUser({
+      const { error } = await db.supabase.auth.updateUser({
         data: { reading_preferences: readingPreferences }
       });
 
       if (error) throw error;
 
-      // Update the user context with new metadata
-      if (updateUserMetadata && data?.user) {
-        await updateUserMetadata(data.user.user_metadata);
+      // Update local user context
+      if (updateUserMetadata) {
+        updateUserMetadata({ reading_preferences: readingPreferences });
       }
 
       setSaveMessage('Saved successfully!');

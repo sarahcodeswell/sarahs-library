@@ -79,9 +79,11 @@ export const db = {
       .from('taste_profiles')
       .upsert({
         user_id: userId,
-        liked_books: profile.likedBooks,
-        liked_themes: profile.likedThemes,
-        liked_authors: profile.likedAuthors,
+        liked_books: profile.likedBooks || [],
+        liked_themes: profile.likedThemes || [],
+        liked_authors: profile.likedAuthors || [],
+        profile_photo_url: profile.profile_photo_url || null,
+        favorite_authors: profile.favorite_authors || [],
         updated_at: new Date().toISOString(),
       });
     return { data, error };
