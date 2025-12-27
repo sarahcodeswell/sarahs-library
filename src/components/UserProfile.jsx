@@ -136,11 +136,12 @@ export default function UserProfile({ tasteProfile }) {
         .from('profile-photos')
         .getPublicUrl(fileName);
 
-      // Update profile with photo URL
-      const currentProfile = tasteProfile || {};
-      console.log('[Profile] Updating taste profile with photo URL:', { publicUrl, currentProfile });
+      // Get fresh profile data from database before updating
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      console.log('[Profile] Current profile from DB:', currentProfile);
+      console.log('[Profile] Updating taste profile with photo URL:', publicUrl);
       const result = await db.upsertTasteProfile(user.id, {
-        ...currentProfile,
+        ...(currentProfile || {}),
         profile_photo_url: publicUrl
       });
       console.log('[Profile] Taste profile update result:', result);
@@ -178,10 +179,12 @@ export default function UserProfile({ tasteProfile }) {
     setNewAuthor('');
 
     try {
-      const currentProfile = tasteProfile || {};
-      console.log('[Profile] Adding author, current profile:', currentProfile);
+      // Get fresh profile data from database before updating
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      console.log('[Profile] Current profile from DB:', currentProfile);
+      console.log('[Profile] Adding author to profile');
       const result = await db.upsertTasteProfile(user.id, {
-        ...currentProfile,
+        ...(currentProfile || {}),
         favorite_authors: updatedAuthors
       });
       console.log('[Profile] Author add result:', result);
@@ -209,10 +212,12 @@ export default function UserProfile({ tasteProfile }) {
     setFavoriteAuthors(updatedAuthors);
 
     try {
-      const currentProfile = tasteProfile || {};
-      console.log('[Profile] Removing author, current profile:', currentProfile);
+      // Get fresh profile data from database before updating
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      console.log('[Profile] Current profile from DB:', currentProfile);
+      console.log('[Profile] Removing author from profile');
       const result = await db.upsertTasteProfile(user.id, {
-        ...currentProfile,
+        ...(currentProfile || {}),
         favorite_authors: updatedAuthors
       });
       console.log('[Profile] Author remove result:', result);
