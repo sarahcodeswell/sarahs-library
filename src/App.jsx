@@ -498,14 +498,23 @@ function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQue
             onClick={async (e) => {
               e.stopPropagation();
               if (isDismissing) return;
-              setIsDismissing(true);
-              await onDismiss(rec);
-              track('recommendation_dismissed', {
-                book_title: rec.title,
-                book_author: displayAuthor,
-                chat_mode: chatMode,
-                source: catalogBook ? 'library' : 'world'
-              });
+              
+              try {
+                setIsDismissing(true);
+                console.log('[Dismiss] Dismissing recommendation:', rec.title);
+                await onDismiss(rec);
+                
+                track('recommendation_dismissed', {
+                  book_title: rec.title,
+                  book_author: displayAuthor,
+                  chat_mode: chatMode,
+                  source: catalogBook ? 'library' : 'world'
+                });
+                console.log('[Dismiss] Successfully dismissed:', rec.title);
+              } catch (error) {
+                console.error('[Dismiss] Error dismissing recommendation:', error);
+                setIsDismissing(false);
+              }
             }}
             disabled={isDismissing}
             className="p-1 hover:bg-[#E8EBE4] rounded transition-colors disabled:opacity-50"
@@ -517,12 +526,12 @@ function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQue
       </div>
       {/* Book Info */}
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Expand/Collapse Button */}
+        <h4 className="font-semibold text-[#4A5940] text-sm mb-1">{rec.title}</h4>
+        {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
+        {displayWhy && (
+          <div className="flex items-start justify-between gap-2 mt-1">
+            <p className="text-xs text-[#5F7252] flex-1">{displayWhy}</p>
+            {/* Expand/Collapse Button - moved here after description */}
             <button
               onClick={() => {
                 const newExpandedState = !expanded;
@@ -549,10 +558,6 @@ function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQue
               )}
             </button>
           </div>
-        </div>
-        {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
-        {displayWhy && (
-          <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>
         )}
       </div>
 
