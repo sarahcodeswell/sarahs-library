@@ -923,6 +923,8 @@ Each recommendation MUST include a line that starts with "Title:".
 You MUST return exactly 3 recommendations (no fewer). If you cannot find 3 perfect matches, broaden slightly and still return 3.
 If the user's request is vague, still return 3 solid picks, then ask 1 short clarifying question at the very end.
 
+CRITICAL: NEVER recommend books that are in the user's collection/reading queue. The user content will specify books to avoid. If you recommend any of those books, it's a critical error.
+
 When asked for "best books of the year" or new releases, treat the current year as ${CURRENT_YEAR} unless the user specifies a different year.`;
 };
 
@@ -1628,7 +1630,7 @@ Find similar books from beyond my library that match this taste profile.
           .filter(Boolean)
           .slice(0, 100); // Limit to avoid token overflow
         if (userBooks.length > 0) {
-          parts.push(`BOOKS TO AVOID (user already has these - DO NOT recommend any):\n${userBooks.join(', ')}`);
+          parts.push(`CRITICAL: DO NOT RECOMMEND ANY OF THESE BOOKS - USER ALREADY HAS THEM:\n${userBooks.join(', ')}\n\nIf you recommend any of these books, it's a critical error. Choose different books that are NOT on this list.`);
         }
       }
       
@@ -1643,6 +1645,13 @@ Find similar books from beyond my library that match this taste profile.
       
       parts.push(`USER REQUEST:\n${userMessage}`);
       const userContent = parts.join('\n\n');
+      
+      // Log what we're sending to Claude for debugging
+      console.log('[App] Sending to Claude:');
+      console.log('[App] - hasLibraryMatches:', hasLibraryMatches);
+      console.log('[App] - readingQueue length:', readingQueue.length);
+      console.log('[App] - User books to avoid count:', readingQueue.length);
+      console.log('[App] - Content preview:', userContent.substring(0, 500) + '...');
 
       // Update progress: searching world, then finding matches
       setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 2000);
