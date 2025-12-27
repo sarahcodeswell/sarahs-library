@@ -137,7 +137,7 @@ function parseGoodreadsCsv(text) {
   return items;
 }
 
-function buildLibraryContext(userMessage, catalog, readingQueue = []) {
+function buildLibraryContext(userMessage, catalog, readingQueue = [], favoriteAuthors = []) {
   const q = String(userMessage || '').toLowerCase();
   const tokens = tokenizeForSearch(userMessage);
 
@@ -151,6 +151,11 @@ function buildLibraryContext(userMessage, catalog, readingQueue = []) {
   const preferredThemes = new Set();
   const preferredGenres = new Set();
   const preferredAuthors = new Set();
+  
+  // Add user's explicitly favorite authors
+  favoriteAuthors.forEach(author => {
+    preferredAuthors.add(String(author || '').toLowerCase());
+  });
   
   finishedBooks.forEach(item => {
     const matchingBook = catalog.find(b => 
@@ -1568,7 +1573,8 @@ Find similar books from beyond my library that match this taste profile.
         }));
 
       // Build optimized library shortlist using semantic search
-      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, 10);
+      const favoriteAuthors = tasteProfile?.favorite_authors || [];
+      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
       const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
       const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
       

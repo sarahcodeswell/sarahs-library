@@ -6,9 +6,10 @@
  * Calculate similarity score between query and book
  * @param {string} query - User's search query
  * @param {Object} book - Book object from catalog
+ * @param {Array} favoriteAuthors - User's favorite authors
  * @returns {number} - Similarity score (0-100)
  */
-function calculateBookScore(query, book) {
+function calculateBookScore(query, book, favoriteAuthors = []) {
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
   
@@ -25,6 +26,14 @@ function calculateBookScore(query, book) {
   queryWords.forEach(word => {
     if (authorLower.includes(word)) score += 15;
   });
+  
+  // Boost books by favorite authors
+  const isFavoriteAuthor = favoriteAuthors.some(favAuthor => 
+    authorLower.includes(favAuthor.toLowerCase())
+  );
+  if (isFavoriteAuthor) {
+    score += 25; // Significant boost for favorite authors
+  }
   
   // Genre match
   const genreLower = (book.genre || '').toLowerCase();
@@ -56,10 +65,11 @@ function calculateBookScore(query, book) {
  * @param {string} query - User's search query
  * @param {Array} catalog - Book catalog
  * @param {Array} readingQueue - User's reading queue (to exclude)
+ * @param {Array} favoriteAuthors - User's favorite authors
  * @param {number} limit - Max results to return
  * @returns {Array} - Top matching books with scores
  */
-export function searchLibrary(query, catalog, readingQueue = [], limit = 10) {
+export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors = [], limit = 10) {
   if (!query || !catalog || !Array.isArray(catalog)) {
     return [];
   }
@@ -74,7 +84,7 @@ export function searchLibrary(query, catalog, readingQueue = [], limit = 10) {
     .filter(book => !excludeTitles.has((book.title || '').toLowerCase()))
     .map(book => ({
       ...book,
-      score: calculateBookScore(query, book)
+      score: calculateBookScore(query, book, favoriteAuthors)
     }))
     .filter(book => book.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -88,11 +98,12 @@ export function searchLibrary(query, catalog, readingQueue = [], limit = 10) {
  * @param {string} query - User's search query
  * @param {Array} catalog - Book catalog
  * @param {Array} readingQueue - User's reading queue
+ * @param {Array} favoriteAuthors - User's favorite authors
  * @param {number} limit - Max books to include
  * @returns {string} - Formatted library context
  */
-export function buildOptimizedLibraryContext(query, catalog, readingQueue = [], limit = 10) {
-  const topBooks = searchLibrary(query, catalog, readingQueue, limit);
+export function buildOptimizedLibraryContext(query, catalog, readingQueue = [], favoriteAuthors = [], limit = 10) {
+  const topBooks = searchLibrary(query, catalog, readingQueue, favoriteAuthors, limit);
   
   if (topBooks.length === 0) {
     return 'No strong matches in my library for this specific request.';
