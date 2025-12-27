@@ -1701,24 +1701,28 @@ Find similar books from beyond my library that match this taste profile.
         parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
       }
       
-      // ALWAYS tell Claude about books to avoid (user's collection + dismissed) - FIRST in the prompt
-      const booksToExclude = [];
+      // Build exclusion and preference context
+      const ownedBooks = [];
+      const dismissedBooks = [];
       
-      // Add books from reading queue
+      // Add books from reading queue (owned/read)
       if (readingQueue.length > 0) {
         const userBooks = readingQueue
           .map(item => item.book_title)
           .filter(Boolean);
-        booksToExclude.push(...userBooks);
+        ownedBooks.push(...userBooks);
       }
       
-      // Add dismissed recommendations
+      // Add dismissed recommendations (rejected)
       if (dismissedRecommendations.length > 0) {
-        const dismissedBooks = dismissedRecommendations
+        const rejected = dismissedRecommendations
           .map(item => item.book_title)
           .filter(Boolean);
-        booksToExclude.push(...dismissedBooks);
+        dismissedBooks.push(...rejected);
       }
+      
+      // Combine for exclusion list
+      const booksToExclude = [...ownedBooks, ...dismissedBooks];
       
       if (booksToExclude.length > 0) {
         // Remove duplicates
@@ -1740,6 +1744,46 @@ You MUST choose completely different books that are NOT on this list.
         
         // Insert at the beginning of parts array
         parts.unshift(exclusionList);
+      }
+      
+      // Add negative preference learning from dismissed books
+      if (dismissedBooks.length > 0) {
+        // Extract themes/patterns from dismissed books to learn what user dislikes
+        const dismissedWithMetadata = dismissedRecommendations
+          .map(item => {
+            const catalogBook = bookCatalog.find(b => 
+              normalizeTitle(b.title) === normalizeTitle(item.book_title)
+            );
+            return catalogBook ? {
+              title: item.book_title,
+              author: item.book_author,
+              genre: catalogBook.genre,
+              themes: catalogBook.themes
+            } : null;
+          })
+          .filter(Boolean);
+        
+        if (dismissedWithMetadata.length > 0) {
+          const dismissedGenres = dismissedWithMetadata
+            .map(b => b.genre)
+            .filter(Boolean);
+          const dismissedThemes = dismissedWithMetadata
+            .flatMap(b => b.themes || [])
+            .filter(Boolean);
+          
+          if (dismissedGenres.length > 0 || dismissedThemes.length > 0) {
+            const negativeSignals = `
+📊 USER PREFERENCE SIGNALS (use to refine recommendations):
+
+DISMISSED BOOKS: The user has rejected ${dismissedBooks.length} recommendations.
+${dismissedGenres.length > 0 ? `- Genres they dismissed: ${[...new Set(dismissedGenres)].join(', ')}` : ''}
+${dismissedThemes.length > 0 ? `- Themes they dismissed: ${[...new Set(dismissedThemes)].join(', ')}` : ''}
+
+💡 Use this to avoid similar books and refine your understanding of their taste.`;
+            
+            parts.push(negativeSignals);
+          }
+        }
       }
       
       if (importedLibrary?.items?.length) {
