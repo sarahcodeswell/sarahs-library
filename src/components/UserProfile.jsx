@@ -46,8 +46,13 @@ export default function UserProfile({ tasteProfile }) {
     if (!user) return;
     
     try {
+      console.log('[Profile] Loading stats for user:', user.id);
       // Get reading queue data
-      const { data: queue } = await db.getReadingQueue(user.id);
+      const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
+      if (queueError) {
+        console.error('[Profile] Error loading reading queue:', queueError);
+      }
+      console.log('[Profile] Reading queue loaded:', { total: queue?.length, queue });
       
       // Collection = books marked as 'finished' (matches My Collection page logic)
       const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
@@ -60,13 +65,17 @@ export default function UserProfile({ tasteProfile }) {
       // Get recommendations count
       const { data: recommendations } = await db.getUserRecommendations(user.id);
       
-      setStats({
+      const stats = {
         collectionCount: finishedBooks.length,
         queueCount: queueBooks.length,
         recommendationsCount: recommendations?.length || 0
-      });
+      };
+      console.log('[Profile] Stats calculated:', stats);
+      console.log('[Profile] Finished books:', finishedBooks.map(b => ({ title: b.book_title, status: b.status })));
+      console.log('[Profile] Queue books:', queueBooks.map(b => ({ title: b.book_title, status: b.status })));
+      setStats(stats);
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('[Profile] Error loading stats:', error);
     }
   };
 
@@ -76,7 +85,11 @@ export default function UserProfile({ tasteProfile }) {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    console.log('[Profile] Photo upload started:', { file: file?.name, size: file?.size, type: file?.type, userId: user?.id });
+    if (!file || !user) {
+      console.error('[Profile] Photo upload failed: missing file or user');
+      return;
+    }
 
     // Validate file type and size
     if (!file.type.startsWith('image/')) {
@@ -99,11 +112,16 @@ export default function UserProfile({ tasteProfile }) {
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
+      console.log('[Profile] Uploading to storage:', fileName);
       const { error: uploadError } = await db.supabase.storage
         .from('profile-photos')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[Profile] Storage upload error:', uploadError);
+        throw uploadError;
+      }
+      console.log('[Profile] Storage upload successful');
 
       // Get public URL
       const { data: { publicUrl } } = db.supabase.storage
@@ -112,10 +130,12 @@ export default function UserProfile({ tasteProfile }) {
 
       // Update profile with photo URL
       const currentProfile = tasteProfile || {};
-      await db.upsertTasteProfile(user.id, {
+      console.log('[Profile] Updating taste profile with photo URL:', { publicUrl, currentProfile });
+      const result = await db.upsertTasteProfile(user.id, {
         ...currentProfile,
         profile_photo_url: publicUrl
       });
+      console.log('[Profile] Taste profile update result:', result);
 
       setProfilePhotoUrl(publicUrl);
       setSaveMessage('Photo uploaded successfully!');
@@ -186,15 +206,23 @@ export default function UserProfile({ tasteProfile }) {
     setSaveMessage('');
 
     try {
-      const { error } = await db.supabase.auth.updateUser({
+      console.log('[Profile] Saving reading preferences:', readingPreferences.substring(0, 50) + '...');
+      const { data, error } = await db.supabase.auth.updateUser({
         data: { reading_preferences: readingPreferences }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Profile] Auth update error:', error);
+        throw error;
+      }
+      console.log('[Profile] Auth update successful:', data?.user?.user_metadata);
 
       // Update local user context
       if (updateUserMetadata) {
+        console.log('[Profile] Updating local user context');
         updateUserMetadata({ reading_preferences: readingPreferences });
+      } else {
+        console.warn('[Profile] updateUserMetadata not available');
       }
 
       setSaveMessage('Saved successfully!');

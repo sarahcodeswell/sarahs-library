@@ -147,6 +147,11 @@ function buildLibraryContext(userMessage, catalog, readingQueue = [], favoriteAu
     String(item.book_title || '').toLowerCase().trim()
   ));
   
+  console.log('[Recommendations] Building library context');
+  console.log('[Recommendations] Finished books count:', finishedBooks.length);
+  console.log('[Recommendations] Finished titles to exclude:', Array.from(finishedTitles));
+  console.log('[Recommendations] Favorite authors:', favoriteAuthors);
+  
   // Collect themes, genres, and authors from finished books for preference boosting
   const preferredThemes = new Set();
   const preferredGenres = new Set();
@@ -186,6 +191,9 @@ function buildLibraryContext(userMessage, catalog, readingQueue = [], favoriteAu
 
     // Skip books the user has already finished
     if (finishedTitles.has(titleLc.trim())) {
+      if (import.meta.env.DEV) {
+        console.log('[Recommendations] Excluding finished book:', title);
+      }
       return { book: b, score: -1000, idx }; // Exclude finished books
     }
 
