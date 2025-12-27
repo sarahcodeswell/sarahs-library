@@ -1593,9 +1593,15 @@ Find similar books from beyond my library that match this taste profile.
 
       // Build optimized library shortlist using semantic search
       const favoriteAuthors = tasteProfile?.favorite_authors || [];
+      console.log('[App] Building library shortlist');
+      console.log('[App] readingQueue length:', readingQueue?.length);
+      console.log('[App] readingQueue sample:', readingQueue?.slice(0, 3));
+      console.log('[App] bookCatalog length:', bookCatalog?.length);
       const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
+      console.log('[App] Library shortlist result:', libraryShortlist?.substring(0, 200));
       const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
       const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
+      console.log('[App] Has library matches:', hasLibraryMatches, 'Prioritize world:', prioritizeWorld);
       
       // Update progress: library checked
       setTimeout(() => setLoadingProgress({ step: 'library', progress: 100 }), 500);
