@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 import { db, supabase, auth } from '../lib/supabase';
-import booksData from '../books.json';
-
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
 export default function UserProfile({ tasteProfile }) {
   const { user, signOut, updateUserMetadata } = useUser();
@@ -51,9 +48,6 @@ export default function UserProfile({ tasteProfile }) {
     try {
       console.log('[Profile] Loading stats for user:', user.id);
       
-      // Check if user is master admin
-      const isMasterAdmin = user.email === MASTER_ADMIN_EMAIL;
-      
       // Get user_books (books added to collection via photo/manual entry)
       const { data: userBooks, error: userBooksError } = await db.getUserBooks(user.id);
       if (userBooksError) {
@@ -70,13 +64,7 @@ export default function UserProfile({ tasteProfile }) {
       
       // Collection = user_books + books marked as 'finished' in reading_queue
       const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
-      let collectionCount = (userBooks?.length || 0) + finishedBooks.length;
-      
-      // If master admin, add 200 curated books from books.json
-      if (isMasterAdmin) {
-        collectionCount += booksData.length;
-        console.log('[Profile] Master admin - adding', booksData.length, 'curated books');
-      }
+      const collectionCount = (userBooks?.length || 0) + finishedBooks.length;
       
       // Queue = books marked as 'want_to_read' or 'reading'
       const queueBooks = queue?.filter(item => 
