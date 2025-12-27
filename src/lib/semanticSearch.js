@@ -75,15 +75,31 @@ export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors
   }
   
   // Get titles to exclude (only books marked as finished)
+  const finishedBooks = readingQueue.filter(item => item.status === 'finished');
   const excludeTitles = new Set(
-    readingQueue
-      .filter(item => item.status === 'finished')
-      .map(item => (item.book_title || '').toLowerCase())
+    finishedBooks.map(item => (item.book_title || '').toLowerCase().trim())
   );
   
+  console.log('[SemanticSearch] searchLibrary called');
+  console.log('[SemanticSearch] Reading queue total:', readingQueue.length);
+  console.log('[SemanticSearch] Finished books:', finishedBooks.length);
+  console.log('[SemanticSearch] Titles to exclude:', Array.from(excludeTitles).slice(0, 10), '...');
+  console.log('[SemanticSearch] Catalog size:', catalog.length);
+  
   // Score all books
-  const scoredBooks = catalog
-    .filter(book => !excludeTitles.has((book.title || '').toLowerCase()))
+  const beforeFilter = catalog.length;
+  const afterExclusion = catalog.filter(book => {
+    const bookTitle = (book.title || '').toLowerCase().trim();
+    const isExcluded = excludeTitles.has(bookTitle);
+    if (isExcluded && import.meta.env.DEV) {
+      console.log('[SemanticSearch] Excluding finished book:', book.title);
+    }
+    return !isExcluded;
+  });
+  
+  console.log('[SemanticSearch] Books after exclusion:', afterExclusion.length, '(excluded:', beforeFilter - afterExclusion.length, ')');
+  
+  const scoredBooks = afterExclusion
     .map(book => ({
       ...book,
       score: calculateBookScore(query, book, favoriteAuthors)
@@ -91,6 +107,9 @@ export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors
     .filter(book => book.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+  
+  console.log('[SemanticSearch] Final recommendations:', scoredBooks.length);
+  console.log('[SemanticSearch] Top 3 recommendations:', scoredBooks.slice(0, 3).map(b => b.title));
   
   return scoredBooks;
 }
