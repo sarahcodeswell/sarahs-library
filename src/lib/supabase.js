@@ -192,6 +192,62 @@ export const db = {
     return { data, error };
   },
 
+  // Dismissed Recommendations functions
+  getDismissedRecommendations: async (userId) => {
+    if (!supabase) return { data: null, error: null };
+    
+    try {
+      const { data, error } = await supabase
+        .from('dismissed_recommendations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('dismissed_at', { ascending: false });
+      
+      return { data, error };
+    } catch (err) {
+      console.error('getDismissedRecommendations: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
+  dismissRecommendation: async (userId, book) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('dismissed_recommendations')
+        .insert({
+          user_id: userId,
+          book_title: book.title,
+          book_author: book.author,
+        })
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('dismissRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Dismiss failed' } };
+    }
+  },
+
+  undismissRecommendation: async (userId, bookTitle) => {
+    if (!supabase) return { error: null };
+    
+    try {
+      const { error } = await supabase
+        .from('dismissed_recommendations')
+        .delete()
+        .eq('user_id', userId)
+        .eq('book_title', bookTitle);
+      
+      return { error };
+    } catch (err) {
+      console.error('undismissRecommendation: Exception', err);
+      return { error: { message: err.message || 'Undismiss failed' } };
+    }
+  },
+
   // Recommendations functions
   getUserRecommendations: async (userId) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };

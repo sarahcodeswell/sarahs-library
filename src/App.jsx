@@ -391,12 +391,13 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss }) {
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [showBuyOptions, setShowBuyOptions] = useState(false);
   const [showListenOptions, setShowListenOptions] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [isDismissing, setIsDismissing] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -471,24 +472,47 @@ function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQue
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
-      {/* Source Badge - only show "From My Library" if we had library matches AND book is in catalog */}
-      <div className="flex items-center gap-2 mb-3">
-        {catalogBook && hasLibraryMatches !== false ? (
-          <span 
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium"
-            title="From my personal collection—a book I've read and love!"
+      {/* Source Badge and Dismiss Button */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {catalogBook && hasLibraryMatches !== false ? (
+            <span 
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium"
+              title="From my personal collection—a book I've read and love!"
+            >
+              <Library className="w-3 h-3" />
+              From My Library
+            </span>
+          ) : (
+            <span 
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium"
+              title="From the wider world—the best match for your request!"
+            >
+              <Sparkles className="w-3 h-3" />
+              World Discovery
+            </span>
+          )}
+        </div>
+        {user && onDismiss && (
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (isDismissing) return;
+              setIsDismissing(true);
+              await onDismiss(rec);
+              track('recommendation_dismissed', {
+                book_title: rec.title,
+                book_author: displayAuthor,
+                chat_mode: chatMode,
+                source: catalogBook ? 'library' : 'world'
+              });
+            }}
+            disabled={isDismissing}
+            className="p-1 hover:bg-[#E8EBE4] rounded transition-colors disabled:opacity-50"
+            title="Not interested - don't recommend this again"
           >
-            <Library className="w-3 h-3" />
-            From My Library
-          </span>
-        ) : (
-          <span 
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium"
-            title="From the wider world—the best match for your request!"
-          >
-            <Sparkles className="w-3 h-3" />
-            World Discovery
-          </span>
+            <X className="w-4 h-4 text-[#96A888] hover:text-[#5F7252]" />
+          </button>
         )}
       </div>
       {/* Book Info */}
@@ -780,7 +804,7 @@ function RecommendationActionPanel({ onShowMore }) {
   );
 }
 
-function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -822,6 +846,7 @@ function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionP
           onAddToQueue={onAddToQueue}
           onRemoveFromQueue={onRemoveFromQueue}
           onShowAuthModal={onShowAuthModal}
+          onDismiss={onDismiss}
         />
       ))}
       
@@ -1021,7 +1046,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -1049,6 +1074,7 @@ function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPan
             onAddToQueue={onAddToQueue}
             onRemoveFromQueue={onRemoveFromQueue}
             onShowAuthModal={onShowAuthModal}
+            onDismiss={onDismiss}
           />
         ) : (
           <div className="text-sm leading-relaxed">
@@ -1269,6 +1295,31 @@ export default function App() {
     loadTasteProfile();
   }, [user]);
 
+  // Load dismissed recommendations when user logs in
+  const [dismissedRecommendations, setDismissedRecommendations] = useState([]);
+  
+  useEffect(() => {
+    const loadDismissedRecommendations = async () => {
+      if (!user) {
+        setDismissedRecommendations([]);
+        return;
+      }
+      
+      try {
+        const { data, error } = await db.getDismissedRecommendations(user.id);
+        if (error) {
+          console.error('Error loading dismissed recommendations:', error);
+          return;
+        }
+        setDismissedRecommendations(data || []);
+      } catch (err) {
+        console.error('Error loading dismissed recommendations:', err);
+      }
+    };
+    
+    loadDismissedRecommendations();
+  }, [user]);
+
   // Save taste profile to database when it changes (if user is logged in)
   useEffect(() => {
     if (user && tasteProfile.likedBooks.length > 0) {
@@ -1372,6 +1423,41 @@ Find similar books from beyond my library that match this taste profile.
     const result = await removeFromQueue(queueItemId);
     return result.success;
   }, [user, removeFromQueue]);
+
+  const handleDismissRecommendation = useCallback(async (rec) => {
+    if (!user) return;
+    
+    const { data, error } = await db.dismissRecommendation(user.id, {
+      title: rec.title,
+      author: rec.author
+    });
+    
+    if (error) {
+      console.error('Failed to dismiss recommendation:', error);
+      return;
+    }
+    
+    // Update dismissed recommendations list
+    setDismissedRecommendations(prev => [...prev, data]);
+    
+    // Remove the recommendation from the current chat by filtering messages
+    setMessages(prev => prev.map(msg => {
+      if (msg.isUser) return msg;
+      
+      // Parse and filter out the dismissed recommendation
+      const recommendations = parseRecommendations(msg.text);
+      const filtered = recommendations.filter(r => 
+        normalizeTitle(r.title) !== normalizeTitle(rec.title)
+      );
+      
+      // If all recommendations were dismissed, keep the message but mark it
+      if (filtered.length === 0) {
+        return { ...msg, text: msg.text + '\n\n_(All recommendations from this response have been dismissed)_' };
+      }
+      
+      return msg;
+    }));
+  }, [user]);
 
   const handleNewConversation = () => {
     setMessages(getInitialMessages());
@@ -1615,29 +1701,45 @@ Find similar books from beyond my library that match this taste profile.
         parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
       }
       
-      // ALWAYS tell Claude about books to avoid (user's collection) - FIRST in the prompt
+      // ALWAYS tell Claude about books to avoid (user's collection + dismissed) - FIRST in the prompt
+      const booksToExclude = [];
+      
+      // Add books from reading queue
       if (readingQueue.length > 0) {
         const userBooks = readingQueue
           .map(item => item.book_title)
           .filter(Boolean);
-        if (userBooks.length > 0) {
-          // Put exclusion list at the TOP of user content for maximum visibility
-          const exclusionList = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        booksToExclude.push(...userBooks);
+      }
+      
+      // Add dismissed recommendations
+      if (dismissedRecommendations.length > 0) {
+        const dismissedBooks = dismissedRecommendations
+          .map(item => item.book_title)
+          .filter(Boolean);
+        booksToExclude.push(...dismissedBooks);
+      }
+      
+      if (booksToExclude.length > 0) {
+        // Remove duplicates
+        const uniqueBooks = [...new Set(booksToExclude)];
+        
+        // Put exclusion list at the TOP of user content for maximum visibility
+        const exclusionList = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚫 CRITICAL: BOOKS TO NEVER RECOMMEND 🚫
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The user ALREADY OWNS these ${userBooks.length} books. DO NOT recommend ANY of them:
+The user ALREADY OWNS or has REJECTED these ${uniqueBooks.length} books. DO NOT recommend ANY of them:
 
-${userBooks.join('\n')}
+${uniqueBooks.join('\n')}
 
 ⚠️ Recommending ANY book from this list is a CRITICAL ERROR ⚠️
 You MUST choose completely different books that are NOT on this list.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
-          
-          // Insert at the beginning of parts array
-          parts.unshift(exclusionList);
-        }
+        
+        // Insert at the beginning of parts array
+        parts.unshift(exclusionList);
       }
       
       if (importedLibrary?.items?.length) {
@@ -2123,6 +2225,12 @@ You MUST choose completely different books that are NOT on this list.
                 hasLibraryMatches={msg.hasLibraryMatches}
                 messageIndex={idx}
                 chatMode={chatMode}
+                user={user}
+                readingQueue={readingQueue}
+                onAddToQueue={handleAddToReadingQueue}
+                onRemoveFromQueue={handleRemoveFromReadingQueue}
+                onShowAuthModal={() => setShowAuthModal(true)}
+                onDismiss={handleDismissRecommendation}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -2175,11 +2283,6 @@ You MUST choose completely different books that are NOT on this list.
                     });
                   }
                 }}
-                user={user}
-                readingQueue={readingQueue}
-                onAddToQueue={handleAddToReadingQueue}
-                onRemoveFromQueue={handleRemoveFromReadingQueue}
-                onShowAuthModal={() => setShowAuthModal(true)}
               />
             ))}
             {isLoading && (
