@@ -106,8 +106,9 @@ export default function UserProfile({ tasteProfile }) {
         .getPublicUrl(fileName);
 
       // Update profile with photo URL
+      const currentProfile = tasteProfile || {};
       await db.upsertTasteProfile(user.id, {
-        ...tasteProfile,
+        ...currentProfile,
         profile_photo_url: publicUrl
       });
 
@@ -138,8 +139,9 @@ export default function UserProfile({ tasteProfile }) {
     setNewAuthor('');
 
     try {
+      const currentProfile = tasteProfile || {};
       await db.upsertTasteProfile(user.id, {
-        ...tasteProfile,
+        ...currentProfile,
         favorite_authors: updatedAuthors
       });
       setSaveMessage('Author added!');
@@ -158,8 +160,9 @@ export default function UserProfile({ tasteProfile }) {
     setFavoriteAuthors(updatedAuthors);
 
     try {
+      const currentProfile = tasteProfile || {};
       await db.upsertTasteProfile(user.id, {
-        ...tasteProfile,
+        ...currentProfile,
         favorite_authors: updatedAuthors
       });
     } catch (error) {
@@ -254,7 +257,7 @@ export default function UserProfile({ tasteProfile }) {
               <Heart className="w-4 h-4 text-[#5F7252]" />
             </div>
             <div className="text-lg font-semibold text-[#4A5940]">{stats.recommendationsCount}</div>
-            <div className="text-xs text-[#7A8F6C]">Recommendations</div>
+            <div className="text-xs text-[#7A8F6C]">Shared</div>
           </div>
         </div>
         <button
@@ -290,7 +293,9 @@ export default function UserProfile({ tasteProfile }) {
           </button>
           {saveMessage && (
             <span className={`text-xs ${
-              saveMessage.includes('success') ? 'text-[#5F7252]' : 'text-red-500'
+              saveMessage.includes('success') || saveMessage.includes('added') || saveMessage.includes('uploaded') 
+                ? 'text-[#5F7252]' 
+                : 'text-red-500'
             }`}>
               {saveMessage}
             </span>
