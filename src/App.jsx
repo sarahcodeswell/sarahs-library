@@ -23,7 +23,7 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
-const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks'; // TODO: Replace with actual affiliate ID when available
+const LIBRO_FM_AFFILIATE_ID = '25361';
 const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20'; // Uses Amazon Associates
 const CURRENT_YEAR = new Date().getFullYear();
 const ADMIN_EMAIL = 'sarah@darkridge.com'; // Admin access
