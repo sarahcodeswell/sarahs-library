@@ -809,8 +809,15 @@ function RecommendationActionPanel({ onShowMore }) {
   );
 }
 
-function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss }) {
-  const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
+function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss, sessionDismissedTitles }) {
+  const recommendations = React.useMemo(() => {
+    const allRecs = parseRecommendations(String(text || ''));
+    // Filter out dismissed recommendations
+    if (sessionDismissedTitles && sessionDismissedTitles.size > 0) {
+      return allRecs.filter(rec => !sessionDismissedTitles.has(normalizeTitle(rec.title)));
+    }
+    return allRecs;
+  }, [text, sessionDismissedTitles]);
   
   // Extract the header (everything before the first recommendation)
   const header = React.useMemo(() => {
@@ -1051,7 +1058,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss }) {
+function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal, onDismiss, sessionDismissedTitles }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
 
   return (
@@ -1080,6 +1087,7 @@ function ChatMessage({ message, isUser, hasLibraryMatches, chatMode, onActionPan
             onRemoveFromQueue={onRemoveFromQueue}
             onShowAuthModal={onShowAuthModal}
             onDismiss={onDismiss}
+            sessionDismissedTitles={sessionDismissedTitles}
           />
         ) : (
           <div className="text-sm leading-relaxed">
@@ -1429,6 +1437,9 @@ Find similar books from beyond my library that match this taste profile.
     return result.success;
   }, [user, removeFromQueue]);
 
+  // Track dismissed recommendations in current session for immediate UI updates
+  const [sessionDismissedTitles, setSessionDismissedTitles] = useState(new Set());
+
   const handleDismissRecommendation = useCallback(async (rec) => {
     if (!user) return;
     
@@ -1445,23 +1456,8 @@ Find similar books from beyond my library that match this taste profile.
     // Update dismissed recommendations list
     setDismissedRecommendations(prev => [...prev, data]);
     
-    // Remove the recommendation from the current chat by filtering messages
-    setMessages(prev => prev.map(msg => {
-      if (msg.isUser) return msg;
-      
-      // Parse and filter out the dismissed recommendation
-      const recommendations = parseRecommendations(msg.text);
-      const filtered = recommendations.filter(r => 
-        normalizeTitle(r.title) !== normalizeTitle(rec.title)
-      );
-      
-      // If all recommendations were dismissed, keep the message but mark it
-      if (filtered.length === 0) {
-        return { ...msg, text: msg.text + '\n\n_(All recommendations from this response have been dismissed)_' };
-      }
-      
-      return msg;
-    }));
+    // Add to session dismissed titles for immediate UI filtering
+    setSessionDismissedTitles(prev => new Set([...prev, normalizeTitle(rec.title)]));
   }, [user]);
 
   const handleNewConversation = () => {
@@ -2280,6 +2276,7 @@ ${dismissedThemes.length > 0 ? `- Themes they dismissed: ${[...new Set(dismissed
                 onRemoveFromQueue={handleRemoveFromReadingQueue}
                 onShowAuthModal={() => setShowAuthModal(true)}
                 onDismiss={handleDismissRecommendation}
+                sessionDismissedTitles={sessionDismissedTitles}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
