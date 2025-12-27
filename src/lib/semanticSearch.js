@@ -74,9 +74,11 @@ export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors
     return [];
   }
   
-  // Get titles to exclude (already read or queued)
+  // Get titles to exclude (only books marked as finished)
   const excludeTitles = new Set(
-    readingQueue.map(item => (item.book_title || '').toLowerCase())
+    readingQueue
+      .filter(item => item.status === 'finished')
+      .map(item => (item.book_title || '').toLowerCase())
   );
   
   // Score all books

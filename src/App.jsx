@@ -1593,7 +1593,20 @@ Find similar books from beyond my library that match this taste profile.
 
       // Build optimized library shortlist using semantic search
       const favoriteAuthors = tasteProfile?.favorite_authors || [];
-      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
+      
+      // For Master Admin, add curated books to reading queue for exclusion
+      const isMasterAdmin = user?.email === ADMIN_EMAIL;
+      const enrichedReadingQueue = isMasterAdmin 
+        ? [
+            ...readingQueue,
+            ...bookCatalog.map(book => ({
+              book_title: book.title,
+              status: 'finished'
+            }))
+          ]
+        : readingQueue;
+      
+      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, enrichedReadingQueue, favoriteAuthors, 10);
       const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
       const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
       

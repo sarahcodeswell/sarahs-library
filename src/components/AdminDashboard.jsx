@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MessageSquare, BookMarked, ShoppingBag, Activity, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare, BookMarked, ShoppingBag, Activity, TrendingUp, Database } from 'lucide-react';
 import { db } from '../lib/supabase';
+import { populateMasterAdminReadingQueue, checkMasterAdminReadingQueue } from '../lib/adminUtils';
 
 export default function AdminDashboard({ onNavigate, user }) {
   const [metrics, setMetrics] = useState({
@@ -10,9 +11,13 @@ export default function AdminDashboard({ onNavigate, user }) {
     totalChatMessages: 0,
     loading: true
   });
+  const [queueStatus, setQueueStatus] = useState(null);
+  const [isPopulating, setIsPopulating] = useState(false);
+  const [populationResult, setPopulationResult] = useState(null);
 
   useEffect(() => {
     loadMetrics();
+    checkQueue();
   }, []);
 
   const loadMetrics = async () => {
@@ -31,6 +36,25 @@ export default function AdminDashboard({ onNavigate, user }) {
       console.error('Error loading metrics:', error);
       setMetrics(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const checkQueue = async () => {
+    if (!user) return;
+    const status = await checkMasterAdminReadingQueue(user.id, user.email);
+    setQueueStatus(status);
+  };
+
+  const handlePopulateQueue = async () => {
+    if (!user) return;
+    setIsPopulating(true);
+    setPopulationResult(null);
+    
+    const result = await populateMasterAdminReadingQueue(user.id, user.email);
+    setPopulationResult(result);
+    setIsPopulating(false);
+    
+    // Refresh queue status
+    await checkQueue();
   };
 
   if (metrics.loading) {
@@ -125,6 +149,73 @@ export default function AdminDashboard({ onNavigate, user }) {
             </div>
           </div>
         </div>
+
+        {/* Reading Queue Population */}
+        {queueStatus && (
+          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-[#5F7252]/10 rounded-lg">
+                <Database className="w-6 h-6 text-[#5F7252]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-[#4A5940]" style={{ fontFamily: 'Crimson Pro' }}>
+                  Master Admin Reading Queue
+                </h2>
+                <p className="text-xs text-[#7A8F6C]">
+                  Populate your reading queue with all 200 curated books
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-[#F8F6EE] rounded-lg">
+                <div className="text-sm">
+                  <span className="text-[#4A5940] font-medium">Current finished books: </span>
+                  <span className="text-[#5F7252]">{queueStatus.currentCount}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-[#4A5940] font-medium">Expected: </span>
+                  <span className="text-[#5F7252]">{queueStatus.expectedCount}</span>
+                </div>
+              </div>
+
+              {queueStatus.needsPopulation && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-800 mb-2">
+                    ⚠️ Your reading queue is missing {queueStatus.missing} books. Click below to populate it with all curated books.
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    This will ensure recommendations don't include books from your collection.
+                  </p>
+                </div>
+              )}
+
+              {populationResult && (
+                <div className={`p-3 rounded-lg ${populationResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <p className={`text-xs ${populationResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                    {populationResult.success ? (
+                      <>
+                        ✅ Successfully added {populationResult.added} books!
+                        {populationResult.skipped > 0 && ` (${populationResult.skipped} already existed)`}
+                        {populationResult.errors > 0 && ` (${populationResult.errors} errors)`}
+                      </>
+                    ) : (
+                      `❌ Error: ${populationResult.error}`
+                    )}
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={handlePopulateQueue}
+                disabled={isPopulating || !queueStatus.needsPopulation}
+                className="w-full px-4 py-2.5 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPopulating ? 'Populating...' : queueStatus.needsPopulation ? 'Populate Reading Queue' : 'Reading Queue Up to Date ✓'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Additional Info */}
         <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
