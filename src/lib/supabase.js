@@ -91,6 +91,9 @@ export const db = {
         profile_photo_url: profile.profile_photo_url || null,
         favorite_authors: profile.favorite_authors || [],
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
+        ignoreDuplicates: false
       });
     return { data, error };
   },
