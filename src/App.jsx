@@ -813,8 +813,8 @@ function FormattedRecommendations({ text, chatMode, hasLibraryMatches, onActionP
   const recommendations = React.useMemo(() => {
     const allRecs = parseRecommendations(String(text || ''));
     // Filter out dismissed recommendations
-    if (sessionDismissedTitles && sessionDismissedTitles.size > 0) {
-      return allRecs.filter(rec => !sessionDismissedTitles.has(normalizeTitle(rec.title)));
+    if (sessionDismissedTitles && sessionDismissedTitles.length > 0) {
+      return allRecs.filter(rec => !sessionDismissedTitles.includes(normalizeTitle(rec.title)));
     }
     return allRecs;
   }, [text, sessionDismissedTitles]);
