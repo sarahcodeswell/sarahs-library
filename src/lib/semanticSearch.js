@@ -91,8 +91,11 @@ export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors
   const afterExclusion = catalog.filter(book => {
     const bookTitle = (book.title || '').toLowerCase().trim();
     const isExcluded = excludeTitles.has(bookTitle);
-    if (isExcluded && import.meta.env.DEV) {
-      console.log('[SemanticSearch] Excluding finished book:', book.title);
+    if (isExcluded) {
+      console.log('[SemanticSearch] ✓ Excluding finished book:', book.title);
+    } else if (import.meta.env.DEV) {
+      // Show first few non-excluded books for debugging
+      console.log('[SemanticSearch] ✗ NOT excluding:', book.title, '(not in finished list)');
     }
     return !isExcluded;
   });
