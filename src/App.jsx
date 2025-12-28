@@ -1448,9 +1448,13 @@ Find similar books from beyond my library that match this taste profile.
     // Add to session dismissed titles immediately for UI update
     setSessionDismissedTitles(prev => [...prev, normalizedTitle]);
     
+    // Get author from rec or catalog lookup
+    const catalogBook = bookCatalog.find(b => normalizeTitle(b.title) === normalizedTitle);
+    const author = rec.author || catalogBook?.author || '';
+    
     const { data, error } = await db.dismissRecommendation(user.id, {
       title: rec.title,
-      author: rec.author
+      author: author
     });
     
     if (error) {
