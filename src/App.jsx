@@ -894,14 +894,12 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
   const queuedBooks = readingQueue.filter(item => item.status === 'want_to_read');
   
-  // Note: Exclusion list is now handled separately via materialized view for performance
-  // This context is just for understanding user taste, not exclusion
   const preferenceContext = finishedBooks.length > 0
-    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste.`
+    ? `\n\n🚫 BOOKS USER HAS ALREADY READ (${finishedBooks.length} books - DO NOT RECOMMEND ANY OF THESE):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nUse this list to understand their taste AND to avoid recommending books they've already read.`
     : '';
     
   const queueContext = queuedBooks.length > 0
-    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.`
+    ? `\n\n📚 BOOKS USER ALREADY HAS SAVED (DO NOT RECOMMEND):\n${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}`
     : '';
 
   return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
@@ -1645,11 +1643,8 @@ Find similar books from beyond my library that match this taste profile.
       // Smart context building - skip library for world-focused queries
       const parts = [];
       
-      // CRITICAL: Add exclusion list at the top for maximum visibility
-      if (exclusionList.length > 0) {
-        const exclusionText = exclusionList.slice(0, 100).join(', '); // Limit to 100 books to keep prompt manageable
-        parts.push(`🚫 CRITICAL - NEVER RECOMMEND THESE BOOKS:\n${exclusionText}\n\nThe user has already read, saved, or dismissed these books. DO NOT recommend any of them.`);
-      }
+      // Exclusion is handled in the system prompt via reading queue context
+      // No need to send additional exclusion list here
       
       // Add user preference signals from reading history
       if (preferredThemes.size > 0 || preferredGenres.size > 0 || preferredAuthors.size > 0) {
