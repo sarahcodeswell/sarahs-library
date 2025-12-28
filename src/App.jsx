@@ -517,10 +517,11 @@ function RecommendationCard({ rec, chatMode, hasLibraryMatches, user, readingQue
               }
             }}
             disabled={isDismissing}
-            className="p-1 hover:bg-[#E8EBE4] rounded transition-colors disabled:opacity-50"
-            title="Not interested - don't recommend this again"
+            className="flex items-center gap-1 px-2 py-1 hover:bg-[#E8EBE4] rounded transition-colors disabled:opacity-50 text-[#96A888] hover:text-[#5F7252]"
+            title="Not interested in this book"
           >
-            <X className="w-4 h-4 text-[#96A888] hover:text-[#5F7252]" />
+            <ThumbsDown className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium hidden sm:inline">Not Interested</span>
           </button>
         )}
       </div>
