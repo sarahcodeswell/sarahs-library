@@ -1603,6 +1603,31 @@ Find similar books from beyond my library that match this taste profile.
         }
       }
 
+      // Extract user preferences from finished books
+      const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+      const preferredThemes = new Set();
+      const preferredGenres = new Set();
+      const preferredAuthors = new Set();
+      
+      finishedBooks.forEach(item => {
+        const matchingBook = bookCatalog.find(b => 
+          String(b.title || '').toLowerCase().trim() === String(item.book_title || '').toLowerCase().trim()
+        );
+        if (matchingBook) {
+          if (matchingBook.genre) preferredGenres.add(matchingBook.genre);
+          if (Array.isArray(matchingBook.themes)) {
+            matchingBook.themes.forEach(t => preferredThemes.add(t));
+          }
+          if (matchingBook.author) preferredAuthors.add(matchingBook.author);
+        }
+      });
+      
+      console.log('[Recommendations] User preferences extracted:', {
+        themes: Array.from(preferredThemes),
+        genres: Array.from(preferredGenres),
+        authors: Array.from(preferredAuthors)
+      });
+
       // Build optimized library shortlist using semantic search
       const favoriteAuthors = tasteProfile?.favorite_authors || [];
       const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
@@ -1624,6 +1649,21 @@ Find similar books from beyond my library that match this taste profile.
       if (exclusionList.length > 0) {
         const exclusionText = exclusionList.slice(0, 100).join(', '); // Limit to 100 books to keep prompt manageable
         parts.push(`🚫 CRITICAL - NEVER RECOMMEND THESE BOOKS:\n${exclusionText}\n\nThe user has already read, saved, or dismissed these books. DO NOT recommend any of them.`);
+      }
+      
+      // Add user preference signals from reading history
+      if (preferredThemes.size > 0 || preferredGenres.size > 0 || preferredAuthors.size > 0) {
+        const prefParts = [];
+        if (preferredThemes.size > 0) {
+          prefParts.push(`Themes they love: ${Array.from(preferredThemes).join(', ')}`);
+        }
+        if (preferredGenres.size > 0) {
+          prefParts.push(`Genres they enjoy: ${Array.from(preferredGenres).join(', ')}`);
+        }
+        if (preferredAuthors.size > 0) {
+          prefParts.push(`Authors they've read: ${Array.from(preferredAuthors).slice(0, 10).join(', ')}`);
+        }
+        parts.push(`✨ USER'S TASTE PROFILE (based on ${finishedBooks.length} finished books):\n${prefParts.join('\n')}\n\nPrioritize recommendations that match these preferences.`);
       }
       
       // Only include library context if we have good matches and not prioritizing world

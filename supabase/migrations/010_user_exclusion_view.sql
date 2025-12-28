@@ -6,24 +6,24 @@ CREATE MATERIALIZED VIEW user_exclusion_list AS
 SELECT 
   user_id,
   book_title,
-  MAX(created_at) as last_interaction,
+  MAX(interaction_time) as last_interaction,
   ARRAY_AGG(DISTINCT source_table) as sources
 FROM (
   -- Books from reading queue (all statuses)
   SELECT 
     user_id,
     book_title,
-    added_at as created_at,
+    added_at as interaction_time,
     'reading_queue' as source_table
   FROM reading_queue
   
   UNION ALL
   
-  -- Dismissed recommendations
+  -- Dismissed recommendations (use NOW() as timestamp since table may not have created_at)
   SELECT 
     user_id,
     book_title,
-    created_at,
+    NOW() as interaction_time,
     'dismissed' as source_table
   FROM dismissed_recommendations
 ) combined
