@@ -1851,6 +1851,13 @@ ${dismissedThemes.length > 0 ? `- Themes they dismissed: ${[...new Set(dismissed
       console.log('[App] - Dismissed books count:', dismissedBooks.length);
       console.log('[App] - Total exclusion list:', booksToExclude.length);
       console.log('[App] - Exclusion list sample:', booksToExclude.slice(0, 10));
+      
+      // Check if "Tell Me How to Be" is in the exclusion list
+      const tellMeVariants = booksToExclude.filter(title => 
+        title.toLowerCase().includes('tell me how')
+      );
+      console.log('[App] - "Tell Me How" variants in exclusion:', tellMeVariants);
+      
       console.log('[App] - Content preview:', userContent.substring(0, 500) + '...');
 
       // Update progress: searching world, then finding matches
