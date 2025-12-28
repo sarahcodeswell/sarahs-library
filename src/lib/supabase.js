@@ -484,6 +484,30 @@ export const db = {
     }
   },
 
+  // Get user exclusion list (optimized with materialized view)
+  getUserExclusionList: async (userId) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_exclusion_list')
+        .select('book_title')
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('getUserExclusionList: Error', error);
+        return { data: null, error };
+      }
+      
+      // Return just the book titles as an array
+      const titles = data?.map(row => row.book_title) || [];
+      return { data: titles, error: null };
+    } catch (err) {
+      console.error('getUserExclusionList: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
   deleteChatHistory: async (userId, sessionId = null) => {
     if (!supabase) return { error: null };
     

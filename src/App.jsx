@@ -894,12 +894,14 @@ Be specific about WHY each book matches their request. If vague, ask one clarify
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
   const queuedBooks = readingQueue.filter(item => item.status === 'want_to_read');
   
+  // Note: Exclusion list is now handled separately via materialized view for performance
+  // This context is just for understanding user taste, not exclusion
   const preferenceContext = finishedBooks.length > 0
-    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and NEVER recommend books they've already read.`
+    ? `\n\nUSER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste.`
     : '';
     
   const queueContext = queuedBooks.length > 0
-    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nDO NOT recommend any of these books again.`
+    ? `\n\nUSER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.`
     : '';
 
   return `You are Sarah, a passionate book curator with a personal library of 200+ beloved books.
@@ -1591,6 +1593,16 @@ Find similar books from beyond my library that match this taste profile.
           content: m.text
         }));
 
+      // Fetch optimized exclusion list from materialized view (single fast query)
+      let exclusionList = [];
+      if (user) {
+        const { data: excludedTitles, error: exclusionError } = await db.getUserExclusionList(user.id);
+        if (!exclusionError && excludedTitles) {
+          exclusionList = excludedTitles;
+          console.log('[Recommendations] Exclusion list loaded:', exclusionList.length, 'books');
+        }
+      }
+
       // Build optimized library shortlist using semantic search
       const favoriteAuthors = tasteProfile?.favorite_authors || [];
       const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
@@ -1607,6 +1619,12 @@ Find similar books from beyond my library that match this taste profile.
 
       // Smart context building - skip library for world-focused queries
       const parts = [];
+      
+      // CRITICAL: Add exclusion list at the top for maximum visibility
+      if (exclusionList.length > 0) {
+        const exclusionText = exclusionList.slice(0, 100).join(', '); // Limit to 100 books to keep prompt manageable
+        parts.push(`🚫 CRITICAL - NEVER RECOMMEND THESE BOOKS:\n${exclusionText}\n\nThe user has already read, saved, or dismissed these books. DO NOT recommend any of them.`);
+      }
       
       // Only include library context if we have good matches and not prioritizing world
       if (hasLibraryMatches && !prioritizeWorld) {
