@@ -10,6 +10,7 @@ import { buildCachedSystemPrompt } from './lib/promptCache';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
+import Toast from './components/Toast';
 import { useUser, useReadingQueue } from './contexts';
 
 // Lazy load heavy components
@@ -1158,6 +1159,7 @@ export default function App() {
   const [showDiscoverModal, setShowDiscoverModal] = useState(false);
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
+  const [toast, setToast] = useState(null);
   const [messages, setMessages] = useState([
     { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world. Look for the **From My Library** or **World Discovery** badges to see the source!\n\nTell me what you're in the mood for and I'll find your next great read.", isUser: false }
   ]);
@@ -1424,9 +1426,12 @@ Find similar books from beyond my library that match this taste profile.
     const result = await addToQueue({ title, author });
     
     if (!result.success) {
-      alert('Failed to save book. Please try again.');
+      setToast({ message: 'Failed to save book. Please try again.', type: 'error' });
       return false;
     }
+    
+    // Show success toast
+    setToast({ message: 'Added to Reading Queue', type: 'success' });
     
     return true;
   }, [user, readingQueue, addToQueue, setShowAuthModal]);
@@ -1462,11 +1467,15 @@ Find similar books from beyond my library that match this taste profile.
       console.error('Failed to dismiss recommendation:', error);
       // Remove from session dismissed if DB save failed
       setSessionDismissedTitles(prev => prev.filter(t => t !== normalizedTitle));
+      setToast({ message: 'Failed to dismiss recommendation', type: 'error' });
       return;
     }
     
     // Update dismissed recommendations list
     setDismissedRecommendations(prev => [...prev, data]);
+    
+    // Show success toast
+    setToast({ message: "Won't recommend similar books", type: 'success' });
   }, [user]);
 
   const handleNewConversation = () => {
@@ -2685,6 +2694,16 @@ ${dismissedThemes.length > 0 ? `- Themes they dismissed: ${[...new Set(dismissed
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          duration={3000}
+        />
       )}
 
     </div>
