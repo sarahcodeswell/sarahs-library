@@ -1757,6 +1757,15 @@ Find similar books from beyond my library that match this taste profile.
         ownedBooks.push(...userBooks);
       }
       
+      // Special case: If user is admin/curator, also exclude ALL catalog books
+      // since they've read everything in their curated collection
+      const isAdmin = user?.email === ADMIN_EMAIL;
+      if (isAdmin && chatMode === 'library') {
+        const catalogTitles = bookCatalog.map(b => b.title).filter(Boolean);
+        ownedBooks.push(...catalogTitles);
+        console.log('[App] Admin detected - excluding all', catalogTitles.length, 'catalog books');
+      }
+      
       // Add dismissed recommendations (rejected)
       if (dismissedRecommendations.length > 0) {
         const rejected = dismissedRecommendations
