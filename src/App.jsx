@@ -1643,8 +1643,8 @@ Find similar books from beyond my library that match this taste profile.
       // Smart context building - skip library for world-focused queries
       const parts = [];
       
-      // Exclusion is handled in the system prompt via reading queue context
-      // No need to send additional exclusion list here
+      // Exclusion is handled in the cached system prompt (promptCache.js)
+      // No need to duplicate it here
       
       // Add user preference signals from reading history
       if (preferredThemes.size > 0 || preferredGenres.size > 0 || preferredAuthors.size > 0) {

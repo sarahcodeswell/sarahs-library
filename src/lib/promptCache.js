@@ -76,13 +76,13 @@ When asked for "best books of the year" or new releases, treat the current year 
   
   if (finishedBooks.length > 0) {
     preferencesText.push(
-      `USER'S READING HISTORY:\nThe user has finished reading: ${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nUse this to understand their taste and NEVER recommend books they've already read.`
+      `🚫 CRITICAL EXCLUSION - BOOKS USER HAS ALREADY READ (${finishedBooks.length} books):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nNEVER recommend any of these books. Use this list to understand their taste, but DO NOT recommend books from this list.`
     );
   }
   
   if (queuedBooks.length > 0) {
     preferencesText.push(
-      `USER'S READING QUEUE:\nThe user has already saved these books: ${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}.\nDO NOT recommend any of these books again.`
+      `📚 BOOKS USER HAS ALREADY SAVED (DO NOT RECOMMEND):\n${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}`
     );
   }
 
