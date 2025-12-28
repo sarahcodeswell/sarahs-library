@@ -69,14 +69,9 @@ export default function UserProfile({ tasteProfile }) {
       console.log('[Profile] Reading queue loaded:', { total: queue?.length });
       
       // Collection = user_books + books marked as 'finished' in reading_queue
+      // Note: Admin's catalog books are now in reading_queue, so no special handling needed
       const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
       let collectionCount = (userBooks?.length || 0) + finishedBooks.length;
-      
-      // If master admin, add 200 curated books from books.json
-      if (isMasterAdmin) {
-        collectionCount += booksData.length;
-        console.log('[Profile] Master admin - adding', booksData.length, 'curated books');
-      }
       
       // Queue = books marked as 'want_to_read' or 'reading'
       const queueBooks = queue?.filter(item => 
