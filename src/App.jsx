@@ -1144,7 +1144,7 @@ function AboutSection({ onShare }) {
 
 export default function App() {
   const { user, authLoading, showAuthModal, setShowAuthModal, signOut } = useUser();
-  const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
+  const { readingQueue, isLoadingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
   
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
@@ -1451,6 +1451,18 @@ Find similar books from beyond my library that match this taste profile.
     
     const normalizedTitle = normalizeTitle(rec.title);
     
+    // Check if already dismissed
+    const alreadyDismissed = dismissedRecommendations.some(
+      d => normalizeTitle(d.book_title) === normalizedTitle
+    );
+    
+    if (alreadyDismissed) {
+      // Just update UI, don't try to save again
+      setSessionDismissedTitles(prev => [...prev, normalizedTitle]);
+      setToast({ message: "Won't recommend similar books", type: 'success' });
+      return;
+    }
+    
     // Add to session dismissed titles immediately for UI update
     setSessionDismissedTitles(prev => [...prev, normalizedTitle]);
     
@@ -1467,7 +1479,13 @@ Find similar books from beyond my library that match this taste profile.
       console.error('Failed to dismiss recommendation:', error);
       // Remove from session dismissed if DB save failed
       setSessionDismissedTitles(prev => prev.filter(t => t !== normalizedTitle));
-      setToast({ message: 'Failed to dismiss recommendation', type: 'error' });
+      
+      // Check if it's a duplicate error (already dismissed)
+      if (error.message?.includes('unique') || error.code === '23505') {
+        setToast({ message: "Won't recommend similar books", type: 'success' });
+      } else {
+        setToast({ message: 'Failed to dismiss recommendation', type: 'error' });
+      }
       return;
     }
     
@@ -1476,7 +1494,7 @@ Find similar books from beyond my library that match this taste profile.
     
     // Show success toast
     setToast({ message: "Won't recommend similar books", type: 'success' });
-  }, [user]);
+  }, [user, dismissedRecommendations]);
 
   const handleNewConversation = () => {
     setMessages(getInitialMessages());
@@ -1659,6 +1677,13 @@ Find similar books from beyond my library that match this taste profile.
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
+    
+    // Wait for reading queue to load before making recommendations
+    if (user && isLoadingQueue) {
+      console.log('[App] Waiting for reading queue to load...');
+      setToast({ message: 'Loading your library...', type: 'info' });
+      return;
+    }
 
     const userMessage = inputValue.trim();
     setInputValue('');
