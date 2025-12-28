@@ -1820,8 +1820,12 @@ ${dismissedThemes.length > 0 ? `- Themes they dismissed: ${[...new Set(dismissed
       // Log what we're sending to Claude for debugging
       console.log('[App] Sending to Claude:');
       console.log('[App] - hasLibraryMatches:', hasLibraryMatches);
-      console.log('[App] - readingQueue length:', readingQueue.length);
-      console.log('[App] - User books to avoid count:', readingQueue.length);
+      console.log('[App] - readingQueue length:', readingQueue?.length || 0);
+      console.log('[App] - readingQueue sample:', readingQueue?.slice(0, 5).map(b => b.book_title));
+      console.log('[App] - User books to avoid count:', ownedBooks.length);
+      console.log('[App] - Dismissed books count:', dismissedBooks.length);
+      console.log('[App] - Total exclusion list:', booksToExclude.length);
+      console.log('[App] - Exclusion list sample:', booksToExclude.slice(0, 10));
       console.log('[App] - Content preview:', userContent.substring(0, 500) + '...');
 
       // Update progress: searching world, then finding matches
