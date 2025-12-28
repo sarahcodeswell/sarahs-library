@@ -193,10 +193,12 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
 
       let successCount = 0;
       for (const book of books) {
-        const result = await addBook({
+        // Add books from Goodreads CSV directly to reading queue with status='finished'
+        // This ensures they're counted in collection and excluded from recommendations
+        const result = await addToQueue({
           title: book.title,
           author: book.author || '',
-          addedVia: 'goodreads',
+          status: 'finished',
         });
         
         if (result.success) {
