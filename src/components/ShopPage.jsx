@@ -29,7 +29,7 @@ export default function ShopPage({ onNavigate }) {
               <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
                 <div className="aspect-square bg-white flex items-center justify-center p-8">
                   <img 
-                    src="/tshirt-1.jpg" 
+                    src="/unisex-staple-t-shirt-vintage-white-front-69530f90b2fa7.png" 
                     alt="For the love of reading t-shirt - compact design"
                     className="w-full h-full object-contain"
                   />
@@ -50,7 +50,7 @@ export default function ShopPage({ onNavigate }) {
               <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
                 <div className="aspect-square bg-white flex items-center justify-center p-8">
                   <img 
-                    src="/tshirt-2.jpg" 
+                    src="/unisex-staple-t-shirt-vintage-white-front-6953100b12468.png" 
                     alt="For the love of reading t-shirt - centered design"
                     className="w-full h-full object-contain"
                   />
