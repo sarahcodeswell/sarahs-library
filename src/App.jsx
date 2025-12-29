@@ -2005,7 +2005,7 @@ Find similar books from beyond my library that match this taste profile.
               
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">For the <span className="text-[#c96b6b]">❤️</span> of reading</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
               </div>
             </div>
             
