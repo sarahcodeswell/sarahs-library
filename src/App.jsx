@@ -1028,6 +1028,7 @@ function BookDetail({ book, onClose }) {
 
 function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
+  const isWelcomeMessage = !isUser && message.includes("Hi, I'm Sarah!");
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -1054,6 +1055,13 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
             onRemoveFromQueue={onRemoveFromQueue}
             onShowAuthModal={onShowAuthModal}
           />
+        ) : isWelcomeMessage ? (
+          <div className="text-sm leading-relaxed">
+            <p className="mb-3">Hi, I'm Sarah!</p>
+            <p className="mb-3">I'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.</p>
+            <p className="mb-3">Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F7F2] border border-[#D4DAD0] text-[10px] font-medium text-[#5F7252]"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFFEF0] border border-[#E8E4B8] text-[10px] font-medium text-[#5F7252]"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
+            <p>Tell me what you're in the mood for and I'll find your next great read.</p>
+          </div>
         ) : (
           <div className="text-sm leading-relaxed">
             <FormattedText text={message} />
@@ -1123,7 +1131,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world. Look for the **From My Library** or **World Discovery** badges to see the source!\n\nTell me what you're in the mood for and I'll find your next great read.", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.\n\nTell me what you're in the mood for and I'll find your next great read.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1298,7 +1306,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world. Look for the **From My Library** or **World Discovery** badges to see the source!\n\nTell me what you're in the mood for and I'll find your next great read.",
+      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.\n\nTell me what you're in the mood for and I'll find your next great read.",
       isUser: false
     }];
   };
