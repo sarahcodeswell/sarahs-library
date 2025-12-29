@@ -1059,7 +1059,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
           <div className="text-sm leading-relaxed">
             <p className="mb-3">Hi, I'm Sarah!</p>
             <p className="mb-3">I'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.</p>
-            <p className="mb-3">Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E8F5E9] border border-[#81C784] text-[10px] font-medium text-[#2E7D32]"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFF9C4] border border-[#FFD54F] text-[10px] font-medium text-[#F57F17]"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
+            <p className="mb-3">Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
             <p>Tell me what you're in the mood for and I'll find your next great read.</p>
           </div>
         ) : (
