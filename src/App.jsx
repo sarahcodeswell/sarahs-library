@@ -2005,7 +2005,7 @@ Find similar books from beyond my library that match this taste profile.
               
               <div>
                 <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
-                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">For the ❤️ of reading</p>
+                <p className="text-xs text-[#7A8F6C] font-light tracking-wide">For the <span className="text-[#c96b6b]">❤️</span> of reading</p>
               </div>
             </div>
             
@@ -2423,7 +2423,7 @@ Find similar books from beyond my library that match this taste profile.
           />
 
           <div className="mt-16 sm:mt-20 text-center">
-            <div className="text-xs text-[#7A8F6C] font-light">For the ❤️ of reading</div>
+            <div className="text-xs text-[#7A8F6C] font-light">A Curated Collection of Infinite Possibilities</div>
           </div>
 
         </main>
