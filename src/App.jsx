@@ -15,6 +15,7 @@ import { useUser, useReadingQueue } from './contexts';
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
+const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
@@ -1980,6 +1981,23 @@ Find similar books from beyond my library that match this taste profile.
                       <BookHeart className="w-4 h-4" />
                       How It Works
                     </button>
+                    <button
+                      onClick={() => {
+                        setCurrentPage('shop');
+                        setShowNavMenu(false);
+                        window.scrollTo(0, 0);
+                        window.history.pushState({}, '', '/shop');
+                        
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'shop'
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      Shop
+                    </button>
                     <div className="border-t border-[#E8EBE4] my-1"></div>
                     {user?.email === ADMIN_EMAIL && (
                       <button
@@ -2068,6 +2086,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'about' && (
         <Suspense fallback={<LoadingFallback message="Loading About..." />}>
           <AboutPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+      
+      {currentPage === 'shop' && (
+        <Suspense fallback={<LoadingFallback message="Loading Shop..." />}>
+          <ShopPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
       
