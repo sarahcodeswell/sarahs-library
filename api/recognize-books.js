@@ -1,4 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getClientIdentifier } from './utils/auth.js';
+import { checkDailyLimit } from './utils/userLimits.js';
+import { rateLimit } from './utils/rateLimit.js';
+import { trackCost } from './utils/costMonitoring.js';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -10,11 +14,44 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Get client identifier for rate limiting
+    const clientId = getClientIdentifier(req);
+    
+    // Rate limiting: 10 requests per minute
+    const rateLimitResult = rateLimit(clientId, {
+      maxRequests: 10,
+      windowMs: 60 * 1000,
+    });
+    
+    if (!rateLimitResult.isAllowed) {
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        resetIn: rateLimitResult.resetIn
+      });
+    }
+    
+    // Daily limit: 20 photo recognitions per day
+    const dailyLimit = checkDailyLimit(clientId, 'photo_recognition');
+    
+    if (!dailyLimit.allowed) {
+      const resetDate = new Date(dailyLimit.resetTime);
+      return res.status(429).json({
+        error: `Daily limit reached. You've used all ${dailyLimit.limit} photo recognitions for today. Resets at midnight.`,
+        resetTime: resetDate.toISOString(),
+        remaining: 0
+      });
+    }
+
     // Expect JSON body with base64 encoded image
     const { image, mediaType } = req.body;
 
     if (!image) {
       return res.status(400).json({ error: 'No image provided' });
+    }
+    
+    // Validate image size (limit to 5MB base64)
+    if (image.length > 5 * 1024 * 1024 * 1.37) { // base64 is ~1.37x larger
+      return res.status(400).json({ error: 'Image too large. Maximum 5MB.' });
     }
 
     // Remove data URL prefix if present
@@ -87,6 +124,9 @@ Do not include any other text, explanations, or markdown formatting. Only return
         books: []
       });
     }
+
+    // Track successful API call cost
+    trackCost('photo_recognition');
 
     // Return recognized books
     return res.status(200).json({

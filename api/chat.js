@@ -1,5 +1,8 @@
 import { rateLimit, getRateLimitHeaders } from './utils/rateLimit.js';
 import { getClientIdentifier } from './utils/auth.js';
+import { checkDailyLimit } from './utils/userLimits.js';
+import { validateMessages, sanitizeUserInput } from './utils/inputSanitization.js';
+import { trackCost } from './utils/costMonitoring.js';
 
 export const config = {
   runtime: 'edge',
@@ -52,6 +55,30 @@ export default async function handler(req) {
       );
     }
 
+    // Check daily limit (50 recommendations per day per user)
+    const dailyLimit = checkDailyLimit(clientId, 'recommendation');
+    
+    if (!dailyLimit.allowed) {
+      const resetDate = new Date(dailyLimit.resetTime);
+      return new Response(
+        JSON.stringify({ 
+          error: `Daily limit reached. You've used all ${dailyLimit.limit} recommendations for today. Resets at midnight.`,
+          resetTime: resetDate.toISOString(),
+          remaining: 0
+        }),
+        {
+          status: 429,
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+            'X-Daily-Limit': dailyLimit.limit.toString(),
+            'X-Daily-Remaining': '0',
+            'X-Daily-Reset': resetDate.toISOString(),
+          },
+        }
+      );
+    }
+
     // Parse and validate request body
     const body = await req.json();
     
@@ -64,6 +91,21 @@ export default async function handler(req) {
         }
       );
     }
+
+    // Sanitize and validate messages
+    const messageValidation = validateMessages(body.messages);
+    if (!messageValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: messageValidation.error }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+
+    // Use sanitized messages
+    body.messages = messageValidation.sanitized;
 
     // Validate API key is configured
     const apiKey = globalThis?.process?.env?.ANTHROPIC_API_KEY;
@@ -95,6 +137,9 @@ export default async function handler(req) {
     // Log errors from Anthropic
     if (!response.ok) {
       console.error('Anthropic API error:', data);
+    } else {
+      // Track successful API call cost
+      trackCost('recommendation');
     }
 
     return new Response(JSON.stringify(data), {
