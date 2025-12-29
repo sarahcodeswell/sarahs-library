@@ -1,106 +1,80 @@
 import React from 'react';
-import { ShoppingBag, ExternalLink, Heart, Sparkles } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 export default function ShopPage({ onNavigate }) {
-  const products = [
-    {
-      name: "Sarah's Books Classic Tee",
-      description: "Soft, comfortable cotton tee featuring the Sarah's Books logo",
-      image: "/shop-tee-preview.jpg", // You'll need to add product images
-      price: "$24.99",
-    },
-    // Add more products as you create them in Printful
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFBF4] via-[#FBF9F0] to-[#F5EFDC]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <ShoppingBag className="w-8 h-8 text-[#5F7252]" />
-            <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940]">Shop</h1>
-          </div>
-          <p className="text-[#7A8F6C] text-sm sm:text-base max-w-2xl mx-auto">
-            Wear your love of reading with Sarah's Books merchandise. Each purchase supports our mission to connect readers with their next great book.
+        {/* Simple Header */}
+        <div className="text-center mb-16">
+          <h1 className="font-serif text-4xl sm:text-5xl text-[#4A5940] mb-6">
+            For the <Heart className="w-10 h-10 sm:w-12 sm:h-12 fill-[#c96b6b] text-[#c96b6b] inline mx-1" /> of reading
+          </h1>
+          <p className="text-[#7A8F6C] text-base sm:text-lg mb-8 max-w-2xl mx-auto">
+            Wear your love of books. Each t-shirt is made to order and supports our mission to connect readers with their next great read.
           </p>
         </div>
 
-        {/* Featured Banner */}
-        <div className="bg-white rounded-2xl p-8 sm:p-12 border border-[#D4DAD0] shadow-sm mb-12 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="w-6 h-6 text-[#c96b6b] fill-[#c96b6b]" />
-            <Sparkles className="w-6 h-6 text-[#5F7252]" />
-          </div>
-          <h2 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-4">
-            Sarah's Books Collection
-          </h2>
-          <p className="text-[#7A8F6C] mb-6 max-w-xl mx-auto">
-            High-quality apparel for book lovers. Designed with care, printed on demand, and shipped directly to you.
-          </p>
-          <a
-            href="https://sarahsbooks.printful.me/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors font-medium"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            Browse All Products
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </div>
+        {/* Product Showcase */}
+        <div className="mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+            {/* Product 1 */}
+            <a
+              href="https://sarahsbooks.printful.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
+                <div className="aspect-square bg-white flex items-center justify-center p-8">
+                  <img 
+                    src="/tshirt-1.jpg" 
+                    alt="For the love of reading t-shirt - compact design"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="p-6 text-center">
+                  <p className="text-sm text-[#7A8F6C] font-serif italic">Compact Design</p>
+                </div>
+              </div>
+            </a>
 
-        {/* Product Grid - You can expand this later */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {/* Product Card Example */}
-          <div className="bg-white rounded-xl border border-[#D4DAD0] overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="aspect-square bg-[#F8F6EE] flex items-center justify-center">
-              <ShoppingBag className="w-16 h-16 text-[#D4DAD0]" />
-              {/* Replace with actual product image */}
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium text-[#4A5940] mb-1">T-Shirts</h3>
-              <p className="text-xs text-[#7A8F6C] mb-3">Classic & comfortable</p>
-              <a
-                href="https://sarahsbooks.printful.me/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-[#5F7252] hover:text-[#4A5940] font-medium inline-flex items-center gap-1"
-              >
-                Shop Now
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-
-          {/* Add more product cards as needed */}
-        </div>
-
-        {/* Info Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-6 border border-[#D4DAD0] text-center">
-            <div className="w-12 h-12 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-3">
-              <ShoppingBag className="w-6 h-6 text-[#2E7D32]" />
-            </div>
-            <h3 className="font-medium text-[#4A5940] mb-2">Quality Materials</h3>
-            <p className="text-xs text-[#7A8F6C]">Premium fabrics and prints that last</p>
+            {/* Product 2 */}
+            <a
+              href="https://sarahsbooks.printful.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
+                <div className="aspect-square bg-white flex items-center justify-center p-8">
+                  <img 
+                    src="/tshirt-2.jpg" 
+                    alt="For the love of reading t-shirt - centered design"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="p-6 text-center">
+                  <p className="text-sm text-[#7A8F6C] font-serif italic">Centered Design</p>
+                </div>
+              </div>
+            </a>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-[#D4DAD0] text-center">
-            <div className="w-12 h-12 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-6 h-6 text-[#2E7D32]" />
-            </div>
-            <h3 className="font-medium text-[#4A5940] mb-2">Made to Order</h3>
-            <p className="text-xs text-[#7A8F6C]">Printed just for you, reducing waste</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-[#D4DAD0] text-center">
-            <div className="w-12 h-12 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-3">
-              <Heart className="w-6 h-6 text-[#c96b6b] fill-[#c96b6b]" />
-            </div>
-            <h3 className="font-medium text-[#4A5940] mb-2">Support Reading</h3>
-            <p className="text-xs text-[#7A8F6C]">Every purchase supports our mission</p>
+          {/* CTA */}
+          <div className="text-center">
+            <a
+              href="https://sarahsbooks.printful.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-8 py-4 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors font-medium text-lg"
+            >
+              Shop Now
+            </a>
+            <p className="text-xs text-[#96A888] mt-4">
+              Opens in new window • Secure checkout via Printful
+            </p>
           </div>
         </div>
 
