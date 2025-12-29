@@ -26,16 +26,17 @@ export default function ShopPage({ onNavigate }) {
               rel="noopener noreferrer"
               className="group"
             >
-              <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
-                <div className="aspect-square bg-white flex items-center justify-center p-8">
+              <div className="rounded-2xl overflow-hidden hover:shadow-xl transition-all">
+                <div className="flex items-center justify-center p-8 sm:p-12">
                   <img 
                     src="/unisex-staple-t-shirt-vintage-white-front-69530f90b2fa7.png" 
                     alt="For the love of reading t-shirt - compact design"
-                    className="w-full h-full object-contain"
+                    className="w-64 h-64 object-contain"
                   />
                 </div>
-                <div className="p-6 text-center">
-                  <p className="text-sm text-[#7A8F6C] font-serif italic">Compact Design</p>
+                <div className="text-center pb-4">
+                  <p className="text-sm text-[#7A8F6C] font-serif italic mb-1">Compact Design</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
             </a>
@@ -47,16 +48,17 @@ export default function ShopPage({ onNavigate }) {
               rel="noopener noreferrer"
               className="group"
             >
-              <div className="bg-white rounded-2xl overflow-hidden border border-[#D4DAD0] hover:shadow-xl transition-all">
-                <div className="aspect-square bg-white flex items-center justify-center p-8">
+              <div className="rounded-2xl overflow-hidden hover:shadow-xl transition-all">
+                <div className="flex items-center justify-center p-8 sm:p-12">
                   <img 
                     src="/unisex-staple-t-shirt-vintage-white-front-6953100b12468.png" 
                     alt="For the love of reading t-shirt - centered design"
-                    className="w-full h-full object-contain"
+                    className="w-64 h-64 object-contain"
                   />
                 </div>
-                <div className="p-6 text-center">
-                  <p className="text-sm text-[#7A8F6C] font-serif italic">Centered Design</p>
+                <div className="text-center pb-4">
+                  <p className="text-sm text-[#7A8F6C] font-serif italic mb-1">Centered Design</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
             </a>
