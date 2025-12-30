@@ -164,17 +164,15 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           });
         }
       } else {
-        // Add to reading queue with the rating
+        // Add to reading queue with the rating in one operation
         const result = await addToQueue({
           title: book.book_title,
           author: book.book_author,
           status: 'finished',
+          rating: newRating,
         });
         
-        if (result.success && result.data) {
-          // Now update with the rating
-          await updateQueueItem(result.data.id, { rating: newRating });
-          
+        if (result.success) {
           track('curated_book_rated', {
             book_title: book.book_title,
             rating: newRating

@@ -151,16 +151,22 @@ export const db = {
       console.log('addToReadingQueue: Starting insert for', { userId, book });
     }
     
+    const insertData = {
+      user_id: userId,
+      book_title: book.title,
+      book_author: book.author,
+      status: book.status || 'want_to_read',
+    };
+    
+    // Include rating if provided
+    if (book.rating !== undefined) {
+      insertData.rating = book.rating;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('reading_queue')
-        .insert({
-          user_id: userId,
-          book_title: book.title,
-          book_author: book.author,
-          status: book.status || 'want_to_read',
-          added_at: new Date().toISOString(),
-        })
+        .insert([insertData])
         .select();
       
       if (import.meta.env.DEV) {
