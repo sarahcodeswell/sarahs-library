@@ -503,7 +503,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
   const handleNotForMe = (e) => {
     e.stopPropagation();
-    setDismissed(true);
     
     track('recommendation_dismissed', {
       book_title: rec.title,
@@ -511,6 +510,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       chat_mode: chatMode,
       has_catalog_match: !!catalogBook
     });
+    
+    // Delay dismissal to show animation
+    setTimeout(() => setDismissed(true), 300);
   };
 
   const handleWantToRead = async (e) => {
@@ -524,13 +526,13 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     setShowAcquisitionOptions(true);
   };
 
-  // Don't render if dismissed
-  if (dismissed) {
-    return null;
-  }
-
   return (
-    <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
+    <div 
+      className={`bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4 transition-all duration-300 ${
+        dismissed ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+      }`}
+      style={{ display: dismissed ? 'none' : 'block' }}
+    >
       {/* Source Badge */}
       <div className="flex items-center gap-2 mb-3">
         {catalogBook ? (
@@ -701,8 +703,22 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
-                  onClick={() => {
+                  onClick={async () => {
                     setUserRating(star);
+                    
+                    // Find the book in reading queue and update its rating
+                    const queueItem = readingQueue.find(
+                      qb => normalizeTitle(qb.book_title) === normalizeTitle(rec.title)
+                    );
+                    
+                    if (queueItem) {
+                      try {
+                        await db.updateReadingQueueItem(queueItem.id, { rating: star });
+                      } catch (error) {
+                        console.error('Failed to save rating:', error);
+                      }
+                    }
+                    
                     track('recommendation_rated', {
                       book_title: rec.title,
                       rating: star,
@@ -734,8 +750,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         )}
       </div>
 
-      {/* Secondary Acquisition Actions (always visible for now, will be conditional later) */}
-      <div className="grid grid-cols-4 gap-2">
+      {/* Secondary Acquisition Actions (shown after engagement or on expand) */}
+      {(showAcquisitionOptions || expanded) && (
+        <div className="grid grid-cols-4 gap-2">
         {/* Library Button */}
         <button
           onClick={() => {
@@ -903,6 +920,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           <span className="hidden sm:inline whitespace-nowrap">Save</span>
         </button>
       </div>
+      )}
     </div>
   );
 }
