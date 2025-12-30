@@ -26,25 +26,26 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     
     // If master admin, merge with all 200 curated books from books.json
     if (isMasterAdmin) {
-      // Convert books.json to same format as reading queue
-      const curatedBooks = booksData.map((book, index) => ({
-        id: `curated-${index}`,
-        book_title: book.title,
-        book_author: book.author,
-        status: 'finished',
-        isCurated: true, // Flag to identify curated books
-        added_at: null, // Curated books don't have an added date
-      }));
+      // Start with user's reading queue (these have ratings and user data)
+      const allBooks = [...finishedBooks];
       
-      // Merge curated books with user's reading queue (avoid duplicates)
-      const allBooks = [...curatedBooks];
-      finishedBooks.forEach(book => {
-        const isDuplicate = curatedBooks.some(
-          cb => cb.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
-                cb.book_author?.toLowerCase() === book.book_author?.toLowerCase()
+      // Add curated books that aren't already in reading queue
+      booksData.forEach((book, index) => {
+        const isDuplicate = finishedBooks.some(
+          qb => qb.book_title?.toLowerCase() === book.title?.toLowerCase() &&
+                qb.book_author?.toLowerCase() === book.author?.toLowerCase()
         );
+        
+        // Only add curated book if not already in reading queue
         if (!isDuplicate) {
-          allBooks.push(book);
+          allBooks.push({
+            id: `curated-${index}`,
+            book_title: book.title,
+            book_author: book.author,
+            status: 'finished',
+            isCurated: true,
+            added_at: null,
+          });
         }
       });
       
