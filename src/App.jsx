@@ -491,7 +491,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     
     if (success) {
       setShowRatingPrompt(true);
-      setShowAcquisitionOptions(true);
+      // Don't show acquisition options for Already Read - only rating
       
       track('recommendation_marked_read', {
         book_title: rec.title,
@@ -744,11 +744,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </div>
         )}
 
-        {/* Acquisition Options Prompt (shows after engagement) */}
-        {showAcquisitionOptions && (
+        {/* Acquisition Options Prompt (shows after Want to Read) */}
+        {showAcquisitionOptions && !showRatingPrompt && (
           <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
             <p className="text-xs font-medium text-[#4A5940] mb-2">
-              {showRatingPrompt ? 'Want to own or listen to it?' : 'How do you want to get it?'}
+              ✓ Added to your Reading Queue
+            </p>
+            <p className="text-xs text-[#7A8F6C] mt-1">
+              Want to get it now?
             </p>
           </div>
         )}
@@ -756,7 +759,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
       {/* Secondary Acquisition Actions (shown after engagement or on expand) */}
       {(showAcquisitionOptions || expanded) && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
         {/* Library Button */}
         <button
           onClick={() => {
@@ -908,21 +911,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             </div>
           )}
         </div>
-
-        {/* Save Button (Bookmark) */}
-        <button
-          onClick={user ? handleAddToQueue : onShowAuthModal}
-          disabled={addingToQueue}
-          className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1 ${
-            isInQueue 
-              ? 'bg-[#5F7252] border-[#5F7252] text-white' 
-              : 'bg-white border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2]'
-          }`}
-          title={user ? (isInQueue ? 'Saved to reading queue' : 'Save to reading queue') : 'Sign in to save books'}
-        >
-          <Bookmark className={`w-3.5 h-3.5 flex-shrink-0 ${isInQueue ? 'fill-current' : ''}`} />
-          <span className="hidden sm:inline whitespace-nowrap">Save</span>
-        </button>
       </div>
       )}
     </div>
