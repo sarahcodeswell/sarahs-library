@@ -709,8 +709,17 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         {/* Rating Prompt (shows after "Already Read") */}
         {(showRatingPrompt || isFinished) && (
           <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-            <p className="text-xs font-medium text-[#4A5940] mb-2">How would you rate it?</p>
-            <div className="flex items-center gap-1">
+            {userRating ? (
+              <div className="text-center">
+                <p className="text-xs font-medium text-[#5F7252] mb-1">✓ Added to your Collection</p>
+                <p className="text-xs text-[#7A8F6C]">
+                  We'll use your {userRating}-star rating to improve future recommendations
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs font-medium text-[#4A5940] mb-2">How would you rate it?</p>
+                <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -735,6 +744,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                       rating: star,
                       chat_mode: chatMode
                     });
+                    
+                    // After rating, show confirmation and dismiss card
+                    setTimeout(() => {
+                      setShowRatingPrompt(false);
+                      setDismissed(true);
+                    }, 1500);
                   }}
                   className="p-1 hover:scale-110 transition-transform"
                 >
@@ -747,7 +762,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                   />
                 </button>
               ))}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
