@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, Activity } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, Activity, BookCheck } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -398,6 +398,10 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [showBuyOptions, setShowBuyOptions] = useState(false);
   const [showListenOptions, setShowListenOptions] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  const [userRating, setUserRating] = useState(null);
+  const [showAcquisitionOptions, setShowAcquisitionOptions] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -469,6 +473,61 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       });
     }
   };
+
+  const handleAlreadyRead = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      onShowAuthModal();
+      return;
+    }
+    
+    // Add to reading queue with 'finished' status
+    setAddingToQueue(true);
+    const success = await onAddToQueue({
+      ...rec,
+      status: 'finished'
+    });
+    setAddingToQueue(false);
+    
+    if (success) {
+      setShowRatingPrompt(true);
+      setShowAcquisitionOptions(true);
+      
+      track('recommendation_marked_read', {
+        book_title: rec.title,
+        book_author: displayAuthor,
+        chat_mode: chatMode
+      });
+    }
+  };
+
+  const handleNotForMe = (e) => {
+    e.stopPropagation();
+    setDismissed(true);
+    
+    track('recommendation_dismissed', {
+      book_title: rec.title,
+      book_author: displayAuthor,
+      chat_mode: chatMode,
+      has_catalog_match: !!catalogBook
+    });
+  };
+
+  const handleWantToRead = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      onShowAuthModal();
+      return;
+    }
+    
+    await handleAddToQueue(e);
+    setShowAcquisitionOptions(true);
+  };
+
+  // Don't render if dismissed
+  if (dismissed) {
+    return null;
+  }
 
   return (
     <div className="bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4">
@@ -594,7 +653,88 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         </div>
       )}
 
-      {/* Action Buttons - World-Class Acquisition UX */}
+      {/* Primary Engagement Actions */}
+      <div className="mb-3">
+        <div className="grid grid-cols-3 gap-2">
+          {/* Already Read Button */}
+          <button
+            onClick={handleAlreadyRead}
+            disabled={addingToQueue}
+            className="py-2.5 px-3 rounded-lg text-xs font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center justify-center gap-1.5"
+            title="I've already read this book"
+          >
+            <BookCheck className="w-4 h-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Already Read</span>
+          </button>
+
+          {/* Want to Read Button */}
+          <button
+            onClick={handleWantToRead}
+            disabled={addingToQueue}
+            className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+              isInQueue 
+                ? 'bg-[#7A8F6C] border-[#7A8F6C] text-white' 
+                : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
+            }`}
+            title={user ? (isInQueue ? 'Saved to reading queue' : 'Save to reading queue') : 'Sign in to save books'}
+          >
+            <BookMarked className={`w-4 h-4 flex-shrink-0 ${isInQueue ? 'fill-current' : ''}`} />
+            <span className="whitespace-nowrap">Want to Read</span>
+          </button>
+
+          {/* Not For Me Button */}
+          <button
+            onClick={handleNotForMe}
+            className="py-2.5 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE] flex items-center justify-center gap-1.5"
+            title="Not interested in this recommendation"
+          >
+            <X className="w-4 h-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Not For Me</span>
+          </button>
+        </div>
+
+        {/* Rating Prompt (shows after "Already Read") */}
+        {showRatingPrompt && (
+          <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+            <p className="text-xs font-medium text-[#4A5940] mb-2">How would you rate it?</p>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => {
+                    setUserRating(star);
+                    track('recommendation_rated', {
+                      book_title: rec.title,
+                      rating: star,
+                      chat_mode: chatMode
+                    });
+                  }}
+                  className="p-1 hover:scale-110 transition-transform"
+                >
+                  <Star 
+                    className={`w-5 h-5 ${
+                      star <= (userRating || 0) 
+                        ? 'fill-[#F59E0B] text-[#F59E0B]' 
+                        : 'fill-none text-[#D4DAD0]'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Acquisition Options Prompt (shows after engagement) */}
+        {showAcquisitionOptions && (
+          <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+            <p className="text-xs font-medium text-[#4A5940] mb-2">
+              {showRatingPrompt ? 'Want to own or listen to it?' : 'How do you want to get it?'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Secondary Acquisition Actions (always visible for now, will be conditional later) */}
       <div className="grid grid-cols-4 gap-2">
         {/* Library Button */}
         <button
