@@ -69,19 +69,30 @@ function calculateBookScore(query, book, favoriteAuthors = []) {
  * @param {number} limit - Max results to return
  * @returns {Array} - Top matching books with scores
  */
+// Helper function to normalize titles for matching
+function normalizeTitle(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function searchLibrary(query, catalog, readingQueue = [], favoriteAuthors = [], limit = 10) {
   if (!query || !catalog || !Array.isArray(catalog)) {
     return [];
   }
   
-  // Get titles to exclude (already read or queued)
+  // Get titles to exclude (already read or queued) - use normalized titles
   const excludeTitles = new Set(
-    readingQueue.map(item => (item.book_title || '').toLowerCase())
+    readingQueue.map(item => normalizeTitle(item.book_title))
   );
   
   // Score all books
   const scoredBooks = catalog
-    .filter(book => !excludeTitles.has((book.title || '').toLowerCase()))
+    .filter(book => !excludeTitles.has(normalizeTitle(book.title)))
     .map(book => ({
       ...book,
       score: calculateBookScore(query, book, favoriteAuthors)

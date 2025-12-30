@@ -41,10 +41,16 @@ export async function getUserFromRequest(req) {
 
 export function getClientIdentifier(req) {
   // Try to get user IP for rate limiting
-  const forwarded = req.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0].trim() : 
-             req.headers.get('x-real-ip') || 
-             'unknown';
+  // Handle both Vercel (Headers object with .get()) and Express (plain object)
+  const headers = req.headers;
+  const forwarded = typeof headers.get === 'function' 
+    ? headers.get('x-forwarded-for')
+    : headers['x-forwarded-for'];
+  const realIp = typeof headers.get === 'function'
+    ? headers.get('x-real-ip')
+    : headers['x-real-ip'];
+  
+  const ip = forwarded ? forwarded.split(',')[0].trim() : realIp || 'unknown';
   
   return ip;
 }
