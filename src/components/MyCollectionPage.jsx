@@ -144,23 +144,42 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   const handleRatingChange = async (book, newRating) => {
-    // For curated books, we need to add them to reading_queue first
+    // For curated books, check if already in reading_queue first
     if (book.isCurated) {
-      // Add to reading queue with the rating
-      const result = await addToQueue({
-        title: book.book_title,
-        author: book.book_author,
-        status: 'finished',
-      });
+      // Check if this book already exists in reading_queue
+      const existingBook = readingQueue.find(
+        qb => qb.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
+              qb.book_author?.toLowerCase() === book.book_author?.toLowerCase() &&
+              qb.status === 'finished'
+      );
       
-      if (result.success && result.data) {
-        // Now update with the rating
-        await updateQueueItem(result.data.id, { rating: newRating });
+      if (existingBook) {
+        // Book already exists, just update the rating
+        const result = await updateQueueItem(existingBook.id, { rating: newRating });
         
-        track('curated_book_rated', {
-          book_title: book.book_title,
-          rating: newRating
+        if (result.success) {
+          track('curated_book_rated', {
+            book_title: book.book_title,
+            rating: newRating
+          });
+        }
+      } else {
+        // Add to reading queue with the rating
+        const result = await addToQueue({
+          title: book.book_title,
+          author: book.book_author,
+          status: 'finished',
         });
+        
+        if (result.success && result.data) {
+          // Now update with the rating
+          await updateQueueItem(result.data.id, { rating: newRating });
+          
+          track('curated_book_rated', {
+            book_title: book.book_title,
+            rating: newRating
+          });
+        }
       }
       return;
     }
