@@ -107,13 +107,13 @@ When asked for "best books of the year" or new releases, treat the current year 
   // All finished books (for exclusion)
   if (finishedBooks.length > 0) {
     preferencesText.push(
-      `🚫 CRITICAL EXCLUSION - ALL BOOKS USER HAS READ (${finishedBooks.length} books):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nNEVER recommend any of these books.`
+      `🚫 CRITICAL EXCLUSION - BOOKS USER HAS ALREADY READ (${finishedBooks.length} books):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\n⚠️ ABSOLUTE RULE: NEVER recommend ANY of these books under ANY circumstances. If a user asks about one of these books, acknowledge they've read it but do NOT include it in your 3 recommendations.`
     );
   }
   
   if (queuedBooks.length > 0) {
     preferencesText.push(
-      `📚 BOOKS USER HAS ALREADY SAVED (DO NOT RECOMMEND):\n${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}`
+      `📚 BOOKS USER HAS ALREADY SAVED TO READING QUEUE (${queuedBooks.length} books):\n${queuedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\n⚠️ DO NOT recommend any of these books - they're already in the user's reading queue.`
     );
   }
 
