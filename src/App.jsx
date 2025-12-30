@@ -1725,8 +1725,47 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      // Strip verbose intro text, keep only "My Top 3 Picks for You" and recommendations
+      // POST-AI FILTERING: Remove books in user's exclusion list
       let cleanedText = result.text;
+      const exclusionList = result.exclusionList || [];
+      
+      if (exclusionList.length > 0) {
+        const recs = parseRecommendations(result.text);
+        
+        // Filter out books in exclusion list
+        const validRecs = recs.filter(rec => {
+          const isExcluded = exclusionList.some(excludedTitle => 
+            normalizeTitle(excludedTitle) === normalizeTitle(rec.title)
+          );
+          
+          if (isExcluded) {
+            console.log('[Filter] Removed excluded book:', rec.title);
+            return false;
+          }
+          return true;
+        });
+        
+        // Rebuild response if we filtered anything out
+        if (validRecs.length < recs.length) {
+          if (validRecs.length === 0) {
+            cleanedText = "I'm having trouble finding books that aren't already in your collection. Try asking for something more specific or from a different genre!";
+          } else {
+            // Rebuild with valid recommendations only
+            const parts = ['My Top 3 Picks for You\n'];
+            validRecs.forEach((rec, i) => {
+              parts.push(`\n[RECOMMENDATION ${i + 1}]`);
+              parts.push(`Title: ${rec.title}`);
+              if (rec.author) parts.push(`Author: ${rec.author}`);
+              if (rec.why) parts.push(`Why This Fits: ${rec.why}`);
+              if (rec.description) parts.push(`Description: ${rec.description}`);
+              if (rec.reputation) parts.push(`Reputation: ${rec.reputation}`);
+            });
+            cleanedText = parts.join('\n');
+          }
+        }
+      }
+      
+      // Strip verbose intro text, keep only "My Top 3 Picks for You" and recommendations
       const lines = cleanedText.split('\n');
       const startIndex = lines.findIndex(line => line.includes('My Top 3 Picks for You'));
       if (startIndex > 0) {

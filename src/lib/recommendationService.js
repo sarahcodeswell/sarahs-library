@@ -199,7 +199,8 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     return {
       success: true,
       text: data.content[0].text,
-      exclusionCount: exclusionList.length
+      exclusionCount: exclusionList.length,
+      exclusionList: exclusionList // Return for client-side validation
     };
 
   } catch (error) {
