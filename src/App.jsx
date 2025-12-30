@@ -402,6 +402,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [showRatingPrompt, setShowRatingPrompt] = useState(false);
   const [userRating, setUserRating] = useState(null);
   const [showAcquisitionOptions, setShowAcquisitionOptions] = useState(false);
+  const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -530,7 +531,23 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     }
     
     await handleAddToQueue(e);
+    setShowPurchaseIntent(true);
+  };
+
+  const handleGetItNow = () => {
+    setShowPurchaseIntent(false);
     setShowAcquisitionOptions(true);
+  };
+
+  const handleGetItLater = () => {
+    track('want_to_read_deferred', {
+      book_title: rec.title,
+      book_author: displayAuthor,
+      chat_mode: chatMode
+    });
+    
+    // Dismiss card after brief confirmation
+    setTimeout(() => setDismissed(true), 1500);
   };
 
   return (
@@ -768,15 +785,29 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </div>
         )}
 
-        {/* Acquisition Options Prompt (shows after Want to Read) */}
-        {showAcquisitionOptions && !showRatingPrompt && (
+        {/* Purchase Intent Question (shows after Want to Read) */}
+        {showPurchaseIntent && (
           <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-            <p className="text-xs font-medium text-[#4A5940] mb-2">
+            <p className="text-xs font-medium text-[#4A5940] mb-3">
               ✓ Added to your Reading Queue
             </p>
-            <p className="text-xs text-[#7A8F6C] mt-1">
+            <p className="text-xs text-[#7A8F6C] mb-3">
               Want to get it now?
             </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleGetItNow}
+                className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940]"
+              >
+                Yes, Get It Now
+              </button>
+              <button
+                onClick={handleGetItLater}
+                className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE]"
+              >
+                I'll Get It Later
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -792,6 +823,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               source: 'recommendation_card',
               book_title: rec.title 
             });
+            // Dismiss card after user clicks acquisition option
+            setTimeout(() => setDismissed(true), 500);
           }}
           className="py-2 px-2 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#4A5940] hover:bg-[#F5F7F2] flex items-center justify-center gap-1"
           title="Borrow free from your library"
@@ -838,6 +871,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     source: 'recommendation_card',
                     book_title: rec.title 
                   });
+                  setTimeout(() => setDismissed(true), 500);
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
@@ -865,6 +899,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     book_title: rec.title,
                     is_ios: isIOS
                   });
+                  setTimeout(() => setDismissed(true), 500);
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
@@ -912,6 +947,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     source: 'recommendation_card',
                     book_title: rec.title 
                   });
+                  setTimeout(() => setDismissed(true), 500);
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
               >
@@ -927,6 +963,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                     source: 'recommendation_card',
                     book_title: rec.title 
                   });
+                  setTimeout(() => setDismissed(true), 500);
                 }}
                 className="block px-3 py-2 text-xs text-[#4A5940] hover:bg-[#F8F6EE] transition-colors border-t border-[#E8EBE4] whitespace-nowrap"
               >
