@@ -547,7 +547,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       
       // Show confirmation then dismiss
       setShowPurchaseIntent(true);
-      setTimeout(() => setDismissed(true), 1500);
+      setTimeout(() => setDismissed(true), 2500);
     }
   };
 
@@ -727,11 +727,18 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         {/* Rating Prompt (shows after "Already Read") */}
         {(showRatingPrompt || isFinished) && (
           <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-            {userRating ? (
+            {userRating && userRating > 0 ? (
               <div className="text-center">
                 <p className="text-xs font-medium text-[#5F7252] mb-1">✓ Added to your Collection</p>
                 <p className="text-xs text-[#7A8F6C]">
                   We'll use your {userRating}-star rating to improve future recommendations
+                </p>
+              </div>
+            ) : userRating === -1 ? (
+              <div className="text-center">
+                <p className="text-xs font-medium text-[#5F7252] mb-1">✓ Added to your Collection</p>
+                <p className="text-xs text-[#7A8F6C]">
+                  You can rate this book later. Ratings help us improve your recommendations!
                 </p>
               </div>
             ) : (
@@ -789,8 +796,11 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                       chat_mode: chatMode
                     });
                     
-                    // Dismiss card without rating
-                    setTimeout(() => setDismissed(true), 300);
+                    // Show confirmation message
+                    setUserRating(-1); // Special value to show "rate later" confirmation
+                    
+                    // Dismiss card after showing confirmation
+                    setTimeout(() => setDismissed(true), 2500);
                   }}
                   className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE]"
                 >

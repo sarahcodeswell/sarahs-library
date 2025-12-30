@@ -70,7 +70,9 @@ When asked for "best books of the year" or new releases, treat the current year 
 
   // User preferences (dynamic, but cacheable per session)
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
-  const queuedBooks = readingQueue.filter(item => item.status === 'want_to_read');
+  const queuedBooks = readingQueue.filter(item => 
+    item.status === 'want_to_read' || item.status === 'reading'
+  );
   
   const preferencesText = [];
   
