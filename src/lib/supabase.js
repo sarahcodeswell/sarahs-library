@@ -265,15 +265,17 @@ export const db = {
     if (!supabase) return { data: null, error: null };
     
     try {
+      const updateData = {};
+      if (updates.title !== undefined) updateData.book_title = updates.title;
+      if (updates.author !== undefined) updateData.book_author = updates.author;
+      if (updates.isbn !== undefined) updateData.isbn = updates.isbn;
+      if (updates.coverImageUrl !== undefined) updateData.cover_image_url = updates.coverImageUrl;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.rating !== undefined) updateData.rating = updates.rating;
+      
       const { data, error } = await supabase
         .from('user_books')
-        .update({
-          book_title: updates.title,
-          book_author: updates.author,
-          isbn: updates.isbn,
-          cover_image_url: updates.coverImageUrl,
-          notes: updates.notes,
-        })
+        .update(updateData)
         .eq('id', id)
         .select();
       

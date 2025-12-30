@@ -4,6 +4,7 @@ import { track } from '@vercel/analytics';
 import { useUserBooks } from '../contexts/UserBooksContext';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import PhotoCaptureModal from './PhotoCaptureModal';
+import StarRating from './StarRating';
 
 // CSV parsing helper
 function parseCsvLine(line) {
@@ -52,7 +53,7 @@ function parseGoodreadsCsv(text) {
 }
 
 export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
-  const { userBooks, isLoadingBooks, addBook, removeBook } = useUserBooks();
+  const { userBooks, isLoadingBooks, addBook, removeBook, updateBook } = useUserBooks();
   const { readingQueue, addToQueue } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -223,6 +224,17 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
     }
   };
 
+  const handleRatingChange = async (bookId, newRating) => {
+    const result = await updateBook(bookId, { rating: newRating });
+    
+    if (result.success) {
+      track('book_rated', {
+        book_id: bookId,
+        rating: newRating
+      });
+    }
+  };
+
   const handleAddToReadingQueue = async (book, status) => {
     if (!user) {
       onShowAuthModal();
@@ -379,6 +391,13 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
                         {book.book_author}
                       </div>
                     )}
+                    <div className="mt-2">
+                      <StarRating 
+                        rating={book.rating}
+                        onRatingChange={(newRating) => handleRatingChange(book.id, newRating)}
+                        size="sm"
+                      />
+                    </div>
                     {book.notes && (
                       <div className="text-xs text-[#96A888] mt-2 italic">
                         {book.notes}
