@@ -403,6 +403,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [userRating, setUserRating] = useState(null);
   const [showAcquisitionOptions, setShowAcquisitionOptions] = useState(false);
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
+  const [markedAsRead, setMarkedAsRead] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -489,6 +490,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       return;
     }
     
+    // Set flag to prevent Want to Read button from activating
+    setMarkedAsRead(true);
+    
     // Add to reading queue with 'finished' status
     setAddingToQueue(true);
     const success = await onAddToQueue({
@@ -530,24 +534,19 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       return;
     }
     
-    await handleAddToQueue(e);
-    setShowPurchaseIntent(true);
-  };
-
-  const handleGetItNow = () => {
-    setShowPurchaseIntent(false);
-    setShowAcquisitionOptions(true);
-  };
-
-  const handleGetItLater = () => {
-    track('want_to_read_deferred', {
-      book_title: rec.title,
-      book_author: displayAuthor,
-      chat_mode: chatMode
-    });
+    const success = await handleAddToQueue(e);
     
-    // Dismiss card after brief confirmation
-    setTimeout(() => setDismissed(true), 1500);
+    if (success) {
+      track('want_to_read_added', {
+        book_title: rec.title,
+        book_author: displayAuthor,
+        chat_mode: chatMode
+      });
+      
+      // Show confirmation then dismiss
+      setShowPurchaseIntent(true);
+      setTimeout(() => setDismissed(true), 1500);
+    }
   };
 
   return (
@@ -700,15 +699,15 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           {/* Want to Read Button */}
           <button
             onClick={handleWantToRead}
-            disabled={addingToQueue}
+            disabled={addingToQueue || markedAsRead}
             className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
-              isInQueue 
+              (isInQueue && !markedAsRead)
                 ? 'bg-[#7A8F6C] border-[#7A8F6C] text-white' 
                 : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
             }`}
             title={user ? (isInQueue ? 'Saved to reading queue' : 'Save to reading queue') : 'Sign in to save books'}
           >
-            <BookMarked className={`w-4 h-4 flex-shrink-0 ${isInQueue ? 'fill-current' : ''}`} />
+            <BookMarked className={`w-4 h-4 flex-shrink-0 ${(isInQueue && !markedAsRead) ? 'fill-current' : ''}`} />
             <span className="whitespace-nowrap">Want to Read</span>
           </button>
 
@@ -785,29 +784,15 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           </div>
         )}
 
-        {/* Purchase Intent Question (shows after Want to Read) */}
+        {/* Want to Read Confirmation */}
         {showPurchaseIntent && (
-          <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-            <p className="text-xs font-medium text-[#4A5940] mb-3">
+          <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4] text-center">
+            <p className="text-xs font-medium text-[#5F7252] mb-1">
               ✓ Added to your Reading Queue
             </p>
-            <p className="text-xs text-[#7A8F6C] mb-3">
-              Want to get it now?
+            <p className="text-xs text-[#7A8F6C]">
+              Find acquisition options in your Reading Queue
             </p>
-            <div className="flex gap-2">
-              <button
-                onClick={handleGetItNow}
-                className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940]"
-              >
-                Yes, Get It Now
-              </button>
-              <button
-                onClick={handleGetItLater}
-                className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE]"
-              >
-                I'll Get It Later
-              </button>
-            </div>
           </div>
         )}
       </div>
