@@ -344,46 +344,7 @@ const themeDescriptions = {
   justice: 'Systems, power, and what’s unseen.',
 };
 
-// Parse structured recommendations from AI response
-function parseRecommendations(text) {
-  const recommendations = [];
-  const lines = text.split('\n');
-  let current = null;
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    // Skip lines that contain [RECOMMENDATION X] or **RECOMMENDATION X** markers
-    if (trimmed.match(/\[RECOMMENDATION\s+\d+\]/i) || trimmed.match(/\*\*RECOMMENDATION\s+\d+\*\*/i)) {
-      continue;
-    }
-    
-    if (trimmed.startsWith('Title:')) {
-      if (current) recommendations.push(current);
-      current = { title: trimmed.replace('Title:', '').trim() };
-    } else if (current) {
-      if (trimmed.startsWith('Author:')) {
-        current.author = trimmed.replace('Author:', '').trim();
-      } else if (trimmed.startsWith('Why This Fits:')) {
-        current.why = trimmed.replace('Why This Fits:', '').trim();
-      } else if (trimmed.startsWith('Why:')) {
-        current.why = trimmed.replace('Why:', '').trim();
-      } else if (trimmed.startsWith('Description:')) {
-        // Start collecting description
-        current.description = trimmed.replace('Description:', '').trim();
-      } else if (trimmed.startsWith('Reputation:')) {
-        current.reputation = trimmed.replace('Reputation:', '').trim();
-      } else if (current.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('[RECOMMENDATION')) {
-        // Continue appending to description if we're in the middle of one
-        // and the line isn't a new field
-        current.description += ' ' + trimmed;
-      }
-    }
-  }
-  
-  if (current && current.title) recommendations.push(current);
-  return recommendations;
-}
+// parseRecommendations moved to recommendationService.js
 
 // Check if message contains structured recommendations
 function hasStructuredRecommendations(text) {
