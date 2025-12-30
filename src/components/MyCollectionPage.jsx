@@ -4,12 +4,13 @@ import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import RecommendationModal from './RecommendationModal';
+import StarRating from './StarRating';
 import booksData from '../books.json';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
-  const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
+  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
   const { createRecommendation } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState(null);
@@ -138,6 +139,22 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       });
     } else {
       alert('Failed to remove book. Please try again.');
+    }
+  };
+
+  const handleRatingChange = async (book, newRating) => {
+    // Prevent rating curated books for master admin
+    if (book.isCurated) {
+      return;
+    }
+
+    const result = await updateQueueItem(book.id, { rating: newRating });
+    
+    if (result.success) {
+      track('book_rated_in_collection', {
+        book_id: book.id,
+        rating: newRating
+      });
     }
   };
 
@@ -282,6 +299,14 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                         {book.book_author}
                       </div>
                     )}
+                    <div className="mt-2">
+                      <StarRating 
+                        rating={book.rating}
+                        onRatingChange={(newRating) => handleRatingChange(book, newRating)}
+                        readOnly={book.isCurated}
+                        size="sm"
+                      />
+                    </div>
                     {book.added_at && (
                       <div className="text-xs text-[#96A888] mt-2">
                         Added {new Date(book.added_at).toLocaleDateString()}

@@ -125,12 +125,43 @@ export function ReadingQueueProvider({ children }) {
     }
   }, [readingQueue]);
 
+  const updateQueueItem = useCallback(async (bookId, updates) => {
+    const bookToUpdate = readingQueue.find(b => b.id === bookId);
+    if (!bookToUpdate) return { success: false };
+
+    const previousBook = { ...bookToUpdate };
+    setReadingQueue(prev => 
+      prev.map(b => b.id === bookId ? { ...b, ...updates } : b)
+    );
+
+    try {
+      const { data, error } = await db.updateReadingQueueItem(bookId, updates);
+      
+      if (error) {
+        console.error('updateQueueItem: Database error', error);
+        setReadingQueue(prev => 
+          prev.map(b => b.id === bookId ? previousBook : b)
+        );
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data: data[0] };
+    } catch (err) {
+      console.error('updateQueueItem: Exception', err);
+      setReadingQueue(prev => 
+        prev.map(b => b.id === bookId ? previousBook : b)
+      );
+      return { success: false, error: err.message };
+    }
+  }, [readingQueue]);
+
   const value = {
     readingQueue,
     isLoadingQueue,
     addToQueue,
     removeFromQueue,
     updateQueueStatus,
+    updateQueueItem,
     refreshQueue: loadReadingQueue,
   };
 
@@ -151,6 +182,7 @@ export function useReadingQueue() {
       addToQueue: async () => ({ success: false, error: 'Context not available' }),
       removeFromQueue: async () => ({ success: false, error: 'Context not available' }),
       updateQueueStatus: async () => ({ success: false, error: 'Context not available' }),
+      updateQueueItem: async () => ({ success: false, error: 'Context not available' }),
       refreshQueue: async () => {}
     };
   }

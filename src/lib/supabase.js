@@ -192,6 +192,27 @@ export const db = {
     return { data, error };
   },
 
+  updateReadingQueueItem: async (id, updates) => {
+    if (!supabase) return { data: null, error: null };
+    
+    try {
+      const updateData = {};
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.rating !== undefined) updateData.rating = updates.rating;
+      
+      const { data, error } = await supabase
+        .from('reading_queue')
+        .update(updateData)
+        .eq('id', id)
+        .select();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateReadingQueueItem: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
+  },
+
   // User Books operations
   getUserBooks: async (userId) => {
     if (!supabase) return { data: null, error: null };
