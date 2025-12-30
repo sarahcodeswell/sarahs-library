@@ -5,8 +5,7 @@ import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
-import { buildOptimizedLibraryContext, shouldPrioritizeWorldSearch } from './lib/semanticSearch';
-import { buildCachedSystemPrompt } from './lib/promptCache';
+import { getRecommendations, parseRecommendations } from './lib/recommendationService';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1808,177 +1807,17 @@ Find similar books from beyond my library that match this taste profile.
       message_length: userMessage.length
     });
 
-    let timeoutId;
     try {
-      // Abort any in-flight request (e.g., rapid successive sends).
-      if (inFlightRequestRef.current) {
-        try { inFlightRequestRef.current.abort(); } catch (e) { void e; }
-      }
-      const controller = new AbortController();
-      inFlightRequestRef.current = controller;
-      timeoutId = setTimeout(() => {
-        try { controller.abort(); } catch (e) { void e; }
-      }, 15000);
+      // Update progress
+      setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 500);
+      setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 1000);
 
-      const chatHistory = messages
-        .filter(m => m.isUser !== undefined)
-        .slice(-3)
-        .map(m => ({
-          role: m.isUser ? 'user' : 'assistant',
-          content: m.text
-        }));
-
-      // Fetch optimized exclusion list from materialized view (single fast query)
-      let exclusionList = [];
-      if (user) {
-        const { data: excludedTitles, error: exclusionError } = await db.getUserExclusionList(user.id);
-        if (!exclusionError && excludedTitles) {
-          exclusionList = excludedTitles;
-          console.log('[Recommendations] Exclusion list loaded:', exclusionList.length, 'books');
-        } else if (exclusionError) {
-          console.error('[Recommendations] Failed to load exclusion list:', exclusionError);
-        }
-      }
-
-      // Extract user preferences from finished books
-      const finishedBooks = readingQueue.filter(item => item.status === 'finished');
-      const preferredThemes = new Set();
-      const preferredGenres = new Set();
-      const preferredAuthors = new Set();
+      // NEW CLEAN RECOMMENDATION SERVICE
+      const result = await getRecommendations(user?.id, userMessage, readingQueue);
       
-      finishedBooks.forEach(item => {
-        const matchingBook = bookCatalog.find(b => 
-          String(b.title || '').toLowerCase().trim() === String(item.book_title || '').toLowerCase().trim()
-        );
-        if (matchingBook) {
-          if (matchingBook.genre) preferredGenres.add(matchingBook.genre);
-          if (Array.isArray(matchingBook.themes)) {
-            matchingBook.themes.forEach(t => preferredThemes.add(t));
-          }
-          if (matchingBook.author) preferredAuthors.add(matchingBook.author);
-        }
-      });
-      
-      console.log('[Recommendations] User preferences extracted:', {
-        themes: Array.from(preferredThemes),
-        genres: Array.from(preferredGenres),
-        authors: Array.from(preferredAuthors)
-      });
-
-      // Build optimized library shortlist using semantic search
-      const favoriteAuthors = tasteProfile?.favorite_authors || [];
-      const libraryShortlist = buildOptimizedLibraryContext(userMessage, bookCatalog, readingQueue, favoriteAuthors, 10);
-      const prioritizeWorld = shouldPrioritizeWorldSearch(userMessage);
-      const hasLibraryMatches = libraryShortlist !== 'No strong matches in my library for this specific request.';
-      
-      // Update progress: library checked
-      setTimeout(() => setLoadingProgress({ step: 'library', progress: 100 }), 500);
-      setTimeout(() => setLoadingProgress({ step: 'world', progress: 0 }), 1000);
-
-      const themeFilterText = selectedThemes.length > 0
-        ? `\n\nACTIVE THEME FILTERS: ${selectedThemes.map(t => themeInfo[t]?.label).join(', ')}\nIMPORTANT: All recommendations must match at least one of these themes.`
-        : '';
-
-      // Smart context building - skip library for world-focused queries
-      const parts = [];
-      
-      // Exclusion is handled in the cached system prompt (promptCache.js)
-      // No need to duplicate it here
-      
-      // Add user preference signals from reading history
-      if (preferredThemes.size > 0 || preferredGenres.size > 0 || preferredAuthors.size > 0) {
-        const prefParts = [];
-        if (preferredThemes.size > 0) {
-          prefParts.push(`Themes they love: ${Array.from(preferredThemes).join(', ')}`);
-        }
-        if (preferredGenres.size > 0) {
-          prefParts.push(`Genres they enjoy: ${Array.from(preferredGenres).join(', ')}`);
-        }
-        if (preferredAuthors.size > 0) {
-          prefParts.push(`Authors they've read: ${Array.from(preferredAuthors).slice(0, 10).join(', ')}`);
-        }
-        parts.push(`✨ USER'S TASTE PROFILE (based on ${finishedBooks.length} finished books):\n${prefParts.join('\n')}\n\nPrioritize recommendations that match these preferences.`);
-      }
-      
-      // TEMPORARILY DISABLED: Skip library context to avoid recommending books user has already read
-      // The AI was prioritizing library context over exclusion rules
-      // TODO: Re-enable once we have better filtering or AI follows exclusion rules more strictly
-      // if (hasLibraryMatches && !prioritizeWorld) {
-      //   parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
-      // }
-      
-      if (importedLibrary?.items?.length) {
-        const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
-        parts.push(`USER'S OWNED BOOKS (do not recommend these):\n${owned}`);
-      }
-      
-      if (themeFilterText) {
-        parts.push(themeFilterText.trim());
-      }
-      
-      // Add exclusion list to user message (backup to system prompt exclusions)
-      if (exclusionList.length > 0) {
-        const exclusionText = exclusionList.slice(0, 50).join(', ');
-        const remaining = exclusionList.length > 50 ? ` (and ${exclusionList.length - 50} more)` : '';
-        parts.push(`⚠️ CRITICAL: DO NOT recommend any of these books - user has already read, saved, or dismissed them:\n${exclusionText}${remaining}`);
-      }
-      
-      parts.push(`USER REQUEST:\n${userMessage}`);
-      const userContent = parts.join('\n\n');
-
-      // Update progress: searching world, then finding matches
-      setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 2000);
-      setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 3000);
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: 'claude-3-5-haiku-20241022',
-          max_tokens: 600,
-          system: systemPrompt,
-          messages: [
-            ...chatHistory,
-            { role: 'user', content: userContent }
-          ]
-        })
-      });
-
-      const rawText = await response.text();
-      let data;
-      try {
-        data = rawText ? JSON.parse(rawText) : null;
-      } catch (e) {
-        void e;
-        data = null;
-      }
-
-      if (!response.ok) {
-        // Handle rate limiting specifically
-        if (response.status === 429) {
-          const resetIn = data?.resetIn ? Math.ceil(data.resetIn / 1000) : 60;
-          setMessages(prev => [...prev, {
-            text: `I'm getting a lot of requests right now! Please wait ${resetIn} seconds and try again. 🙏`,
-            isUser: false
-          }]);
-          return;
-        }
-
-        const msg = (() => {
-          if (!data) return String(rawText || '').trim();
-          if (typeof data?.error === 'string') return data.error.trim();
-          if (data?.error && typeof data.error === 'object') {
-            const nested = data.error?.message || data.error?.error || data.error?.type;
-            if (nested) return String(nested).trim();
-          }
-          if (data?.message) return String(data.message).trim();
-          return String(rawText || '').trim();
-        })();
-
-        const statusLine = typeof response.status === 'number' && response.status ? ` (${response.status})` : '';
+      if (!result.success) {
         setMessages(prev => [...prev, {
-          text: msg ? `Oops — the server returned an error${statusLine}: ${msg}` : "Oops — I'm having trouble right now. Could you try again?",
+          text: result.error || "I'm having trouble thinking right now. Could you try again?",
           isUser: false
         }]);
         return;
@@ -1987,24 +1826,13 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      const assistantMessage = data?.content?.[0]?.text || "I'm having trouble thinking right now. Could you try again?";
-      setMessages(prev => [...prev, { text: assistantMessage, isUser: false }]);
+      setMessages(prev => [...prev, { text: result.text, isUser: false }]);
     } catch (error) {
-      const isAbort = error?.name === 'AbortError';
-      if (isAbort) {
-        setMessages(prev => [...prev, {
-          text: "That took longer than expected. Please try again - I'll be faster this time!",
-          isUser: false
-        }]);
-      } else {
-        setMessages(prev => [...prev, {
-          text: "Oops, I'm having a moment. Let me catch my breath and try again!",
-          isUser: false
-        }]);
-      }
+      setMessages(prev => [...prev, {
+        text: "Oops, I'm having a moment. Let me catch my breath and try again!",
+        isUser: false
+      }]);
     } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-      inFlightRequestRef.current = null;
       setIsLoading(false);
       setLoadingProgress({ step: '', progress: 0 });
     }
