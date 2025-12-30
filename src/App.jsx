@@ -692,7 +692,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           <button
             onClick={handleAlreadyRead}
             disabled={addingToQueue || isFinished}
-            className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+            className={`py-2.5 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors border flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               isFinished
                 ? 'bg-[#5F7252] border-[#5F7252] text-white'
                 : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
@@ -700,14 +700,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             title="I've already read this book"
           >
             <BookCheck className="w-4 h-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Already Read</span>
+            <span className="text-[10px] sm:text-xs leading-tight">Already Read</span>
           </button>
 
           {/* Want to Read Button */}
           <button
             onClick={handleWantToRead}
             disabled={addingToQueue || markedAsRead}
-            className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+            className={`py-2.5 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors border flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               (isInQueue && !markedAsRead)
                 ? 'bg-[#7A8F6C] border-[#7A8F6C] text-white' 
                 : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
@@ -715,17 +715,17 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             title={user ? (isInQueue ? 'Saved to reading queue' : 'Save to reading queue') : 'Sign in to save books'}
           >
             <BookMarked className={`w-4 h-4 flex-shrink-0 ${(isInQueue && !markedAsRead) ? 'fill-current' : ''}`} />
-            <span className="whitespace-nowrap">Want to Read</span>
+            <span className="text-[10px] sm:text-xs leading-tight">Want to Read</span>
           </button>
 
           {/* Not For Me Button */}
           <button
             onClick={handleNotForMe}
-            className="py-2.5 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE] flex items-center justify-center gap-1.5"
+            className="py-2.5 px-2 sm:px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE] flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5"
             title="Not interested in this recommendation"
           >
             <X className="w-4 h-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Not For Me</span>
+            <span className="text-[10px] sm:text-xs leading-tight">Not For Me</span>
           </button>
         </div>
 
