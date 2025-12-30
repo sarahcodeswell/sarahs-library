@@ -97,7 +97,7 @@ export default function ShopPage({ onNavigate }) {
               Shop Now
             </a>
             <p className="text-xs text-[#96A888] mt-4">
-              Opens in new window • Secure checkout via Printful
+              Secure checkout by Printful
             </p>
           </div>
         </div>
