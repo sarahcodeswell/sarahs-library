@@ -661,8 +661,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           {/* Already Read Button */}
           <button
             onClick={handleAlreadyRead}
-            disabled={addingToQueue}
-            className="py-2.5 px-3 rounded-lg text-xs font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center justify-center gap-1.5"
+            disabled={addingToQueue || showRatingPrompt}
+            className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+              showRatingPrompt
+                ? 'bg-[#5F7252] border-[#5F7252] text-white'
+                : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
+            }`}
             title="I've already read this book"
           >
             <BookCheck className="w-4 h-4 flex-shrink-0" />
