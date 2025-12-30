@@ -243,76 +243,66 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           </p>
         </div>
 
-        {/* Acquisition Options - Matches Recommendation Cards */}
-        <div className="mb-8 p-4 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
-          <h2 className="text-sm font-medium text-[#4A5940] mb-4">Where to Get Your Books</h2>
-          
-          <div className="space-y-3">
-            {/* Library */}
-            <div className="flex items-center gap-2">
-              <Library className="w-4 h-4 text-[#5F7252]" />
-              <span className="text-sm font-medium text-[#4A5940] w-16">Library</span>
+        {/* Smart Acquisition Bar - Shows for #1 book */}
+        {filteredBooks.length > 0 && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-[#5F7252] to-[#4A5940] rounded-xl border border-[#E8EBE4] text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">🎯</span>
+              <span className="text-sm font-medium">Next Up:</span>
+              <span className="font-serif">{filteredBooks[0].book_title}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://bookshop.org/search?keywords=${encodeURIComponent(filteredBooks[0].book_title + ' ' + (filteredBooks[0].book_author || ''))}&a_aid=${BOOKSHOP_AFFILIATE_ID}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Buy
+              </a>
+              <a
+                href={`https://libro.fm/search?q=${encodeURIComponent(filteredBooks[0].book_title + ' ' + (filteredBooks[0].book_author || ''))}&affiliate=${LIBRO_FM_AFFILIATE_ID}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+              >
+                <Headphones className="w-3 h-3" />
+                Listen
+              </a>
               <a
                 href="https://libbyapp.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] hover:border-[#5F7252] transition-colors"
+                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
-                Libby
-              </a>
-            </div>
-            
-            {/* Buy */}
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-[#5F7252]" />
-              <span className="text-sm font-medium text-[#4A5940] w-16">Buy</span>
-              <a
-                href={`https://bookshop.org/?a_aid=${BOOKSHOP_AFFILIATE_ID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] hover:border-[#5F7252] transition-colors"
-              >
-                Local (Bookshop.org)
-              </a>
-              <a
-                href={`https://www.amazon.com/kindle-dbs/storefront?tag=${AMAZON_AFFILIATE_TAG}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] hover:border-[#5F7252] transition-colors"
-              >
-                Kindle
-              </a>
-            </div>
-            
-            {/* Listen */}
-            <div className="flex items-center gap-2">
-              <Headphones className="w-4 h-4 text-[#5F7252]" />
-              <span className="text-sm font-medium text-[#4A5940] w-16">Listen</span>
-              <a
-                href={`https://libro.fm/?affiliate=${LIBRO_FM_AFFILIATE_ID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] hover:border-[#5F7252] transition-colors"
-              >
-                Libro.fm
-              </a>
-              <a
-                href={`https://www.audible.com/?tag=${AUDIBLE_AFFILIATE_TAG}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] hover:border-[#5F7252] transition-colors"
-              >
-                Audible
+                <Library className="w-3 h-3" />
+                Library
               </a>
             </div>
           </div>
-          
-          <div className="mt-4 pt-3 border-t border-[#E8EBE4]">
-            <p className="text-xs text-[#7A8F6C]">
-              <strong>How it works:</strong> Drag the ⋮⋮ handle to reorder your reading priority. 
-              When you finish a book, tap "Finished" to move it to your collection.
-            </p>
-          </div>
+        )}
+
+        {/* Compact Acquisition Options */}
+        <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+          <details className="group">
+            <summary className="flex items-center justify-between cursor-pointer text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors">
+              <span className="font-medium">📚 Where to get books</span>
+              <span className="group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="mt-2 space-y-1 text-xs text-[#7A8F6C]">
+              <p>• <strong>Buy:</strong> <a href={`https://bookshop.org/?a_aid=${BOOKSHOP_AFFILIATE_ID}`} className="text-[#5F7252] hover:underline">Bookshop.org</a> (local), <a href={`https://www.amazon.com/kindle-dbs/storefront?tag=${AMAZON_AFFILIATE_TAG}`} className="text-[#5F7252] hover:underline">Kindle</a></p>
+              <p>• <strong>Listen:</strong> <a href={`https://libro.fm/?affiliate=${LIBRO_FM_AFFILIATE_ID}`} className="text-[#5F7252] hover:underline">Libro.fm</a>, <a href={`https://www.audible.com/?tag=${AUDIBLE_AFFILIATE_TAG}`} className="text-[#5F7252] hover:underline">Audible</a></p>
+              <p>• <strong>Library:</strong> <a href="https://libbyapp.com" className="text-[#5F7252] hover:underline">Libby app</a></p>
+            </div>
+          </details>
+        </div>
+
+        {/* Instructions */}
+        <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+          <p className="text-xs text-[#7A8F6C]">
+            <strong>💡 Tip:</strong> Drag the ⋮⋮ handle to reorder. Tap "Finished" to move books to your collection.
+          </p>
         </div>
 
         {queueBooks.length > 0 && (
