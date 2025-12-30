@@ -438,7 +438,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
 
   const handleAddToQueue = async (e) => {
     e.stopPropagation();
-    if (!user || addingToQueue) return;
+    if (!user || addingToQueue) return false;
     
     // If already in queue, remove it
     if (isInQueue) {
@@ -456,7 +456,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           });
         }
       }
-      return;
+      return false;
     }
     
     setAddingToQueue(true);
@@ -474,12 +474,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         chat_mode: chatMode,
         has_catalog_match: !!catalogBook
       });
+      return true;
     } else {
       // Track failed save
       track('recommendation_save_failed', {
         book_title: rec.title,
         chat_mode: chatMode
       });
+      return false;
     }
   };
 
@@ -735,7 +737,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             ) : (
               <>
                 <p className="text-xs font-medium text-[#4A5940] mb-2">How would you rate it?</p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 mb-3">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -779,6 +781,21 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 </button>
               ))}
                 </div>
+                <button
+                  onClick={() => {
+                    track('recommendation_rated_later', {
+                      book_title: rec.title,
+                      book_author: displayAuthor,
+                      chat_mode: chatMode
+                    });
+                    
+                    // Dismiss card without rating
+                    setTimeout(() => setDismissed(true), 300);
+                  }}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors bg-white border border-[#D4DAD0] text-[#7A8F6C] hover:bg-[#F8F6EE]"
+                >
+                  Rate Later
+                </button>
               </>
             )}
           </div>
