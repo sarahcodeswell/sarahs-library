@@ -537,6 +537,32 @@ export const db = {
     }
   },
 
+  // Dismissed Recommendations operations
+  addDismissedRecommendation: async (userId, bookTitle, bookAuthor) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('dismissed_recommendations')
+        .insert({
+          user_id: userId,
+          book_title: bookTitle,
+          book_author: bookAuthor
+        })
+        .select();
+      
+      if (error) {
+        console.error('addDismissedRecommendation: Error', error);
+        return { data: null, error };
+      }
+      
+      return { data: data?.[0], error: null };
+    } catch (err) {
+      console.error('addDismissedRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Insert failed' } };
+    }
+  },
+
   deleteChatHistory: async (userId, sessionId = null) => {
     if (!supabase) return { error: null };
     

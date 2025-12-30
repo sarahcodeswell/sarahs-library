@@ -515,8 +515,13 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     }
   };
 
-  const handleNotForMe = (e) => {
+  const handleNotForMe = async (e) => {
     e.stopPropagation();
+    
+    // Track dismissal in database for exclusion
+    if (user) {
+      await db.addDismissedRecommendation(user.id, rec.title, displayAuthor);
+    }
     
     track('recommendation_dismissed', {
       book_title: rec.title,
@@ -1830,6 +1835,8 @@ Find similar books from beyond my library that match this taste profile.
         if (!exclusionError && excludedTitles) {
           exclusionList = excludedTitles;
           console.log('[Recommendations] Exclusion list loaded:', exclusionList.length, 'books');
+        } else if (exclusionError) {
+          console.error('[Recommendations] Failed to load exclusion list:', exclusionError);
         }
       }
 
@@ -1907,6 +1914,13 @@ Find similar books from beyond my library that match this taste profile.
       
       if (themeFilterText) {
         parts.push(themeFilterText.trim());
+      }
+      
+      // Add exclusion list to user message (backup to system prompt exclusions)
+      if (exclusionList.length > 0) {
+        const exclusionText = exclusionList.slice(0, 50).join(', ');
+        const remaining = exclusionList.length > 50 ? ` (and ${exclusionList.length - 50} more)` : '';
+        parts.push(`⚠️ CRITICAL: DO NOT recommend any of these books - user has already read, saved, or dismissed them:\n${exclusionText}${remaining}`);
       }
       
       parts.push(`USER REQUEST:\n${userMessage}`);
