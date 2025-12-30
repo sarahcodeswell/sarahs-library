@@ -10,7 +10,7 @@ import booksData from '../books.json';
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
-  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
+  const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
   const { createRecommendation } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState(null);
@@ -143,8 +143,24 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   const handleRatingChange = async (book, newRating) => {
-    // Prevent rating curated books for master admin
+    // For curated books, we need to add them to reading_queue first
     if (book.isCurated) {
+      // Add to reading queue with the rating
+      const result = await addToQueue({
+        title: book.book_title,
+        author: book.book_author,
+        status: 'finished',
+      });
+      
+      if (result.success && result.data) {
+        // Now update with the rating
+        await updateQueueItem(result.data.id, { rating: newRating });
+        
+        track('curated_book_rated', {
+          book_title: book.book_title,
+          rating: newRating
+        });
+      }
       return;
     }
 
@@ -303,7 +319,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                       <StarRating 
                         rating={book.rating}
                         onRatingChange={(newRating) => handleRatingChange(book, newRating)}
-                        readOnly={book.isCurated}
+                        readOnly={false}
                         size="sm"
                       />
                     </div>
