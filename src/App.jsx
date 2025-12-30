@@ -1893,10 +1893,12 @@ Find similar books from beyond my library that match this taste profile.
         parts.push(`✨ USER'S TASTE PROFILE (based on ${finishedBooks.length} finished books):\n${prefParts.join('\n')}\n\nPrioritize recommendations that match these preferences.`);
       }
       
-      // Only include library context if we have good matches and not prioritizing world
-      if (hasLibraryMatches && !prioritizeWorld) {
-        parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
-      }
+      // TEMPORARILY DISABLED: Skip library context to avoid recommending books user has already read
+      // The AI was prioritizing library context over exclusion rules
+      // TODO: Re-enable once we have better filtering or AI follows exclusion rules more strictly
+      // if (hasLibraryMatches && !prioritizeWorld) {
+      //   parts.push(`MY LIBRARY SHORTLIST (books I personally love and recommend):\n${libraryShortlist}`);
+      // }
       
       if (importedLibrary?.items?.length) {
         const owned = importedLibrary.items.slice(0, 12).map(b => `- ${b.title}${b.author ? ` — ${b.author}` : ''}`).join('\n');
