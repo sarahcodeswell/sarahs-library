@@ -513,24 +513,38 @@ export const db = {
     }
   },
 
-  // Get user exclusion list (optimized with materialized view)
+  // Get user exclusion list (queries both tables directly for reliability)
   getUserExclusionList: async (userId) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
-      const { data, error } = await supabase
-        .from('user_exclusion_list')
-        .select('book_title')
-        .eq('user_id', userId);
+      // Query both tables in parallel for speed
+      const [queueResult, dismissedResult] = await Promise.all([
+        supabase
+          .from('reading_queue')
+          .select('book_title')
+          .eq('user_id', userId),
+        supabase
+          .from('dismissed_recommendations')
+          .select('book_title')
+          .eq('user_id', userId)
+      ]);
       
-      if (error) {
-        console.error('getUserExclusionList: Error', error);
-        return { data: null, error };
+      if (queueResult.error) {
+        console.error('getUserExclusionList: Queue error', queueResult.error);
+      }
+      if (dismissedResult.error) {
+        console.error('getUserExclusionList: Dismissed error', dismissedResult.error);
       }
       
-      // Return just the book titles as an array
-      const titles = data?.map(row => row.book_title) || [];
-      return { data: titles, error: null };
+      // Combine and deduplicate titles
+      const queueTitles = queueResult.data?.map(row => row.book_title) || [];
+      const dismissedTitles = dismissedResult.data?.map(row => row.book_title) || [];
+      const allTitles = [...new Set([...queueTitles, ...dismissedTitles])];
+      
+      console.log(`[ExclusionList] Queue: ${queueTitles.length}, Dismissed: ${dismissedTitles.length}, Total: ${allTitles.length}`);
+      
+      return { data: allTitles, error: null };
     } catch (err) {
       console.error('getUserExclusionList: Exception', err);
       return { data: null, error: { message: err.message || 'Fetch failed' } };

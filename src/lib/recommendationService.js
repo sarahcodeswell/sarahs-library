@@ -171,37 +171,51 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
 
     const userContent = messageParts.join('\n\n');
 
-    // 4. Call Claude API
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 600,
-        system: systemPrompt,
-        messages: [
-          { role: 'user', content: userContent }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
+    // 4. Call Claude API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    if (!data?.content?.[0]?.text) {
-      throw new Error('Invalid API response format');
-    }
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 600,
+          system: systemPrompt,
+          messages: [
+            { role: 'user', content: userContent }
+          ]
+        })
+      });
 
-    return {
-      success: true,
-      text: data.content[0].text,
-      exclusionCount: exclusionList.length,
-      exclusionList: exclusionList // Return for client-side validation
-    };
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data?.content?.[0]?.text) {
+        throw new Error('Invalid API response format');
+      }
+
+      return {
+        success: true,
+        text: data.content[0].text,
+        exclusionCount: exclusionList.length,
+        exclusionList: exclusionList // Return for client-side validation
+      };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
+      throw fetchError;
+    }
 
   } catch (error) {
     console.error('[RecommendationService] Error:', error);
