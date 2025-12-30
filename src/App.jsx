@@ -480,7 +480,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     
     // Track dismissal in database for exclusion
     if (user) {
-      await db.addDismissedRecommendation(user.id, rec.title, displayAuthor);
+      const result = await db.addDismissedRecommendation(user.id, rec.title, displayAuthor);
+      if (result.error) {
+        console.error('[NotForMe] Failed to save dismissal:', result.error);
+      } else {
+        console.log('[NotForMe] Dismissed book saved:', rec.title);
+      }
     }
     
     track('recommendation_dismissed', {
@@ -1725,43 +1730,52 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      // POST-AI FILTERING: Remove books in user's exclusion list
+      // POST-AI FILTERING: Remove duplicates and excluded books
       let cleanedText = result.text;
       const exclusionList = result.exclusionList || [];
+      const recs = parseRecommendations(result.text);
       
-      if (exclusionList.length > 0) {
-        const recs = parseRecommendations(result.text);
+      // Remove duplicates (case-insensitive title matching)
+      const seenTitles = new Set();
+      const uniqueRecs = recs.filter(rec => {
+        const normalizedTitle = normalizeTitle(rec.title);
+        if (seenTitles.has(normalizedTitle)) {
+          console.log('[Filter] Removed duplicate:', rec.title);
+          return false;
+        }
+        seenTitles.add(normalizedTitle);
+        return true;
+      });
+      
+      // Filter out books in exclusion list
+      const validRecs = uniqueRecs.filter(rec => {
+        const isExcluded = exclusionList.some(excludedTitle => 
+          normalizeTitle(excludedTitle) === normalizeTitle(rec.title)
+        );
         
-        // Filter out books in exclusion list
-        const validRecs = recs.filter(rec => {
-          const isExcluded = exclusionList.some(excludedTitle => 
-            normalizeTitle(excludedTitle) === normalizeTitle(rec.title)
-          );
-          
-          if (isExcluded) {
-            console.log('[Filter] Removed excluded book:', rec.title);
-            return false;
-          }
-          return true;
-        });
-        
-        // Rebuild response if we filtered anything out
-        if (validRecs.length < recs.length) {
-          if (validRecs.length === 0) {
-            cleanedText = "I'm having trouble finding books that aren't already in your collection. Try asking for something more specific or from a different genre!";
-          } else {
-            // Rebuild with valid recommendations only
-            const parts = ['My Top 3 Picks for You\n'];
-            validRecs.forEach((rec, i) => {
-              parts.push(`\n[RECOMMENDATION ${i + 1}]`);
-              parts.push(`Title: ${rec.title}`);
-              if (rec.author) parts.push(`Author: ${rec.author}`);
-              if (rec.why) parts.push(`Why This Fits: ${rec.why}`);
-              if (rec.description) parts.push(`Description: ${rec.description}`);
-              if (rec.reputation) parts.push(`Reputation: ${rec.reputation}`);
-            });
-            cleanedText = parts.join('\n');
-          }
+        if (isExcluded) {
+          console.log('[Filter] Removed excluded book:', rec.title);
+          return false;
+        }
+        return true;
+      });
+      
+      // Rebuild response if we filtered anything out
+      if (validRecs.length < recs.length) {
+        if (validRecs.length === 0) {
+          cleanedText = "I'm having trouble finding books that aren't already in your collection. Try asking for something more specific or from a different genre!";
+        } else {
+          // Rebuild with valid recommendations only
+          const parts = ['My Top 3 Picks for You\n'];
+          validRecs.forEach((rec, i) => {
+            parts.push(`\n[RECOMMENDATION ${i + 1}]`);
+            parts.push(`Title: ${rec.title}`);
+            if (rec.author) parts.push(`Author: ${rec.author}`);
+            if (rec.why) parts.push(`Why This Fits: ${rec.why}`);
+            if (rec.description) parts.push(`Description: ${rec.description}`);
+            if (rec.reputation) parts.push(`Reputation: ${rec.reputation}`);
+          });
+          cleanedText = parts.join('\n');
         }
       }
       
