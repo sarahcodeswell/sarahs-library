@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, Target, ChevronDown, Lightbulb } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 
@@ -247,9 +247,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         {filteredBooks.length > 0 && (
           <div className="mb-6 p-4 bg-gradient-to-r from-[#5F7252] to-[#4A5940] rounded-xl border border-[#E8EBE4] text-white">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">🎯</span>
-              <span className="text-sm font-medium">Next Up:</span>
-              <span className="font-serif">{filteredBooks[0].book_title}</span>
+              <Target className="w-4 h-4" />
+              <span className="text-xs font-medium">Next Up:</span>
+              <span className="font-serif text-sm">{filteredBooks[0].book_title}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               <a
@@ -258,7 +258,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
-                <ShoppingBag className="w-3 h-3" />
+                <ShoppingBag className="w-3.5 h-3.5" />
                 Buy
               </a>
               <a
@@ -267,7 +267,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
-                <Headphones className="w-3 h-3" />
+                <Headphones className="w-3.5 h-3.5" />
                 Listen
               </a>
               <a
@@ -276,7 +276,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
-                <Library className="w-3 h-3" />
+                <Library className="w-3.5 h-3.5" />
                 Library
               </a>
             </div>
@@ -287,8 +287,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
           <details className="group">
             <summary className="flex items-center justify-between cursor-pointer text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors">
-              <span className="font-medium">📚 Where to get books</span>
-              <span className="group-open:rotate-180 transition-transform">▼</span>
+              <span className="font-medium flex items-center gap-1">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                Where to get books
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
             </summary>
             <div className="mt-2 space-y-1 text-xs text-[#7A8F6C]">
               <p>• <strong>Buy:</strong> <a href={`https://bookshop.org/?a_aid=${BOOKSHOP_AFFILIATE_ID}`} className="text-[#5F7252] hover:underline">Bookshop.org</a> (local), <a href={`https://www.amazon.com/kindle-dbs/storefront?tag=${AMAZON_AFFILIATE_TAG}`} className="text-[#5F7252] hover:underline">Kindle</a></p>
@@ -300,8 +303,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
         {/* Instructions */}
         <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-          <p className="text-xs text-[#7A8F6C]">
-            <strong>💡 Tip:</strong> Drag the ⋮⋮ handle to reorder. Tap "Finished" to move books to your collection.
+          <p className="text-xs text-[#7A8F6C] flex items-center gap-1">
+            <Lightbulb className="w-3.5 h-3.5" />
+            <strong>Tip:</strong> Drag the ⋮⋮ handle to reorder. Tap "Finished" to move books to your collection.
           </p>
         </div>
 
