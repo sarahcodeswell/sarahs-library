@@ -74,9 +74,38 @@ When asked for "best books of the year" or new releases, treat the current year 
   
   const preferencesText = [];
   
+  // Separate books by rating
+  const highlyRatedBooks = finishedBooks.filter(b => b.rating >= 4);
+  const lovedBooks = finishedBooks.filter(b => b.rating === 5);
+  const likedBooks = finishedBooks.filter(b => b.rating === 4);
+  const lowRatedBooks = finishedBooks.filter(b => b.rating && b.rating <= 2);
+  const unratedBooks = finishedBooks.filter(b => !b.rating);
+  
+  // Books they LOVED (5 stars) - use for recommendations
+  if (lovedBooks.length > 0) {
+    preferencesText.push(
+      `⭐⭐⭐⭐⭐ BOOKS USER LOVED (5 stars - ${lovedBooks.length} books):\n${lovedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nThese are their absolute favorites. Recommend books with similar themes, writing styles, or by the same authors.`
+    );
+  }
+  
+  // Books they LIKED (4 stars) - also good for recommendations
+  if (likedBooks.length > 0) {
+    preferencesText.push(
+      `⭐⭐⭐⭐ BOOKS USER REALLY LIKED (4 stars - ${likedBooks.length} books):\n${likedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nThese are strong favorites. Consider similar books but prioritize 5-star matches first.`
+    );
+  }
+  
+  // Books they DISLIKED (1-2 stars) - avoid similar books
+  if (lowRatedBooks.length > 0) {
+    preferencesText.push(
+      `👎 BOOKS USER DISLIKED (1-2 stars - ${lowRatedBooks.length} books):\n${lowRatedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nAvoid recommending books with similar themes, styles, or genres to these.`
+    );
+  }
+  
+  // All finished books (for exclusion)
   if (finishedBooks.length > 0) {
     preferencesText.push(
-      `🚫 CRITICAL EXCLUSION - BOOKS USER HAS ALREADY READ (${finishedBooks.length} books):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nNEVER recommend any of these books. Use this list to understand their taste, but DO NOT recommend books from this list.`
+      `🚫 CRITICAL EXCLUSION - ALL BOOKS USER HAS READ (${finishedBooks.length} books):\n${finishedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nNEVER recommend any of these books.`
     );
   }
   
