@@ -422,9 +422,16 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const displayWhy = String(rec?.why || '').trim();
   const fullDescription = catalogBook?.description || rec.description;
 
-  // Check if book is already in queue
+  // Check if book is in queue with "want_to_read" or "reading" status
   const isInQueue = readingQueue?.some(
-    queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title)
+    queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
+                 (queueBook.status === 'want_to_read' || queueBook.status === 'reading')
+  );
+  
+  // Check if book is already marked as finished
+  const isFinished = readingQueue?.some(
+    queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
+                 queueBook.status === 'finished'
   );
 
   const handleAddToQueue = async (e) => {
@@ -661,9 +668,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           {/* Already Read Button */}
           <button
             onClick={handleAlreadyRead}
-            disabled={addingToQueue || showRatingPrompt}
+            disabled={addingToQueue || isFinished}
             className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5 ${
-              showRatingPrompt
+              isFinished
                 ? 'bg-[#5F7252] border-[#5F7252] text-white'
                 : 'bg-white border-[#5F7252] text-[#5F7252] hover:bg-[#F8F6EE]'
             }`}
@@ -700,7 +707,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
         </div>
 
         {/* Rating Prompt (shows after "Already Read") */}
-        {showRatingPrompt && (
+        {(showRatingPrompt || isFinished) && (
           <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
             <p className="text-xs font-medium text-[#4A5940] mb-2">How would you rate it?</p>
             <div className="flex items-center gap-1">
