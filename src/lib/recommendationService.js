@@ -215,11 +215,15 @@ export function parseRecommendations(responseText) {
     } else if (trimmed.startsWith('Author:') && currentRec) {
       currentRec.author = trimmed.substring(7).trim();
     } else if (trimmed.startsWith('Why This Fits:') && currentRec) {
-      currentRec.whyThisFits = trimmed.substring(14).trim();
+      currentRec.why = trimmed.substring(14).trim();
+    } else if (trimmed.startsWith('Why:') && currentRec) {
+      currentRec.why = trimmed.substring(4).trim();
     } else if (trimmed.startsWith('Description:') && currentRec) {
       currentRec.description = trimmed.substring(12).trim();
     } else if (trimmed.startsWith('Reputation:') && currentRec) {
       currentRec.reputation = trimmed.substring(11).trim();
+    } else if (currentRec && currentRec.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('Author:') && !trimmed.startsWith('Why') && !trimmed.startsWith('Reputation:') && trimmed.length > 0) {
+      currentRec.description += ' ' + trimmed;
     }
   }
 
