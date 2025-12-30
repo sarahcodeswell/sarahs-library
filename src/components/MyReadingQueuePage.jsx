@@ -1,12 +1,119 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, ShoppingBag, BookMarked, Library, Headphones } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableBookCard({ book, index, onMarkAsRead, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: book.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow ${
+        isDragging ? 'shadow-lg' : ''
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-serif text-[#96A888] w-8 text-center select-none">
+            {index + 1}
+          </span>
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-1.5 rounded cursor-grab active:cursor-grabbing text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors touch-none"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-[#4A5940] mb-1 truncate">
+              {book.book_title}
+            </h3>
+            {book.book_author && (
+              <p className="text-sm text-[#7A8F6C] mb-2">
+                by {book.book_author}
+              </p>
+            )}
+            {index === 0 && (
+              <span className="inline-block px-2 py-0.5 text-xs font-medium bg-[#5F7252] text-white rounded-full">
+                Next Up
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onMarkAsRead(book)}
+              className="px-3 py-1.5 rounded text-sm font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+              title="Mark as Finished"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Finished</span>
+            </button>
+            <button
+              onClick={() => onRemove(book)}
+              className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+              title="Remove from queue"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Filter to only show books marked as "want_to_read"
   const queueBooks = useMemo(() => {
@@ -78,34 +185,22 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
-  const handleMoveUp = (index) => {
-    if (index === 0) return;
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
     
-    const items = [...filteredBooks];
-    const temp = items[index];
-    items[index] = items[index - 1];
-    items[index - 1] = temp;
-    
-    setLocalOrder(items.map(item => item.id));
-    track('reading_queue_reordered', {
-      direction: 'up',
-      queue_length: filteredBooks.length
-    });
-  };
-
-  const handleMoveDown = (index) => {
-    if (index === filteredBooks.length - 1) return;
-    
-    const items = [...filteredBooks];
-    const temp = items[index];
-    items[index] = items[index + 1];
-    items[index + 1] = temp;
-    
-    setLocalOrder(items.map(item => item.id));
-    track('reading_queue_reordered', {
-      direction: 'down',
-      queue_length: filteredBooks.length
-    });
+    if (active.id !== over?.id) {
+      const oldIndex = filteredBooks.findIndex(item => item.id === active.id);
+      const newIndex = filteredBooks.findIndex(item => item.id === over.id);
+      
+      const newOrder = arrayMove(filteredBooks, oldIndex, newIndex);
+      setLocalOrder(newOrder.map(item => item.id));
+      
+      track('reading_queue_reordered', {
+        from_position: oldIndex + 1,
+        to_position: newIndex + 1,
+        queue_length: filteredBooks.length
+      });
+    }
   };
 
   if (!user) {
@@ -135,10 +230,56 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           Back to Home
         </button>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-serif text-[#4A5940] mb-2">My Reading Queue</h1>
           <p className="text-[#7A8F6C]">
             {queueBooks.length} {queueBooks.length === 1 ? 'book' : 'books'} you want to read
+          </p>
+        </div>
+
+        {/* Acquisition Options - Static Section */}
+        <div className="mb-8 p-4 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
+          <h2 className="text-sm font-medium text-[#4A5940] mb-3">Where to Get Your Books</h2>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="https://bookshop.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-[#E8EBE4] text-sm text-[#5F7252] hover:border-[#5F7252] transition-colors"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Bookshop.org
+            </a>
+            <a
+              href="https://amazon.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-[#E8EBE4] text-sm text-[#5F7252] hover:border-[#5F7252] transition-colors"
+            >
+              <BookMarked className="w-4 h-4" />
+              Amazon
+            </a>
+            <a
+              href="https://www.worldcat.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-[#E8EBE4] text-sm text-[#5F7252] hover:border-[#5F7252] transition-colors"
+            >
+              <Library className="w-4 h-4" />
+              Find at Library
+            </a>
+            <a
+              href="https://www.audible.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-[#E8EBE4] text-sm text-[#5F7252] hover:border-[#5F7252] transition-colors"
+            >
+              <Headphones className="w-4 h-4" />
+              Listen on Audible
+            </a>
+          </div>
+          <p className="text-xs text-[#96A888] mt-3">
+            Drag books to reorder your reading priority. Mark as finished when done to add to your collection.
           </p>
         </div>
 
@@ -163,80 +304,32 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
               {searchQuery ? `No books found matching "${searchQuery}"` : 'No books in your reading queue yet'}
             </p>
             {!searchQuery && (
-              <p className="text-[#96A888] text-xs mt-2">Add books you want to read from the Add Books page.</p>
+              <p className="text-[#96A888] text-xs mt-2">Add books from recommendations to start building your queue.</p>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredBooks.map((book, index) => (
-              <div
-                key={book.id}
-                className="bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col gap-1 pt-1">
-                    <button
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                      className={`p-1 rounded transition-colors ${
-                        index === 0 
-                          ? 'text-[#D4DAD0] cursor-not-allowed' 
-                          : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
-                      }`}
-                      title="Move up"
-                    >
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === filteredBooks.length - 1}
-                      className={`p-1 rounded transition-colors ${
-                        index === filteredBooks.length - 1
-                          ? 'text-[#D4DAD0] cursor-not-allowed' 
-                          : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
-                      }`}
-                      title="Move down"
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-[#4A5940] mb-1 truncate">
-                      {book.book_title}
-                    </h3>
-                    {book.book_author && (
-                      <p className="text-sm text-[#7A8F6C] mb-2">
-                        by {book.book_author}
-                      </p>
-                    )}
-                    <p className="text-xs text-[#96A888]">
-                      Added {new Date(book.added_at).toLocaleDateString()}
-                    </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleMarkAsRead(book)}
-                        className="px-3 py-1.5 rounded text-sm font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-                        title="Mark as Read"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        Finished
-                      </button>
-                      <button
-                        onClick={() => handleRemoveBook(book)}
-                        className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
-                        title="Remove from queue"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={filteredBooks.map(b => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {filteredBooks.map((book, index) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    index={index}
+                    onMarkAsRead={handleMarkAsRead}
+                    onRemove={handleRemoveBook}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>
