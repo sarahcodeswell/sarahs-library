@@ -121,7 +121,7 @@ function buildExclusionMessage(exclusionList) {
  * Get book recommendations from Claude
  * Single source of truth for recommendation logic
  */
-export async function getRecommendations(userId, userMessage, readingQueue = []) {
+export async function getRecommendations(userId, userMessage, readingQueue = [], themeFilters = []) {
   try {
     // 1. Fetch exclusion list (single fast query)
     let exclusionList = [];
@@ -145,6 +145,19 @@ export async function getRecommendations(userId, userMessage, readingQueue = [])
     const preferences = buildUserPreferences(readingQueue);
     if (preferences) {
       messageParts.push(preferences);
+    }
+
+    // Add theme filter requirements (STRICT)
+    if (themeFilters && themeFilters.length > 0) {
+      const themeLabels = {
+        women: "Women's stories",
+        emotional: "Emotional truth",
+        identity: "Identity & belonging",
+        spiritual: "Spirituality & meaning",
+        justice: "Justice & systems"
+      };
+      const selectedThemes = themeFilters.map(t => themeLabels[t] || t).join(', ');
+      messageParts.push(`🎯 MANDATORY THEME REQUIREMENT:\nALL recommendations MUST match at least one of these themes: ${selectedThemes}\nDo NOT recommend books that don't fit these themes, even if they're excellent books.`);
     }
 
     // Add exclusion list

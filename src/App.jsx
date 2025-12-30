@@ -1712,7 +1712,7 @@ Find similar books from beyond my library that match this taste profile.
       setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 1000);
 
       // NEW CLEAN RECOMMENDATION SERVICE
-      const result = await getRecommendations(user?.id, userMessage, readingQueue);
+      const result = await getRecommendations(user?.id, userMessage, readingQueue, selectedThemes);
       
       if (!result.success) {
         setMessages(prev => [...prev, {
@@ -1725,7 +1725,15 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      setMessages(prev => [...prev, { text: result.text, isUser: false }]);
+      // Strip verbose intro text, keep only "My Top 3 Picks for You" and recommendations
+      let cleanedText = result.text;
+      const lines = cleanedText.split('\n');
+      const startIndex = lines.findIndex(line => line.includes('My Top 3 Picks for You'));
+      if (startIndex > 0) {
+        cleanedText = lines.slice(startIndex).join('\n');
+      }
+      
+      setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
     } catch (error) {
       setMessages(prev => [...prev, {
         text: "Oops, I'm having a moment. Let me catch my breath and try again!",
