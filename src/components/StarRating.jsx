@@ -33,7 +33,7 @@ export default function StarRating({ rating, onRatingChange, readOnly = false, s
   const displayRating = hoverRating || rating || 0;
   
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 relative z-10">
       {[1, 2, 3, 4, 5].map((value) => {
         const isFilled = value <= displayRating;
         
@@ -41,12 +41,15 @@ export default function StarRating({ rating, onRatingChange, readOnly = false, s
           <button
             key={value}
             type="button"
-            onClick={() => handleClick(value)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick(value);
+            }}
             onMouseEnter={() => handleMouseEnter(value)}
             onMouseLeave={handleMouseLeave}
             disabled={readOnly}
             className={`
-              transition-all
+              transition-all p-0.5
               ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}
               ${!readOnly && 'focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:ring-offset-1 rounded'}
             `}
@@ -55,7 +58,7 @@ export default function StarRating({ rating, onRatingChange, readOnly = false, s
             <Star
               className={`
                 ${iconSize}
-                transition-colors
+                transition-colors pointer-events-none
                 ${isFilled 
                   ? 'fill-[#F59E0B] text-[#F59E0B]' 
                   : 'fill-none text-[#D4DAD0]'
@@ -69,7 +72,10 @@ export default function StarRating({ rating, onRatingChange, readOnly = false, s
       {!readOnly && rating && (
         <button
           type="button"
-          onClick={() => onRatingChange(null)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRatingChange(null);
+          }}
           className="ml-2 text-xs text-[#96A888] hover:text-[#5F7252] transition-colors"
         >
           Clear
