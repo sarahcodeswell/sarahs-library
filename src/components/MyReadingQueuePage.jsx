@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, ChevronDown, ChevronUp, Info, Star, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import booksData from '../books.json';
