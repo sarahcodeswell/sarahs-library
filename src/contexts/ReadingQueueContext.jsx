@@ -40,6 +40,8 @@ export function ReadingQueueProvider({ children }) {
       return { success: false, error: 'Not authenticated' };
     }
 
+    console.log('[addToQueue] Adding book with data:', book);
+
     const optimisticBook = {
       id: `temp-${Date.now()}`,
       user_id: user.id,
@@ -47,6 +49,8 @@ export function ReadingQueueProvider({ children }) {
       book_author: book.author,
       status: book.status || 'want_to_read',
       added_at: new Date().toISOString(),
+      description: book.description || null,
+      why_recommended: book.why || null,
     };
 
     setReadingQueue(prev => [optimisticBook, ...prev]);

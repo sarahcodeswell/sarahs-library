@@ -1328,6 +1328,14 @@ Find similar books from beyond my library that match this taste profile.
     const why = String(book.why || '').trim();
     const status = book.status || 'want_to_read';
     
+    console.log('[handleAddToReadingQueue] Book data:', {
+      title,
+      author,
+      description: description.substring(0, 50) + '...',
+      why: why.substring(0, 50) + '...',
+      status
+    });
+    
     if (!title) {
       console.error('Cannot add book without title:', book);
       return false;
