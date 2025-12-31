@@ -84,7 +84,7 @@ export default function OurPracticesPage({ onNavigate }) {
               <h2 className="font-serif text-xl text-[#4A5940] mb-3">Our Mission</h2>
               <div className="space-y-3 text-sm text-[#5F7252] leading-relaxed">
                 <p className="text-base font-medium text-[#4A5940]">
-                  To encourage the love of reading and support the ecosystem that makes it possible.
+                  To encourage a love of reading and support the local ecosystems that make it possible.
                 </p>
                 <p>
                   We believe in the power of books to transform lives, expand perspectives, and connect us to each other. That's why we're committed to:

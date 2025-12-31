@@ -112,42 +112,72 @@ export default function UserProfile({ tasteProfile }) {
       const { data: userBooks } = await db.getUserBooks(user.id);
       const { data: recommendations } = await db.getUserRecommendations(user.id);
       
-      const exportData = {
-        exportDate: new Date().toISOString(),
-        user: {
-          email: user.email,
-          createdAt: user.created_at,
-        },
-        profile: {
-          readingPreferences: user.user_metadata?.reading_preferences || '',
-          favoriteAuthors: profile?.favorite_authors || [],
-        },
-        readingQueue: queue?.map(item => ({
-          title: item.book_title,
-          author: item.book_author,
-          status: item.status,
-          rating: item.rating,
-          addedAt: item.created_at,
-        })) || [],
-        userBooks: userBooks?.map(item => ({
-          title: item.title,
-          author: item.author,
-          addedAt: item.created_at,
-        })) || [],
-        recommendations: recommendations?.map(item => ({
-          title: item.book_title,
-          author: item.book_author,
-          note: item.recommendation_note,
-          createdAt: item.created_at,
-        })) || [],
+      // Helper to escape CSV values
+      const escapeCSV = (value) => {
+        if (value === null || value === undefined) return '';
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
       };
       
-      // Create and download JSON file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      // Build CSV content
+      const lines = [];
+      
+      // Header section
+      lines.push('SARAH\'S BOOKS DATA EXPORT');
+      lines.push(`Export Date,${new Date().toISOString()}`);
+      lines.push(`Email,${escapeCSV(user.email)}`);
+      lines.push(`Reading Preferences,${escapeCSV(user.user_metadata?.reading_preferences || '')}`);
+      lines.push(`Favorite Authors,${escapeCSV((profile?.favorite_authors || []).join('; '))}`);
+      lines.push('');
+      
+      // Reading Queue section
+      lines.push('MY READING QUEUE');
+      lines.push('Title,Author,Status,Rating,Date Added');
+      (queue || []).forEach(item => {
+        lines.push([
+          escapeCSV(item.book_title),
+          escapeCSV(item.book_author),
+          escapeCSV(item.status),
+          escapeCSV(item.rating || ''),
+          escapeCSV(item.created_at?.split('T')[0] || '')
+        ].join(','));
+      });
+      lines.push('');
+      
+      // User Books section
+      lines.push('MY BOOKS (ADDED MANUALLY)');
+      lines.push('Title,Author,Date Added');
+      (userBooks || []).forEach(item => {
+        lines.push([
+          escapeCSV(item.title),
+          escapeCSV(item.author),
+          escapeCSV(item.created_at?.split('T')[0] || '')
+        ].join(','));
+      });
+      lines.push('');
+      
+      // Recommendations section
+      lines.push('RECOMMENDATIONS SHARED');
+      lines.push('Title,Author,Note,Date Shared');
+      (recommendations || []).forEach(item => {
+        lines.push([
+          escapeCSV(item.book_title),
+          escapeCSV(item.book_author),
+          escapeCSV(item.recommendation_note || ''),
+          escapeCSV(item.created_at?.split('T')[0] || '')
+        ].join(','));
+      });
+      
+      // Create and download CSV file
+      const csvContent = lines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sarahs-books-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `sarahs-books-export-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
