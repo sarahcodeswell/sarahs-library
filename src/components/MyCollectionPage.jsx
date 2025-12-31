@@ -18,6 +18,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [showRecommendModal, setShowRecommendModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
+  const [sortBy, setSortBy] = useState('date_added'); // 'date_added' or 'title'
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -93,11 +94,19 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
 
   const sortedBooks = useMemo(() => {
     return [...readBooks].sort((a, b) => {
-      const titleA = (a.book_title || '').toLowerCase();
-      const titleB = (b.book_title || '').toLowerCase();
-      return titleA.localeCompare(titleB);
+      if (sortBy === 'date_added') {
+        // Sort by date added, most recent first
+        const dateA = new Date(a.added_at || a.updated_at || 0);
+        const dateB = new Date(b.added_at || b.updated_at || 0);
+        return dateB - dateA;
+      } else {
+        // Sort alphabetically by title
+        const titleA = (a.book_title || '').toLowerCase();
+        const titleB = (b.book_title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      }
     });
-  }, [readBooks]);
+  }, [readBooks, sortBy]);
 
   const filteredBooks = useMemo(() => {
     let books = sortedBooks;
@@ -328,15 +337,25 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           </p>
         </div>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search your collection..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search your collection..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+          >
+            <option value="date_added">Recently Added</option>
+            <option value="title">A-Z by Title</option>
+          </select>
         </div>
 
         {/* A-Z Letter Navigation */}
