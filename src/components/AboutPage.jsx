@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Library, Upload, BookMarked, Share2, Sparkles, Star, Check, ShoppingBag, User, X, GripVertical } from 'lucide-react';
+import { ArrowLeft, Library, Upload, BookMarked, Share2, Sparkles, Heart, Check, ShoppingBag, User, X, GripVertical } from 'lucide-react';
 
 export default function AboutPage({ onNavigate }) {
 
@@ -110,7 +110,7 @@ export default function AboutPage({ onNavigate }) {
             </p>
             <div className="space-y-3">
               <div className="flex items-start gap-2 text-sm">
-                <Star className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <Heart className="w-4 h-4 text-[#E11D48] flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[#5F7252] font-medium">Rate</span>
                   <span className="text-[#96A888]"> — Your ratings improve future recommendations</span>
