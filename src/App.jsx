@@ -16,6 +16,7 @@ import { useUser, useReadingQueue, useRecommendations } from './contexts';
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
+const MeetSarahPage = lazy(() => import('./components/MeetSarahPage'));
 const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
@@ -1898,6 +1899,23 @@ Find similar books from beyond my library that match this taste profile.
                     </button>
                     <button
                       onClick={() => {
+                        setCurrentPage('meet-sarah');
+                        setShowNavMenu(false);
+                        window.scrollTo(0, 0);
+                        window.history.pushState({}, '', '/meet-sarah');
+                        
+                        track('page_navigation', {
+                          from: currentPage,
+                          to: 'meet-sarah'
+                        });
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                    >
+                      <UserIcon className="w-4 h-4" />
+                      Meet Sarah
+                    </button>
+                    <button
+                      onClick={() => {
                         setCurrentPage('shop');
                         setShowNavMenu(false);
                         window.scrollTo(0, 0);
@@ -1999,8 +2017,14 @@ Find similar books from beyond my library that match this taste profile.
 
       {/* Page Routing */}
       {currentPage === 'about' && (
-        <Suspense fallback={<LoadingFallback message="Loading About..." />}>
+        <Suspense fallback={<LoadingFallback message="Loading How It Works..." />}>
           <AboutPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'meet-sarah' && (
+        <Suspense fallback={<LoadingFallback message="Loading Meet Sarah..." />}>
+          <MeetSarahPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
       
