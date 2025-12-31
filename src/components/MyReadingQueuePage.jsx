@@ -87,12 +87,33 @@ const themeInfo = {
 function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition }) {
   const [expanded, setExpanded] = useState(false);
   
-  // Look up full book details from local catalog
-  const catalogBook = useMemo(() => {
+  // Look up full book details from local catalog, or use stored data
+  const bookDetails = useMemo(() => {
     const t = String(book?.book_title || '');
     const key = t.toLowerCase().trim();
-    return booksData.find(b => b.title?.toLowerCase().trim() === key);
-  }, [book.book_title]);
+    const catalogBook = booksData.find(b => b.title?.toLowerCase().trim() === key);
+    
+    // If found in catalog, use catalog data
+    if (catalogBook) {
+      return {
+        ...catalogBook,
+        source: 'catalog'
+      };
+    }
+    
+    // Otherwise, use stored data from the book itself (from recommendations)
+    if (book.description || book.why_recommended) {
+      return {
+        title: book.book_title,
+        author: book.book_author,
+        description: book.description || book.why_recommended,
+        themes: [],
+        source: 'stored'
+      };
+    }
+    
+    return null;
+  }, [book]);
 
   const {
     attributes,
@@ -158,7 +179,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 }`}>
                   {book.book_title}
                 </h3>
-                {catalogBook && (
+                {bookDetails && (
                   <button
                     onClick={() => setExpanded(!expanded)}
                     className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
@@ -175,9 +196,9 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
               )}
               
               {/* Brief description when collapsed */}
-              {!expanded && catalogBook?.description && (
+              {!expanded && bookDetails?.description && (
                 <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
-                  {catalogBook.description}
+                  {bookDetails.description}
                 </p>
               )}
             </div>
@@ -268,35 +289,35 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
           )}
           
           {/* Expanded Book Details */}
-          {expanded && catalogBook && (
+          {expanded && bookDetails && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
-              {catalogBook.favorite && (
+              {bookDetails.favorite && (
                 <div className="mb-3 flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                   <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
                 </div>
               )}
               
-              {catalogBook.description && (
+              {bookDetails.description && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{catalogBook.description}</p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{bookDetails.description}</p>
                 </div>
               )}
               
-              {catalogBook.themes && catalogBook.themes.length > 0 && (
+              {bookDetails.themes && bookDetails.themes.length > 0 && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">Themes:</p>
                   <div className="flex flex-wrap gap-2">
-                    {catalogBook.themes.slice(0, 5).map(theme => {
+                    {bookDetails.themes.slice(0, 5).map(theme => {
                       const ThemeIcon = themeInfo[theme]?.icon;
                       return (
                         <span 
                           key={theme} 
-                          className={`text-xs px-2 py-0.5 rounded-full border ${themeInfo[theme]?.color} flex items-center gap-1`}
+                          className={`text-xs px-2 py-0.5 rounded-full border ${themeInfo[theme]?.color || 'bg-gray-100 text-gray-800 border-gray-200'} flex items-center gap-1`}
                         >
                           {ThemeIcon && <ThemeIcon className="w-3 h-3" />}
-                          {themeInfo[theme]?.label}
+                          {themeInfo[theme]?.label || theme}
                         </span>
                       );
                     })}
@@ -307,14 +328,14 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
               {/* Reviews Link */}
               <div className="pt-3 border-t border-[#E8EBE4]">
                 <a
-                  href={`https://www.goodreads.com/search?q=${encodeURIComponent(catalogBook.title + ' ' + catalogBook.author)}`}
+                  href={`https://www.goodreads.com/search?q=${encodeURIComponent((bookDetails.title || book.book_title) + ' ' + (bookDetails.author || book.book_author))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     e.stopPropagation();
                     track('read_reviews_clicked', { 
-                      book_title: catalogBook.title,
-                      book_author: catalogBook.author,
+                      book_title: bookDetails.title || book.book_title,
+                      book_author: bookDetails.author || book.book_author,
                       source: 'reading_queue'
                     });
                   }}

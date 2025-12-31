@@ -1324,6 +1324,9 @@ Find similar books from beyond my library that match this taste profile.
     
     const title = String(book.title || book.book_title || '').trim();
     const author = String(book.author || book.book_author || '').trim();
+    const description = String(book.description || '').trim();
+    const why = String(book.why || '').trim();
+    const status = book.status || 'want_to_read';
     
     if (!title) {
       console.error('Cannot add book without title:', book);
@@ -1338,7 +1341,14 @@ Find similar books from beyond my library that match this taste profile.
       return true;
     }
     
-    const result = await addToQueue({ title, author });
+    // Pass all available book data to the queue
+    const result = await addToQueue({ 
+      title, 
+      author, 
+      description, 
+      why,
+      status
+    });
     
     if (!result.success) {
       alert('Failed to save book. Please try again.');

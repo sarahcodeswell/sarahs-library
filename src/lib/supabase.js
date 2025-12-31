@@ -163,6 +163,16 @@ export const db = {
       insertData.rating = book.rating;
     }
     
+    // Include description if provided (from recommendations)
+    if (book.description) {
+      insertData.description = book.description;
+    }
+    
+    // Include why_recommended if provided
+    if (book.why) {
+      insertData.why_recommended = book.why;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('reading_queue')
