@@ -260,7 +260,15 @@ export function parseRecommendations(responseText) {
   let currentRec = null;
 
   for (const line of lines) {
-    const trimmed = line.trim();
+    let trimmed = line.trim();
+    
+    // Skip [RECOMMENDATION X] markers
+    if (trimmed.match(/^\[RECOMMENDATION\s*\d+\]$/i)) {
+      continue;
+    }
+    
+    // Remove inline [RECOMMENDATION X] markers from text
+    trimmed = trimmed.replace(/\[RECOMMENDATION\s*\d+\]/gi, '').trim();
     
     if (trimmed.startsWith('Title:')) {
       if (currentRec) recommendations.push(currentRec);
@@ -276,7 +284,11 @@ export function parseRecommendations(responseText) {
     } else if (trimmed.startsWith('Reputation:') && currentRec) {
       currentRec.reputation = trimmed.substring(11).trim();
     } else if (currentRec && currentRec.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('Author:') && !trimmed.startsWith('Why') && !trimmed.startsWith('Reputation:') && trimmed.length > 0) {
-      currentRec.description += ' ' + trimmed;
+      // Also clean any [RECOMMENDATION X] from continuation lines
+      const cleanedLine = trimmed.replace(/\[RECOMMENDATION\s*\d+\]/gi, '').trim();
+      if (cleanedLine) {
+        currentRec.description += ' ' + cleanedLine;
+      }
     }
   }
 
