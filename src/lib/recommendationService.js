@@ -2,7 +2,7 @@
 // Handles all recommendation logic with clear separation of concerns
 
 import { db } from './supabase';
-import { findSimilarBooks, getBooksByThemes, getRandomBooks } from './vectorSearch';
+import { findSimilarBooks, getBooksByThemes } from './vectorSearch';
 
 /**
  * Build system prompt for Claude

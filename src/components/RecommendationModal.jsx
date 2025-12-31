@@ -21,7 +21,7 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
       await onSubmit(book, note.trim());
       setNote('');
       onClose();
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to create recommendation. Please try again.');
     } finally {
       setIsSubmitting(false);

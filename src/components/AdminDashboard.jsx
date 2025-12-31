@@ -11,15 +11,8 @@ export default function AdminDashboard({ onNavigate, user }) {
     loading: true
   });
 
-  useEffect(() => {
-    loadMetrics();
-  }, []);
-
   const loadMetrics = async () => {
     try {
-      // Note: Database counts require admin RLS policies or service role
-      // For now, showing note to use Supabase dashboard for detailed DB metrics
-      
       setMetrics({
         totalUsers: 'See Supabase',
         totalReadingQueueItems: 'See Supabase',
@@ -27,11 +20,15 @@ export default function AdminDashboard({ onNavigate, user }) {
         totalChatMessages: 'See Vercel Analytics',
         loading: false
       });
-    } catch (error) {
-      console.error('Error loading metrics:', error);
+    } catch (err) {
+      console.error('Error loading metrics:', err);
       setMetrics(prev => ({ ...prev, loading: false }));
     }
   };
+
+  useEffect(() => {
+    loadMetrics();
+  }, []);
 
   if (metrics.loading) {
     return (

@@ -21,7 +21,7 @@ function getGoodreadsSearchUrl(title, author) {
   return `https://www.goodreads.com/search?q=${encodeURIComponent(query)}`;
 }
 
-export default function CollectionPage({ onNavigate, onBookClick, user, readingQueue, onAddToQueue, onShowAuthModal }) {
+export default function CollectionPage({ onNavigate, user, readingQueue, onAddToQueue, onShowAuthModal }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedBook, setExpandedBook] = useState(null);
   const [showBuyOptions, setShowBuyOptions] = useState(null);

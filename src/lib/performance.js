@@ -1,4 +1,5 @@
 // Performance monitoring and optimization utilities
+import React from 'react';
 
 // Performance metrics tracking
 export class PerformanceMonitor {
@@ -118,7 +119,7 @@ export const performanceUtils = {
   },
 
   // Lazy load images
-  lazyLoadImage: (src, placeholder = null) => {
+  lazyLoadImage: (src) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(src);
@@ -200,7 +201,7 @@ export const usePerformanceMonitor = (componentName) => {
     renderCount.current++;
     
     // Log render frequency in development
-    if (process.env.NODE_ENV === 'development' && renderCount.current > 100) {
+    if (import.meta.env.DEV && renderCount.current > 100) {
       console.warn(`⚠️ High render frequency detected for ${componentName}: ${renderCount.current} renders`);
     }
   });

@@ -27,7 +27,7 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
             return newState;
           });
         }, 2000);
-      } catch (err) {
+      } catch (_err) {
         alert('Failed to copy link. Please try again.');
       }
     } else {

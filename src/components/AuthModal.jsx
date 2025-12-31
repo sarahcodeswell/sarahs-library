@@ -28,7 +28,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         onAuthSuccess(result.data.user);
         onClose();
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
