@@ -24,6 +24,7 @@ const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1963,6 +1964,12 @@ Find similar books from beyond my library that match this taste profile.
           <ShopPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
+
+      {currentPage === 'our-practices' && (
+        <Suspense fallback={<LoadingFallback message="Loading Our Practices..." />}>
+          <OurPracticesPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
       
       {currentPage === 'collection' && (
         <ErrorBoundary>
@@ -2286,18 +2293,18 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Sarah's Lists - Collapsible */}
+          {/* Sarah's Curated Lists - Collapsible */}
           <div className="mb-6 mt-3">
             <button
               onClick={() => setShowThemeLists(prev => !prev)}
               className="mx-auto flex items-center gap-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
             >
-              <span>Or browse Sarah's Lists</span>
+              <span>Or browse Sarah's Curated Lists</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showThemeLists ? 'rotate-180' : ''}`} />
             </button>
             
             {showThemeLists && (
-              <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
+              <div className="mt-3 max-w-sm mx-auto">
                 {Object.entries(themeInfo).map(([key, info]) => {
                 const isSelected = selectedThemes.includes(key);
                 return (
@@ -2333,17 +2340,18 @@ Find similar books from beyond my library that match this taste profile.
                         }, 0);
                       }
                     }}
-                    className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
+                    className={`w-full px-3 py-2 text-left text-sm transition-all flex items-center gap-2 border-b border-[#E8EBE4] last:border-b-0 ${
                       isSelected
-                        ? 'bg-[#5F7252] border-[#5F7252] text-white shadow-sm'
-                        : 'border-[#D4DAD0] bg-white text-[#5F7252] hover:border-[#96A888] hover:bg-[#F8F6EE]'
+                        ? 'bg-[#5F7252]/10 text-[#4A5940] font-medium'
+                        : 'text-[#5F7252] hover:bg-[#F8F6EE]'
                     }`}
                     aria-label={`${info.label} theme filter`}
                     aria-pressed={isSelected}
-                    title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
+                    title={themeDescriptions[key]}
                   >
-                    {info.icon && <info.icon className="w-4 h-4" />}
+                    {info.icon && <info.icon className="w-4 h-4 flex-shrink-0" />}
                     <span>{info.label}</span>
+                    {isSelected && <span className="ml-auto text-xs text-[#5F7252]">✓</span>}
                   </button>
                 );
               })}
@@ -2383,10 +2391,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="mt-16 sm:mt-20 text-center">
-            <div className="text-xs text-[#7A8F6C] font-light">A Curated Collection of Infinite Possibilities</div>
-          </div>
-
+          
         </main>
       )}
 

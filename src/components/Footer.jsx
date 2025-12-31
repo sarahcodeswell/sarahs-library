@@ -12,7 +12,7 @@ export default function Footer({ onNavigate, currentPage }) {
     <footer className="bg-[#F8F6EE] border-t border-[#D4DAD0] mt-auto">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
         {/* Navigation Links - More prominent */}
-        <nav className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-4">
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3 mb-4">
           <button
             onClick={() => handleNavigation('about', '/how-it-works')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'about' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
@@ -24,6 +24,12 @@ export default function Footer({ onNavigate, currentPage }) {
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'meet-sarah' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >
             Meet Sarah
+          </button>
+          <button
+            onClick={() => handleNavigation('our-practices', '/our-practices')}
+            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'our-practices' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
+          >
+            Our Practices
           </button>
           <button
             onClick={() => handleNavigation('shop', '/shop')}
@@ -39,6 +45,11 @@ export default function Footer({ onNavigate, currentPage }) {
             Contact
           </a>
         </nav>
+
+        {/* Tagline */}
+        <p className="text-xs text-[#7A8F6C] text-center mb-3 font-light">
+          A Curated Collection of Infinite Possibilities
+        </p>
 
         {/* Copyright */}
         <p className="text-xs text-[#96A888] text-center">
