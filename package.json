@@ -21,7 +21,9 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@vercel/analytics": "^1.6.1",
     "@vercel/kv": "^3.0.0",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.561.0",
+    "openai": "^6.15.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

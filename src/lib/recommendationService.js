@@ -2,6 +2,7 @@
 // Handles all recommendation logic with clear separation of concerns
 
 import { db } from './supabase';
+import { findSimilarBooks, getBooksByThemes, getRandomBooks } from './vectorSearch';
 
 /**
  * Build system prompt for Claude
@@ -166,8 +167,32 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       messageParts.push(exclusionMessage);
     }
 
+    // Add vector search context if available
+    let vectorContext = '';
+    try {
+      if (themeFilters && themeFilters.length > 0) {
+        // Get books by themes first
+        const themeBooks = await getBooksByThemes(themeFilters, 10);
+        if (themeBooks.length > 0) {
+          vectorContext = `\n\nSARAH'S CURATED BOOKS THAT MATCH YOUR THEMES:\n${themeBooks.slice(0, 5).map((book, i) => 
+            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'}\n   Sarah's take: ${book.sarah_assessment || 'No assessment available'}`
+          ).join('\n\n')}`;
+        }
+      } else {
+        // Use semantic search for general queries
+        const similarBooks = await findSimilarBooks(userMessage, 5, 0.6);
+        if (similarBooks.length > 0) {
+          vectorContext = `\n\nSARAH'S CURATED BOOKS SIMILAR TO YOUR REQUEST:\n${similarBooks.map((book, i) => 
+            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'} (similarity: ${book.similarity.toFixed(2)})\n   Sarah's take: ${book.sarah_assessment || 'No assessment available'}`
+          ).join('\n\n')}`;
+        }
+      }
+    } catch (error) {
+      console.log('Vector search unavailable, using general recommendations');
+    }
+
     // Add user request
-    messageParts.push(`USER REQUEST:\n${userMessage}`);
+    messageParts.push(`USER REQUEST:\n${userMessage}${vectorContext}`);
 
     const userContent = messageParts.join('\n\n');
 
