@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, ChevronDown, ChevronUp, Info, Star, ExternalLink } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import booksData from '../books.json';
 
 import {
   DndContext,
@@ -25,7 +26,74 @@ const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
 const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks';
 const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20';
 
+// Theme info for displaying themes
+const themeInfo = {
+  identity: { label: 'Identity & Belonging', icon: null, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  family: { label: 'Family & Relationships', icon: null, color: 'bg-pink-100 text-pink-800 border-pink-200' },
+  love: { label: 'Love & Relationships', icon: null, color: 'bg-red-100 text-red-800 border-red-200' },
+  grief: { label: 'Grief & Loss', icon: null, color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  friendship: { label: 'Friendship', icon: null, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  community: { label: 'Community & Society', icon: null, color: 'bg-green-100 text-green-800 border-green-200' },
+  justice: { label: 'Justice & Systems', icon: null, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  coming_of_age: { label: 'Coming of Age', icon: null, color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  historical: { label: 'Historical Fiction', icon: null, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  memoir: { label: 'Memoir & Biography', icon: null, color: 'bg-teal-100 text-teal-800 border-teal-200' },
+  mental_health: { label: 'Mental Health', icon: null, color: 'bg-lime-100 text-lime-800 border-lime-200' },
+  immigration: { label: 'Immigration & Migration', icon: null, color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+  race: { label: 'Race & Racism', icon: null, color: 'bg-rose-100 text-rose-800 border-rose-200' },
+  war: { label: 'War & Conflict', icon: null, color: 'bg-slate-100 text-slate-800 border-slate-200' },
+  technology: { label: 'Technology & Science', icon: null, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  art: { label: 'Art & Creativity', icon: null, color: 'bg-violet-100 text-violet-800 border-violet-200' },
+  philosophy: { label: 'Philosophy & Ideas', icon: null, color: 'bg-amber-100 text-amber-800 border-amber-200' },
+  spirituality: { label: 'Spirituality & Faith', icon: null, color: 'bg-sky-100 text-sky-800 border-sky-200' },
+  nature: { label: 'Nature & Environment', icon: null, color: 'bg-green-100 text-green-800 border-green-200' },
+  education: { label: 'Education & Learning', icon: null, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  work: { label: 'Work & Career', icon: null, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  health: { label: 'Health & Wellness', icon: null, color: 'bg-red-100 text-red-800 border-red-200' },
+  food: { label: 'Food & Culture', icon: null, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  travel: { label: 'Travel & Adventure', icon: null, color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+  sports: { label: 'Sports & Competition', icon: null, color: 'bg-lime-100 text-lime-800 border-lime-200' },
+  music: { label: 'Music & Performance', icon: null, color: 'bg-pink-100 text-pink-800 border-pink-200' },
+  humor: { label: 'Humor & Comedy', icon: null, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  mystery: { label: 'Mystery & Thriller', icon: null, color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  fantasy: { label: 'Fantasy & Magic', icon: null, color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  science_fiction: { label: 'Science Fiction', icon: null, color: 'bg-slate-100 text-slate-800 border-slate-200' },
+  business: { label: 'Business & Economics', icon: null, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  politics: { label: 'Politics & Government', icon: null, color: 'bg-red-100 text-red-800 border-red-200' },
+  religion: { label: 'Religion & Belief', icon: null, color: 'bg-sky-100 text-sky-800 border-sky-200' },
+  parenting: { label: 'Parenting & Family', icon: null, color: 'bg-rose-100 text-rose-800 border-rose-200' },
+  aging: { label: 'Aging & Time', icon: null, color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  disability: { label: 'Disability & Accessibility', icon: null, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  addiction: { label: 'Addiction & Recovery', icon: null, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  rural: { label: 'Rural Life', icon: null, color: 'bg-green-100 text-green-800 border-green-200' },
+  urban: { label: 'Urban Life', icon: null, color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  lgbtq: { label: 'LGBTQ+ Stories', icon: null, color: 'bg-rainbow-100 text-rainbow-800 border-rainbow-200' },
+  feminism: { label: 'Feminism & Gender', icon: null, color: 'bg-pink-100 text-pink-800 border-pink-200' },
+  colonialism: { label: 'Colonialism & Post-Colonialism', icon: null, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  diaspora: { label: 'Diaspora & Migration', icon: null, color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+  class: { label: 'Class & Economic', icon: null, color: 'bg-slate-100 text-slate-800 border-slate-200' },
+  environment: { label: 'Environment & Climate', icon: null, color: 'bg-green-100 text-green-800 border-green-200' },
+  animal: { label: 'Animal Stories', icon: null, color: 'bg-amber-100 text-amber-800 border-amber-200' },
+  biography: { label: 'Biography & Memoir', icon: null, color: 'bg-teal-100 text-teal-800 border-teal-200' },
+  poetry: { label: 'Poetry & Literature', icon: null, color: 'bg-violet-100 text-violet-800 border-violet-200' },
+  short_stories: { label: 'Short Stories', icon: null, color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  essays: { label: 'Essays & Nonfiction', icon: null, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  graphic_novels: { label: 'Graphic Novels', icon: null, color: 'bg-pink-100 text-pink-800 border-pink-200' },
+  young_adult: { label: 'Young Adult', icon: null, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  children: { label: "Children's Books", icon: null, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
+};
+
 function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  // Look up full book details from local catalog
+  const catalogBook = useMemo(() => {
+    const t = String(book?.book_title || '');
+    const key = t.toLowerCase().trim();
+    return booksData.find(b => b.title?.toLowerCase().trim() === key);
+  }, [book.book_title]);
+
   const {
     attributes,
     listeners,
@@ -72,14 +140,32 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h3 className={`font-medium mb-1 truncate ${
-                isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
-              }`}>
-                {book.book_title}
-              </h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className={`font-medium truncate ${
+                  isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
+                }`}>
+                  {book.book_title}
+                </h3>
+                {catalogBook && (
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+                    aria-label={expanded ? "Show less" : "Show more"}
+                  >
+                    <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+              </div>
               {book.book_author && (
                 <p className="text-sm text-[#7A8F6C]">
                   by {book.book_author}
+                </p>
+              )}
+              
+              {/* Brief description when collapsed */}
+              {!expanded && catalogBook?.description && (
+                <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
+                  {catalogBook.description}
                 </p>
               )}
             </div>
@@ -164,6 +250,66 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 >
                   <Library className="w-3.5 h-3.5" />
                   Library
+                </a>
+              </div>
+            </div>
+          )}
+          
+          {/* Expanded Book Details */}
+          {expanded && catalogBook && (
+            <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              {catalogBook.favorite && (
+                <div className="mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
+                </div>
+              )}
+              
+              {catalogBook.description && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{catalogBook.description}</p>
+                </div>
+              )}
+              
+              {catalogBook.themes && catalogBook.themes.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-[#4A5940] mb-2">Themes:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {catalogBook.themes.slice(0, 5).map(theme => {
+                      const ThemeIcon = themeInfo[theme]?.icon;
+                      return (
+                        <span 
+                          key={theme} 
+                          className={`text-xs px-2 py-0.5 rounded-full border ${themeInfo[theme]?.color} flex items-center gap-1`}
+                        >
+                          {ThemeIcon && <ThemeIcon className="w-3 h-3" />}
+                          {themeInfo[theme]?.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Reviews Link */}
+              <div className="pt-3 border-t border-[#E8EBE4]">
+                <a
+                  href={`https://www.goodreads.com/search?q=${encodeURIComponent(catalogBook.title + ' ' + catalogBook.author)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    track('read_reviews_clicked', { 
+                      book_title: catalogBook.title,
+                      book_author: catalogBook.author,
+                      source: 'reading_queue'
+                    });
+                  }}
+                  className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+                >
+                  <Star className="w-3.5 h-3.5" />
+                  Read Reviews on Goodreads
                 </a>
               </div>
             </div>
