@@ -2095,6 +2095,37 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
+          {/* Welcome Section for new users */}
+          {!user && messages.length <= 1 && (
+            <div className="mb-6 text-center">
+              <p className="text-sm text-[#7A8F6C] mb-4">
+                Find your next great read, curated by someone who gets it.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 text-xs">
+                <button
+                  onClick={() => {
+                    setCurrentPage('about');
+                    window.scrollTo(0, 0);
+                    window.history.pushState({}, '', '/how-it-works');
+                  }}
+                  className="px-3 py-1.5 rounded-full border border-[#D4DAD0] text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+                >
+                  How It Works
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentPage('meet-sarah');
+                    window.scrollTo(0, 0);
+                    window.history.pushState({}, '', '/meet-sarah');
+                  }}
+                  className="px-3 py-1.5 rounded-full border border-[#D4DAD0] text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+                >
+                  Meet Sarah
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
             <img
               src="/books.jpg"
