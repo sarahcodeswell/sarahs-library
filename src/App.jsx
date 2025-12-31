@@ -1123,6 +1123,7 @@ export default function App() {
   const [selectedThemes, setSelectedThemes] = useState([]);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
+  const [showThemeLists, setShowThemeLists] = useState(false);
   const [signInNudgeDismissed, setSignInNudgeDismissed] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
@@ -1752,7 +1753,22 @@ Find similar books from beyond my library that match this taste profile.
                   
                   {showNavMenu && (
                     <div className="absolute top-full left-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[220px] z-50">
+                      {/* Home */}
+                      <button
+                        onClick={() => {
+                          setCurrentPage('home');
+                          setShowNavMenu(false);
+                          window.scrollTo(0, 0);
+                          window.history.pushState({}, '', '/');
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                      >
+                        <Home className="w-4 h-4" />
+                        Home
+                      </button>
+                      
                       {/* MY LIBRARY Section */}
+                      <div className="border-t border-[#E8EBE4] my-1"></div>
                       <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
                         My Library
                       </div>
@@ -2270,63 +2286,69 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Theme Filter Section */}
+          {/* Sarah's Lists - Collapsible */}
           <div className="mb-6 mt-3">
-            <p className="text-center text-xs text-[#7A8F6C] mb-3 font-light">Or browse Sarah's Lists</p>
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              {Object.entries(themeInfo).map(([key, info]) => {
-              const isSelected = selectedThemes.includes(key);
-              return (
-                <button
-                  key={key}
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedThemes(prev => prev.filter(t => t !== key));
-                      setInputValue('');
-                      
-                      // Track theme deselection
-                      track('theme_filter_removed', {
-                        theme: key,
-                        theme_label: info.label
-                      });
-                    } else {
-                      setSelectedThemes(prev => [...prev, key]);
-                      const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                      setInputValue(themeText);
-                      
-                      // Track theme selection
-                      track('theme_filter_selected', {
-                        theme: key,
-                        theme_label: info.label,
-                        chat_mode: chatMode
-                      });
-                      
-                      // Auto-resize textarea after setting value
-                      setTimeout(() => {
-                        const textarea = document.querySelector('textarea[placeholder="Describe your perfect next read..."]');
-                        if (textarea) {
-                          textarea.style.height = '24px';
-                          const newHeight = Math.min(textarea.scrollHeight, 200);
-                          textarea.style.height = newHeight + 'px';
-                        }
-                      }, 0);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
-                    isSelected
-                      ? 'bg-[#5F7252] border-[#5F7252] text-white shadow-sm'
-                      : 'border-[#D4DAD0] bg-white text-[#5F7252] hover:border-[#96A888] hover:bg-[#F8F6EE]'
-                  }`}
-                  aria-label={`${info.label} theme filter`}
-                  aria-pressed={isSelected}
-                  title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
-                >
-                  {info.icon && <info.icon className="w-4 h-4" />}
-                  <span>{info.label}</span>
-                </button>
-              );
-            })}
-            </div>
+            <button
+              onClick={() => setShowThemeLists(prev => !prev)}
+              className="mx-auto flex items-center gap-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
+            >
+              <span>Or browse Sarah's Lists</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showThemeLists ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showThemeLists && (
+              <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
+                {Object.entries(themeInfo).map(([key, info]) => {
+                const isSelected = selectedThemes.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedThemes(prev => prev.filter(t => t !== key));
+                        setInputValue('');
+                        
+                        track('theme_filter_removed', {
+                          theme: key,
+                          theme_label: info.label
+                        });
+                      } else {
+                        setSelectedThemes(prev => [...prev, key]);
+                        const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                        setInputValue(themeText);
+                        
+                        track('theme_filter_selected', {
+                          theme: key,
+                          theme_label: info.label,
+                          chat_mode: chatMode
+                        });
+                        
+                        setTimeout(() => {
+                          const textarea = document.querySelector('textarea[placeholder="Describe your perfect next read..."]');
+                          if (textarea) {
+                            textarea.style.height = '24px';
+                            const newHeight = Math.min(textarea.scrollHeight, 200);
+                            textarea.style.height = newHeight + 'px';
+                          }
+                        }, 0);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-[#5F7252] border-[#5F7252] text-white shadow-sm'
+                        : 'border-[#D4DAD0] bg-white text-[#5F7252] hover:border-[#96A888] hover:bg-[#F8F6EE]'
+                    }`}
+                    aria-label={`${info.label} theme filter`}
+                    aria-pressed={isSelected}
+                    title={`${info.label} — ${themeDescriptions[key]}${isSelected ? ' (active filter)' : ''}`}
+                  >
+                    {info.icon && <info.icon className="w-4 h-4" />}
+                    <span>{info.label}</span>
+                  </button>
+                );
+              })}
+              </div>
+            )}
           </div>
 
           <input
@@ -2341,17 +2363,22 @@ Find similar books from beyond my library that match this taste profile.
             }}
           />
 
-          {/* Create Profile hint for logged-out users - subtle inline */}
+          {/* Create Profile CTA for logged-out users */}
           {!user && (
-            <div className="mt-4 text-center">
+            <div className="mt-6 bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-5 text-center">
+              <h3 className="font-serif text-lg text-[#4A5940] mb-2">Get Better Recommendations</h3>
+              <p className="text-sm text-[#7A8F6C] mb-4 leading-relaxed">
+                Create a free profile to add your books, share favorite authors, and get personalized recommendations based on your reading preferences.
+              </p>
               <button
                 onClick={() => {
                   setShowAuthModal(true);
                   track('create_profile_cta_clicked');
                 }}
-                className="text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
               >
-                <span className="underline">Create a free profile</span> for personalized recommendations
+                <UserIcon className="w-4 h-4" />
+                Create Your Profile
               </button>
             </div>
           )}
