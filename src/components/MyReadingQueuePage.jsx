@@ -171,10 +171,10 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className={`font-medium truncate ${
+              <div className="flex items-start gap-2 mb-1">
+                <h3 className={`font-medium ${
                   isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
                 }`}>
                   {book.book_title}
@@ -182,7 +182,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 {bookDetails && (
                   <button
                     onClick={() => setExpanded(!expanded)}
-                    className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+                    className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0 mt-0.5"
                     aria-label={expanded ? "Show less" : "Show more"}
                   >
                     <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
