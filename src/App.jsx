@@ -1809,6 +1809,11 @@ Find similar books from beyond my library that match this taste profile.
                         >
                           <BookMarked className="w-4 h-4" />
                           My Reading Queue
+                          {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
+                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full">
+                              {readingQueue.filter(b => b.status === 'want_to_read').length}
+                            </span>
+                          )}
                         </button>
                         <button
                           onClick={() => {
@@ -1827,6 +1832,11 @@ Find similar books from beyond my library that match this taste profile.
                         >
                           <Library className="w-4 h-4" />
                           My Collection
+                          {readingQueue.filter(b => b.status === 'finished').length > 0 && (
+                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full">
+                              {readingQueue.filter(b => b.status === 'finished').length}
+                            </span>
+                          )}
                         </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         {/* MY RECOMMENDATIONS Section */}
