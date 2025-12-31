@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
 
-// Warming heart colors from cool to warm
+// Warming heart colors from cool to warm (5 = brand rose #E11D48)
 const heartColors = {
-  1: { fill: '#FDA4AF', stroke: '#FB7185' },  // Light pink/rose
-  2: { fill: '#FB7185', stroke: '#F43F5E' },  // Rose
-  3: { fill: '#F43F5E', stroke: '#E11D48' },  // Medium rose
-  4: { fill: '#E11D48', stroke: '#BE123C' },  // Warm rose
-  5: { fill: '#BE123C', stroke: '#9F1239' },  // Deep rose/red
+  1: { fill: '#FECDD3', stroke: '#FECDD3' },  // Palest pink
+  2: { fill: '#FDA4AF', stroke: '#FDA4AF' },  // Light pink
+  3: { fill: '#FB7185', stroke: '#FB7185' },  // Pink
+  4: { fill: '#F43F5E', stroke: '#F43F5E' },  // Rose
+  5: { fill: '#E11D48', stroke: '#BE123C' },  // Brand rose ❤️
 };
 
 const emptyColor = { fill: 'none', stroke: '#D4DAD0' };
