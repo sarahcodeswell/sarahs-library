@@ -11,6 +11,7 @@ import { cacheUtils } from './lib/cache';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
+import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
 
 // Lazy load heavy components
@@ -1031,9 +1032,9 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
         ) : isWelcomeMessage ? (
           <div className="text-sm leading-relaxed">
             <p className="mb-3">Hi, I'm Sarah!</p>
-            <p className="mb-3">I'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.</p>
+            <p className="mb-3">I'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.</p>
             <p className="mb-3">Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
-            <p>Tell me what you're in the mood for and I'll find your next great read.</p>
+            <p>What are you in the mood for?</p>
           </div>
         ) : (
           <div className="text-sm leading-relaxed">
@@ -1105,7 +1106,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.\n\nTell me what you're in the mood for and I'll find your next great read.", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.\n\nWhat are you in the mood for?", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1278,7 +1279,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated library of 200+ beloved titles or discoveries from the wider world.\n\nTell me what you're in the mood for and I'll find your next great read.",
+      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.\n\nWhat are you in the mood for?",
       isUser: false
     }];
   };
@@ -1880,84 +1881,28 @@ Find similar books from beyond my library that match this taste profile.
                         </button>
                       </>
                     )}
-                    <button
-                      onClick={() => {
-                        setCurrentPage('about');
-                        setShowNavMenu(false);
-                        window.scrollTo(0, 0);
-                        window.history.pushState({}, '', '/how-it-works');
-                        
-                        track('page_navigation', {
-                          from: currentPage,
-                          to: 'about'
-                        });
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                    >
-                      <BookHeart className="w-4 h-4" />
-                      How It Works
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentPage('meet-sarah');
-                        setShowNavMenu(false);
-                        window.scrollTo(0, 0);
-                        window.history.pushState({}, '', '/meet-sarah');
-                        
-                        track('page_navigation', {
-                          from: currentPage,
-                          to: 'meet-sarah'
-                        });
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                    >
-                      <UserIcon className="w-4 h-4" />
-                      Meet Sarah
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentPage('shop');
-                        setShowNavMenu(false);
-                        window.scrollTo(0, 0);
-                        window.history.pushState({}, '', '/shop');
-                        
-                        track('page_navigation', {
-                          from: currentPage,
-                          to: 'shop'
-                        });
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                    >
-                      <ShoppingBag className="w-4 h-4" />
-                      Shop
-                    </button>
-                    <div className="border-t border-[#E8EBE4] my-1"></div>
                     {user?.email === ADMIN_EMAIL && (
-                      <button
-                        onClick={() => {
-                          setCurrentPage('admin');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/admin');
-                          
-                          track('page_navigation', {
-                            from: currentPage,
-                            to: 'admin'
-                          });
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <Activity className="w-4 h-4" />
-                        Admin Dashboard
-                      </button>
+                      <>
+                        <div className="border-t border-[#E8EBE4] my-1"></div>
+                        <button
+                          onClick={() => {
+                            setCurrentPage('admin');
+                            setShowNavMenu(false);
+                            window.scrollTo(0, 0);
+                            window.history.pushState({}, '', '/admin');
+                            
+                            track('page_navigation', {
+                              from: currentPage,
+                              to: 'admin'
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                        >
+                          <Activity className="w-4 h-4" />
+                          Admin Dashboard
+                        </button>
+                      </>
                     )}
-                    <a
-                      href="mailto:hello@sarahsbooks.com"
-                      className="w-full px-4 py-2.5 text-left text-sm text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Contact
-                    </a>
                   </div>
                 )}
               </div>
@@ -2098,8 +2043,11 @@ Find similar books from beyond my library that match this taste profile.
           {/* Welcome Section for new users */}
           {!user && messages.length <= 1 && (
             <div className="mb-6 text-center">
-              <p className="text-sm text-[#7A8F6C] mb-4">
-                Find your next great read, curated by someone who gets it.
+              <p className="text-sm text-[#7A8F6C] mb-2">
+                Find your next great read, curated just for you.
+              </p>
+              <p className="text-xs text-[#96A888] mb-4">
+                Whether from my curated collection of 200+ beloved titles or discoveries from the world's library.
               </p>
               <div className="flex flex-wrap justify-center gap-2 text-xs">
                 <button
@@ -2581,6 +2529,9 @@ Find similar books from beyond my library that match this taste profile.
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer onNavigate={setCurrentPage} currentPage={currentPage} />
 
     </div>
   );

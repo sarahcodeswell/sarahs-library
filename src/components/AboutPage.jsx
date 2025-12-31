@@ -142,7 +142,7 @@ export default function AboutPage({ onNavigate }) {
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm text-center">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-3">Ready to find your next great read?</h2>
           <p className="text-sm text-[#7A8F6C] mb-6">
-            Tell me what you're in the mood for and I'll find the perfect book.
+            Whether from my curated collection or discoveries from the world's library.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
