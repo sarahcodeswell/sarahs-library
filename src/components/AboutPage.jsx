@@ -35,24 +35,30 @@ export default function AboutPage({ onNavigate }) {
               <Sparkles className="w-5 h-5 text-[#5F7252]" />
               <h3 className="font-medium text-[#4A5940] text-base">Get Recommendations</h3>
             </div>
-            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4 ml-11">
+            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
               Ask Sarah for personalized book recommendations. For each book, you have 3 choices:
             </p>
-            <div className="space-y-2 ml-11">
-              <div className="flex items-center gap-2 text-sm">
-                <Library className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Already Read</span>
-                <span className="text-[#96A888]">→ Goes to My Collection</span>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 text-sm">
+                <Library className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Already Read</span>
+                  <span className="text-[#96A888]"> → Goes to My Collection</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <BookMarked className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Want to Read</span>
-                <span className="text-[#96A888]">→ Goes to My Reading Queue</span>
+              <div className="flex items-start gap-2 text-sm">
+                <BookMarked className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Want to Read</span>
+                  <span className="text-[#96A888]"> → Goes to My Reading Queue</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <X className="w-4 h-4 text-[#96A888]" />
-                <span className="text-[#5F7252] font-medium">Not for Me</span>
-                <span className="text-[#96A888]">→ Improves future recommendations</span>
+              <div className="flex items-start gap-2 text-sm">
+                <X className="w-4 h-4 text-[#96A888] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Not for Me</span>
+                  <span className="text-[#96A888]"> → Improves future recommendations</span>
+                </div>
               </div>
             </div>
           </div>
@@ -64,24 +70,30 @@ export default function AboutPage({ onNavigate }) {
               <BookMarked className="w-5 h-5 text-[#5F7252]" />
               <h3 className="font-medium text-[#4A5940] text-base">My Reading Queue</h3>
             </div>
-            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4 ml-11">
+            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
               Books you want to read. Here you can:
             </p>
-            <div className="space-y-2 ml-11">
-              <div className="flex items-center gap-2 text-sm">
-                <GripVertical className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Prioritize</span>
-                <span className="text-[#96A888]">— Drag to reorder your list</span>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 text-sm">
+                <GripVertical className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Prioritize</span>
+                  <span className="text-[#96A888]"> — Drag to reorder your list</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <ShoppingBag className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Purchase</span>
-                <span className="text-[#96A888]">— Local bookstore, Libro.fm, or library</span>
+              <div className="flex items-start gap-2 text-sm">
+                <ShoppingBag className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Purchase</span>
+                  <span className="text-[#96A888]"> — Bookshop.org, Amazon, Libro.fm, or library</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Finish</span>
-                <span className="text-[#96A888]">— Mark as read when done</span>
+              <div className="flex items-start gap-2 text-sm">
+                <Check className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Finish</span>
+                  <span className="text-[#96A888]"> — Mark as read when done</span>
+                </div>
               </div>
             </div>
           </div>
@@ -93,19 +105,23 @@ export default function AboutPage({ onNavigate }) {
               <Library className="w-5 h-5 text-[#5F7252]" />
               <h3 className="font-medium text-[#4A5940] text-base">My Collection</h3>
             </div>
-            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4 ml-11">
+            <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
               Books you've finished reading. Here you can:
             </p>
-            <div className="space-y-2 ml-11">
-              <div className="flex items-center gap-2 text-sm">
-                <Star className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Rate</span>
-                <span className="text-[#96A888]">— Your ratings improve future recommendations</span>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 text-sm">
+                <Star className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Rate</span>
+                  <span className="text-[#96A888]"> — Your ratings improve future recommendations</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Share2 className="w-4 h-4 text-[#5F7252]" />
-                <span className="text-[#5F7252] font-medium">Share</span>
-                <span className="text-[#96A888]">— Recommend favorites to friends</span>
+              <div className="flex items-start gap-2 text-sm">
+                <Share2 className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[#5F7252] font-medium">Share</span>
+                  <span className="text-[#96A888]"> — Recommend favorites to friends</span>
+                </div>
               </div>
             </div>
           </div>
