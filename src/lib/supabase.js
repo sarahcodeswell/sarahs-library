@@ -199,13 +199,31 @@ export const db = {
   },
 
   updateReadingQueueStatus: async (id, status) => {
-    if (!supabase) return { data: null, error: null };
-    const { data, error } = await supabase
-      .from('reading_queue')
-      .update({ status })
-      .eq('id', id)
-      .select();
-    return { data, error };
+    if (!supabase) {
+      console.error('updateReadingQueueStatus: Supabase client not initialized');
+      return { data: null, error: { message: 'Supabase not configured' } };
+    }
+    
+    console.log('updateReadingQueueStatus: Updating', { id, status });
+    
+    try {
+      const { data, error } = await supabase
+        .from('reading_queue')
+        .update({ status })
+        .eq('id', id)
+        .select();
+      
+      if (error) {
+        console.error('updateReadingQueueStatus: Database error', error);
+      } else {
+        console.log('updateReadingQueueStatus: Success', data);
+      }
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateReadingQueueStatus: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
   },
 
   updateReadingQueueItem: async (id, updates) => {
