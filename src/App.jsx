@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, Activity, BookCheck } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, Activity, BookCheck, LogOut } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -1826,6 +1826,29 @@ Find similar books from beyond my library that match this taste profile.
                         )}
                       </button>
                       
+                      {/* Profile & Sign Out */}
+                      <div className="border-t border-[#E8EBE4] my-1"></div>
+                      <button
+                        onClick={() => {
+                          setShowAuthModal(true);
+                          setShowNavMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setShowNavMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                      
                       {/* Admin Section */}
                       {user?.email === ADMIN_EMAIL && (
                         <>
@@ -2249,7 +2272,7 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* Theme Filter Section */}
           <div className="mb-6 mt-3">
-            <p className="text-center text-xs text-[#7A8F6C] mb-3 font-light">Common themes in my collection</p>
+            <p className="text-center text-xs text-[#7A8F6C] mb-3 font-light">Or browse Sarah's Lists</p>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               {Object.entries(themeInfo).map(([key, info]) => {
               const isSelected = selectedThemes.includes(key);
@@ -2318,22 +2341,17 @@ Find similar books from beyond my library that match this taste profile.
             }}
           />
 
-          {/* Create Profile CTA for logged-out users */}
+          {/* Create Profile hint for logged-out users - subtle inline */}
           {!user && (
-            <div className="mt-6 bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-5 text-center">
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2">Get Better Recommendations</h3>
-              <p className="text-sm text-[#7A8F6C] mb-4 leading-relaxed">
-                Create a free profile to add your books, share favorite authors, and get personalized recommendations based on your reading preferences.
-              </p>
+            <div className="mt-4 text-center">
               <button
                 onClick={() => {
                   setShowAuthModal(true);
                   track('create_profile_cta_clicked');
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
+                className="text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
               >
-                <UserIcon className="w-4 h-4" />
-                Create Your Profile
+                <span className="underline">Create a free profile</span> for personalized recommendations
               </button>
             </div>
           )}
