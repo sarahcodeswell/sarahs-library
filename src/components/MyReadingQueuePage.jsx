@@ -239,15 +239,27 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
           {isFirst && showAcquisition && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
               <div className="flex flex-wrap gap-2">
+                {/* Preferred: Local Bookstore */}
                 <a
                   href={`https://bookshop.org/search?keywords=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&a_aid=${BOOKSHOP_AFFILIATE_ID}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-[#5F7252] hover:bg-[#4A5940] rounded-lg text-xs text-white transition-colors flex items-center gap-1.5 font-medium"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  Bookshop.org
+                  Local Bookstore
                 </a>
+                {/* Preferred: Libro.fm */}
+                <a
+                  href={`https://libro.fm/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&affiliate=${LIBRO_FM_AFFILIATE_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#5F7252] hover:bg-[#4A5940] rounded-lg text-xs text-white transition-colors flex items-center gap-1.5 font-medium"
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  Libro.fm
+                </a>
+                {/* Other options */}
                 <a
                   href={`https://www.amazon.com/s?k=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`}
                   target="_blank"
@@ -256,15 +268,6 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
                   Kindle
-                </a>
-                <a
-                  href={`https://libro.fm/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&affiliate=${LIBRO_FM_AFFILIATE_ID}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
-                >
-                  <Headphones className="w-3.5 h-3.5" />
-                  Libro.fm
                 </a>
                 <a
                   href={`https://www.audible.com/search?keywords=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&tag=${AUDIBLE_AFFILIATE_TAG}`}
