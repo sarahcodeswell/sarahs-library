@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library, ChevronDown, ChevronUp, Upload, BookMarked, User, Home, Share2, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, Upload, BookMarked, Share2, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function AboutPage({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isCuratorNoteExpanded, setIsCuratorNoteExpanded] = useState(false);
 
   const filteredBooks = useMemo(() => {
     if (!searchQuery.trim()) return bookCatalog;
@@ -65,93 +64,138 @@ export default function AboutPage({ onNavigate }) {
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={() => {
-                    document.getElementById('browse-collection')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#5F7252] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
-                >
-                  <Library className="w-4 h-4" />
-                  Browse Sarah's Collection
-                </button>
-                <button
-                  onClick={() => {
-                    document.getElementById('curator-themes')?.scrollIntoView({ behavior: 'smooth' });
+                    onNavigate('home');
+                    window.scrollTo(0, 0);
                   }}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
                 >
-                  Explore Curator Themes
+                  <Sparkles className="w-4 h-4" />
+                  Get Your First Recommendation
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('my-books');
+                    window.scrollTo(0, 0);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#5F7252] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  Add Your Books First
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Curator's Note removed from here - moved to after collection */}
-
-        {/* How It Works - 3 Jobs */}
+        {/* Your Journey - Step by Step */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
-          <h2 className="font-serif text-2xl text-[#4A5940] mb-4">
-            Three Ways to Use Sarah's Books
+          <h2 className="font-serif text-2xl text-[#4A5940] mb-2">
+            Your Journey
           </h2>
+          <p className="text-sm text-[#7A8F6C] mb-6">
+            Here's how to get the most out of Sarah's Books
+          </p>
+          
           <div className="space-y-4">
-            {/* Job 1: Discover */}
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                <Home className="w-4 h-4 text-[#5F7252]" />
-                Discover Your Next Read
-              </h3>
-              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
-                Chat with me to get personalized recommendations from my curated collection of 200 books—or discoveries from the world's library.
+            {/* Step 1: Get Recommendations */}
+            <div className="bg-white rounded-xl p-5 border border-[#E8EBE4]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-sm font-medium">1</div>
+                <h3 className="font-medium text-[#4A5940] text-base">Get Recommendations</h3>
+              </div>
+              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
+                Ask Sarah for personalized book recommendations. For each book, you have 3 choices:
               </p>
-              <div className="bg-[#F8F6EE] rounded-lg p-3 border border-[#D4DAD0]">
-                <div className="flex items-start gap-2">
-                  <Upload className="w-4 h-4 text-[#5F7252] mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs font-medium text-[#5F7252]">Add Your Books</p>
-                      <div className="px-2 py-0.5 bg-[#5F7252] text-white text-[10px] font-medium rounded uppercase tracking-wide">Pro Tip</div>
-                    </div>
-                    <p className="text-xs text-[#96A888] leading-relaxed">
-                      Upload photos of books you've read so I never recommend something you've already finished—and to improve your recommendations based on your taste.
-                    </p>
-                  </div>
+              <div className="space-y-2 ml-11">
+                <div className="flex items-center gap-2 text-sm">
+                  <Library className="w-4 h-4 text-[#5F7252]" />
+                  <span className="text-[#5F7252] font-medium">Already Read</span>
+                  <span className="text-[#96A888]">→ Goes to My Collection</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <BookMarked className="w-4 h-4 text-[#5F7252]" />
+                  <span className="text-[#5F7252] font-medium">Want to Read</span>
+                  <span className="text-[#96A888]">→ Goes to My Reading Queue</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-4 h-4 text-[#96A888] flex items-center justify-center text-lg">×</span>
+                  <span className="text-[#5F7252] font-medium">Not for Me</span>
+                  <span className="text-[#96A888]">→ Improves future recommendations</span>
                 </div>
               </div>
             </div>
             
-            {/* Job 2: Build Library */}
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                <Library className="w-4 h-4 text-[#5F7252]" />
-                Build Your Personal Library
-              </h3>
-              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-3">
-                Track books you want to read, mark them as finished, and keep your library up to date.
+            {/* Step 2: My Reading Queue */}
+            <div className="bg-white rounded-xl p-5 border border-[#E8EBE4]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-sm font-medium">2</div>
+                <h3 className="font-medium text-[#4A5940] text-base">My Reading Queue</h3>
+              </div>
+              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
+                Books you want to read. Here you can:
               </p>
-              <div className="space-y-2">
-                <div className="text-xs text-[#96A888] flex items-center gap-2">
-                  <BookMarked className="w-3.5 h-3.5" />
-                  View My Reading Queue
+              <div className="space-y-2 ml-11">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-[#5F7252] font-medium w-20">Prioritize</span>
+                  <span className="text-[#96A888]">Drag to reorder your list</span>
                 </div>
-                <div className="text-xs text-[#96A888] flex items-center gap-2">
-                  <Library className="w-3.5 h-3.5" />
-                  Add to My Collection
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-[#5F7252] font-medium w-20">Purchase</span>
+                  <span className="text-[#96A888]">Get from local bookstore, Libro.fm, or library</span>
                 </div>
-                <div className="text-xs text-[#96A888] flex items-center gap-2">
-                  <Upload className="w-3.5 h-3.5" />
-                  <p className="text-xs text-[#96A888]">Add Books anytime</p>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-[#5F7252] font-medium w-20">Finish</span>
+                  <span className="text-[#96A888]">Mark as read when done</span>
                 </div>
               </div>
             </div>
             
-            {/* Job 3: Share */}
-            <div className="bg-[#F8F6EE] rounded-lg p-4 border border-[#E8EBE4]">
-              <h3 className="font-medium text-[#4A5940] mb-2 text-base flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-[#5F7252]" />
-                Share with Friends
-              </h3>
-              <p className="text-sm text-[#7A8F6C] leading-relaxed">
-                Recommend your favorite books to others with personalized notes
+            {/* Step 3: My Collection */}
+            <div className="bg-white rounded-xl p-5 border border-[#E8EBE4]">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#5F7252] text-white flex items-center justify-center text-sm font-medium">3</div>
+                <h3 className="font-medium text-[#4A5940] text-base">My Collection</h3>
+              </div>
+              <p className="text-sm text-[#7A8F6C] leading-relaxed mb-4">
+                Books you've finished reading. Here you can:
               </p>
+              <div className="space-y-2 ml-11">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-[#5F7252] font-medium w-20">Rate</span>
+                  <span className="text-[#96A888]">Your ratings improve future recommendations</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-[#5F7252] font-medium w-20">Share</span>
+                  <span className="text-[#96A888]">Recommend favorites to friends</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pro Tip: Add Your Books */}
+        <div className="bg-[#5F7252]/10 rounded-2xl p-6 sm:p-8 border border-[#5F7252]/20 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
+              <Upload className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-medium text-[#4A5940] text-base">Pro Tip: Add Your Books First</h3>
+              </div>
+              <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
+                Upload photos of books you've already read so Sarah never recommends something you've finished—and to personalize your recommendations based on your taste.
+              </p>
+              <button
+                onClick={() => {
+                  onNavigate('my-books');
+                  window.scrollTo(0, 0);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                Add Your Books
+              </button>
             </div>
           </div>
         </div>
