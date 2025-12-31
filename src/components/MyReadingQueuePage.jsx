@@ -373,17 +373,32 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   }, [sortedBooks, searchQuery]);
 
   const handleMarkAsRead = async (book) => {
+    console.log('🔍 [handleMarkAsRead] Starting process for:', {
+      bookId: book.id,
+      title: book.book_title,
+      author: book.book_author,
+      userId: user?.id
+    });
+    
     if (!user) {
+      console.log('❌ [handleMarkAsRead] No user logged in');
       onShowAuthModal();
       return;
     }
 
     // First update the status to 'finished'
+    console.log('📝 [handleMarkAsRead] Updating status to finished...');
     const statusResult = await updateQueueStatus(book.id, 'finished');
+    
+    console.log('📊 [handleMarkAsRead] Status update result:', {
+      success: statusResult.success,
+      error: statusResult.error
+    });
     
     if (statusResult.success) {
       // Also add to user's collection (user_books table)
       try {
+        console.log('📚 [handleMarkAsRead] Adding to user collection...');
         const { db } = await import('../lib/supabase');
         const collectionResult = await db.addUserBook(user.id, {
           title: book.book_title,
@@ -391,15 +406,21 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           addedVia: 'reading_queue'
         });
         
+        console.log('📊 [handleMarkAsRead] Collection add result:', {
+          success: !collectionResult.error,
+          error: collectionResult.error,
+          data: collectionResult.data
+        });
+        
         if (collectionResult.error) {
-          console.error('Failed to add to collection:', collectionResult.error);
+          console.error('❌ [handleMarkAsRead] Failed to add to collection:', collectionResult.error);
           // Don't show error to user since status update worked
           // The book will still appear in collection from reading_queue
         } else {
-          console.log('Book successfully added to collection:', book.book_title);
+          console.log('✅ [handleMarkAsRead] Book successfully added to collection:', book.book_title);
         }
       } catch (error) {
-        console.error('Exception adding to collection:', error);
+        console.error('❌ [handleMarkAsRead] Exception adding to collection:', error);
       }
       
       track('book_marked_as_read_from_queue', {
@@ -407,8 +428,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         added_to_collection: !collectionResult?.error
       });
     } else {
+      console.error('❌ [handleMarkAsRead] Failed to update book status:', statusResult.error);
       alert('Failed to update book status. Please try again.');
     }
+    
+    console.log('🏁 [handleMarkAsRead] Process completed');
   };
 
   const handleRemoveBook = async (book) => {
