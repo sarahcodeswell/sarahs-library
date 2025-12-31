@@ -93,9 +93,9 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
         </button>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">My Recommendations</h1>
+          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Books I've Shared</h1>
           <p className="text-[#7A8F6C]">
-            {recommendations.length} {recommendations.length === 1 ? 'book' : 'books'} you've recommended
+            {recommendations.length} {recommendations.length === 1 ? 'book' : 'books'} you've shared with friends
           </p>
         </div>
 

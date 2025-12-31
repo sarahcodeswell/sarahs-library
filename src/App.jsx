@@ -1839,9 +1839,9 @@ Find similar books from beyond my library that match this taste profile.
                           )}
                         </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
-                        {/* MY RECOMMENDATIONS Section */}
+                        {/* SHARING Section */}
                         <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                          My Recommendations
+                          Sharing
                         </div>
                         <button
                           onClick={() => {
@@ -1858,7 +1858,7 @@ Find similar books from beyond my library that match this taste profile.
                           className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                         >
                           <Share2 className="w-4 h-4" />
-                          View All
+                          Books I've Shared
                         </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         <button
