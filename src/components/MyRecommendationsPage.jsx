@@ -9,12 +9,36 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
   const [editingId, setEditingId] = useState(null);
   const [editNote, setEditNote] = useState('');
 
-  const handleCopyLink = async (recommendation) => {
+  const handleShare = async (recommendation) => {
     const result = await getShareLink(recommendation.id);
     
     if (result.success && result.data?.shareUrl) {
+      const shareUrl = result.data.shareUrl;
+      const shareData = {
+        title: `${recommendation.book_title} by ${recommendation.book_author}`,
+        text: recommendation.recommendation_note 
+          ? `I recommend "${recommendation.book_title}" — ${recommendation.recommendation_note}`
+          : `I recommend "${recommendation.book_title}" by ${recommendation.book_author}`,
+        url: shareUrl
+      };
+
+      // Try native share first (mobile + some desktop browsers)
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+          track('recommendation_shared_native', {
+            book_title: recommendation.book_title
+          });
+          return;
+        } catch (err) {
+          // User cancelled or share failed, fall back to copy
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback: copy to clipboard
       try {
-        await navigator.clipboard.writeText(result.data.shareUrl);
+        await navigator.clipboard.writeText(shareUrl);
         setCopyFeedback({ [recommendation.id]: 'Copied!' });
         
         track('recommendation_link_copied', {
@@ -230,7 +254,7 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleCopyLink(recommendation)}
+                      onClick={() => handleShare(recommendation)}
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center gap-2"
                     >
                       {copyFeedback[recommendation.id] ? (

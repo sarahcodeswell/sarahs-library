@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, Lock } from 'lucide-react';
+import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, Lock, RefreshCw } from 'lucide-react';
 import { db } from '../lib/supabase';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useUser } from '../contexts/UserContext';
@@ -141,27 +141,52 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </div>
             )}
 
-            {/* Locked Actions Preview */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F8F6EE]/80 to-[#F8F6EE] z-10 flex items-end justify-center pb-4">
-                <Lock className="w-5 h-5 text-[#96A888]" />
+            {/* Greyed-out Actions - clickable to sign up */}
+            <div className="space-y-3">
+              <button
+                onClick={onShowAuthModal}
+                className="w-full px-4 py-3 bg-[#5F7252]/30 text-[#5F7252]/60 rounded-lg flex items-center justify-center gap-2 font-medium cursor-pointer hover:bg-[#5F7252]/40 transition-colors"
+              >
+                <Lock className="w-4 h-4" />
+                <BookMarked className="w-5 h-5" />
+                Add to Reading Queue
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={onShowAuthModal}
+                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Bookshop.org
+                </button>
+                <button
+                  onClick={onShowAuthModal}
+                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Amazon
+                </button>
               </div>
-              <div className="opacity-40 pointer-events-none space-y-3">
-                <div className="w-full px-4 py-3 bg-[#5F7252]/20 text-[#5F7252] rounded-lg flex items-center justify-center gap-2 font-medium">
-                  <BookMarked className="w-5 h-5" />
-                  Add to Reading Queue
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252] rounded-lg flex items-center justify-center gap-2 text-sm">
-                    <ShoppingBag className="w-4 h-4" />
-                    Purchase
-                  </div>
-                  <div className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252] rounded-lg flex items-center justify-center gap-2 text-sm">
-                    <Library className="w-4 h-4" />
-                    Library
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={onShowAuthModal}
+                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
+                >
+                  <Library className="w-4 h-4" />
+                  Find at Library
+                </button>
+                <button
+                  onClick={onShowAuthModal}
+                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
+                >
+                  <Headphones className="w-4 h-4" />
+                  Audiobook
+                </button>
               </div>
+              <p className="text-xs text-center text-[#96A888] mt-2">
+                <Lock className="w-3 h-3 inline mr-1" />
+                Create a free account to unlock
+              </p>
             </div>
           </div>
 
@@ -191,6 +216,12 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 <Users className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-[#5F7252]">
                   <strong>Share favorites</strong> with friends who love to read
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <RefreshCw className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[#5F7252]">
+                  <strong>Goodreads compatible</strong> — import your reads or export to Goodreads
                 </p>
               </div>
             </div>
