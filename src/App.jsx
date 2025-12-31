@@ -6,6 +6,8 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
 import { getRecommendations, parseRecommendations } from './lib/recommendationService';
+import { validateMessage, validateBook } from './lib/validation';
+import { cacheUtils } from './lib/cache';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -1532,15 +1534,27 @@ Find similar books from beyond my library that match this taste profile.
     }
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage = inputValue.trim();
+    
+    // Validate input
+    try {
+      validateMessage({ message: userMessage });
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        text: "Please enter a valid message (max 1000 characters).",
+        isUser: false
+      }]);
+      return;
+    }
+
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
     setLoadingProgress({ step: 'library', progress: 0 });
-    lastActivityRef.current = Date.now(); // Track activity
+    lastActivityRef.current = Date.now();
 
     track('chat_message', {
       mode: chatMode,
@@ -1637,8 +1651,7 @@ Find similar books from beyond my library that match this taste profile.
       setIsLoading(false);
       setLoadingProgress({ step: '', progress: 0 });
     }
-  };
-
+  }, [inputValue, isLoading, chatMode, messages, user, signInNudgeDismissed]);
 
   const handleShare = async () => {
     const url = (typeof window !== 'undefined' && window.location?.href) ? window.location.href : '';

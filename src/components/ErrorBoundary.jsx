@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -22,10 +22,29 @@ class ErrorBoundary extends React.Component {
       errorInfo
     });
 
-    // Log to error tracking service if available
-    if (window.trackError) {
-      window.trackError(error, errorInfo);
+    // Log to error tracking service
+    this.logError(error, errorInfo);
+  }
+
+  logError = (error, errorInfo) => {
+    // Send to error tracking service
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'exception', {
+        description: error.toString(),
+        fatal: false,
+        error_info: errorInfo.componentStack
+      });
     }
+
+    // Log to console with structured data
+    console.error('Application Error:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    });
   }
 
   handleReset = () => {
@@ -79,6 +98,7 @@ class ErrorBoundary extends React.Component {
                 onClick={() => window.location.href = '/'}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors font-medium"
               >
+                <Home className="w-4 h-4" />
                 Go to Home
               </button>
             </div>
