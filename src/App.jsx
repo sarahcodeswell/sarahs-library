@@ -2399,6 +2399,26 @@ Find similar books from beyond my library that match this taste profile.
             }}
           />
 
+          {/* Create Profile CTA for logged-out users */}
+          {!user && (
+            <div className="mt-6 bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-5 text-center">
+              <h3 className="font-serif text-lg text-[#4A5940] mb-2">Get Better Recommendations</h3>
+              <p className="text-sm text-[#7A8F6C] mb-4 leading-relaxed">
+                Create a free profile to add your books, share favorite authors, and get personalized recommendations based on your reading preferences.
+              </p>
+              <button
+                onClick={() => {
+                  setShowAuthModal(true);
+                  track('create_profile_cta_clicked');
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
+              >
+                <UserIcon className="w-4 h-4" />
+                Create Your Profile
+              </button>
+            </div>
+          )}
+
           <div className="mt-16 sm:mt-20 text-center">
             <div className="text-xs text-[#7A8F6C] font-light">A Curated Collection of Infinite Possibilities</div>
           </div>
