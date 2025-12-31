@@ -239,7 +239,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
           {isFirst && showAcquisition && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
               <p className="text-xs text-[#7A8F6C] mb-2 italic">
-                Support local bookstores and independent audiobook sellers
+                We encourage readers to support local bookstores, independent audiobook sellers, and public libraries
               </p>
               <div className="flex flex-wrap gap-2">
                 {/* Preferred: Local Bookstore */}
