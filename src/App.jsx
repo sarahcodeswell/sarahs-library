@@ -1284,6 +1284,8 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showSignInNudge, setShowSignInNudge] = useState(false);
+  const [signInNudgeDismissed, setSignInNudgeDismissed] = useState(false);
   const attachmentMenuRef = useRef(null);
   const chatStorageKey = 'sarah_books_chat_history_v1';
   const lastActivityRef = useRef(Date.now());
@@ -1787,6 +1789,11 @@ Find similar books from beyond my library that match this taste profile.
       }
       
       setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
+      
+      // Show sign-in nudge for non-signed-in users after first recommendation
+      if (!user && !signInNudgeDismissed && messages.length >= 1) {
+        setShowSignInNudge(true);
+      }
     } catch (error) {
       setMessages(prev => [...prev, {
         text: "Oops, I'm having a moment. Let me catch my breath and try again!",
@@ -2335,6 +2342,40 @@ Find similar books from beyond my library that match this taste profile.
             )}
             <div ref={chatEndRef} />
           </div>
+
+          {/* Sign-In Nudge Banner - Shows after recommendations for non-signed-in users */}
+          {showSignInNudge && !user && (
+            <div className="mb-3 p-3 bg-[#5F7252]/10 rounded-xl border border-[#5F7252]/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-[#4A5940]">
+                <Library className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
+                <span>
+                  <strong>Already own some of these?</strong> Sign in to add your collection—I'll personalize future recommendations.
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setShowAuthModal(true);
+                    track('sign_in_nudge_clicked');
+                  }}
+                  className="px-3 py-1.5 bg-[#5F7252] text-white text-xs font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSignInNudge(false);
+                    setSignInNudgeDismissed(true);
+                    track('sign_in_nudge_dismissed');
+                  }}
+                  className="p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
+                  title="Dismiss"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <textarea

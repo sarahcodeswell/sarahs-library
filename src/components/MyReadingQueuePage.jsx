@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, Target, ChevronDown, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, GripVertical, Library, Headphones, ShoppingBag, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 
@@ -25,7 +25,7 @@ const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
 const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks';
 const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20';
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition }) {
   const {
     attributes,
     listeners,
@@ -46,13 +46,17 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-xl border border-[#E8EBE4] p-4 hover:shadow-md transition-shadow ${
+      className={`bg-white rounded-xl border ${
+        isFirst ? 'border-[#5F7252] ring-1 ring-[#5F7252]/20' : 'border-[#E8EBE4]'
+      } p-4 hover:shadow-md transition-all ${
         isDragging ? 'shadow-lg' : ''
       }`}
     >
       <div className="flex items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-serif text-[#96A888] w-8 text-center select-none">
+          <span className={`text-2xl font-serif w-8 text-center select-none ${
+            isFirst ? 'text-[#5F7252]' : 'text-[#96A888]'
+          }`}>
             {index + 1}
           </span>
           <button
@@ -65,40 +69,105 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove }) {
           </button>
         </div>
         
-        <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-[#4A5940] mb-1 truncate">
-              {book.book_title}
-            </h3>
-            {book.book_author && (
-              <p className="text-sm text-[#7A8F6C] mb-2">
-                by {book.book_author}
-              </p>
-            )}
-            {index === 0 && (
-              <span className="inline-block px-2 py-0.5 text-xs font-medium bg-[#5F7252] text-white rounded-full">
-                Next Up
-              </span>
-            )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-medium mb-1 truncate ${
+                isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
+              }`}>
+                {book.book_title}
+              </h3>
+              {book.book_author && (
+                <p className="text-sm text-[#7A8F6C]">
+                  by {book.book_author}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isFirst && (
+                <button
+                  onClick={onToggleAcquisition}
+                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
+                    showAcquisition 
+                      ? 'bg-[#5F7252] text-white' 
+                      : 'bg-[#F8F6EE] text-[#5F7252] hover:bg-[#E8EBE4]'
+                  }`}
+                >
+                  Get It
+                  {showAcquisition ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
+              <button
+                onClick={() => onMarkAsRead(book)}
+                className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+                title="Mark as Finished"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Finished</span>
+              </button>
+              <button
+                onClick={() => onRemove(book)}
+                className="p-1.5 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Remove from queue"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onMarkAsRead(book)}
-              className="px-3 py-1.5 rounded text-sm font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-              title="Mark as Finished"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Finished</span>
-            </button>
-            <button
-              onClick={() => onRemove(book)}
-              className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
-              title="Remove from queue"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          {/* Inline Acquisition Options - Only for #1 book when expanded */}
+          {isFirst && showAcquisition && (
+            <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={`https://bookshop.org/search?keywords=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&a_aid=${BOOKSHOP_AFFILIATE_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  Bookshop.org
+                </a>
+                <a
+                  href={`https://www.amazon.com/s?k=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  Kindle
+                </a>
+                <a
+                  href={`https://libro.fm/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&affiliate=${LIBRO_FM_AFFILIATE_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  Libro.fm
+                </a>
+                <a
+                  href={`https://www.audible.com/search?keywords=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&tag=${AUDIBLE_AFFILIATE_TAG}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  Audible
+                </a>
+                <a
+                  href="https://libbyapp.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <Library className="w-3.5 h-3.5" />
+                  Library
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -109,6 +178,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
+  const [showAcquisition, setShowAcquisition] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -243,72 +313,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           </p>
         </div>
 
-        {/* Smart Acquisition Bar - Shows for #1 book */}
-        {filteredBooks.length > 0 && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-[#5F7252] to-[#4A5940] rounded-xl border border-[#E8EBE4] text-white">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="w-4 h-4" />
-              <span className="text-xs font-medium">Next Up:</span>
-              <span className="font-serif text-sm">{filteredBooks[0].book_title}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={`https://bookshop.org/search?keywords=${encodeURIComponent(filteredBooks[0].book_title + ' ' + (filteredBooks[0].book_author || ''))}&a_aid=${BOOKSHOP_AFFILIATE_ID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-              >
-                <ShoppingBag className="w-3.5 h-3.5" />
-                Buy
-              </a>
-              <a
-                href={`https://libro.fm/search?q=${encodeURIComponent(filteredBooks[0].book_title + ' ' + (filteredBooks[0].book_author || ''))}&affiliate=${LIBRO_FM_AFFILIATE_ID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-              >
-                <Headphones className="w-3.5 h-3.5" />
-                Listen
-              </a>
-              <a
-                href="https://libbyapp.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-              >
-                <Library className="w-3.5 h-3.5" />
-                Library
-              </a>
-            </div>
-          </div>
-        )}
-
-        {/* Compact Acquisition Options */}
-        <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-          <details className="group">
-            <summary className="flex items-center justify-between cursor-pointer text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors">
-              <span className="font-medium flex items-center gap-1">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                Where to get books
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="mt-2 space-y-1 text-xs text-[#7A8F6C]">
-              <p>• <strong>Buy:</strong> <a href={`https://bookshop.org/?a_aid=${BOOKSHOP_AFFILIATE_ID}`} className="text-[#5F7252] hover:underline">Bookshop.org</a> (local), <a href={`https://www.amazon.com/kindle-dbs/storefront?tag=${AMAZON_AFFILIATE_TAG}`} className="text-[#5F7252] hover:underline">Kindle</a></p>
-              <p>• <strong>Listen:</strong> <a href={`https://libro.fm/?affiliate=${LIBRO_FM_AFFILIATE_ID}`} className="text-[#5F7252] hover:underline">Libro.fm</a>, <a href={`https://www.audible.com/?tag=${AUDIBLE_AFFILIATE_TAG}`} className="text-[#5F7252] hover:underline">Audible</a></p>
-              <p>• <strong>Library:</strong> <a href="https://libbyapp.com" className="text-[#5F7252] hover:underline">Libby app</a></p>
-            </div>
-          </details>
-        </div>
-
-        {/* Instructions */}
-        <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-          <p className="text-xs text-[#7A8F6C] flex items-center gap-1">
-            <Lightbulb className="w-3.5 h-3.5" />
-            <strong>Tip:</strong> Drag the ⋮⋮ handle to reorder. Tap "Finished" to move books to your collection.
-          </p>
-        </div>
-
+        {/* Search Bar - At top for easy access */}
         {queueBooks.length > 0 && (
           <div className="mb-6">
             <div className="relative">
@@ -351,11 +356,22 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     index={index}
                     onMarkAsRead={handleMarkAsRead}
                     onRemove={handleRemoveBook}
+                    isFirst={index === 0}
+                    showAcquisition={showAcquisition}
+                    onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
                   />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
+        )}
+
+        {/* Inline tip at bottom */}
+        {filteredBooks.length > 0 && (
+          <div className="mt-6 flex items-center gap-2 text-xs text-[#96A888]">
+            <Info className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Drag the handle to reorder your queue. Tap "Finished" to move books to your collection.</span>
+          </div>
         )}
       </div>
     </div>
