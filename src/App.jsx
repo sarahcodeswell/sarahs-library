@@ -1807,10 +1807,10 @@ Find similar books from beyond my library that match this taste profile.
                           }}
                           className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                         >
-                          <BookMarked className="w-4 h-4" />
-                          My Reading Queue
+                          <BookMarked className="w-4 h-4 flex-shrink-0" />
+                          <span className="flex-1">My Reading Queue</span>
                           {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
-                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full">
+                            <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                               {readingQueue.filter(b => b.status === 'want_to_read').length}
                             </span>
                           )}
@@ -1830,10 +1830,10 @@ Find similar books from beyond my library that match this taste profile.
                           }}
                           className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                         >
-                          <Library className="w-4 h-4" />
-                          My Collection
+                          <Library className="w-4 h-4 flex-shrink-0" />
+                          <span className="flex-1">My Collection</span>
                           {readingQueue.filter(b => b.status === 'finished').length > 0 && (
-                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full">
+                            <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                               {readingQueue.filter(b => b.status === 'finished').length}
                             </span>
                           )}
