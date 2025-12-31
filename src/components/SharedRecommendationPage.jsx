@@ -164,13 +164,6 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               )}
             </div>
 
-            {/* Book Description */}
-            {bookData.book_description && (
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
-                {bookData.book_description}
-              </p>
-            )}
-
             {/* Recommendation Note */}
             {bookData.recommendation_note && (
               <div className="bg-white/50 rounded-xl p-4 mb-6 border border-[#E8EBE4]">
@@ -299,7 +292,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6">
           
           {/* Title & Author */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-6">
             <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
               {bookData.book_title}
             </h1>
@@ -307,13 +300,6 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               <p className="text-[#7A8F6C]">by {bookData.book_author}</p>
             )}
           </div>
-
-          {/* Book Description */}
-          {bookData.book_description && (
-            <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
-              {bookData.book_description}
-            </p>
-          )}
 
           {/* Recommendation Note */}
           {bookData.recommendation_note && (
