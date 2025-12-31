@@ -35,7 +35,7 @@ export default function ShopPage({ onNavigate }) {
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Compact Tee</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">T-Shirt, Compact Design</p>
                   <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
@@ -57,7 +57,7 @@ export default function ShopPage({ onNavigate }) {
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Centered Tee</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">T-Shirt, Centered Design</p>
                   <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
@@ -79,8 +79,8 @@ export default function ShopPage({ onNavigate }) {
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Dad Hat</p>
-                  <p className="text-lg font-medium text-[#4A5940]">$25</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Hat</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$18</p>
                 </div>
               </div>
             </a>

@@ -231,17 +231,17 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopyLink(recommendation)}
-                      className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-white border border-[#D4DAD0] text-[#5F7252] hover:bg-[#F8F6EE] flex items-center justify-center gap-2"
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center gap-2"
                     >
                       {copyFeedback[recommendation.id] ? (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-[#5F7252]" />
-                          <span className="text-[#5F7252]">Copied!</span>
+                          <Copy className="w-3.5 h-3.5" />
+                          Copied!
                         </>
                       ) : (
                         <>
                           <Share2 className="w-3.5 h-3.5" />
-                          Share Link
+                          Share
                         </>
                       )}
                     </button>

@@ -24,6 +24,7 @@ const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
+const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -1133,6 +1134,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [showNavMenu, setShowNavMenu] = useState(false);
   const navMenuRef = useRef(null);
+  const [shareToken, setShareToken] = useState(null);
 
   // Listen for profile close event
   useEffect(() => {
@@ -1147,22 +1149,38 @@ export default function App() {
   useEffect(() => {
     // Set initial page based on URL
     const getPageFromPath = (pathname) => {
-      const path = pathname.replace(/^\//, '').split('/')[0] || 'home';
+      const pathParts = pathname.replace(/^\//, '').split('/');
+      const path = pathParts[0] || 'home';
+      
+      // Handle shared recommendation URLs (/r/TOKEN)
+      if (path === 'r' && pathParts[1]) {
+        return { page: 'shared-recommendation', token: pathParts[1] };
+      }
+      
       const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'meet-sarah', 'shop', 'our-practices'];
-      if (path === 'add-books') return 'my-books';
-      return validPages.includes(path) ? path : 'home';
+      if (path === 'add-books') return { page: 'my-books', token: null };
+      return { page: validPages.includes(path) ? path : 'home', token: null };
     };
 
     // Set initial page from URL on mount
-    const initialPage = getPageFromPath(window.location.pathname);
-    if (initialPage !== 'home') {
+    const { page: initialPage, token } = getPageFromPath(window.location.pathname);
+    if (initialPage === 'shared-recommendation' && token) {
+      setCurrentPage('shared-recommendation');
+      setShareToken(token);
+    } else if (initialPage !== 'home') {
       setCurrentPage(initialPage);
     }
 
     // Handle popstate (back/forward button)
     const handlePopState = () => {
-      const page = getPageFromPath(window.location.pathname);
-      setCurrentPage(page);
+      const { page, token } = getPageFromPath(window.location.pathname);
+      if (page === 'shared-recommendation' && token) {
+        setCurrentPage('shared-recommendation');
+        setShareToken(token);
+      } else {
+        setCurrentPage(page);
+        setShareToken(null);
+      }
       window.scrollTo(0, 0);
     };
 
@@ -1964,6 +1982,16 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'our-practices' && (
         <Suspense fallback={<LoadingFallback message="Loading Our Practices..." />}>
           <OurPracticesPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'shared-recommendation' && shareToken && (
+        <Suspense fallback={<LoadingFallback message="Loading recommendation..." />}>
+          <SharedRecommendationPage 
+            shareToken={shareToken}
+            onNavigate={setCurrentPage}
+            onShowAuthModal={() => setShowAuthModal(true)}
+          />
         </Suspense>
       )}
       
