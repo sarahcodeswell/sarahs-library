@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart } from 'lucide-react';
+import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2 } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 import { db, supabase, auth } from '../lib/supabase';
 import booksData from '../books.json';
@@ -21,6 +21,9 @@ export default function UserProfile({ tasteProfile }) {
     queueCount: 0,
     recommendationsCount: 0
   });
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Load existing preferences and profile data on mount
   useEffect(() => {
@@ -96,6 +99,122 @@ export default function UserProfile({ tasteProfile }) {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+    
+    setIsExporting(true);
+    try {
+      // Gather all user data
+      const { data: profile } = await db.getTasteProfile(user.id);
+      const { data: queue } = await db.getReadingQueue(user.id);
+      const { data: userBooks } = await db.getUserBooks(user.id);
+      const { data: recommendations } = await db.getUserRecommendations(user.id);
+      
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        user: {
+          email: user.email,
+          createdAt: user.created_at,
+        },
+        profile: {
+          readingPreferences: user.user_metadata?.reading_preferences || '',
+          favoriteAuthors: profile?.favorite_authors || [],
+        },
+        readingQueue: queue?.map(item => ({
+          title: item.book_title,
+          author: item.book_author,
+          status: item.status,
+          rating: item.rating,
+          addedAt: item.created_at,
+        })) || [],
+        userBooks: userBooks?.map(item => ({
+          title: item.title,
+          author: item.author,
+          addedAt: item.created_at,
+        })) || [],
+        recommendations: recommendations?.map(item => ({
+          title: item.book_title,
+          author: item.book_author,
+          note: item.recommendation_note,
+          createdAt: item.created_at,
+        })) || [],
+      };
+      
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sarahs-books-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setSaveMessage('Data exported successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      setSaveMessage('Error exporting data');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete all user data from database tables
+      // Note: This deletes data but keeps the auth account
+      // Full account deletion requires admin API or user to contact support
+      
+      // Delete reading queue entries
+      const { error: queueError } = await supabase
+        .from('reading_queue')
+        .delete()
+        .eq('user_id', user.id);
+      if (queueError) console.error('Error deleting queue:', queueError);
+      
+      // Delete user books
+      const { error: booksError } = await supabase
+        .from('user_books')
+        .delete()
+        .eq('user_id', user.id);
+      if (booksError) console.error('Error deleting user books:', booksError);
+      
+      // Delete recommendations
+      const { error: recsError } = await supabase
+        .from('user_recommendations')
+        .delete()
+        .eq('user_id', user.id);
+      if (recsError) console.error('Error deleting recommendations:', recsError);
+      
+      // Delete taste profile
+      const { error: profileError } = await supabase
+        .from('taste_profiles')
+        .delete()
+        .eq('user_id', user.id);
+      if (profileError) console.error('Error deleting profile:', profileError);
+      
+      // Sign out the user
+      await signOut();
+      
+      // Close the modal
+      window.dispatchEvent(new CustomEvent('closeProfile'));
+      
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setSaveMessage('Error deleting account. Please contact support.');
+      setTimeout(() => setSaveMessage(''), 5000);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   const handlePhotoUpload = async (e) => {
@@ -435,6 +554,58 @@ export default function UserProfile({ tasteProfile }) {
           <p className="text-xs text-[#96A888] italic">No favorite authors added yet</p>
         )}
       </div>
+
+      {/* Your Data Section */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2">Your Data</h4>
+        <p className="text-xs text-[#96A888] mb-3">
+          You own your data. Export it anytime or delete your account.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={handleExportData}
+            disabled={isExporting}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {isExporting ? 'Exporting...' : 'Export My Data'}
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-medium text-[#4A5940] mb-2">Delete Account?</h3>
+            <p className="text-sm text-[#7A8F6C] mb-4">
+              This will permanently delete all your data including your reading queue, collection, and recommendations. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Done Button */}
       <div className="pt-6 border-t border-[#E8EBE4]">

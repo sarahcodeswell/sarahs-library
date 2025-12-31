@@ -85,7 +85,7 @@ export default function AboutPage({ onNavigate }) {
                 <ShoppingBag className="w-4 h-4 text-[#5F7252] flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[#5F7252] font-medium">Purchase</span>
-                  <span className="text-[#96A888]"> — Bookshop.org, Amazon, Libro.fm, or library</span>
+                  <span className="text-[#96A888]"> — Local bookstore, Libro.fm, library, or Amazon</span>
                 </div>
               </div>
               <div className="flex items-start gap-2 text-sm">
