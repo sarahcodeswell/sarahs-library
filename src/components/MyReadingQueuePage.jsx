@@ -238,6 +238,9 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
           {/* Inline Acquisition Options - Only for #1 book when expanded */}
           {isFirst && showAcquisition && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              <p className="text-xs text-[#7A8F6C] mb-2 italic">
+                Support local bookstores and independent audiobook sellers
+              </p>
               <div className="flex flex-wrap gap-2">
                 {/* Preferred: Local Bookstore */}
                 <a
@@ -259,7 +262,17 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                   <Headphones className="w-3.5 h-3.5" />
                   Libro.fm
                 </a>
-                {/* Other options */}
+                {/* Library - free option */}
+                <a
+                  href="https://libbyapp.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                >
+                  <Library className="w-3.5 h-3.5" />
+                  Library
+                </a>
+                {/* Amazon options - last */}
                 <a
                   href={`https://www.amazon.com/s?k=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`}
                   target="_blank"
@@ -277,15 +290,6 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 >
                   <Headphones className="w-3.5 h-3.5" />
                   Audible
-                </a>
-                <a
-                  href="https://libbyapp.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
-                >
-                  <Library className="w-3.5 h-3.5" />
-                  Library
                 </a>
               </div>
             </div>
