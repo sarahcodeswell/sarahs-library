@@ -377,6 +377,7 @@ export const db = {
           book_title: book.book_title || book.title,
           book_author: book.book_author || book.author,
           book_isbn: book.isbn || null,
+          book_description: book.description || book.why_recommended || null,
           recommendation_note: note,
           is_from_collection: true
         })
@@ -470,6 +471,7 @@ export const db = {
             book_title,
             book_author,
             book_isbn,
+            book_description,
             recommendation_note,
             created_at
           )
