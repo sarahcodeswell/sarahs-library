@@ -2,60 +2,30 @@ import React, { useState } from 'react';
 import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
+import ShareModal from './ShareModal';
 
 export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModal }) {
   const { recommendations, isLoading, deleteRecommendation, getShareLink, updateRecommendation } = useRecommendations();
   const [copyFeedback, setCopyFeedback] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editNote, setEditNote] = useState('');
+  const [shareModalData, setShareModalData] = useState(null);
 
   const handleShare = async (recommendation) => {
     const result = await getShareLink(recommendation.id);
     
     if (result.success && result.data?.shareUrl) {
-      const shareUrl = result.data.shareUrl;
-      const shareData = {
-        title: `${recommendation.book_title} by ${recommendation.book_author}`,
-        text: recommendation.recommendation_note 
-          ? `I recommend "${recommendation.book_title}" — ${recommendation.recommendation_note}`
-          : `I recommend "${recommendation.book_title}" by ${recommendation.book_author}`,
-        url: shareUrl
-      };
-
-      // Try native share first (mobile + some desktop browsers)
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        try {
-          await navigator.share(shareData);
-          track('recommendation_shared_native', {
-            book_title: recommendation.book_title
-          });
-          return;
-        } catch (err) {
-          // User cancelled or share failed, fall back to copy
-          if (err.name === 'AbortError') return;
-        }
-      }
-
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopyFeedback({ [recommendation.id]: 'Copied!' });
-        
-        track('recommendation_link_copied', {
-          book_title: recommendation.book_title,
-          has_views: (recommendation.shared_recommendations?.[0]?.view_count || 0) > 0
-        });
-        
-        setTimeout(() => {
-          setCopyFeedback(prev => {
-            const newState = { ...prev };
-            delete newState[recommendation.id];
-            return newState;
-          });
-        }, 2000);
-      } catch (_err) {
-        alert('Failed to copy link. Please try again.');
-      }
+      // Open custom share modal
+      setShareModalData({
+        shareUrl: result.data.shareUrl,
+        bookTitle: recommendation.book_title,
+        bookAuthor: recommendation.book_author,
+        note: recommendation.recommendation_note
+      });
+      
+      track('recommendation_share_opened', {
+        book_title: recommendation.book_title
+      });
     } else {
       alert('Failed to generate share link. Please try again.');
     }
@@ -292,6 +262,16 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={!!shareModalData}
+        onClose={() => setShareModalData(null)}
+        shareUrl={shareModalData?.shareUrl || ''}
+        bookTitle={shareModalData?.bookTitle || ''}
+        bookAuthor={shareModalData?.bookAuthor || ''}
+        note={shareModalData?.note || ''}
+      />
     </div>
   );
 }

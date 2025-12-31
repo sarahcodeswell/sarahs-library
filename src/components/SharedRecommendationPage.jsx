@@ -90,17 +90,45 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     );
   }
 
-  if (error) {
+  if (error || !recommendation?.user_recommendations) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
-        <div className="text-center">
-          <p className="text-[#7A8F6C] mb-4">{error}</p>
-          <button
-            onClick={() => onNavigate('home')}
-            className="px-4 py-2 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors"
-          >
-            Go to Sarah's Books
-          </button>
+        <div className="text-center max-w-sm mx-auto px-4">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#E11D48]/10 flex items-center justify-center">
+            <Heart className="w-6 h-6 text-[#E11D48]" />
+          </div>
+          <h2 className="font-serif text-xl text-[#4A5940] mb-2">Something went wrong</h2>
+          <p className="text-sm text-[#7A8F6C] mb-6">
+            {error || "We couldn't load this recommendation. It may have been removed or the link is invalid."}
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setIsLoading(true);
+                setError(null);
+                setRecommendation(null);
+                // Re-trigger the useEffect by forcing a re-render
+                window.location.reload();
+              }}
+              className="w-full px-4 py-2.5 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                window.history.pushState({}, '', '/');
+                onNavigate('home');
+              }}
+              className="w-full px-4 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              Go to Home
+            </button>
+          </div>
+          <p className="text-xs text-[#96A888] mt-4">
+            If this problem persists, please refresh the page or contact support.
+          </p>
         </div>
       </div>
     );
@@ -127,7 +155,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6">
             
             {/* Title & Author */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
                 {bookData.book_title}
               </h1>
@@ -135,6 +163,13 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 <p className="text-[#7A8F6C]">by {bookData.book_author}</p>
               )}
             </div>
+
+            {/* Book Description */}
+            {bookData.book_description && (
+              <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
+                {bookData.book_description}
+              </p>
+            )}
 
             {/* Recommendation Note */}
             {bookData.recommendation_note && (
@@ -264,7 +299,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6">
           
           {/* Title & Author */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
               {bookData.book_title}
             </h1>
@@ -272,6 +307,13 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               <p className="text-[#7A8F6C]">by {bookData.book_author}</p>
             )}
           </div>
+
+          {/* Book Description */}
+          {bookData.book_description && (
+            <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
+              {bookData.book_description}
+            </p>
+          )}
 
           {/* Recommendation Note */}
           {bookData.recommendation_note && (
