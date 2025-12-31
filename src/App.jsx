@@ -11,7 +11,7 @@ import { cacheUtils } from './lib/cache';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useUser, useReadingQueue } from './contexts';
+import { useUser, useReadingQueue, useRecommendations } from './contexts';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
@@ -1088,6 +1088,7 @@ function AboutSection({ onShare }) {
 export default function App() {
   const { user, authLoading, showAuthModal, setShowAuthModal, signOut } = useUser();
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
+  const { recommendations } = useRecommendations();
   
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
@@ -1857,8 +1858,13 @@ Find similar books from beyond my library that match this taste profile.
                           }}
                           className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                         >
-                          <Share2 className="w-4 h-4" />
-                          Books I've Shared
+                          <Share2 className="w-4 h-4 flex-shrink-0" />
+                          <span className="flex-1">Books I've Shared</span>
+                          {recommendations.length > 0 && (
+                            <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
+                              {recommendations.length}
+                            </span>
+                          )}
                         </button>
                         <div className="border-t border-[#E8EBE4] my-1"></div>
                         <button
