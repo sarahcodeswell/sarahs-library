@@ -114,12 +114,24 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-xl border ${
-        isFirst ? 'border-[#5F7252] ring-1 ring-[#5F7252]/20' : 'border-[#E8EBE4]'
+      className={`rounded-xl border ${
+        isFirst 
+          ? 'bg-gradient-to-r from-[#F8F6EE] to-white border-[#5F7252] ring-1 ring-[#5F7252]/20' 
+          : 'bg-white border-[#E8EBE4]'
       } p-4 hover:shadow-md transition-all ${
         isDragging ? 'shadow-lg' : ''
       }`}
     >
+      {/* Next Up Badge for first book */}
+      {isFirst && (
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#E8EBE4]">
+          <span className="px-2 py-0.5 bg-[#5F7252] text-white text-xs font-medium rounded-full">
+            Next Up
+          </span>
+          <span className="text-xs text-[#7A8F6C]">Ready to read? Get your copy below.</span>
+        </div>
+      )}
+      
       <div className="flex items-start gap-3">
         <div className="flex items-center gap-2">
           <span className={`text-2xl font-serif w-8 text-center select-none ${
@@ -386,6 +398,8 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       return;
     }
 
+    let addedToCollection = false;
+
     // First update the status to 'finished'
     console.log('📝 [handleMarkAsRead] Updating status to finished...');
     const statusResult = await updateQueueStatus(book.id, 'finished');
@@ -414,10 +428,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         
         if (collectionResult.error) {
           console.error('❌ [handleMarkAsRead] Failed to add to collection:', collectionResult.error);
-          // Don't show error to user since status update worked
-          // The book will still appear in collection from reading_queue
         } else {
           console.log('✅ [handleMarkAsRead] Book successfully added to collection:', book.book_title);
+          addedToCollection = true;
         }
       } catch (error) {
         console.error('❌ [handleMarkAsRead] Exception adding to collection:', error);
@@ -425,7 +438,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       
       track('book_marked_as_read_from_queue', {
         book_title: book.book_title,
-        added_to_collection: !collectionResult?.error
+        added_to_collection: addedToCollection
       });
     } else {
       console.error('❌ [handleMarkAsRead] Failed to update book status:', statusResult.error);
