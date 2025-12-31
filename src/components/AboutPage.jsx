@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Library, Upload, BookMarked, Share2, Sparkles, Star, Check, ShoppingBag, User } from 'lucide-react';
+import { ArrowLeft, Library, Upload, BookMarked, Share2, Sparkles, Star, Check, ShoppingBag, User, X, GripVertical } from 'lucide-react';
 
 export default function AboutPage({ onNavigate }) {
 
@@ -50,7 +50,7 @@ export default function AboutPage({ onNavigate }) {
                 <span className="text-[#96A888]">→ Goes to My Reading Queue</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="w-4 h-4 text-[#96A888] flex items-center justify-center text-lg">×</span>
+                <X className="w-4 h-4 text-[#96A888]" />
                 <span className="text-[#5F7252] font-medium">Not for Me</span>
                 <span className="text-[#96A888]">→ Improves future recommendations</span>
               </div>
@@ -69,7 +69,7 @@ export default function AboutPage({ onNavigate }) {
             </p>
             <div className="space-y-2 ml-11">
               <div className="flex items-center gap-2 text-sm">
-                <span className="w-4 text-center text-[#5F7252]">↕</span>
+                <GripVertical className="w-4 h-4 text-[#5F7252]" />
                 <span className="text-[#5F7252] font-medium">Prioritize</span>
                 <span className="text-[#96A888]">— Drag to reorder your list</span>
               </div>

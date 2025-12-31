@@ -1033,8 +1033,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
           <div className="text-sm leading-relaxed">
             <p className="mb-3">Hi, I'm Sarah!</p>
             <p className="mb-3">I'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.</p>
-            <p className="mb-3">Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
-            <p>What are you in the mood for?</p>
+            <p>Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
           </div>
         ) : (
           <div className="text-sm leading-relaxed">
@@ -1736,132 +1735,27 @@ Find similar books from beyond my library that match this taste profile.
     <div className="min-h-screen font-sans" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)', fontFamily: "'Poppins', sans-serif" }}>
       <Analytics />
       <header className="bg-[#FDFBF4]/90 backdrop-blur-md border-b border-[#D4DAD0] sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
-            {/* Left: Logo + Title */}
-            <button 
-              onClick={() => {
-                setCurrentPage('home');
-                window.scrollTo(0, 0);
-                window.history.pushState({}, '', '/');
-              }}
-              className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src="/logo-mark.png" 
-                alt="Sarah's Books" 
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg"
-              />
-              <div className="hidden sm:block">
-                <h1 className="font-serif text-lg sm:text-xl text-[#4A5940] leading-tight">Sarah's Books</h1>
-                <p className="text-[10px] text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-2.5 h-2.5 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
-              </div>
-            </button>
-
-            {/* Center: Nav items for logged-in users */}
-            {user && (
-              <nav className="hidden sm:flex items-center gap-1">
-                <button
-                  onClick={() => {
-                    setCurrentPage('home');
-                    window.scrollTo(0, 0);
-                    window.history.pushState({}, '', '/');
-                  }}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'home' ? 'bg-[#5F7252]/10 text-[#4A5940]' : 'text-[#7A8F6C] hover:bg-[#F8F6EE]'}`}
-                  title="Get Recommendations"
-                >
-                  <Sparkles className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentPage('reading-queue');
-                    window.scrollTo(0, 0);
-                    window.history.pushState({}, '', '/reading-queue');
-                  }}
-                  className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'reading-queue' ? 'bg-[#5F7252]/10 text-[#4A5940]' : 'text-[#7A8F6C] hover:bg-[#F8F6EE]'}`}
-                  title="My Reading Queue"
-                >
-                  <BookMarked className="w-4 h-4" />
-                  {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 text-[9px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center px-1">
-                      {readingQueue.filter(b => b.status === 'want_to_read').length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentPage('collection');
-                    window.scrollTo(0, 0);
-                    window.history.pushState({}, '', '/collection');
-                  }}
-                  className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'collection' ? 'bg-[#5F7252]/10 text-[#4A5940]' : 'text-[#7A8F6C] hover:bg-[#F8F6EE]'}`}
-                  title="My Collection"
-                >
-                  <Library className="w-4 h-4" />
-                  {readingQueue.filter(b => b.status === 'finished').length > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 text-[9px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center px-1">
-                      {readingQueue.filter(b => b.status === 'finished').length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentPage('my-books');
-                    window.scrollTo(0, 0);
-                    window.history.pushState({}, '', '/add-books');
-                  }}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'my-books' ? 'bg-[#5F7252]/10 text-[#4A5940]' : 'text-[#7A8F6C] hover:bg-[#F8F6EE]'}`}
-                  title="Add Books"
-                >
-                  <Upload className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentPage('recommendations');
-                    window.scrollTo(0, 0);
-                    window.history.pushState({}, '', '/recommendations');
-                  }}
-                  className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === 'recommendations' ? 'bg-[#5F7252]/10 text-[#4A5940]' : 'text-[#7A8F6C] hover:bg-[#F8F6EE]'}`}
-                  title="Books I've Shared"
-                >
-                  <Share2 className="w-4 h-4" />
-                  {recommendations.length > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 text-[9px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center px-1">
-                      {recommendations.length}
-                    </span>
-                  )}
-                </button>
-              </nav>
-            )}
-            
-            {/* Right: Mobile menu + Profile/Sign In */}
-            <div className="flex items-center gap-2">
-              {/* Mobile hamburger menu - only for logged-in users on mobile */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Hamburger Menu - only for logged-in users */}
               {user && (
-                <div className="relative sm:hidden" ref={navMenuRef}>
+                <div className="relative" ref={navMenuRef}>
                   <button
                     onClick={() => setShowNavMenu(!showNavMenu)}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] transition-colors"
+                    className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] transition-colors"
                     aria-label="Navigation menu"
                     aria-expanded={showNavMenu}
                   >
-                    <Menu className="w-4 h-4 text-[#5F7252]" />
+                    <Menu className="w-5 h-5 text-[#5F7252]" />
                   </button>
                   
                   {showNavMenu && (
-                    <div className="absolute top-full right-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[200px] z-50">
-                      <button
-                        onClick={() => {
-                          setCurrentPage('home');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Get Recommendations
-                      </button>
+                    <div className="absolute top-full left-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[220px] z-50">
+                      {/* MY LIBRARY Section */}
+                      <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                        My Library
+                      </div>
                       <button
                         onClick={() => {
                           setCurrentPage('reading-queue');
@@ -1872,7 +1766,7 @@ Find similar books from beyond my library that match this taste profile.
                         className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                       >
                         <BookMarked className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">My Reading Queue</span>
+                        <span className="flex-1">Reading Queue</span>
                         {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
                           <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                             {readingQueue.filter(b => b.status === 'want_to_read').length}
@@ -1908,6 +1802,12 @@ Find similar books from beyond my library that match this taste profile.
                         <Upload className="w-4 h-4" />
                         Add Books
                       </button>
+                      
+                      {/* SHARING Section */}
+                      <div className="border-t border-[#E8EBE4] my-1"></div>
+                      <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                        Sharing
+                      </div>
                       <button
                         onClick={() => {
                           setCurrentPage('recommendations');
@@ -1925,6 +1825,8 @@ Find similar books from beyond my library that match this taste profile.
                           </span>
                         )}
                       </button>
+                      
+                      {/* Admin Section */}
                       {user?.email === ADMIN_EMAIL && (
                         <>
                           <div className="border-t border-[#E8EBE4] my-1"></div>
@@ -1946,12 +1848,29 @@ Find similar books from beyond my library that match this taste profile.
                   )}
                 </div>
               )}
-
-              {/* Profile / Sign In button */}
+              
+              {/* Logo + Title */}
+              <button 
+                onClick={() => {
+                  setCurrentPage('home');
+                  window.scrollTo(0, 0);
+                  window.history.pushState({}, '', '/');
+                }}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <div>
+                  <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
+                  <p className="text-xs text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
+                </div>
+              </button>
+            </div>
+            
+            {/* Right: Profile/Sign In */}
+            <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:gap-2 sm:px-3 sm:py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all"
                   title="View profile"
                 >
                   {tasteProfile.profile_photo_url ? (
