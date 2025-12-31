@@ -19,6 +19,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
   const [sortBy, setSortBy] = useState('date_added'); // 'date_added' or 'title'
+  const [recommendPromptBook, setRecommendPromptBook] = useState(null); // For showing recommend prompt after high rating
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -260,6 +261,11 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         book_id: book.id,
         rating: newRating
       });
+      
+      // Show recommend prompt for high ratings (4-5 stars)
+      if (newRating >= 4) {
+        setRecommendPromptBook(book);
+      }
     }
   };
 
@@ -318,6 +324,53 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
+      {/* Recommend Prompt Modal - Shows after 4-5 star rating */}
+      {recommendPromptBook && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                <Share2 className="w-5 h-5 text-[#5F7252]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-[#4A5940]">Great rating!</h3>
+                <p className="text-xs text-[#7A8F6C]">{recommendPromptBook.book_title}</p>
+              </div>
+            </div>
+            <p className="text-sm text-[#5F7252] mb-4">
+              Love this book? Share it with a friend!
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setSelectedBook(recommendPromptBook);
+                  setShowRecommendModal(true);
+                  setRecommendPromptBook(null);
+                  track('recommend_prompt_accepted', {
+                    book_title: recommendPromptBook.book_title
+                  });
+                }}
+                className="flex-1 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Recommend
+              </button>
+              <button
+                onClick={() => {
+                  setRecommendPromptBook(null);
+                  track('recommend_prompt_dismissed', {
+                    book_title: recommendPromptBook.book_title
+                  });
+                }}
+                className="px-4 py-2.5 bg-[#F8F6EE] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#E8EBE4] transition-colors"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <button
           onClick={() => {
