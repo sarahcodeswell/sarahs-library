@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Search, Trash2, BookMarked, Share2 } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
@@ -6,6 +6,7 @@ import { useRecommendations } from '../contexts/RecommendationContext';
 import RecommendationModal from './RecommendationModal';
 import StarRating from './StarRating';
 import booksData from '../books.json';
+import { db } from '../lib/supabase';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
@@ -16,44 +17,79 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [showRecommendModal, setShowRecommendModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [userBooks, setUserBooks] = useState([]);
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
 
-  // Filter to only show books marked as "finished"
+  // Load user's books from user_books table
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadUserBooks = async () => {
+      try {
+        const { data, error } = await db.getUserBooks(user.id);
+        if (error) {
+          console.error('Error loading user books:', error);
+        } else {
+          setUserBooks(data || []);
+        }
+      } catch (err) {
+        console.error('Exception loading user books:', err);
+      }
+    };
+
+    loadUserBooks();
+  }, [user]);
+
+  // Combine finished books from reading_queue and user_books table
   const readBooks = useMemo(() => {
     const finishedBooks = readingQueue.filter(item => item.status === 'finished');
     
+    // Create a map to track books by title+author to avoid duplicates
+    const bookMap = new Map();
+    
+    // Add finished books from reading queue
+    finishedBooks.forEach(book => {
+      const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
+      bookMap.set(key, {
+        ...book,
+        source: 'reading_queue'
+      });
+    });
+    
+    // Add books from user_books table
+    userBooks.forEach(book => {
+      const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
+      if (!bookMap.has(key)) {
+        bookMap.set(key, {
+          ...book,
+          status: 'finished', // All user_books are considered finished
+          source: 'user_books'
+        });
+      }
+    });
+    
     // If master admin, merge with all 200 curated books from books.json
     if (isMasterAdmin) {
-      // Start with user's reading queue (these have ratings and user data)
-      const allBooks = [...finishedBooks];
-      
-      // Add curated books that aren't already in reading queue
       booksData.forEach((book, index) => {
-        const isDuplicate = finishedBooks.some(
-          qb => qb.book_title?.toLowerCase() === book.title?.toLowerCase() &&
-                qb.book_author?.toLowerCase() === book.author?.toLowerCase()
-        );
-        
-        // Only add curated book if not already in reading queue
-        if (!isDuplicate) {
-          allBooks.push({
+        const key = `${book.title?.toLowerCase()}:${book.author?.toLowerCase()}`;
+        if (!bookMap.has(key)) {
+          bookMap.set(key, {
             id: `curated-${index}`,
             book_title: book.title,
             book_author: book.author,
             status: 'finished',
             isCurated: true,
             added_at: null,
+            source: 'curated'
           });
         }
       });
-      
-      return allBooks;
     }
     
-    return finishedBooks;
-  }, [readingQueue, isMasterAdmin]);
+    return Array.from(bookMap.values());
+  }, [readingQueue, userBooks, isMasterAdmin]);
 
   const sortedBooks = useMemo(() => {
     return [...readBooks].sort((a, b) => {
@@ -132,14 +168,40 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       return;
     }
 
-    const result = await removeFromQueue(book.id);
+    let success = false;
+    let error = null;
+
+    // Handle removal based on source
+    if (book.source === 'reading_queue') {
+      const result = await removeFromQueue(book.id);
+      success = result.success;
+      error = result.error;
+    } else if (book.source === 'user_books') {
+      try {
+        const { error: removeError } = await db.removeUserBook(book.id);
+        success = !removeError;
+        error = removeError;
+        
+        if (success) {
+          // Refresh user books list
+          const { data, error: fetchError } = await db.getUserBooks(user.id);
+          if (!fetchError) {
+            setUserBooks(data || []);
+          }
+        }
+      } catch (err) {
+        success = false;
+        error = err.message;
+      }
+    }
     
-    if (result.success) {
+    if (success) {
       track('book_removed_from_collection', {
         book_title: book.book_title,
+        source: book.source
       });
     } else {
-      alert('Failed to remove book. Please try again.');
+      alert(`Failed to remove book. ${error ? error.message : 'Please try again.'}`);
     }
   };
 

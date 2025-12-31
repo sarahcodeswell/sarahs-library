@@ -232,11 +232,33 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       return;
     }
 
-    const result = await updateQueueStatus(book.id, 'finished');
+    // First update the status to 'finished'
+    const statusResult = await updateQueueStatus(book.id, 'finished');
     
-    if (result.success) {
+    if (statusResult.success) {
+      // Also add to user's collection (user_books table)
+      try {
+        const { db } = await import('../lib/supabase');
+        const collectionResult = await db.addUserBook(user.id, {
+          title: book.book_title,
+          author: book.book_author,
+          addedVia: 'reading_queue'
+        });
+        
+        if (collectionResult.error) {
+          console.error('Failed to add to collection:', collectionResult.error);
+          // Don't show error to user since status update worked
+          // The book will still appear in collection from reading_queue
+        } else {
+          console.log('Book successfully added to collection:', book.book_title);
+        }
+      } catch (error) {
+        console.error('Exception adding to collection:', error);
+      }
+      
       track('book_marked_as_read_from_queue', {
         book_title: book.book_title,
+        added_to_collection: !collectionResult?.error
       });
     } else {
       alert('Failed to update book status. Please try again.');
