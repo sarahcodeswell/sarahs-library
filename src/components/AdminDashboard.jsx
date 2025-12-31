@@ -1,34 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MessageSquare, BookMarked, ShoppingBag, Activity, TrendingUp } from 'lucide-react';
-import { db } from '../lib/supabase';
+import React, { useState } from 'react';
+import { ArrowLeft, Users, MessageSquare, BookMarked, Activity, TrendingUp } from 'lucide-react';
 
-export default function AdminDashboard({ onNavigate, user }) {
+export default function AdminDashboard({ onNavigate }) {
   const [metrics, setMetrics] = useState({
-    totalUsers: 0,
-    totalReadingQueueItems: 0,
-    totalUserBooks: 0,
-    totalChatMessages: 0,
-    loading: true
+    totalUsers: 'See Supabase',
+    totalReadingQueueItems: 'See Supabase',
+    totalUserBooks: 'See Supabase',
+    totalChatMessages: 'See Vercel Analytics',
+    loading: false
   });
-
-  const loadMetrics = async () => {
-    try {
-      setMetrics({
-        totalUsers: 'See Supabase',
-        totalReadingQueueItems: 'See Supabase',
-        totalUserBooks: 'See Supabase',
-        totalChatMessages: 'See Vercel Analytics',
-        loading: false
-      });
-    } catch (err) {
-      console.error('Error loading metrics:', err);
-      setMetrics(prev => ({ ...prev, loading: false }));
-    }
-  };
-
-  useEffect(() => {
-    loadMetrics();
-  }, []);
 
   if (metrics.loading) {
     return (

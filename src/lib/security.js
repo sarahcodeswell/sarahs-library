@@ -72,8 +72,8 @@ export const rateLimitUtils = {
     const ip = req.ip || req.connection.remoteAddress || '';
     const timestamp = Date.now();
     
-    // Simple hash (in production, use crypto)
-    return Buffer.from(`${ip}:${userAgent}:${timestamp}`).toString('base64').slice(0, 32);
+    // Simple hash using btoa (browser-compatible)
+    return btoa(`${ip}:${userAgent}:${timestamp}`).slice(0, 32);
   },
 
   // Check for suspicious patterns
@@ -206,7 +206,7 @@ export const securityLogger = {
     console.log('[SECURITY]', logEntry);
     
     // In production, send to security monitoring service
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       // Send to security monitoring service
     }
   },

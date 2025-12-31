@@ -2274,7 +2274,7 @@ Find similar books from beyond my library that match this taste profile.
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
               <button
-                onClick={handleBackToLibrary}
+                onClick={() => setChatMode('library')}
                 className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
                 aria-label="Back to my library"
               >

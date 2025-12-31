@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       if (supabaseUrl && supabaseAnonKey) {
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
         const start = Date.now();
-        const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
+        const { error } = await supabase.from('user_profiles').select('count').limit(1);
         const responseTime = Date.now() - start;
         
         healthCheck.database = {
