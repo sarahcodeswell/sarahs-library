@@ -365,6 +365,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [showAcquisition, setShowAcquisition] = useState(false);
+  const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -468,6 +469,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         book_title: book.book_title,
         added_to_collection: addedToCollection
       });
+      
+      // Show confirmation modal
+      setFinishedBook(book);
     } else {
       console.error('❌ [handleMarkAsRead] Failed to update book status:', statusResult.error);
       alert('Failed to update book status. Please try again.');
@@ -530,6 +534,52 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFBF4] via-[#FBF9F0] to-[#F5EFDC]">
+      {/* Finished Book Confirmation Modal */}
+      {finishedBook && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-[#5F7252]" />
+              </div>
+              <div>
+                <h3 className="font-medium text-[#4A5940]">Moved to Collection!</h3>
+                <p className="text-xs text-[#7A8F6C]">{finishedBook.book_title}</p>
+              </div>
+            </div>
+            <p className="text-sm text-[#5F7252] mb-4">
+              Rate this book to improve your future recommendations.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setFinishedBook(null);
+                  onNavigate('collection');
+                  track('finished_confirmation_go_to_collection', {
+                    book_title: finishedBook.book_title
+                  });
+                }}
+                className="flex-1 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2"
+              >
+                <Library className="w-4 h-4" />
+                Go to Collection
+              </button>
+              <button
+                onClick={() => {
+                  setFinishedBook(null);
+                  track('finished_confirmation_stay', {
+                    book_title: finishedBook.book_title
+                  });
+                }}
+                className="px-4 py-2.5 bg-[#F8F6EE] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#E8EBE4] transition-colors"
+              >
+                Stay Here
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={() => onNavigate('home')}
