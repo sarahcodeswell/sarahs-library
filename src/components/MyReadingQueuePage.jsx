@@ -262,12 +262,12 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                   <Headphones className="w-3.5 h-3.5" />
                   Libro.fm
                 </a>
-                {/* Library - free option */}
+                {/* Library - preferred free option */}
                 <a
                   href="https://libbyapp.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-[#5F7252] hover:bg-[#4A5940] rounded-lg text-xs text-white transition-colors flex items-center gap-1.5 font-medium"
                 >
                   <Library className="w-3.5 h-3.5" />
                   Library
