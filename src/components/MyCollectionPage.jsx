@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookMarked, Share2 } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Share2 } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
@@ -143,29 +143,6 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     });
     return Array.from(letters).sort();
   }, [sortedBooks]);
-
-  const handleMoveToReadAgain = async (book) => {
-    if (!user) {
-      onShowAuthModal();
-      return;
-    }
-
-    // Prevent modifying curated books for master admin
-    if (book.isCurated) {
-      alert('This is part of your curated collection and cannot be modified.');
-      return;
-    }
-
-    const result = await updateQueueStatus(book.id, 'want_to_read');
-    
-    if (result.success) {
-      track('book_moved_to_read_again', {
-        book_title: book.book_title,
-      });
-    } else {
-      alert('Failed to update book status. Please try again.');
-    }
-  };
 
   const handleRemoveBook = async (book) => {
     // Prevent removing curated books for master admin
@@ -491,14 +468,6 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                     >
                       <Share2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       <span className="hidden sm:inline">Recommend</span>
-                    </button>
-                    <button
-                      onClick={() => handleMoveToReadAgain(book)}
-                      className="p-2 sm:px-3 sm:py-2 rounded text-xs font-medium text-[#5F7252] bg-white border border-[#D4DAD0] hover:bg-[#E8EBE4] transition-colors flex items-center justify-center gap-1.5"
-                      title="Move to reading queue to read again"
-                    >
-                      <BookMarked className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden sm:inline">Read Again</span>
                     </button>
                     <button
                       onClick={() => handleRemoveBook(book)}
