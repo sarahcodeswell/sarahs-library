@@ -53,6 +53,11 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     return `https://www.worldcat.org/search?q=${query}`;
   };
 
+  const getAudiobookUrl = (title, author) => {
+    const query = encodeURIComponent(`${title} ${author} audiobook`);
+    return `https://libro.fm/search?q=${query}`;
+  };
+
   const handleAddToQueue = async () => {
     if (!user) {
       onShowAuthModal();
@@ -157,14 +162,14 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                   className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  Bookshop.org
+                  Local Bookstore
                 </button>
                 <button
                   onClick={onShowAuthModal}
                   className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
                 >
-                  <ShoppingBag className="w-4 h-4" />
-                  Amazon
+                  <Headphones className="w-4 h-4" />
+                  Audiobook
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -173,14 +178,14 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                   className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
                 >
                   <Library className="w-4 h-4" />
-                  Find at Library
+                  Library
                 </button>
                 <button
                   onClick={onShowAuthModal}
                   className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
                 >
-                  <Headphones className="w-4 h-4" />
-                  Audiobook
+                  <ShoppingBag className="w-4 h-4" />
+                  Amazon
                 </button>
               </div>
               <p className="text-xs text-center text-[#96A888] mt-2">
@@ -297,7 +302,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </div>
             )}
 
-            {/* Purchase Options */}
+            {/* Purchase Options - Local Bookstore, Audiobook, Library, Amazon */}
             <div className="grid grid-cols-2 gap-2">
               <a
                 href={getBookshopUrl(bookData.book_title, bookData.book_author)}
@@ -306,16 +311,16 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Bookshop.org
+                Local Bookstore
               </a>
               <a
-                href={getAmazonUrl(bookData.book_title, bookData.book_author)}
+                href={getAudiobookUrl(bookData.book_title, bookData.book_author)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
               >
-                <ShoppingBag className="w-4 h-4" />
-                Amazon
+                <Headphones className="w-4 h-4" />
+                Audiobook
               </a>
             </div>
 
@@ -327,7 +332,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
               >
                 <Library className="w-4 h-4" />
-                Find at Library
+                Library
               </a>
               <a
                 href={getAmazonUrl(bookData.book_title, bookData.book_author)}
@@ -335,8 +340,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 rel="noopener noreferrer"
                 className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
               >
-                <Headphones className="w-4 h-4" />
-                Audiobook
+                <ShoppingBag className="w-4 h-4" />
+                Amazon
               </a>
             </div>
           </div>
