@@ -614,11 +614,25 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
         {filteredBooks.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#7A8F6C] text-sm">
-              {searchQuery ? `No books found matching "${searchQuery}"` : 'No books in your reading queue yet'}
-            </p>
-            {!searchQuery && (
-              <p className="text-[#96A888] text-xs mt-2">Add books from recommendations to start building your queue.</p>
+            {searchQuery ? (
+              <p className="text-[#7A8F6C] text-sm">No books found matching "{searchQuery}"</p>
+            ) : (
+              <div className="max-w-sm mx-auto">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                  <BookOpen className="w-8 h-8 text-[#5F7252]" />
+                </div>
+                <h3 className="font-medium text-[#4A5940] mb-2">Your reading queue is empty</h3>
+                <p className="text-[#7A8F6C] text-sm mb-4">
+                  Ready to discover your next great read?
+                </p>
+                <button
+                  onClick={() => onNavigate('home')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                >
+                  <Star className="w-4 h-4" />
+                  Ask Sarah for Recommendations
+                </button>
+              </div>
             )}
           </div>
         ) : (

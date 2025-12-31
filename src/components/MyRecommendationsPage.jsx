@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 
@@ -105,21 +105,22 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
           </div>
         ) : recommendations.length === 0 ? (
           <div className="text-center py-12">
-            <div className="mb-6">
-              <Share2 className="w-16 h-16 text-[#96A888] mx-auto mb-4" />
-              <p className="text-[#7A8F6C] text-sm mb-2">
-                You haven't recommended any books yet
+            <div className="max-w-sm mx-auto">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                <Share2 className="w-8 h-8 text-[#5F7252]" />
+              </div>
+              <h3 className="font-medium text-[#4A5940] mb-2">No recommendations shared yet</h3>
+              <p className="text-[#7A8F6C] text-sm mb-4">
+                Found a book you love? Share it with friends! Rate books in your Collection to get started.
               </p>
-              <p className="text-[#96A888] text-xs">
-                Go to My Collection and click "Recommend" on a book you've read
-              </p>
+              <button
+                onClick={() => onNavigate('collection')}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+              >
+                <Library className="w-4 h-4" />
+                Go to My Collection
+              </button>
             </div>
-            <button
-              onClick={() => onNavigate('collection')}
-              className="px-6 py-2 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors"
-            >
-              Go to My Collection
-            </button>
           </div>
         ) : (
           <div className="space-y-4">
