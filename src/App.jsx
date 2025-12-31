@@ -1143,6 +1143,33 @@ export default function App() {
     return () => window.removeEventListener('closeProfile', handleCloseProfile);
   }, []);
 
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    // Set initial page based on URL
+    const getPageFromPath = (pathname) => {
+      const path = pathname.replace(/^\//, '').split('/')[0] || 'home';
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'meet-sarah', 'shop', 'our-practices'];
+      if (path === 'add-books') return 'my-books';
+      return validPages.includes(path) ? path : 'home';
+    };
+
+    // Set initial page from URL on mount
+    const initialPage = getPageFromPath(window.location.pathname);
+    if (initialPage !== 'home') {
+      setCurrentPage(initialPage);
+    }
+
+    // Handle popstate (back/forward button)
+    const handlePopState = () => {
+      const page = getPageFromPath(window.location.pathname);
+      setCurrentPage(page);
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // systemPrompt no longer needed - handled in recommendationService
 
   // Memoize imported library overlap calculation
@@ -2270,7 +2297,7 @@ Find similar books from beyond my library that match this taste profile.
                     key={key}
                     onClick={() => {
                       if (isSelected) {
-                        setSelectedThemes(prev => prev.filter(t => t !== key));
+                        setSelectedThemes([]);
                         setInputValue('');
                         
                         track('theme_filter_removed', {
@@ -2278,7 +2305,7 @@ Find similar books from beyond my library that match this taste profile.
                           theme_label: info.label
                         });
                       } else {
-                        setSelectedThemes(prev => [...prev, key]);
+                        setSelectedThemes([key]);
                         const themeText = `Show me options in ${info.label.toLowerCase()}.`;
                         setInputValue(themeText);
                         

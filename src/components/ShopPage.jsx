@@ -18,7 +18,7 @@ export default function ShopPage({ onNavigate }) {
 
         {/* Product Showcase */}
         <div className="mb-12">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8 mb-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-6 mb-12 max-w-5xl mx-auto">
             {/* Product 1 - T-Shirt Compact */}
             <a
               href="https://sarahsbooks.printful.me/"
@@ -27,16 +27,16 @@ export default function ShopPage({ onNavigate }) {
               className="group block"
             >
               <div className="transition-transform group-hover:scale-105">
-                <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center justify-center mb-2">
                   <img 
                     src="/unisex-staple-t-shirt-vintage-white-front-69530f90b2fa7.png" 
                     alt="For the love of reading t-shirt - compact design"
-                    className="w-full max-w-xs object-contain drop-shadow-sm"
+                    className="w-full max-w-[180px] object-contain drop-shadow-sm"
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-[#7A8F6C] font-serif italic mb-2">Compact Design</p>
-                  <p className="text-2xl font-medium text-[#4A5940]">$20</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Compact Tee</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
             </a>
@@ -49,21 +49,21 @@ export default function ShopPage({ onNavigate }) {
               className="group block"
             >
               <div className="transition-transform group-hover:scale-105">
-                <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center justify-center mb-2">
                   <img 
                     src="/unisex-staple-t-shirt-vintage-white-front-6953100b12468.png" 
                     alt="For the love of reading t-shirt - centered design"
-                    className="w-full max-w-xs object-contain drop-shadow-sm"
+                    className="w-full max-w-[180px] object-contain drop-shadow-sm"
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-[#7A8F6C] font-serif italic mb-2">Centered Design</p>
-                  <p className="text-2xl font-medium text-[#4A5940]">$20</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Centered Tee</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$20</p>
                 </div>
               </div>
             </a>
 
-            {/* Product 3 - Sticker */}
+            {/* Product 3 - Dad Hat */}
             <a
               href="https://sarahsbooks.printful.me/"
               target="_blank"
@@ -71,16 +71,38 @@ export default function ShopPage({ onNavigate }) {
               className="group block"
             >
               <div className="transition-transform group-hover:scale-105">
-                <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center justify-center mb-2">
                   <img 
-                    src="/sticker.png" 
-                    alt="For the love of reading laptop sticker"
-                    className="w-full max-w-xs object-contain drop-shadow-sm"
+                    src="/Dad Hat Front.png" 
+                    alt="For the love of reading dad hat"
+                    className="w-full max-w-[180px] object-contain drop-shadow-sm"
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-[#7A8F6C] font-serif italic mb-2">Laptop Sticker</p>
-                  <p className="text-2xl font-medium text-[#4A5940]">$3</p>
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Dad Hat</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$25</p>
+                </div>
+              </div>
+            </a>
+
+            {/* Product 4 - Sticker */}
+            <a
+              href="https://sarahsbooks.printful.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block"
+            >
+              <div className="transition-transform group-hover:scale-105">
+                <div className="flex items-center justify-center mb-2">
+                  <img 
+                    src="/sticker.png" 
+                    alt="For the love of reading laptop sticker"
+                    className="w-full max-w-[180px] object-contain drop-shadow-sm"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-[#7A8F6C] font-serif italic mb-1">Laptop Sticker</p>
+                  <p className="text-lg font-medium text-[#4A5940]">$3</p>
                 </div>
               </div>
             </a>

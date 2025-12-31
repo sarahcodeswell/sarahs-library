@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 
 export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModal }) {
-  const { recommendations, isLoading, deleteRecommendation, getShareLink } = useRecommendations();
+  const { recommendations, isLoading, deleteRecommendation, getShareLink, updateRecommendation } = useRecommendations();
   const [copyFeedback, setCopyFeedback] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editNote, setEditNote] = useState('');
 
   const handleCopyLink = async (recommendation) => {
     const result = await getShareLink(recommendation.id);
@@ -48,6 +50,31 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
       });
     } else {
       alert('Failed to delete recommendation. Please try again.');
+    }
+  };
+
+  const handleStartEdit = (recommendation) => {
+    setEditingId(recommendation.id);
+    setEditNote(recommendation.recommendation_note || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditNote('');
+  };
+
+  const handleSaveEdit = async (recommendation) => {
+    if (updateRecommendation) {
+      const result = await updateRecommendation(recommendation.id, editNote);
+      if (result.success) {
+        track('recommendation_edited', { book_title: recommendation.book_title });
+        setEditingId(null);
+        setEditNote('');
+      } else {
+        alert('Failed to save changes. Please try again.');
+      }
+    } else {
+      alert('Edit functionality not available.');
     }
   };
 
@@ -132,7 +159,7 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
               return (
                 <div
                   key={recommendation.id}
-                  className="bg-white rounded-xl border border-[#E8EBE4] p-5 hover:shadow-md transition-shadow"
+                  className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1 min-w-0">
@@ -147,12 +174,43 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
                     </div>
                   </div>
 
-                  {recommendation.recommendation_note && (
-                    <div className="mb-3 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+                  {editingId === recommendation.id ? (
+                    <div className="mb-3">
+                      <textarea
+                        value={editNote}
+                        onChange={(e) => setEditNote(e.target.value)}
+                        placeholder="Why do you recommend this book?"
+                        className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent resize-none"
+                        rows={3}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleSaveEdit(recommendation)}
+                          className="px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="px-3 py-1.5 border border-[#D4DAD0] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : recommendation.recommendation_note ? (
+                    <div className="mb-3 p-3 bg-white/50 rounded-lg border border-[#E8EBE4]">
                       <p className="text-sm text-[#5F7252] leading-relaxed">
                         "{recommendation.recommendation_note}"
                       </p>
                     </div>
+                  ) : (
+                    <button
+                      onClick={() => handleStartEdit(recommendation)}
+                      className="mb-3 text-sm text-[#96A888] hover:text-[#5F7252] transition-colors"
+                    >
+                      + Add a note about why you recommend this book
+                    </button>
                   )}
 
                   <div className="flex items-center justify-between text-xs text-[#96A888] mb-3">
@@ -187,6 +245,15 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
                         </>
                       )}
                     </button>
+                    {editingId !== recommendation.id && recommendation.recommendation_note && (
+                      <button
+                        onClick={() => handleStartEdit(recommendation)}
+                        className="p-2 rounded-lg text-[#96A888] hover:text-[#5F7252] hover:bg-white transition-colors"
+                        title="Edit note"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(recommendation)}
                       className="p-2 rounded-lg text-[#96A888] hover:text-red-600 hover:bg-red-50 transition-colors"
