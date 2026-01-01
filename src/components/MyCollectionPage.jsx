@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Share2, ChevronDown, Star } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
@@ -9,6 +9,114 @@ import booksData from '../books.json';
 import { db } from '../lib/supabase';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
+
+// Expandable book card component for consistent UI
+function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  // Description is already resolved in readBooks (with catalog fallback)
+  const description = book.description;
+  const hasExpandableContent = !!description;
+
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-[#4A5940]">
+                {book.book_title}
+              </div>
+              {book.book_author && (
+                <div className="text-xs text-[#7A8F6C] font-light mt-1">
+                  {book.book_author}
+                </div>
+              )}
+            </div>
+            {hasExpandableContent && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+                aria-label={expanded ? "Show less" : "Show more"}
+              >
+                <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
+          
+          {/* Brief description preview when collapsed */}
+          {!expanded && description && (
+            <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
+              {description}
+            </p>
+          )}
+          
+          <div className="mt-2">
+            <StarRating 
+              rating={book.rating}
+              onRatingChange={(newRating) => onRatingChange(book, newRating)}
+              readOnly={false}
+              size="sm"
+            />
+          </div>
+          {book.added_at && (
+            <div className="text-xs text-[#96A888] mt-2">
+              Added {new Date(book.added_at).toLocaleDateString()}
+            </div>
+          )}
+          
+          {/* Expanded content */}
+          {expanded && description && (
+            <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              <div className="mb-3">
+                <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
+                <p className="text-xs text-[#5F7252] leading-relaxed">{description}</p>
+              </div>
+              
+              {/* Goodreads link */}
+              <div className="pt-3 border-t border-[#E8EBE4]">
+                <a
+                  href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    track('read_reviews_clicked', { 
+                      book_title: book.book_title,
+                      source: 'collection'
+                    });
+                  }}
+                  className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+                >
+                  <Star className="w-3.5 h-3.5" />
+                  Read Reviews on Goodreads
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => onRecommend(book)}
+            className="p-2 sm:px-3 sm:py-2 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-1.5"
+            title="Recommend this book to friends"
+          >
+            <Share2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">Recommend</span>
+          </button>
+          <button
+            onClick={() => onRemove(book)}
+            className="p-2 rounded text-[#96A888] bg-white border border-[#D4DAD0] hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Remove from collection"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
@@ -44,6 +152,27 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     loadUserBooks();
   }, [user]);
 
+  // Helper to find catalog description for a book
+  const getCatalogDescription = (title, author) => {
+    const normalizedTitle = (title || '').toLowerCase().trim();
+    const normalizedAuthor = (author || '').toLowerCase().trim();
+    
+    // Try exact match first
+    const exactMatch = booksData.find(b => 
+      b.title?.toLowerCase().trim() === normalizedTitle &&
+      b.author?.toLowerCase().trim() === normalizedAuthor
+    );
+    if (exactMatch?.description) return exactMatch.description;
+    
+    // Try title-only match
+    const titleMatch = booksData.find(b => 
+      b.title?.toLowerCase().trim() === normalizedTitle
+    );
+    if (titleMatch?.description) return titleMatch.description;
+    
+    return null;
+  };
+
   // Combine finished books from reading_queue and user_books table
   const readBooks = useMemo(() => {
     const finishedBooks = readingQueue.filter(item => item.status === 'finished');
@@ -54,8 +183,11 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     // Add finished books from reading queue
     finishedBooks.forEach(book => {
       const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
+      // Fallback to catalog description if not stored
+      const description = book.description || getCatalogDescription(book.book_title, book.book_author);
       bookMap.set(key, {
         ...book,
+        description,
         source: 'reading_queue'
       });
     });
@@ -64,8 +196,11 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     userBooks.forEach(book => {
       const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
       if (!bookMap.has(key)) {
+        // Fallback to catalog description if not stored
+        const description = book.description || getCatalogDescription(book.book_title, book.book_author);
         bookMap.set(key, {
           ...book,
+          description,
           status: 'finished', // All user_books are considered finished
           source: 'user_books'
         });
@@ -434,58 +569,13 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         ) : (
           <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] shadow-sm divide-y divide-[#E8EBE4]">
             {filteredBooks.map((book) => (
-              <div key={book.id} className="px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-[#4A5940]">
-                      {book.book_title}
-                    </div>
-                    {book.book_author && (
-                      <div className="text-xs text-[#7A8F6C] font-light mt-1">
-                        {book.book_author}
-                      </div>
-                    )}
-                    {/* Show stored description if available */}
-                    {book.description && (
-                      <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
-                        {book.description}
-                      </p>
-                    )}
-                    <div className="mt-2">
-                      <StarRating 
-                        rating={book.rating}
-                        onRatingChange={(newRating) => handleRatingChange(book, newRating)}
-                        readOnly={false}
-                        size="sm"
-                      />
-                    </div>
-                    {book.added_at && (
-                      <div className="text-xs text-[#96A888] mt-2">
-                        Added {new Date(book.added_at).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {/* Mobile: Icon-only, Desktop: Icon + Text */}
-                    <button
-                      onClick={() => handleRecommend(book)}
-                      className="p-2 sm:px-3 sm:py-2 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-1.5"
-                      title="Recommend this book to friends"
-                    >
-                      <Share2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden sm:inline">Recommend</span>
-                    </button>
-                    <button
-                      onClick={() => handleRemoveBook(book)}
-                      className="p-2 rounded text-[#96A888] bg-white border border-[#D4DAD0] hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Remove from collection"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <CollectionBookCard
+                key={book.id}
+                book={book}
+                onRatingChange={handleRatingChange}
+                onRecommend={handleRecommend}
+                onRemove={handleRemoveBook}
+              />
             ))}
           </div>
         )}
