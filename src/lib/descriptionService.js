@@ -87,10 +87,6 @@ If you don't know a book, write a brief generic description based on the title a
 function parseDescriptionResponse(text, books) {
   const results = {};
   
-  if (import.meta.env.DEV) {
-    console.log('parseDescriptionResponse: Raw text:', text);
-  }
-  
   // Try multiple parsing strategies
   
   // Strategy 1: Split by [BOOK X] markers
@@ -152,10 +148,6 @@ function parseDescriptionResponse(text, books) {
     });
   }
   
-  if (import.meta.env.DEV) {
-    console.log('parseDescriptionResponse: Parsed results:', results);
-  }
-
   return results;
 }
 
