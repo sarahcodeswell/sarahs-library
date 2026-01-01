@@ -317,6 +317,8 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     const backfillDescriptions = async () => {
       setHasBackfilledDescriptions(true); // Prevent re-running
       
+      console.log('[Backfill] Starting for', booksNeedingDescriptions.length, 'books');
+      
       const batchSize = 10;
       let updatedCount = 0;
 
@@ -327,13 +329,20 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           author: b.book_author 
         }));
 
+        console.log('[Backfill] Processing batch', i / batchSize + 1, ':', booksForApi.map(b => b.title));
+
         try {
           const descriptions = await generateBookDescriptions(booksForApi);
+          
+          console.log('[Backfill] Got descriptions:', Object.keys(descriptions).length, 'of', batch.length);
+          console.log('[Backfill] Description keys:', Object.keys(descriptions));
 
           // Update each book with its new description
           for (const book of batch) {
             const key = `${book.book_title.toLowerCase()}|${(book.book_author || '').toLowerCase()}`;
             const description = descriptions[key];
+
+            console.log('[Backfill] Looking for key:', key, '- Found:', !!description);
 
             if (description) {
               await updateQueueItem(book.id, { description });
@@ -348,7 +357,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             });
           }
         } catch (batchError) {
-          console.error('Error generating batch:', batchError);
+          console.error('[Backfill] Error generating batch:', batchError);
           // Remove batch from loading state on error
           batch.forEach(book => {
             setLoadingDescriptionIds(prev => {
@@ -359,6 +368,8 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           });
         }
       }
+
+      console.log('[Backfill] Complete. Updated', updatedCount, 'books');
 
       if (updatedCount > 0) {
         track('descriptions_auto_backfilled', {

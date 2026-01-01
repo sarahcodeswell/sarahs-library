@@ -87,21 +87,74 @@ If you don't know a book, write a brief generic description based on the title a
 function parseDescriptionResponse(text, books) {
   const results = {};
   
-  // Split by [BOOK X] markers
+  if (import.meta.env.DEV) {
+    console.log('parseDescriptionResponse: Raw text:', text);
+  }
+  
+  // Try multiple parsing strategies
+  
+  // Strategy 1: Split by [BOOK X] markers
   const sections = text.split(/\[BOOK\s*\d+\]/i).filter(Boolean);
   
-  sections.forEach((section, index) => {
-    if (index >= books.length) return;
-    
-    const book = books[index];
-    const key = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
-    
-    // Extract description
-    const descMatch = section.match(/Description:\s*(.+?)(?=\n\n|\[BOOK|$)/is);
-    if (descMatch) {
-      results[key] = descMatch[1].trim();
-    }
-  });
+  if (sections.length > 0) {
+    sections.forEach((section, index) => {
+      if (index >= books.length) return;
+      
+      const book = books[index];
+      const key = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
+      
+      // Extract description - be more flexible with the regex
+      const descMatch = section.match(/Description:\s*(.+?)(?=\n\n|\[BOOK|$)/is);
+      if (descMatch) {
+        results[key] = descMatch[1].trim();
+      }
+    });
+  }
+  
+  // Strategy 2: If strategy 1 didn't work well, try matching by book title
+  if (Object.keys(results).length < books.length) {
+    books.forEach(book => {
+      const key = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
+      if (results[key]) return; // Already found
+      
+      // Look for the book title in the response followed by description
+      const titleEscaped = book.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const titlePattern = new RegExp(`["']?${titleEscaped}["']?[^:]*:?\\s*(?:Description:)?\\s*(.+?)(?=\\n\\n|\\d+\\.|$)`, 'is');
+      const match = text.match(titlePattern);
+      if (match && match[1]) {
+        const desc = match[1].trim();
+        // Only use if it looks like a description (not just the title/author)
+        if (desc.length > 20 && !desc.toLowerCase().includes('description:')) {
+          results[key] = desc;
+        }
+      }
+    });
+  }
+  
+  // Strategy 3: Split by numbered list (1., 2., etc.)
+  if (Object.keys(results).length < books.length) {
+    const numberedSections = text.split(/\n\d+\.\s+/).filter(Boolean);
+    numberedSections.forEach((section, index) => {
+      if (index >= books.length) return;
+      
+      const book = books[index];
+      const key = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
+      if (results[key]) return; // Already found
+      
+      // Look for description after the title mention
+      const descMatch = section.match(/(?:Description:)?\s*([A-Z][^]*?)$/is);
+      if (descMatch && descMatch[1]) {
+        const desc = descMatch[1].trim();
+        if (desc.length > 20) {
+          results[key] = desc.split('\n')[0].trim(); // Take first paragraph
+        }
+      }
+    });
+  }
+  
+  if (import.meta.env.DEV) {
+    console.log('parseDescriptionResponse: Parsed results:', results);
+  }
 
   return results;
 }
