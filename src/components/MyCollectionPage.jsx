@@ -35,29 +35,21 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {/* Title and Author */}
+          {/* Title */}
           <div className="text-sm font-medium text-[#4A5940]">
             {book.book_title}
           </div>
+          
+          {/* Author */}
           {book.book_author && (
             <div className="text-xs text-[#7A8F6C] font-light mt-0.5">
               {book.book_author}
             </div>
           )}
           
-          {/* Rating - always visible */}
-          <div className="mt-2">
-            <StarRating 
-              rating={book.rating}
-              onRatingChange={(newRating) => onRatingChange(book, newRating)}
-              readOnly={false}
-              size="sm"
-            />
-          </div>
-          
           {/* Description - shown by default, expandable only if long */}
           {hasDescription && (
-            <div className="mt-3">
+            <div className="mt-2">
               <p 
                 ref={descriptionRef}
                 className={`text-xs text-[#5F7252] leading-relaxed ${!expanded && isLongDescription ? 'line-clamp-2' : ''}`}
@@ -78,6 +70,17 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
             </div>
           )}
           
+          {/* Rating */}
+          <div className="mt-2">
+            <StarRating 
+              rating={book.rating}
+              onRatingChange={(newRating) => onRatingChange(book, newRating)}
+              readOnly={false}
+              size="sm"
+            />
+          </div>
+          
+          {/* Date Added */}
           {book.added_at && (
             <div className="text-xs text-[#96A888] mt-2">
               Added {new Date(book.added_at).toLocaleDateString()}
