@@ -205,7 +205,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     }
     
     setAddingToQueue(true);
-    const success = await onAddToQueue(rec);
+    // Pass the best available description (catalog > AI response)
+    const bookWithDescription = {
+      ...rec,
+      description: fullDescription || rec.description
+    };
+    const success = await onAddToQueue(bookWithDescription);
     setAddingToQueue(false);
     
     if (success) {
@@ -240,10 +245,11 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     // Set flag to prevent Want to Read button from activating
     setMarkedAsRead(true);
     
-    // Add to reading queue with 'finished' status
+    // Add to reading queue with 'finished' status and best description
     setAddingToQueue(true);
     const success = await onAddToQueue({
       ...rec,
+      description: fullDescription || rec.description,
       status: 'finished'
     });
     setAddingToQueue(false);

@@ -81,6 +81,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             id: `curated-${index}`,
             book_title: book.title,
             book_author: book.author,
+            description: book.description, // Include description from catalog
             status: 'finished',
             isCurated: true,
             added_at: null,
@@ -443,6 +444,12 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                       <div className="text-xs text-[#7A8F6C] font-light mt-1">
                         {book.book_author}
                       </div>
+                    )}
+                    {/* Show stored description if available */}
+                    {book.description && (
+                      <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
+                        {book.description}
+                      </p>
                     )}
                     <div className="mt-2">
                       <StarRating 
