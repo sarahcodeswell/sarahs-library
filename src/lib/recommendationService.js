@@ -66,7 +66,23 @@ When asked for "best books of the year" or new releases, treat the current year 
 }
 
 /**
+ * Format book with description for richer context
+ */
+function formatBookWithDescription(book) {
+  const base = `"${book.book_title}" by ${book.book_author || 'Unknown'}`;
+  if (book.description && book.description.length > 20) {
+    // Truncate long descriptions to save tokens
+    const desc = book.description.length > 150 
+      ? book.description.slice(0, 150) + '...' 
+      : book.description;
+    return `${base} - ${desc}`;
+  }
+  return base;
+}
+
+/**
  * Build user preferences from reading history
+ * Now includes descriptions for richer context
  */
 function buildUserPreferences(readingQueue) {
   const finishedBooks = readingQueue.filter(item => item.status === 'finished');
@@ -82,21 +98,27 @@ function buildUserPreferences(readingQueue) {
 
   const parts = [];
 
+  // For loved books, include full descriptions (most important for understanding taste)
   if (lovedBooks.length > 0) {
+    const topLoved = lovedBooks.slice(0, 10); // Limit to top 10 to manage token usage
     parts.push(
-      `⭐⭐⭐⭐⭐ BOOKS USER LOVED (5 stars - ${lovedBooks.length} books):\n${lovedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nThese are their absolute favorites. Recommend books with similar themes, writing styles, or by the same authors.`
+      `⭐⭐⭐⭐⭐ BOOKS USER LOVED (5 stars - ${lovedBooks.length} books):\n${topLoved.map(formatBookWithDescription).join('\n')}\n\nThese are their absolute favorites. Recommend books with similar themes, writing styles, or emotional resonance.`
     );
   }
 
+  // For liked books, include descriptions for top ones
   if (likedBooks.length > 0) {
+    const topLiked = likedBooks.slice(0, 5); // Top 5 with descriptions
     parts.push(
-      `⭐⭐⭐⭐ BOOKS USER LIKED (4 stars - ${likedBooks.length} books):\n${likedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nThey enjoyed these books. Use as positive signals for recommendations.`
+      `⭐⭐⭐⭐ BOOKS USER LIKED (4 stars - ${likedBooks.length} books):\n${topLiked.map(formatBookWithDescription).join('\n')}\n\nThey enjoyed these books. Use as positive signals for recommendations.`
     );
   }
 
+  // For disliked books, descriptions help understand what to avoid
   if (lowRatedBooks.length > 0) {
+    const topDisliked = lowRatedBooks.slice(0, 5);
     parts.push(
-      `👎 BOOKS USER DISLIKED (1-2 stars - ${lowRatedBooks.length} books):\n${lowRatedBooks.map(b => `"${b.book_title}" by ${b.book_author || 'Unknown'}`).join(', ')}\n\nAvoid recommending books with similar themes, styles, or genres to these.`
+      `👎 BOOKS USER DISLIKED (1-2 stars - ${lowRatedBooks.length} books):\n${topDisliked.map(formatBookWithDescription).join('\n')}\n\nAvoid recommending books with similar themes, styles, or genres to these.`
     );
   }
 

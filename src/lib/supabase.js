@@ -158,6 +158,22 @@ export const db = {
       status: book.status || 'want_to_read',
     };
     
+    // Include ISBN if provided (primary identifier)
+    if (book.isbn) {
+      insertData.isbn = book.isbn;
+    }
+    if (book.isbn13) {
+      insertData.isbn13 = book.isbn13;
+    }
+    if (book.isbn10) {
+      insertData.isbn10 = book.isbn10;
+    }
+    
+    // Include cover image if provided
+    if (book.cover_image_url) {
+      insertData.cover_image_url = book.cover_image_url;
+    }
+    
     // Include rating if provided
     if (book.rating !== undefined) {
       insertData.rating = book.rating;
@@ -554,15 +570,16 @@ export const db = {
   },
 
   // Get user exclusion list (queries both tables directly for reliability)
+  // Returns both titles and ISBNs for more reliable matching
   getUserExclusionList: async (userId) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
-      // Query both tables in parallel for speed
+      // Query both tables in parallel for speed - include ISBN for reliable matching
       const [queueResult, dismissedResult] = await Promise.all([
         supabase
           .from('reading_queue')
-          .select('book_title')
+          .select('book_title, isbn')
           .eq('user_id', userId),
         supabase
           .from('dismissed_recommendations')
@@ -577,16 +594,22 @@ export const db = {
         console.error('getUserExclusionList: Dismissed error', dismissedResult.error);
       }
       
-      // Combine and deduplicate titles
+      // Combine and deduplicate - use ISBN when available, fallback to title
       const queueTitles = queueResult.data?.map(row => row.book_title) || [];
+      const queueISBNs = queueResult.data?.filter(row => row.isbn).map(row => row.isbn) || [];
       const dismissedTitles = dismissedResult.data?.map(row => row.book_title) || [];
       const allTitles = [...new Set([...queueTitles, ...dismissedTitles])];
       
       if (import.meta.env.DEV) {
-        console.log(`[ExclusionList] Queue: ${queueTitles.length}, Dismissed: ${dismissedTitles.length}, Total: ${allTitles.length}`);
+        console.log(`[ExclusionList] Queue: ${queueTitles.length}, ISBNs: ${queueISBNs.length}, Dismissed: ${dismissedTitles.length}, Total: ${allTitles.length}`);
       }
       
-      return { data: allTitles, error: null };
+      // Return both titles and ISBNs for comprehensive matching
+      return { 
+        data: allTitles, 
+        isbns: queueISBNs,
+        error: null 
+      };
     } catch (err) {
       console.error('getUserExclusionList: Exception', err);
       return { data: null, error: { message: err.message || 'Fetch failed' } };

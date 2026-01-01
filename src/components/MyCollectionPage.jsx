@@ -44,6 +44,18 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   return (
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
+        {/* Cover Image */}
+        {book.cover_image_url && (
+          <div className="flex-shrink-0">
+            <img 
+              src={book.cover_image_url} 
+              alt={`Cover of ${book.book_title}`}
+              className="w-12 h-18 object-cover rounded shadow-sm"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        )}
+        
         <div className="flex-1 min-w-0">
           {/* Title */}
           <div className="text-sm font-medium text-[#4A5940]">
@@ -132,7 +144,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [showRecommendModal, setShowRecommendModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
-  const [sortBy, setSortBy] = useState('date_added'); // 'date_added' or 'title'
+  const [sortBy, setSortBy] = useState('date_added'); // 'date_added', 'title', or 'author'
   const [recommendPromptBook, setRecommendPromptBook] = useState(null); // For showing recommend prompt after high rating
   const [hasBackfilledDescriptions, setHasBackfilledDescriptions] = useState(false);
   const [loadingDescriptionIds, setLoadingDescriptionIds] = useState(new Set()); // Track which books are loading descriptions
@@ -244,6 +256,16 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         const dateA = new Date(a.added_at || a.updated_at || 0);
         const dateB = new Date(b.added_at || b.updated_at || 0);
         return dateB - dateA;
+      } else if (sortBy === 'author') {
+        // Sort alphabetically by author, then by title
+        const authorA = (a.book_author || 'ZZZ').toLowerCase();
+        const authorB = (b.book_author || 'ZZZ').toLowerCase();
+        const authorCompare = authorA.localeCompare(authorB);
+        if (authorCompare !== 0) return authorCompare;
+        // Same author, sort by title
+        const titleA = (a.book_title || '').toLowerCase();
+        const titleB = (b.book_title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
       } else {
         // Sort alphabetically by title
         const titleA = (a.book_title || '').toLowerCase();
@@ -613,6 +635,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           >
             <option value="date_added">Recently Added</option>
             <option value="title">A-Z by Title</option>
+            <option value="author">A-Z by Author</option>
           </select>
           <select
             value={selectedRating === null ? 'all' : selectedRating}
