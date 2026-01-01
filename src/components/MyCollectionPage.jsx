@@ -16,39 +16,23 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
   
   // Description is already resolved in readBooks (with catalog fallback)
   const description = book.description;
-  const hasExpandableContent = !!description;
+  const hasDescription = !!description;
 
   return (
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="text-sm font-medium text-[#4A5940]">
-              {book.book_title}
-            </div>
-            {hasExpandableContent && (
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
-                aria-label={expanded ? "Show less" : "Show more"}
-              >
-                <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
-              </button>
-            )}
+          {/* Title and Author */}
+          <div className="text-sm font-medium text-[#4A5940]">
+            {book.book_title}
           </div>
           {book.book_author && (
-            <div className="text-xs text-[#7A8F6C] font-light">
+            <div className="text-xs text-[#7A8F6C] font-light mt-0.5">
               {book.book_author}
             </div>
           )}
           
-          {/* Brief description preview when collapsed */}
-          {!expanded && description && (
-            <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
-              {description}
-            </p>
-          )}
-          
+          {/* Rating - always visible */}
           <div className="mt-2">
             <StarRating 
               rating={book.rating}
@@ -57,39 +41,49 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
               size="sm"
             />
           </div>
-          {book.added_at && (
-            <div className="text-xs text-[#96A888] mt-2">
-              Added {new Date(book.added_at).toLocaleDateString()}
+          
+          {/* Description section with expand/collapse */}
+          {hasDescription && (
+            <div className="mt-3">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1.5 text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              >
+                <span>Description</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {expanded && (
+                <div className="mt-2">
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{description}</p>
+                  
+                  {/* Goodreads link */}
+                  <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+                    <a
+                      href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        track('read_reviews_clicked', { 
+                          book_title: book.book_title,
+                          source: 'collection'
+                        });
+                      }}
+                      className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+                    >
+                      <Star className="w-3.5 h-3.5" />
+                      Read Reviews on Goodreads
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
-          {/* Expanded content */}
-          {expanded && description && (
-            <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
-              <div className="mb-3">
-                <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
-                <p className="text-xs text-[#5F7252] leading-relaxed">{description}</p>
-              </div>
-              
-              {/* Goodreads link */}
-              <div className="pt-3 border-t border-[#E8EBE4]">
-                <a
-                  href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    track('read_reviews_clicked', { 
-                      book_title: book.book_title,
-                      source: 'collection'
-                    });
-                  }}
-                  className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
-                >
-                  <Star className="w-3.5 h-3.5" />
-                  Read Reviews on Goodreads
-                </a>
-              </div>
+          {book.added_at && (
+            <div className="text-xs text-[#96A888] mt-2">
+              Added {new Date(book.added_at).toLocaleDateString()}
             </div>
           )}
         </div>
@@ -121,6 +115,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const { createRecommendation } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState(null);
+  const [selectedRating, setSelectedRating] = useState(null); // null = all, 1-5 = specific rating
   const [showRecommendModal, setShowRecommendModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
@@ -254,6 +249,16 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       });
     }
     
+    // Filter by selected rating
+    if (selectedRating !== null) {
+      if (selectedRating === 0) {
+        // Unrated books
+        books = books.filter(book => !book.rating || book.rating === 0);
+      } else {
+        books = books.filter(book => book.rating === selectedRating);
+      }
+    }
+    
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -264,7 +269,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     }
     
     return books;
-  }, [sortedBooks, searchQuery, selectedLetter]);
+  }, [sortedBooks, searchQuery, selectedLetter, selectedRating]);
 
   // Get available letters from books
   const availableLetters = useMemo(() => {
@@ -519,6 +524,22 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           >
             <option value="date_added">Recently Added</option>
             <option value="title">A-Z by Title</option>
+          </select>
+          <select
+            value={selectedRating === null ? 'all' : selectedRating}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedRating(val === 'all' ? null : parseInt(val, 10));
+            }}
+            className="px-3 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+          >
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+            <option value="0">Unrated</option>
           </select>
         </div>
 

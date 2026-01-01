@@ -44,7 +44,7 @@ export default function OurPracticesPage({ onNavigate }) {
                 </div>
                 <div className="flex items-start gap-2">
                   <Trash2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#7A8F6C]" />
-                  <p><strong>You own your data.</strong> You can export or delete your data at any time. Just contact us and we'll take care of it promptly.</p>
+                  <p><strong>You own your data.</strong> You can export or delete your data at any time from your profile settings.</p>
                 </div>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default function OurPracticesPage({ onNavigate }) {
               <h2 className="font-serif text-xl text-[#4A5940] mb-3">Responsible AI</h2>
               <div className="space-y-3 text-sm text-[#5F7252] leading-relaxed">
                 <p>
-                  Sarah's Books uses <strong>Claude by Anthropic</strong> to power our book recommendations. Claude is designed to be helpful, harmless, and honest.
+                  Sarah's Books uses <strong>Claude by Anthropic</strong> to power our book recommendations. Claude is designed to be <a href="https://www.anthropic.com/news/claudes-character" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#4A5940]">helpful, harmless, and honest</a>.
                 </p>
                 <p>
                   When you ask for recommendations, Claude analyzes your request against Sarah's curated collection of 200+ books and the broader world of literature to find your perfect match.
