@@ -13,7 +13,7 @@ export default async function handler(req) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-key',
   };
 
   // Handle preflight
@@ -55,8 +55,12 @@ export default async function handler(req) {
       );
     }
 
-    // Check daily limit (50 recommendations per day per user)
-    const dailyLimit = checkDailyLimit(clientId, 'recommendation');
+    // Admin bypass for backfill scripts
+    const adminKey = req.headers.get('x-admin-key');
+    const isAdmin = adminKey === (globalThis?.process?.env?.ADMIN_BACKFILL_KEY || 'sarah-backfill-2024');
+
+    // Check daily limit (50 recommendations per day per user) - skip for admin
+    const dailyLimit = isAdmin ? { allowed: true } : checkDailyLimit(clientId, 'recommendation');
     
     if (!dailyLimit.allowed) {
       const resetDate = new Date(dailyLimit.resetTime);
