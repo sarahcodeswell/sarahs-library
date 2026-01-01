@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, Share2, ChevronDown, Star } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Share2, ChevronDown, Star, Sparkles, Loader2 } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
@@ -7,6 +7,7 @@ import RecommendationModal from './RecommendationModal';
 import StarRating from './StarRating';
 import booksData from '../books.json';
 import { db } from '../lib/supabase';
+import { generateBookDescriptions } from '../lib/descriptionService';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
@@ -117,6 +118,8 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [userBooks, setUserBooks] = useState([]);
   const [sortBy, setSortBy] = useState('date_added'); // 'date_added' or 'title'
   const [recommendPromptBook, setRecommendPromptBook] = useState(null); // For showing recommend prompt after high rating
+  const [isGeneratingDescriptions, setIsGeneratingDescriptions] = useState(false);
+  const [descriptionProgress, setDescriptionProgress] = useState({ current: 0, total: 0 });
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -278,6 +281,68 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     });
     return Array.from(letters).sort();
   }, [sortedBooks]);
+
+  // Count books without descriptions (for backfill feature)
+  const booksWithoutDescriptions = useMemo(() => {
+    return readBooks.filter(book => !book.description);
+  }, [readBooks]);
+
+  // Backfill descriptions for books that don't have them
+  const handleGenerateDescriptions = async () => {
+    if (booksWithoutDescriptions.length === 0) return;
+    
+    setIsGeneratingDescriptions(true);
+    setDescriptionProgress({ current: 0, total: booksWithoutDescriptions.length });
+
+    try {
+      // Generate descriptions in batches
+      const batchSize = 10;
+      let updatedCount = 0;
+
+      for (let i = 0; i < booksWithoutDescriptions.length; i += batchSize) {
+        const batch = booksWithoutDescriptions.slice(i, i + batchSize);
+        const booksForApi = batch.map(b => ({ 
+          title: b.book_title, 
+          author: b.book_author 
+        }));
+
+        try {
+          const descriptions = await generateBookDescriptions(booksForApi);
+
+          // Update each book with its new description
+          for (const book of batch) {
+            const key = `${book.book_title.toLowerCase()}|${(book.book_author || '').toLowerCase()}`;
+            const description = descriptions[key];
+
+            if (description && book.source === 'reading_queue') {
+              // Update the book in reading_queue
+              await updateQueueItem(book.id, { description });
+              updatedCount++;
+            }
+          }
+        } catch (batchError) {
+          console.error('Error generating batch:', batchError);
+        }
+
+        setDescriptionProgress({ current: Math.min(i + batchSize, booksWithoutDescriptions.length), total: booksWithoutDescriptions.length });
+      }
+
+      track('descriptions_backfilled', {
+        total_books: booksWithoutDescriptions.length,
+        updated_count: updatedCount
+      });
+
+      if (updatedCount > 0) {
+        alert(`Generated descriptions for ${updatedCount} book${updatedCount !== 1 ? 's' : ''}!`);
+      }
+    } catch (error) {
+      console.error('Error generating descriptions:', error);
+      alert('Failed to generate descriptions. Please try again.');
+    } finally {
+      setIsGeneratingDescriptions(false);
+      setDescriptionProgress({ current: 0, total: 0 });
+    }
+  };
 
   const handleRemoveBook = async (book) => {
     // Prevent removing curated books for master admin
@@ -496,10 +561,39 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         </button>
 
         <div className="mb-6">
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">My Collection</h1>
-          <p className="text-[#7A8F6C] text-sm font-light">
-            {readBooks.length} book{readBooks.length !== 1 ? 's' : ''} you've read
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">My Collection</h1>
+              <p className="text-[#7A8F6C] text-sm font-light">
+                {readBooks.length} book{readBooks.length !== 1 ? 's' : ''} you've read
+              </p>
+            </div>
+            
+            {/* Generate Descriptions button - only show if there are books without descriptions */}
+            {booksWithoutDescriptions.length > 0 && (
+              <button
+                onClick={handleGenerateDescriptions}
+                disabled={isGeneratingDescriptions}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title={`Generate descriptions for ${booksWithoutDescriptions.length} books`}
+              >
+                {isGeneratingDescriptions ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="hidden sm:inline">
+                      {descriptionProgress.current}/{descriptionProgress.total}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Add Descriptions ({booksWithoutDescriptions.length})</span>
+                    <span className="sm:hidden">{booksWithoutDescriptions.length}</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">

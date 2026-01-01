@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload, Loader2 } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useUserBooks } from '../contexts/UserBooksContext';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import PhotoCaptureModal from './PhotoCaptureModal';
 import StarRating from './StarRating';
+import { generateBookDescriptions } from '../lib/descriptionService';
+import booksData from '../books.json';
 
 // CSV parsing helper
 function parseCsvLine(line) {
@@ -192,13 +194,42 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
         return;
       }
 
+      // Helper to find catalog description
+      const getCatalogDescription = (title) => {
+        const normalizedTitle = (title || '').toLowerCase().trim();
+        const catalogBook = booksData.find(b => 
+          b.title?.toLowerCase().trim() === normalizedTitle
+        );
+        return catalogBook?.description || null;
+      };
+
+      // First, identify books that need AI-generated descriptions
+      const booksNeedingDescriptions = books.filter(book => !getCatalogDescription(book.title));
+      
+      // Generate descriptions for books not in catalog (in background)
+      let descriptions = {};
+      if (booksNeedingDescriptions.length > 0) {
+        try {
+          descriptions = await generateBookDescriptions(booksNeedingDescriptions);
+        } catch (descError) {
+          console.error('Error generating descriptions:', descError);
+          // Continue without descriptions if generation fails
+        }
+      }
+
       let successCount = 0;
       for (const book of books) {
+        // Get description from catalog first, then AI-generated, then null
+        const catalogDesc = getCatalogDescription(book.title);
+        const aiDescKey = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
+        const description = catalogDesc || descriptions[aiDescKey] || null;
+
         // Add books from Goodreads CSV directly to reading queue with status='finished'
         // This ensures they're counted in collection and excluded from recommendations
         const result = await addToQueue({
           title: book.title,
           author: book.author || '',
+          description: description,
           status: 'finished',
         });
         
@@ -210,6 +241,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       track('books_added_from_goodreads', {
         total_in_csv: books.length,
         successfully_added: successCount,
+        descriptions_generated: Object.keys(descriptions).length,
       });
 
       setIsUploadingGoodreads(false);
