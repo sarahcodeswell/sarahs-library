@@ -22,16 +22,9 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-[#4A5940]">
-                {book.book_title}
-              </div>
-              {book.book_author && (
-                <div className="text-xs text-[#7A8F6C] font-light mt-1">
-                  {book.book_author}
-                </div>
-              )}
+          <div className="flex items-center gap-2 mb-1">
+            <div className="text-sm font-medium text-[#4A5940]">
+              {book.book_title}
             </div>
             {hasExpandableContent && (
               <button
@@ -43,6 +36,11 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
               </button>
             )}
           </div>
+          {book.book_author && (
+            <div className="text-xs text-[#7A8F6C] font-light">
+              {book.book_author}
+            </div>
+          )}
           
           {/* Brief description preview when collapsed */}
           {!expanded && description && (
