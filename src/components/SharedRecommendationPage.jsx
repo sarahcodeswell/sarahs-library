@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, Lock, RefreshCw } from 'lucide-react';
+import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, RefreshCw, Star, ExternalLink, Check } from 'lucide-react';
 import { db } from '../lib/supabase';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useUser } from '../contexts/UserContext';
@@ -58,6 +58,11 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     return `https://libro.fm/search?q=${query}`;
   };
 
+  const getGoodreadsUrl = (title, author) => {
+    const query = encodeURIComponent(`${title} ${author}`);
+    return `https://www.goodreads.com/search?q=${query}`;
+  };
+
   const handleAddToQueue = async () => {
     if (!user) {
       onShowAuthModal();
@@ -77,10 +82,26 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     }
   };
 
+  // Handle accept recommendation (for logged-out users)
+  const handleAcceptRecommendation = () => {
+    // Store the book data in sessionStorage so we can add it after sign up
+    const bookData = recommendation.user_recommendations;
+    sessionStorage.setItem('pendingRecommendation', JSON.stringify({
+      book_title: bookData.book_title,
+      book_author: bookData.book_author,
+      book_isbn: bookData.book_isbn,
+      book_description: bookData.book_description
+    }));
+    onShowAuthModal();
+  };
+
   // Check if book is already in queue
   const isInQueue = recommendation && readingQueue.some(
     item => item.book_title?.toLowerCase() === recommendation.user_recommendations?.book_title?.toLowerCase()
   );
+
+  // Get recommender name
+  const recommenderName = recommendation?.recommender_name || 'A friend';
 
   if (isLoading) {
     return (
@@ -136,144 +157,126 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
 
   const bookData = recommendation.user_recommendations;
 
-  // Logged-out view - show book info but gate actions
+  // Logged-out view - improved user journey
   if (!user) {
     return (
       <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
         <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
           
-          {/* Header */}
+          {/* Personal Header */}
           <div className="text-center mb-8">
-            <p className="text-sm text-[#7A8F6C] mb-2">A friend recommended this book for you</p>
-            <div className="flex items-center justify-center gap-2">
-              <Heart className="w-5 h-5 text-[#E11D48]" />
-              <span className="font-serif text-lg text-[#4A5940]">Sarah's Books</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252]/10 rounded-full mb-4">
+              <Heart className="w-4 h-4 text-[#E11D48]" />
+              <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
             </div>
+            <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+              {recommenderName} thinks you'll love this book
+            </h1>
           </div>
 
           {/* Book Card */}
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6">
             
             {/* Title & Author */}
-            <div className="text-center mb-4">
-              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+            <div className="text-center mb-6">
+              <h2 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
                 {bookData.book_title}
-              </h1>
+              </h2>
               {bookData.book_author && (
                 <p className="text-[#7A8F6C]">by {bookData.book_author}</p>
               )}
             </div>
 
-            {/* Book Description */}
-            {bookData.book_description && (
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
-                {bookData.book_description}
-              </p>
-            )}
-
-            {/* Recommendation Note */}
+            {/* Why they recommend it - most important */}
             {bookData.recommendation_note && (
-              <div className="bg-white/50 rounded-xl p-4 mb-6 border border-[#E8EBE4]">
-                <p className="text-sm text-[#96A888] mb-2">Why they recommend it:</p>
-                <p className="text-[#5F7252] leading-relaxed italic">
+              <div className="bg-white rounded-xl p-5 mb-6 border border-[#E8EBE4]">
+                <p className="text-sm text-[#96A888] mb-2 font-medium">
+                  Why {recommenderName} thinks you'll love it:
+                </p>
+                <p className="text-[#4A5940] leading-relaxed text-lg italic">
                   "{bookData.recommendation_note}"
                 </p>
               </div>
             )}
 
-            {/* Greyed-out Actions - clickable to sign up */}
-            <div className="space-y-3">
-              <button
-                onClick={onShowAuthModal}
-                className="w-full px-4 py-3 bg-[#5F7252]/30 text-[#5F7252]/60 rounded-lg flex items-center justify-center gap-2 font-medium cursor-pointer hover:bg-[#5F7252]/40 transition-colors"
+            {/* Book Description */}
+            {bookData.book_description && (
+              <div className="mb-6">
+                <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
+                <p className="text-sm text-[#5F7252] leading-relaxed">
+                  {bookData.book_description}
+                </p>
+              </div>
+            )}
+
+            {/* Goodreads Link */}
+            <div className="flex items-center justify-center gap-4 mb-6 py-3 border-t border-b border-[#E8EBE4]">
+              <a
+                href={getGoodreadsUrl(bookData.book_title, bookData.book_author)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors"
               >
-                <Lock className="w-4 h-4" />
-                <BookMarked className="w-5 h-5" />
-                Add to Reading Queue
-              </button>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={onShowAuthModal}
-                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Local Bookstore
-                </button>
-                <button
-                  onClick={onShowAuthModal}
-                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
-                >
-                  <Headphones className="w-4 h-4" />
-                  Audiobook
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={onShowAuthModal}
-                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
-                >
-                  <Library className="w-4 h-4" />
-                  Library
-                </button>
-                <button
-                  onClick={onShowAuthModal}
-                  className="px-3 py-2.5 bg-white/50 border border-[#D4DAD0] text-[#5F7252]/50 rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer hover:bg-white/70 transition-colors"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Amazon
-                </button>
-              </div>
-              <p className="text-xs text-center text-[#96A888] mt-2">
-                <Lock className="w-3 h-3 inline mr-1" />
-                Create a free account to unlock
-              </p>
+                <Star className="w-4 h-4" />
+                Read reviews on Goodreads
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
+
+            {/* Single Clear CTA */}
+            <button
+              onClick={handleAcceptRecommendation}
+              className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
+            >
+              <BookMarked className="w-5 h-5" />
+              Accept This Recommendation
+            </button>
+            <p className="text-xs text-center text-[#96A888] mt-3">
+              Create a free account to add this to your reading queue
+            </p>
           </div>
 
-          {/* Mission-focused Sign Up CTA */}
-          <div className="bg-[#5F7252]/10 rounded-2xl border border-[#5F7252]/20 p-6 sm:p-8 text-center">
-            <h2 className="font-serif text-xl text-[#4A5940] mb-3">
-              Join the community
-            </h2>
-            <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
-              To encourage a love of reading and support the local ecosystems that make it possible.
-            </p>
+          {/* Value Prop - Why Join */}
+          <div className="bg-white/50 rounded-2xl border border-[#D4DAD0] p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Heart className="w-5 h-5 text-[#E11D48]" />
+                <span className="font-serif text-lg text-[#4A5940]">Sarah's Books</span>
+              </div>
+              <p className="text-sm text-[#5F7252] leading-relaxed">
+                To encourage a love of reading and support the local ecosystems that make it possible.
+              </p>
+            </div>
             
-            <div className="space-y-3 text-left max-w-sm mx-auto mb-6">
+            <div className="space-y-3 max-w-sm mx-auto">
               <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div className="w-5 h-5 rounded-full bg-[#5F7252]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Sparkles className="w-3 h-3 text-[#5F7252]" />
+                </div>
                 <p className="text-sm text-[#5F7252]">
-                  <strong>Personalized recommendations</strong> from Sarah's curated collection and beyond
+                  <strong>Personalized recommendations</strong> from a curated collection
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <BookMarked className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div className="w-5 h-5 rounded-full bg-[#5F7252]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <BookMarked className="w-3 h-3 text-[#5F7252]" />
+                </div>
                 <p className="text-sm text-[#5F7252]">
-                  <strong>Track your reading</strong> with a personal queue and collection
+                  <strong>Track your reading</strong> with a personal queue
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
+                <div className="w-5 h-5 rounded-full bg-[#5F7252]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Users className="w-3 h-3 text-[#5F7252]" />
+                </div>
                 <p className="text-sm text-[#5F7252]">
                   <strong>Share favorites</strong> with friends who love to read
                 </p>
               </div>
-              <div className="flex items-start gap-3">
-                <RefreshCw className="w-5 h-5 text-[#5F7252] flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-[#5F7252]">
-                  <strong>Goodreads compatible</strong> — import your reads or export to Goodreads
-                </p>
-              </div>
             </div>
 
-            <button
-              onClick={onShowAuthModal}
-              className="w-full sm:w-auto px-8 py-3 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors font-medium"
-            >
-              Create Free Account
-            </button>
-            <p className="text-xs text-[#96A888] mt-3">
-              Free forever. No credit card required.
+            <p className="text-xs text-center text-[#96A888] mt-6">
+              Free forever · Goodreads compatible
             </p>
           </div>
         </div>
@@ -286,105 +289,126 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         
-        {/* Header */}
+        {/* Personal Header */}
         <div className="text-center mb-8">
-          <p className="text-sm text-[#7A8F6C] mb-2">A friend recommended this book for you</p>
-          <div className="flex items-center justify-center gap-2">
-            <Heart className="w-5 h-5 text-[#E11D48]" />
-            <span className="font-serif text-lg text-[#4A5940]">Sarah's Books</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252]/10 rounded-full mb-4">
+            <Heart className="w-4 h-4 text-[#E11D48]" />
+            <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
           </div>
+          <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+            {recommenderName} thinks you'll love this book
+          </h1>
         </div>
 
         {/* Book Card */}
         <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6">
           
           {/* Title & Author */}
-          <div className="text-center mb-4">
-            <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+          <div className="text-center mb-6">
+            <h2 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
               {bookData.book_title}
-            </h1>
+            </h2>
             {bookData.book_author && (
               <p className="text-[#7A8F6C]">by {bookData.book_author}</p>
             )}
           </div>
 
-          {/* Book Description */}
-          {bookData.book_description && (
-            <p className="text-sm text-[#5F7252] leading-relaxed mb-6 text-center">
-              {bookData.book_description}
-            </p>
-          )}
-
-          {/* Recommendation Note */}
+          {/* Why they recommend it - most important */}
           {bookData.recommendation_note && (
-            <div className="bg-white/50 rounded-xl p-4 mb-6 border border-[#E8EBE4]">
-              <p className="text-sm text-[#96A888] mb-2">Why they recommend it:</p>
-              <p className="text-[#5F7252] leading-relaxed italic">
+            <div className="bg-white rounded-xl p-5 mb-6 border border-[#E8EBE4]">
+              <p className="text-sm text-[#96A888] mb-2 font-medium">
+                Why {recommenderName} thinks you'll love it:
+              </p>
+              <p className="text-[#4A5940] leading-relaxed text-lg italic">
                 "{bookData.recommendation_note}"
               </p>
             </div>
           )}
 
+          {/* Book Description */}
+          {bookData.book_description && (
+            <div className="mb-6">
+              <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
+              <p className="text-sm text-[#5F7252] leading-relaxed">
+                {bookData.book_description}
+              </p>
+            </div>
+          )}
+
+          {/* Goodreads Link */}
+          <div className="flex items-center justify-center gap-4 mb-6 py-3 border-t border-b border-[#E8EBE4]">
+            <a
+              href={getGoodreadsUrl(bookData.book_title, bookData.book_author)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors"
+            >
+              <Star className="w-4 h-4" />
+              Read reviews on Goodreads
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             
             {/* Add to Reading Queue */}
             {!isInQueue && !addedToQueue ? (
               <button
                 onClick={handleAddToQueue}
-                className="w-full px-4 py-3 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2 font-medium"
+                className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
               >
                 <BookMarked className="w-5 h-5" />
                 Add to My Reading Queue
               </button>
             ) : (
-              <div className="w-full px-4 py-3 bg-[#5F7252]/10 text-[#5F7252] rounded-lg flex items-center justify-center gap-2 font-medium">
-                <BookMarked className="w-5 h-5" />
+              <div className="w-full px-6 py-4 bg-[#5F7252]/10 text-[#5F7252] rounded-xl flex items-center justify-center gap-3 font-medium text-lg">
+                <Check className="w-5 h-5" />
                 {addedToQueue ? 'Added to Your Queue!' : 'Already in Your Queue'}
               </div>
             )}
 
-            {/* Purchase Options - Local Bookstore, Audiobook, Library, Amazon */}
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href={getBookshopUrl(bookData.book_title, bookData.book_author)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Local Bookstore
-              </a>
-              <a
-                href={getAudiobookUrl(bookData.book_title, bookData.book_author)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
-              >
-                <Headphones className="w-4 h-4" />
-                Audiobook
-              </a>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href={getLibraryUrl(bookData.book_title, bookData.book_author)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
-              >
-                <Library className="w-4 h-4" />
-                Library
-              </a>
-              <a
-                href={getAmazonUrl(bookData.book_title, bookData.book_author)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-2 text-sm"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Amazon
-              </a>
+            {/* Purchase Options */}
+            <div className="pt-2">
+              <p className="text-xs text-[#96A888] text-center mb-3">Get this book:</p>
+              <div className="grid grid-cols-4 gap-2">
+                <a
+                  href={getBookshopUrl(bookData.book_title, bookData.book_author)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex flex-col items-center justify-center gap-1 text-xs"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Bookstore
+                </a>
+                <a
+                  href={getAudiobookUrl(bookData.book_title, bookData.book_author)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex flex-col items-center justify-center gap-1 text-xs"
+                >
+                  <Headphones className="w-4 h-4" />
+                  Audio
+                </a>
+                <a
+                  href={getLibraryUrl(bookData.book_title, bookData.book_author)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-lg hover:bg-[#F8F6EE] transition-colors flex flex-col items-center justify-center gap-1 text-xs"
+                >
+                  <Library className="w-4 h-4" />
+                  Library
+                </a>
+                <a
+                  href={getAmazonUrl(bookData.book_title, bookData.book_author)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2 py-2.5 bg-white border border-[#D4DAD0] text-[#5F7252]/60 rounded-lg hover:bg-[#F8F6EE] transition-colors flex flex-col items-center justify-center gap-1 text-xs"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Amazon
+                </a>
+              </div>
             </div>
           </div>
         </div>

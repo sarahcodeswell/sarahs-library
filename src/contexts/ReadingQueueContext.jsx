@@ -32,7 +32,31 @@ export function ReadingQueueProvider({ children }) {
 
   useEffect(() => {
     loadReadingQueue();
-  }, [loadReadingQueue]);
+    
+    // Check for pending recommendation from shared link after sign-up
+    if (user) {
+      const pendingRec = sessionStorage.getItem('pendingRecommendation');
+      if (pendingRec) {
+        try {
+          const bookData = JSON.parse(pendingRec);
+          sessionStorage.removeItem('pendingRecommendation');
+          // Add to queue after a short delay to ensure queue is loaded
+          setTimeout(async () => {
+            await db.addToReadingQueue(user.id, {
+              title: bookData.book_title,
+              author: bookData.book_author,
+              status: 'want_to_read',
+              description: bookData.book_description
+            });
+            loadReadingQueue();
+          }, 500);
+        } catch (err) {
+          console.error('Error processing pending recommendation:', err);
+          sessionStorage.removeItem('pendingRecommendation');
+        }
+      }
+    }
+  }, [loadReadingQueue, user]);
 
   const addToQueue = useCallback(async (book) => {
     if (!user) {

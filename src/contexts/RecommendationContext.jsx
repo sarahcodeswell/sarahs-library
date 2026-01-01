@@ -95,8 +95,11 @@ export function RecommendationProvider({ children }) {
       return { success: true, data: { shareUrl } };
     }
 
-    // Create new share link
-    const { data, error } = await db.createShareLink(recommendationId);
+    // Get user's display name for the share
+    const recommenderName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'A friend';
+
+    // Create new share link with recommender name
+    const { data, error } = await db.createShareLink(recommendationId, recommenderName);
     
     if (error) {
       return { success: false, error: error.message };

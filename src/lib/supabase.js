@@ -425,7 +425,7 @@ export const db = {
     }
   },
 
-  createShareLink: async (recommendationId) => {
+  createShareLink: async (recommendationId, recommenderName = null) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
@@ -433,12 +433,18 @@ export const db = {
       const shareToken = Math.random().toString(36).substring(2, 15) + 
                         Math.random().toString(36).substring(2, 15);
       
+      const insertData = {
+        recommendation_id: recommendationId,
+        share_token: shareToken
+      };
+      
+      if (recommenderName) {
+        insertData.recommender_name = recommenderName;
+      }
+      
       const { data, error } = await supabase
         .from('shared_recommendations')
-        .insert({
-          recommendation_id: recommendationId,
-          share_token: shareToken
-        })
+        .insert(insertData)
         .select()
         .single();
       
@@ -467,6 +473,7 @@ export const db = {
         .from('shared_recommendations')
         .select(`
           *,
+          recommender_name,
           user_recommendations (
             book_title,
             book_author,
