@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, Share2, ChevronDown, Star, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Share2, ChevronDown, Star } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
@@ -11,8 +11,18 @@ import { generateBookDescriptions } from '../lib/descriptionService';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 
+// Shimmer placeholder for loading descriptions
+function DescriptionShimmer() {
+  return (
+    <div className="mt-2 space-y-1.5 animate-pulse">
+      <div className="h-3 bg-[#E8EBE4] rounded w-full"></div>
+      <div className="h-3 bg-[#E8EBE4] rounded w-4/5"></div>
+    </div>
+  );
+}
+
 // Expandable book card component for consistent UI
-function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
+function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoadingDescription }) {
   const [expanded, setExpanded] = useState(false);
   const [isLongDescription, setIsLongDescription] = useState(false);
   const descriptionRef = React.useRef(null);
@@ -47,8 +57,10 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
             </div>
           )}
           
-          {/* Description - shown by default, expandable only if long */}
-          {hasDescription && (
+          {/* Description - shimmer while loading, then show content */}
+          {isLoadingDescription && !hasDescription ? (
+            <DescriptionShimmer />
+          ) : hasDescription ? (
             <div className="mt-2">
               <p 
                 ref={descriptionRef}
@@ -68,7 +80,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
                 </button>
               )}
             </div>
-          )}
+          ) : null}
           
           {/* Rating */}
           <div className="mt-2">
@@ -121,8 +133,8 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [userBooks, setUserBooks] = useState([]);
   const [sortBy, setSortBy] = useState('date_added'); // 'date_added' or 'title'
   const [recommendPromptBook, setRecommendPromptBook] = useState(null); // For showing recommend prompt after high rating
-  const [isGeneratingDescriptions, setIsGeneratingDescriptions] = useState(false);
-  const [descriptionProgress, setDescriptionProgress] = useState({ current: 0, total: 0 });
+  const [hasBackfilledDescriptions, setHasBackfilledDescriptions] = useState(false);
+  const [loadingDescriptionIds, setLoadingDescriptionIds] = useState(new Set()); // Track which books are loading descriptions
 
   // Check if current user is master admin (Sarah)
   const isMasterAdmin = user?.email === MASTER_ADMIN_EMAIL;
@@ -285,25 +297,31 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     return Array.from(letters).sort();
   }, [sortedBooks]);
 
-  // Count books without descriptions (for backfill feature)
-  const booksWithoutDescriptions = useMemo(() => {
-    return readBooks.filter(book => !book.description);
-  }, [readBooks]);
-
-  // Backfill descriptions for books that don't have them
-  const handleGenerateDescriptions = async () => {
-    if (booksWithoutDescriptions.length === 0) return;
+  // Auto-backfill descriptions for books that don't have them (runs once on load)
+  useEffect(() => {
+    if (hasBackfilledDescriptions || readBooks.length === 0) return;
     
-    setIsGeneratingDescriptions(true);
-    setDescriptionProgress({ current: 0, total: booksWithoutDescriptions.length });
+    const booksNeedingDescriptions = readBooks.filter(
+      book => !book.description && book.source === 'reading_queue'
+    );
+    
+    if (booksNeedingDescriptions.length === 0) {
+      setHasBackfilledDescriptions(true);
+      return;
+    }
 
-    try {
-      // Generate descriptions in batches
+    // Mark all books needing descriptions as loading
+    setLoadingDescriptionIds(new Set(booksNeedingDescriptions.map(b => b.id)));
+
+    // Run backfill in background
+    const backfillDescriptions = async () => {
+      setHasBackfilledDescriptions(true); // Prevent re-running
+      
       const batchSize = 10;
       let updatedCount = 0;
 
-      for (let i = 0; i < booksWithoutDescriptions.length; i += batchSize) {
-        const batch = booksWithoutDescriptions.slice(i, i + batchSize);
+      for (let i = 0; i < booksNeedingDescriptions.length; i += batchSize) {
+        const batch = booksNeedingDescriptions.slice(i, i + batchSize);
         const booksForApi = batch.map(b => ({ 
           title: b.book_title, 
           author: b.book_author 
@@ -317,35 +335,41 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             const key = `${book.book_title.toLowerCase()}|${(book.book_author || '').toLowerCase()}`;
             const description = descriptions[key];
 
-            if (description && book.source === 'reading_queue') {
-              // Update the book in reading_queue
+            if (description) {
               await updateQueueItem(book.id, { description });
               updatedCount++;
             }
+            
+            // Remove from loading state
+            setLoadingDescriptionIds(prev => {
+              const next = new Set(prev);
+              next.delete(book.id);
+              return next;
+            });
           }
         } catch (batchError) {
           console.error('Error generating batch:', batchError);
+          // Remove batch from loading state on error
+          batch.forEach(book => {
+            setLoadingDescriptionIds(prev => {
+              const next = new Set(prev);
+              next.delete(book.id);
+              return next;
+            });
+          });
         }
-
-        setDescriptionProgress({ current: Math.min(i + batchSize, booksWithoutDescriptions.length), total: booksWithoutDescriptions.length });
       }
-
-      track('descriptions_backfilled', {
-        total_books: booksWithoutDescriptions.length,
-        updated_count: updatedCount
-      });
 
       if (updatedCount > 0) {
-        alert(`Generated descriptions for ${updatedCount} book${updatedCount !== 1 ? 's' : ''}!`);
+        track('descriptions_auto_backfilled', {
+          total_books: booksNeedingDescriptions.length,
+          updated_count: updatedCount
+        });
       }
-    } catch (error) {
-      console.error('Error generating descriptions:', error);
-      alert('Failed to generate descriptions. Please try again.');
-    } finally {
-      setIsGeneratingDescriptions(false);
-      setDescriptionProgress({ current: 0, total: 0 });
-    }
-  };
+    };
+
+    backfillDescriptions();
+  }, [readBooks, hasBackfilledDescriptions, updateQueueItem]);
 
   const handleRemoveBook = async (book) => {
     // Prevent removing curated books for master admin
@@ -564,39 +588,10 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         </button>
 
         <div className="mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">My Collection</h1>
-              <p className="text-[#7A8F6C] text-sm font-light">
-                {readBooks.length} book{readBooks.length !== 1 ? 's' : ''} you've read
-              </p>
-            </div>
-            
-            {/* Generate Descriptions button - only show if there are books without descriptions */}
-            {booksWithoutDescriptions.length > 0 && (
-              <button
-                onClick={handleGenerateDescriptions}
-                disabled={isGeneratingDescriptions}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title={`Generate descriptions for ${booksWithoutDescriptions.length} books`}
-              >
-                {isGeneratingDescriptions ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span className="hidden sm:inline">
-                      {descriptionProgress.current}/{descriptionProgress.total}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Add Descriptions ({booksWithoutDescriptions.length})</span>
-                    <span className="sm:hidden">{booksWithoutDescriptions.length}</span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">My Collection</h1>
+          <p className="text-[#7A8F6C] text-sm font-light">
+            {readBooks.length} book{readBooks.length !== 1 ? 's' : ''} you've read
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -687,6 +682,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                 onRatingChange={handleRatingChange}
                 onRecommend={handleRecommend}
                 onRemove={handleRemoveBook}
+                isLoadingDescription={loadingDescriptionIds.has(book.id)}
               />
             ))}
           </div>
