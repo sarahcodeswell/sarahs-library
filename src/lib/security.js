@@ -1,4 +1,5 @@
 // Security utilities and middleware
+import { kv } from '@vercel/kv';
 
 // Content Security Policy headers
 export const securityHeaders = {
@@ -65,6 +66,17 @@ export const sanitizeInput = {
 };
 
 // Rate limiting utilities
+
+// In-memory fallback for development
+const memoryBlockedIPs = new Map(); // ip -> expiresAt
+
+/**
+ * Check if KV is available
+ */
+function isKVAvailable() {
+  return typeof kv !== 'undefined' && process.env.KV_REST_API_URL;
+}
+
 export const rateLimitUtils = {
   // Generate user fingerprint
   generateFingerprint: (req) => {
@@ -92,18 +104,57 @@ export const rateLimitUtils = {
     return suspiciousPatterns.some(pattern => pattern.test(userAgent));
   },
 
-  // Block suspicious IPs (simple implementation)
-  blockedIPs: new Set(), // In production, use Redis or database
-  
-  isIPBlocked: (ip) => {
-    return rateLimitUtils.blockedIPs.has(ip);
+  // Check if IP is blocked - async for KV support
+  isIPBlocked: async (ip) => {
+    if (isKVAvailable()) {
+      try {
+        const blocked = await kv.get(`blocked:${ip}`);
+        return !!blocked;
+      } catch (err) {
+        console.error('[Security] KV error checking blocked IP:', err.message);
+        return false;
+      }
+    }
+    
+    // Memory fallback
+    const expiresAt = memoryBlockedIPs.get(ip);
+    if (!expiresAt) return false;
+    if (Date.now() > expiresAt) {
+      memoryBlockedIPs.delete(ip);
+      return false;
+    }
+    return true;
   },
 
-  blockIP: (ip, duration = 3600000) => { // 1 hour default
-    rateLimitUtils.blockedIPs.add(ip);
-    setTimeout(() => {
-      rateLimitUtils.blockedIPs.delete(ip);
-    }, duration);
+  // Block an IP - async for KV support
+  blockIP: async (ip, duration = 3600000) => { // 1 hour default
+    if (isKVAvailable()) {
+      try {
+        await kv.set(`blocked:${ip}`, { blockedAt: Date.now() }, { px: duration });
+        return true;
+      } catch (err) {
+        console.error('[Security] KV error blocking IP:', err.message);
+      }
+    }
+    
+    // Memory fallback
+    memoryBlockedIPs.set(ip, Date.now() + duration);
+    return true;
+  },
+
+  // Unblock an IP
+  unblockIP: async (ip) => {
+    if (isKVAvailable()) {
+      try {
+        await kv.del(`blocked:${ip}`);
+        return true;
+      } catch (err) {
+        console.error('[Security] KV error unblocking IP:', err.message);
+      }
+    }
+    
+    memoryBlockedIPs.delete(ip);
+    return true;
   }
 };
 
@@ -154,25 +205,28 @@ export const authSecurity = {
 
 // API security middleware
 export const createSecurityMiddleware = () => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     // Apply security headers
     Object.entries(securityHeaders).forEach(([header, value]) => {
-      res.set(header, value);
+      res.setHeader(header, value);
     });
 
-    // Check for blocked IPs
-    const clientIP = req.ip || req.connection.remoteAddress;
-    if (rateLimitUtils.isIPBlocked(clientIP)) {
+    // Check for blocked IPs (now async)
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.connection?.remoteAddress;
+    const isBlocked = await rateLimitUtils.isIPBlocked(clientIP);
+    if (isBlocked) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
     // Check for suspicious requests
     if (rateLimitUtils.isSuspiciousRequest(req)) {
-      console.warn('Suspicious request detected:', {
-        ip: clientIP,
-        userAgent: req.headers['user-agent'],
-        path: req.path
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[Security] Suspicious request:', {
+          ip: clientIP,
+          userAgent: req.headers['user-agent'],
+          path: req.path
+        });
+      }
     }
 
     // Validate request size

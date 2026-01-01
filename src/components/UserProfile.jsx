@@ -5,6 +5,8 @@ import { db, supabase, auth } from '../lib/supabase';
 import booksData from '../books.json';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
+const isDev = import.meta.env.DEV;
+const devLog = (...args) => isDev && console.log(...args);
 
 export default function UserProfile({ tasteProfile }) {
   const { user, signOut, updateUserMetadata } = useUser();
@@ -52,7 +54,7 @@ export default function UserProfile({ tasteProfile }) {
     if (!user) return;
     
     try {
-      console.log('[Profile] Loading stats for user:', user.id);
+      devLog('[Profile] Loading stats for user:', user.id);
       
       // Check if user is master admin
       const isMasterAdmin = user.email === MASTER_ADMIN_EMAIL;
@@ -62,14 +64,14 @@ export default function UserProfile({ tasteProfile }) {
       if (userBooksError) {
         console.error('[Profile] Error loading user_books:', userBooksError);
       }
-      console.log('[Profile] User books loaded:', { total: userBooks?.length });
+      devLog('[Profile] User books loaded:', { total: userBooks?.length });
       
       // Get reading queue data
       const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
       if (queueError) {
         console.error('[Profile] Error loading reading queue:', queueError);
       }
-      console.log('[Profile] Reading queue loaded:', { total: queue?.length });
+      devLog('[Profile] Reading queue loaded:', { total: queue?.length });
       
       // Collection = user_books + books marked as 'finished' in reading_queue
       // Note: Admin's catalog books are now in reading_queue, so no special handling needed
@@ -89,8 +91,8 @@ export default function UserProfile({ tasteProfile }) {
         queueCount: queueBooks.length,
         recommendationsCount: recommendations?.length || 0
       };
-      console.log('[Profile] Stats calculated:', stats);
-      console.log('[Profile] User books:', userBooks?.length || 0, 'Finished:', finishedBooks.length);
+      devLog('[Profile] Stats calculated:', stats);
+      devLog('[Profile] User books:', userBooks?.length || 0, 'Finished:', finishedBooks.length);
       setStats(stats);
     } catch (error) {
       console.error('[Profile] Error loading stats:', error);
@@ -249,7 +251,7 @@ export default function UserProfile({ tasteProfile }) {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
-    console.log('[Profile] Photo upload started:', { file: file?.name, size: file?.size, type: file?.type, userId: user?.id });
+    devLog('[Profile] Photo upload started:', { file: file?.name, size: file?.size, type: file?.type, userId: user?.id });
     if (!file || !user) {
       console.error('[Profile] Photo upload failed: missing file or user');
       return;
@@ -276,7 +278,7 @@ export default function UserProfile({ tasteProfile }) {
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
-      console.log('[Profile] Uploading to storage:', fileName);
+      devLog('[Profile] Uploading to storage:', fileName);
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(fileName, file, { upsert: true });
@@ -285,7 +287,7 @@ export default function UserProfile({ tasteProfile }) {
         console.error('[Profile] Storage upload error:', uploadError);
         throw uploadError;
       }
-      console.log('[Profile] Storage upload successful');
+      devLog('[Profile] Storage upload successful');
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -294,13 +296,13 @@ export default function UserProfile({ tasteProfile }) {
 
       // Get fresh profile data from database before updating
       const { data: currentProfile } = await db.getTasteProfile(user.id);
-      console.log('[Profile] Current profile from DB:', currentProfile);
-      console.log('[Profile] Updating taste profile with photo URL:', publicUrl);
+      devLog('[Profile] Current profile from DB:', currentProfile);
+      devLog('[Profile] Updating taste profile with photo URL:', publicUrl);
       const result = await db.upsertTasteProfile(user.id, {
         ...(currentProfile || {}),
         profile_photo_url: publicUrl
       });
-      console.log('[Profile] Taste profile update result:', result);
+      devLog('[Profile] Taste profile update result:', result);
 
       if (result.error) {
         throw result.error;
@@ -337,13 +339,13 @@ export default function UserProfile({ tasteProfile }) {
     try {
       // Get fresh profile data from database before updating
       const { data: currentProfile } = await db.getTasteProfile(user.id);
-      console.log('[Profile] Current profile from DB:', currentProfile);
-      console.log('[Profile] Adding author to profile');
+      devLog('[Profile] Current profile from DB:', currentProfile);
+      devLog('[Profile] Adding author to profile');
       const result = await db.upsertTasteProfile(user.id, {
         ...(currentProfile || {}),
         favorite_authors: updatedAuthors
       });
-      console.log('[Profile] Author add result:', result);
+      devLog('[Profile] Author add result:', result);
       
       if (result.error) {
         throw result.error;
@@ -370,13 +372,13 @@ export default function UserProfile({ tasteProfile }) {
     try {
       // Get fresh profile data from database before updating
       const { data: currentProfile } = await db.getTasteProfile(user.id);
-      console.log('[Profile] Current profile from DB:', currentProfile);
-      console.log('[Profile] Removing author from profile');
+      devLog('[Profile] Current profile from DB:', currentProfile);
+      devLog('[Profile] Removing author from profile');
       const result = await db.upsertTasteProfile(user.id, {
         ...(currentProfile || {}),
         favorite_authors: updatedAuthors
       });
-      console.log('[Profile] Author remove result:', result);
+      devLog('[Profile] Author remove result:', result);
       
       if (result.error) {
         throw result.error;
@@ -400,7 +402,7 @@ export default function UserProfile({ tasteProfile }) {
     setSaveMessage('');
 
     try {
-      console.log('[Profile] Saving reading preferences:', readingPreferences.substring(0, 50) + '...');
+      devLog('[Profile] Saving reading preferences:', readingPreferences.substring(0, 50) + '...');
       const { data, error } = await auth.updateUser({
         data: { reading_preferences: readingPreferences }
       });
@@ -409,11 +411,11 @@ export default function UserProfile({ tasteProfile }) {
         console.error('[Profile] Auth update error:', error);
         throw error;
       }
-      console.log('[Profile] Auth update successful:', data?.user?.user_metadata);
+      devLog('[Profile] Auth update successful:', data?.user?.user_metadata);
 
       // Update local user context
       if (updateUserMetadata) {
-        console.log('[Profile] Updating local user context');
+        devLog('[Profile] Updating local user context');
         updateUserMetadata({ reading_preferences: readingPreferences });
       } else {
         console.warn('[Profile] updateUserMetadata not available');

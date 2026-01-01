@@ -204,7 +204,9 @@ export const db = {
       return { data: null, error: { message: 'Supabase not configured' } };
     }
     
-    console.log('updateReadingQueueStatus: Updating', { id, status });
+    if (import.meta.env.DEV) {
+      console.log('updateReadingQueueStatus: Updating', { id, status });
+    }
     
     try {
       const { data, error } = await supabase
@@ -215,7 +217,7 @@ export const db = {
       
       if (error) {
         console.error('updateReadingQueueStatus: Database error', error);
-      } else {
+      } else if (import.meta.env.DEV) {
         console.log('updateReadingQueueStatus: Success', data);
       }
       
@@ -579,7 +581,9 @@ export const db = {
       const dismissedTitles = dismissedResult.data?.map(row => row.book_title) || [];
       const allTitles = [...new Set([...queueTitles, ...dismissedTitles])];
       
-      console.log(`[ExclusionList] Queue: ${queueTitles.length}, Dismissed: ${dismissedTitles.length}, Total: ${allTitles.length}`);
+      if (import.meta.env.DEV) {
+        console.log(`[ExclusionList] Queue: ${queueTitles.length}, Dismissed: ${dismissedTitles.length}, Total: ${allTitles.length}`);
+      }
       
       return { data: allTitles, error: null };
     } catch (err) {

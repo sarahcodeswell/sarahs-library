@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/supabase';
 import { useUser } from './UserContext';
+import logger from '../lib/logger';
 
 const ReadingQueueContext = createContext(null);
 
@@ -64,7 +65,7 @@ export function ReadingQueueProvider({ children }) {
       return { success: false, error: 'Not authenticated' };
     }
 
-    console.log('[addToQueue] Adding book with data:', book);
+    logger.tagged('addToQueue', 'Adding book with data:', book);
 
     const optimisticBook = {
       id: `temp-${Date.now()}`,
