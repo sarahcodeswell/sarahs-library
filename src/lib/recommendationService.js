@@ -2,7 +2,7 @@
 // Handles all recommendation logic with clear separation of concerns
 
 import { db } from './supabase';
-import { findSimilarBooks, getBooksByThemes } from './vectorSearch';
+import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks } from './vectorSearch';
 
 /**
  * Build system prompt for Claude
@@ -189,11 +189,11 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       messageParts.push(exclusionMessage);
     }
 
-    // Add vector search context if available
+    // Add vector search context if available - now includes cross-user learning
     let vectorContext = '';
     try {
+      // 1. Search Sarah's curated catalog
       if (themeFilters && themeFilters.length > 0) {
-        // Get books by themes first
         const themeBooks = await getBooksByThemes(themeFilters, 10);
         if (themeBooks.length > 0) {
           vectorContext = `\n\nSARAH'S CURATED BOOKS THAT MATCH YOUR THEMES:\n${themeBooks.slice(0, 5).map((book, i) => 
@@ -201,7 +201,6 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
           ).join('\n\n')}`;
         }
       } else {
-        // Use semantic search for general queries
         const similarBooks = await findSimilarBooks(userMessage, 5, 0.6);
         if (similarBooks.length > 0) {
           vectorContext = `\n\nSARAH'S CURATED BOOKS SIMILAR TO YOUR REQUEST:\n${similarBooks.map((book, i) => 
@@ -209,8 +208,33 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
           ).join('\n\n')}`;
         }
       }
+
+      // 2. Cross-user learning: Find books loved by other readers with similar taste
+      const crowdFavorites = await findSimilarBooksAcrossUsers(userMessage, 5, 0.5);
+      if (crowdFavorites.length > 0) {
+        const crowdContext = crowdFavorites
+          .filter(b => b.avg_rating >= 4 && b.user_count >= 1)
+          .slice(0, 3)
+          .map((book, i) => 
+            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - Avg rating: ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
+          ).join('\n');
+        
+        if (crowdContext) {
+          vectorContext += `\n\n📚 BOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
+        }
+      }
+
+      // 3. Get overall popular books if no specific matches
+      if (!vectorContext) {
+        const popularBooks = await getPopularBooks(4, 1);
+        if (popularBooks.length > 0) {
+          vectorContext = `\n\n🌟 HIGHLY RATED BY OUR COMMUNITY:\n${popularBooks.slice(0, 3).map((book, i) => 
+            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg (${book.user_count} readers)`
+          ).join('\n')}`;
+        }
+      }
     } catch (error) {
-      console.log('Vector search unavailable, using general recommendations');
+      console.log('Vector search unavailable, using general recommendations:', error.message);
     }
 
     // Add user request

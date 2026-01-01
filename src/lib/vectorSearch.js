@@ -133,3 +133,106 @@ export async function getRandomBooks(count = 10, excludeTitles = []) {
     return [];
   }
 }
+
+/**
+ * Search across ALL users' reading queues for similar books
+ * This enables cross-user learning - books that many users loved become stronger signals
+ * @param {string} query - User's query text
+ * @param {number} limit - Maximum number of results
+ * @param {number} threshold - Minimum similarity threshold
+ * @returns {Promise<Array>} Array of similar books with aggregated ratings
+ */
+export async function findSimilarBooksAcrossUsers(query, limit = 10, threshold = 0.6) {
+  try {
+    // Generate embedding for the query
+    const embeddingResponse = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: query }),
+    });
+
+    if (!embeddingResponse.ok) {
+      throw new Error('Failed to generate query embedding');
+    }
+
+    const { embedding } = await embeddingResponse.json();
+
+    // Search reading_queue across all users
+    const { data, error } = await supabase.rpc('find_popular_similar_books', {
+      query_embedding: embedding,
+      limit_count: limit,
+      similarity_threshold: threshold
+    });
+
+    if (error) {
+      console.error('Cross-user vector search error:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Cross-user vector search failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Get highly-rated books across all users (crowd wisdom)
+ * @param {number} minRating - Minimum average rating
+ * @param {number} minUsers - Minimum number of users who rated
+ * @param {string[]} genres - Optional genre filter
+ * @returns {Promise<Array>} Array of popular books
+ */
+export async function getPopularBooks(minRating = 4, minUsers = 2, genres = []) {
+  try {
+    const { data, error } = await supabase.rpc('get_popular_books', {
+      min_rating: minRating,
+      min_users: minUsers,
+      genre_filter: genres.length > 0 ? genres : null
+    });
+
+    if (error) {
+      console.error('Popular books error:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Popular books failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Get genre distribution from user's collection
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Genre counts
+ */
+export async function getUserGenreProfile(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('reading_queue')
+      .select('genres, rating')
+      .eq('user_id', userId)
+      .not('genres', 'is', null);
+
+    if (error) {
+      console.error('Genre profile error:', error);
+      return {};
+    }
+
+    // Aggregate genres weighted by rating
+    const genreCounts = {};
+    (data || []).forEach(book => {
+      const weight = book.rating || 3; // Default weight of 3 for unrated
+      (book.genres || []).forEach(genre => {
+        genreCounts[genre] = (genreCounts[genre] || 0) + weight;
+      });
+    });
+
+    return genreCounts;
+  } catch (error) {
+    console.error('Genre profile failed:', error);
+    return {};
+  }
+}

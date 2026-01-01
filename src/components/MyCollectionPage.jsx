@@ -145,6 +145,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBooks, setUserBooks] = useState([]);
   const [sortBy, setSortBy] = useState('date_added'); // 'date_added', 'title', or 'author'
+  const [selectedGenre, setSelectedGenre] = useState(null); // Genre filter
   const [recommendPromptBook, setRecommendPromptBook] = useState(null); // For showing recommend prompt after high rating
   const [hasBackfilledDescriptions, setHasBackfilledDescriptions] = useState(false);
   const [loadingDescriptionIds, setLoadingDescriptionIds] = useState(new Set()); // Track which books are loading descriptions
@@ -305,8 +306,15 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       );
     }
     
+    // Filter by genre
+    if (selectedGenre) {
+      books = books.filter(book => 
+        book.genres?.some(g => g.toLowerCase().includes(selectedGenre.toLowerCase()))
+      );
+    }
+    
     return books;
-  }, [sortedBooks, searchQuery, selectedLetter, selectedRating]);
+  }, [sortedBooks, searchQuery, selectedLetter, selectedRating, selectedGenre]);
 
   // Get available letters from books
   const availableLetters = useMemo(() => {
@@ -318,6 +326,21 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       }
     });
     return Array.from(letters).sort();
+  }, [sortedBooks]);
+
+  // Get available genres from books
+  const availableGenres = useMemo(() => {
+    const genreCounts = {};
+    sortedBooks.forEach(book => {
+      (book.genres || []).forEach(genre => {
+        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+      });
+    });
+    // Sort by count, return top genres
+    return Object.entries(genreCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .map(([genre]) => genre);
   }, [sortedBooks]);
 
   // Auto-backfill descriptions for books that don't have them (runs once on load)
@@ -653,6 +676,18 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
             <option value="1">1 Star</option>
             <option value="0">Unrated</option>
           </select>
+          {availableGenres.length > 0 && (
+            <select
+              value={selectedGenre || 'all'}
+              onChange={(e) => setSelectedGenre(e.target.value === 'all' ? null : e.target.value)}
+              className="px-3 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+            >
+              <option value="all">All Genres</option>
+              {availableGenres.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* A-Z Letter Navigation */}
