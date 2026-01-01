@@ -13,10 +13,22 @@ const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 // Expandable book card component for consistent UI
 function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
   const [expanded, setExpanded] = useState(false);
+  const [isLongDescription, setIsLongDescription] = useState(false);
+  const descriptionRef = React.useRef(null);
   
   // Description is already resolved in readBooks (with catalog fallback)
   const description = book.description;
   const hasDescription = !!description;
+  
+  // Check if description overflows 2 lines
+  React.useEffect(() => {
+    if (descriptionRef.current) {
+      const lineHeight = parseFloat(getComputedStyle(descriptionRef.current).lineHeight);
+      const height = descriptionRef.current.scrollHeight;
+      // If more than ~2.5 lines, consider it long
+      setIsLongDescription(height > lineHeight * 2.5);
+    }
+  }, [description]);
 
   return (
     <div className="px-5 py-4">
@@ -42,41 +54,25 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove }) {
             />
           </div>
           
-          {/* Description section with expand/collapse */}
+          {/* Description - shown by default, expandable only if long */}
           {hasDescription && (
             <div className="mt-3">
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1.5 text-xs font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              <p 
+                ref={descriptionRef}
+                className={`text-xs text-[#5F7252] leading-relaxed ${!expanded && isLongDescription ? 'line-clamp-2' : ''}`}
               >
-                <span>Description</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-              </button>
+                {description}
+              </p>
               
-              {expanded && (
-                <div className="mt-2">
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{description}</p>
-                  
-                  {/* Goodreads link */}
-                  <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
-                    <a
-                      href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + (book.book_author || ''))}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        track('read_reviews_clicked', { 
-                          book_title: book.book_title,
-                          source: 'collection'
-                        });
-                      }}
-                      className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
-                    >
-                      <Star className="w-3.5 h-3.5" />
-                      Read Reviews on Goodreads
-                    </a>
-                  </div>
-                </div>
+              {/* Only show expand/collapse if description is long */}
+              {isLongDescription && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
+                >
+                  <span>{expanded ? 'Show less' : 'Show more'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                </button>
               )}
             </div>
           )}
