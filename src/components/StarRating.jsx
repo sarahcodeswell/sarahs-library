@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, HelpCircle, Sparkles } from 'lucide-react';
+import { Heart, HelpCircle } from 'lucide-react';
 
 // Gradient heart colors from lightest to full dusty rose (#C97B7B)
 const heartColors = {
@@ -47,10 +47,10 @@ function RatingLegend({ isOpen, onClose, anchorRef }) {
       className="absolute left-0 top-full mt-2 z-50 bg-white rounded-xl shadow-lg border border-[#E8EBE4] p-4 w-64"
     >
       <div className="text-xs font-medium text-[#4A5940] mb-3">Rating Guide</div>
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {[1, 2, 3, 4, 5].map((value) => (
-          <div key={value} className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1">
+          <div key={value} className="flex items-center gap-4">
+            <div className="flex items-center gap-0.5 flex-shrink-0">
               {[1, 2, 3, 4, 5].map((heart) => (
                 <Heart
                   key={heart}
@@ -62,9 +62,8 @@ function RatingLegend({ isOpen, onClose, anchorRef }) {
                 />
               ))}
             </div>
-            <span className="text-xs text-[#5F7252] italic flex items-center gap-1">
+            <span className="text-xs text-[#5F7252] italic text-right flex-1">
               {ratingLabels[value]}
-              {value === 5 && <Sparkles className="w-3 h-3 text-[#CE9494]" />}
             </span>
           </div>
         ))}
