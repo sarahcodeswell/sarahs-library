@@ -22,7 +22,7 @@ function DescriptionShimmer() {
 }
 
 // Expandable book card component for consistent UI
-function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoadingDescription }) {
+function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoadingDescription, showRatingLegend = false }) {
   const [expanded, setExpanded] = useState(false);
   const [isLongDescription, setIsLongDescription] = useState(false);
   const descriptionRef = React.useRef(null);
@@ -89,6 +89,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
               onRatingChange={(newRating) => onRatingChange(book, newRating)}
               readOnly={false}
               size="sm"
+              showLegend={showRatingLegend}
             />
           </div>
           
@@ -675,7 +676,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           </div>
         ) : (
           <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] shadow-sm divide-y divide-[#E8EBE4]">
-            {filteredBooks.map((book) => (
+            {filteredBooks.map((book, index) => (
               <CollectionBookCard
                 key={book.id}
                 book={book}
@@ -683,6 +684,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
                 onRecommend={handleRecommend}
                 onRemove={handleRemoveBook}
                 isLoadingDescription={loadingDescriptionIds.has(book.id)}
+                showRatingLegend={index === 0}
               />
             ))}
           </div>
