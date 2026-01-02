@@ -274,7 +274,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           <div className="bg-white/50 rounded-2xl border border-[#D4DAD0] p-6 sm:p-8">
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Heart className="w-5 h-5 text-[#E11D48]" />
+                <Heart className="w-5 h-5 text-[#C97B7B] fill-[#C97B7B]" />
                 <span className="font-serif text-lg text-[#4A5940]">Sarah's Books</span>
               </div>
               <p className="text-sm text-[#5F7252] leading-relaxed">
@@ -310,7 +310,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             </div>
 
             <p className="text-xs text-center text-[#96A888] mt-6">
-              Already use Goodreads? No problem — Sarah's Books works alongside it.
+              <strong>Already use Goodreads?</strong> No problem — Sarah's Books works alongside it.
             </p>
           </div>
         </div>
