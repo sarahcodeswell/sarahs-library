@@ -119,8 +119,12 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     item => item.book_title?.toLowerCase() === recommendation.user_recommendations?.book_title?.toLowerCase()
   );
 
-  // Get recommender name
-  const recommenderName = recommendation?.recommender_name || 'A friend';
+  // Get recommender first name only
+  const recommenderName = React.useMemo(() => {
+    const fullName = recommendation?.recommender_name || 'A friend';
+    // Extract first name only
+    return fullName.split(' ')[0];
+  }, [recommendation?.recommender_name]);
 
   if (isLoading) {
     return (
@@ -184,8 +188,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           
           {/* Personal Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252]/10 rounded-full mb-4">
-              <Heart className="w-4 h-4 text-[#E11D48]" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E8E8] rounded-full mb-4">
+              <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
               <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
             </div>
             <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
@@ -295,7 +299,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             </div>
 
             <p className="text-xs text-center text-[#96A888] mt-6">
-              Free forever · Goodreads compatible
+              Already use Goodreads? No problem — Sarah's Books works alongside it.
             </p>
           </div>
         </div>
@@ -310,8 +314,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         
         {/* Personal Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252]/10 rounded-full mb-4">
-            <Heart className="w-4 h-4 text-[#E11D48]" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E8E8] rounded-full mb-4">
+            <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
             <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
