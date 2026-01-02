@@ -18,15 +18,34 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
   useEffect(() => {
     const loadRecommendation = async () => {
       if (!shareToken) {
+        console.error('[SharedRecommendationPage] No share token provided');
         setError('Invalid share link');
         setIsLoading(false);
         return;
       }
 
+      console.log('[SharedRecommendationPage] Loading recommendation for token:', shareToken);
       const { data, error: fetchError } = await db.getSharedRecommendation(shareToken);
       
-      if (fetchError || !data) {
+      console.log('[SharedRecommendationPage] Result:', { data, error: fetchError });
+      
+      if (fetchError) {
+        console.error('[SharedRecommendationPage] Fetch error:', fetchError);
+        setError(fetchError.message || 'This recommendation could not be found');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!data) {
+        console.error('[SharedRecommendationPage] No data returned');
         setError('This recommendation could not be found');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!data.user_recommendations) {
+        console.error('[SharedRecommendationPage] No user_recommendations in data:', data);
+        setError('The recommendation data is incomplete');
         setIsLoading(false);
         return;
       }
