@@ -141,7 +141,7 @@ function hasStructuredRecommendations(text) {
   return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
 }
 
-function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendations, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const [addingToQueue, setAddingToQueue] = useState(false);
   const [addedToQueue, setAddedToQueue] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -189,6 +189,22 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
                  queueBook.status === 'finished'
   );
+  
+  // Get user's rating for this book (from reading queue)
+  const userBookRating = React.useMemo(() => {
+    const queueItem = readingQueue?.find(
+      queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
+                   queueBook.status === 'finished'
+    );
+    return queueItem?.rating || null;
+  }, [readingQueue, rec.title]);
+  
+  // Check if user has recommended this book
+  const hasUserRecommended = React.useMemo(() => {
+    return userRecommendations?.some(
+      r => normalizeTitle(r.book_title) === normalizeTitle(rec.title)
+    );
+  }, [userRecommendations, rec.title]);
 
   const handleAddToQueue = async (e) => {
     e.stopPropagation();
@@ -374,39 +390,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           ) : null}
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Expand/Collapse Button */}
-                <button
-                  onClick={() => {
-                    const newExpandedState = !expanded;
-                    setExpanded(newExpandedState);
-                    
-                    // Track card expansion
-                    if (newExpandedState) {
-                      track('recommendation_expanded', {
-                        book_title: rec.title,
-                        book_author: displayAuthor,
-                        chat_mode: chatMode,
-                        has_description: !!fullDescription,
-                        has_themes: !!(catalogBook?.themes?.length)
-                      });
-                    }
-                  }}
-                  className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
-                  aria-label={expanded ? "Show less" : "Show more"}
-                >
-                  {expanded ? (
-                    <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
-                  )}
-                </button>
-              </div>
-            </div>
+            <h4 className="font-semibold text-[#4A5940] text-sm mb-1">{rec.title}</h4>
             {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
             
             {/* Genres */}
@@ -423,9 +407,36 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
               </div>
             )}
             
+            {/* Why Sarah Recommends */}
             {displayWhy && (
-              <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>
+              <div className="mt-2">
+                <p className="text-xs font-medium text-[#4A5940] mb-1">Why Sarah recommends:</p>
+                <p className="text-xs text-[#5F7252] leading-relaxed">{displayWhy}</p>
+              </div>
             )}
+            
+            {/* Show more/less button */}
+            <button
+              onClick={() => {
+                const newExpandedState = !expanded;
+                setExpanded(newExpandedState);
+                
+                // Track card expansion
+                if (newExpandedState) {
+                  track('recommendation_expanded', {
+                    book_title: rec.title,
+                    book_author: displayAuthor,
+                    chat_mode: chatMode,
+                    has_description: !!fullDescription,
+                    has_themes: !!(catalogBook?.themes?.length)
+                  });
+                }
+              }}
+              className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-2"
+            >
+              <span>{expanded ? 'Show less' : 'Show more'}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
           </div>
         </div>
       </div>
@@ -433,6 +444,27 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       {/* Expanded Details */}
       {expanded && (
         <div className="mb-4 pb-4 border-b border-[#E8EBE4]">
+          {/* User's status with this book */}
+          {(userBookRating || hasUserRecommended) && (
+            <div className="mb-3 p-2 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+              <p className="text-xs font-medium text-[#4A5940] mb-1">Your history with this book:</p>
+              <div className="flex flex-wrap gap-2">
+                {userBookRating && (
+                  <span className="text-xs text-[#5F7252] flex items-center gap-1">
+                    <Heart className="w-3 h-3 text-[#C97B7B] fill-[#C97B7B]" />
+                    Rated {userBookRating}/5
+                  </span>
+                )}
+                {hasUserRecommended && (
+                  <span className="text-xs text-[#5F7252] flex items-center gap-1">
+                    <Share2 className="w-3 h-3" />
+                    You've shared this
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+          
           {catalogBook?.favorite && (
             <div className="mb-3 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -441,7 +473,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
           )}
           {fullDescription && (
             <div className="mb-3">
-              <p className="text-xs font-medium text-[#4A5940] mb-2">Description:</p>
+              <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
               <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
             </div>
           )}
@@ -652,7 +684,7 @@ function RecommendationActionPanel({ onShowMore }) {
   );
 }
 
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, userRecommendations, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
   
   // Extract the header (everything before the first recommendation)
@@ -690,6 +722,7 @@ function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, us
           chatMode={chatMode}
           user={user}
           readingQueue={readingQueue}
+          userRecommendations={userRecommendations}
           onAddToQueue={onAddToQueue}
           onRemoveFromQueue={onRemoveFromQueue}
           onShowAuthModal={onShowAuthModal}
@@ -840,7 +873,7 @@ function BookDetail({ book, onClose }) {
   );
 }
 
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
+function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, userRecommendations, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
   const isWelcomeMessage = !isUser && message.includes("Hi, I'm Sarah!");
 
@@ -865,6 +898,7 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
             onActionPanelInteraction={onActionPanelInteraction}
             user={user}
             readingQueue={readingQueue}
+            userRecommendations={userRecommendations}
             onAddToQueue={onAddToQueue}
             onRemoveFromQueue={onRemoveFromQueue}
             onShowAuthModal={onShowAuthModal}
