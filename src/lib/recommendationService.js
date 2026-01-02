@@ -11,22 +11,36 @@ import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPop
 function detectSearchIntent(message) {
   const lowerMessage = message.toLowerCase().trim();
   
-  // Author patterns
+  // Author patterns - order matters, more specific first
   const authorPatterns = [
+    // "the new Paula McLain book", "the latest Kristin Hannah book"
+    /(?:the\s+)?(?:new|latest|newest|recent)\s+([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+book/i,
+    // "a Paula McLain book", "any Paula McLain book"
+    /(?:a|any|another)\s+([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+book/i,
+    // "Paula McLain's new book", "Paula McLain's latest"
+    /([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)(?:'s|s)\s+(?:new|latest|newest|book)/i,
+    // "books by Paula McLain"
     /books?\s+(?:by|from)\s+(.+)/i,
+    // "more by Paula McLain"
     /more\s+(?:by|from)\s+(.+)/i,
+    // "author Paula McLain"
     /(?:author|writer)\s+(.+)/i,
-    /(.+?)\s+books?$/i,
+    // "Paula McLain books"
+    /([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+books?/i,
+    // "recommend something by Paula McLain"
     /recommend.+(?:by|from)\s+(.+)/i,
+    // "anything by Paula McLain"
     /anything\s+(?:by|from)\s+(.+)/i,
+    // "read Paula McLain" or "read the Paula McLain"
+    /read\s+(?:the\s+)?(?:new\s+)?([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)/i,
   ];
   
   for (const pattern of authorPatterns) {
     const match = message.match(pattern);
     if (match && match[1]) {
-      const author = match[1].trim().replace(/[?.,!]$/, '');
-      // Check if it looks like a name (has capital letters, 2+ words or single capitalized word)
-      if (/^[A-Z]/.test(author) && author.length > 3) {
+      const author = match[1].trim().replace(/[?.,!]$/, '').replace(/\s+book$/i, '');
+      // Check if it looks like a name (has capital letters, reasonable length)
+      if (/^[A-Z][a-z]+\s+[A-Z]/.test(author) && author.length > 5 && author.length < 40) {
         return { type: 'author', value: author };
       }
     }
@@ -281,13 +295,26 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       if (intent.type === 'author') {
         // Author-specific search
         const authorBooks = await findBooksByAuthor(intent.value, 10);
+        
+        // Check if user is asking for "new/latest" book
+        const wantsNew = /\b(new|latest|newest|recent|2024|2025)\b/i.test(userMessage);
+        
         if (authorBooks.length > 0) {
           vectorContext = `\n\nBOOKS BY ${intent.value.toUpperCase()} IN OUR COMMUNITY:\n${authorBooks.slice(0, 5).map((book, i) => 
             `${i + 1}. "${book.book_title}"${book.avg_rating ? ` - ${book.avg_rating}/5 avg` : ''}`
           ).join('\n')}`;
-          vectorContext += `\n\nIMPORTANT: The user is asking about ${intent.value}. Recommend OTHER books by this author NOT in the list above, or suggest similar authors if they've read most of their work.`;
+          
+          if (wantsNew) {
+            vectorContext += `\n\nIMPORTANT: The user specifically wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work (2024 or later if available). Do NOT recommend older books unless you're certain there's nothing newer.`;
+          } else {
+            vectorContext += `\n\nIMPORTANT: The user is asking about ${intent.value}. Recommend OTHER books by this author NOT in the list above, or suggest similar authors if they've read most of their work.`;
+          }
         } else {
-          vectorContext = `\n\nNote: No books by "${intent.value}" found in our community yet. Use your knowledge to recommend their best works.`;
+          if (wantsNew) {
+            vectorContext = `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work (2024 or later if available). Be specific about the publication year.`;
+          } else {
+            vectorContext = `\n\nNote: No books by "${intent.value}" found in our community yet. Use your knowledge to recommend their best works.`;
+          }
         }
       } else if (intent.type === 'genre') {
         // Genre-specific search
