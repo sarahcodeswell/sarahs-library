@@ -2,7 +2,89 @@
 // Handles all recommendation logic with clear separation of concerns
 
 import { db } from './supabase';
-import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks } from './vectorSearch';
+import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks, findBooksByAuthor, findBooksByGenre } from './vectorSearch';
+
+/**
+ * Detect search intent from user message
+ * Returns { type: 'author'|'genre'|'theme'|'general', value: string }
+ */
+function detectSearchIntent(message) {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Author patterns
+  const authorPatterns = [
+    /books?\s+(?:by|from)\s+(.+)/i,
+    /more\s+(?:by|from)\s+(.+)/i,
+    /(?:author|writer)\s+(.+)/i,
+    /(.+?)\s+books?$/i,
+    /recommend.+(?:by|from)\s+(.+)/i,
+    /anything\s+(?:by|from)\s+(.+)/i,
+  ];
+  
+  for (const pattern of authorPatterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      const author = match[1].trim().replace(/[?.,!]$/, '');
+      // Check if it looks like a name (has capital letters, 2+ words or single capitalized word)
+      if (/^[A-Z]/.test(author) && author.length > 3) {
+        return { type: 'author', value: author };
+      }
+    }
+  }
+  
+  // Check for standalone name pattern (e.g., "Paula McLain")
+  if (/^[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(message.trim())) {
+    return { type: 'author', value: message.trim() };
+  }
+
+  // Genre patterns - common book genres
+  const genres = [
+    'fiction', 'non-fiction', 'nonfiction', 'mystery', 'thriller', 'romance', 
+    'sci-fi', 'science fiction', 'fantasy', 'horror', 'biography', 'autobiography',
+    'memoir', 'history', 'historical fiction', 'literary fiction', 'young adult',
+    'self-help', 'self help', 'business', 'psychology', 'philosophy', 'religion',
+    'spirituality', 'travel', 'cooking', 'art', 'poetry', 'drama', 'comedy',
+    'adventure', 'crime', 'suspense', 'dystopian', 'contemporary'
+  ];
+  
+  for (const genre of genres) {
+    if (lowerMessage.includes(genre)) {
+      // Check if it's a genre request
+      if (/(?:want|looking for|recommend|suggest|give me|show me|find).+/i.test(lowerMessage) ||
+          lowerMessage.includes('books') || lowerMessage.includes('read')) {
+        return { type: 'genre', value: genre };
+      }
+    }
+  }
+
+  // Theme patterns (our curated themes)
+  const themeMap = {
+    "women's stories": 'women',
+    "women's fiction": 'women',
+    'female protagonists': 'women',
+    'emotional': 'emotional',
+    'emotional depth': 'emotional',
+    'moving': 'emotional',
+    'identity': 'identity',
+    'belonging': 'identity',
+    'cultural identity': 'identity',
+    'spiritual': 'spiritual',
+    'spirituality': 'spiritual',
+    'meaning': 'spiritual',
+    'mindfulness': 'spiritual',
+    'justice': 'justice',
+    'social justice': 'justice',
+    'systemic': 'justice'
+  };
+
+  for (const [phrase, theme] of Object.entries(themeMap)) {
+    if (lowerMessage.includes(phrase)) {
+      return { type: 'theme', value: theme };
+    }
+  }
+
+  return { type: 'general', value: message };
+}
 
 /**
  * Build system prompt for Claude
@@ -189,18 +271,45 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       messageParts.push(exclusionMessage);
     }
 
-    // Add vector search context if available - now includes cross-user learning
+    // Add vector search context if available - now includes intelligent search detection
     let vectorContext = '';
     try {
-      // 1. Search Sarah's curated catalog
-      if (themeFilters && themeFilters.length > 0) {
-        const themeBooks = await getBooksByThemes(themeFilters, 10);
+      // Detect search intent (author, genre, theme, or general)
+      const intent = detectSearchIntent(userMessage);
+      console.log('[RecommendationService] Detected intent:', intent.type, '-', intent.value);
+
+      if (intent.type === 'author') {
+        // Author-specific search
+        const authorBooks = await findBooksByAuthor(intent.value, 10);
+        if (authorBooks.length > 0) {
+          vectorContext = `\n\nBOOKS BY ${intent.value.toUpperCase()} IN OUR COMMUNITY:\n${authorBooks.slice(0, 5).map((book, i) => 
+            `${i + 1}. "${book.book_title}"${book.avg_rating ? ` - ${book.avg_rating}/5 avg` : ''}`
+          ).join('\n')}`;
+          vectorContext += `\n\nIMPORTANT: The user is asking about ${intent.value}. Recommend OTHER books by this author NOT in the list above, or suggest similar authors if they've read most of their work.`;
+        } else {
+          vectorContext = `\n\nNote: No books by "${intent.value}" found in our community yet. Use your knowledge to recommend their best works.`;
+        }
+      } else if (intent.type === 'genre') {
+        // Genre-specific search
+        const genreBooks = await findBooksByGenre(intent.value, 15);
+        if (genreBooks.length > 0) {
+          const topRated = genreBooks.filter(b => b.avg_rating && parseFloat(b.avg_rating) >= 4).slice(0, 5);
+          vectorContext = `\n\nTOP ${intent.value.toUpperCase()} BOOKS IN OUR COMMUNITY:\n${topRated.map((book, i) => 
+            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg`
+          ).join('\n')}`;
+          vectorContext += `\n\nThese are highly-rated ${intent.value} books from our readers. Recommend similar books in this genre, prioritizing ones NOT in this list.`;
+        }
+      } else if (intent.type === 'theme' || (themeFilters && themeFilters.length > 0)) {
+        // Theme-specific search (use curated catalog)
+        const themes = themeFilters?.length > 0 ? themeFilters : [intent.value];
+        const themeBooks = await getBooksByThemes(themes, 10);
         if (themeBooks.length > 0) {
-          vectorContext = `\n\nSARAH'S CURATED BOOKS THAT MATCH YOUR THEMES:\n${themeBooks.slice(0, 5).map((book, i) => 
+          vectorContext = `\n\nSARAH'S CURATED BOOKS MATCHING THEME "${intent.value}":\n${themeBooks.slice(0, 5).map((book, i) => 
             `${i + 1}. "${book.title}" by ${book.author || 'Unknown'}\n   Sarah's take: ${book.sarah_assessment || 'No assessment available'}`
           ).join('\n\n')}`;
         }
       } else {
+        // General semantic search
         const similarBooks = await findSimilarBooks(userMessage, 5, 0.6);
         if (similarBooks.length > 0) {
           vectorContext = `\n\nSARAH'S CURATED BOOKS SIMILAR TO YOUR REQUEST:\n${similarBooks.map((book, i) => 
@@ -209,26 +318,26 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         }
       }
 
-      // 2. Cross-user learning: Find books loved by other readers with similar taste
+      // Always add cross-user learning context (crowd wisdom)
       const crowdFavorites = await findSimilarBooksAcrossUsers(userMessage, 5, 0.5);
       if (crowdFavorites.length > 0) {
         const crowdContext = crowdFavorites
           .filter(b => b.avg_rating >= 4 && b.user_count >= 1)
           .slice(0, 3)
           .map((book, i) => 
-            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - Avg rating: ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
+            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
           ).join('\n');
         
         if (crowdContext) {
-          vectorContext += `\n\n📚 BOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
+          vectorContext += `\n\nBOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
         }
       }
 
-      // 3. Get overall popular books if no specific matches
+      // Fallback to popular books if no specific matches
       if (!vectorContext) {
         const popularBooks = await getPopularBooks(4, 1);
         if (popularBooks.length > 0) {
-          vectorContext = `\n\n🌟 HIGHLY RATED BY OUR COMMUNITY:\n${popularBooks.slice(0, 3).map((book, i) => 
+          vectorContext = `\n\nHIGHLY RATED BY OUR COMMUNITY:\n${popularBooks.slice(0, 3).map((book, i) => 
             `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg (${book.user_count} readers)`
           ).join('\n')}`;
         }

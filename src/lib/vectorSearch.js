@@ -236,3 +236,158 @@ export async function getUserGenreProfile(userId) {
     return {};
   }
 }
+
+/**
+ * Find books by a specific author across all users' collections
+ * @param {string} authorName - Author name to search for
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Books by this author with ratings
+ */
+export async function findBooksByAuthor(authorName, limit = 10) {
+  try {
+    const { data, error } = await supabase
+      .from('reading_queue')
+      .select('book_title, book_author, description, genres, rating, isbn, cover_image_url')
+      .ilike('book_author', `%${authorName}%`)
+      .order('rating', { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Author search error:', error);
+      return [];
+    }
+
+    // Deduplicate by title and aggregate ratings
+    const bookMap = new Map();
+    (data || []).forEach(book => {
+      const key = book.book_title.toLowerCase();
+      if (!bookMap.has(key)) {
+        bookMap.set(key, { ...book, ratings: [book.rating].filter(Boolean), userCount: 1 });
+      } else {
+        const existing = bookMap.get(key);
+        if (book.rating) existing.ratings.push(book.rating);
+        existing.userCount++;
+      }
+    });
+
+    return Array.from(bookMap.values()).map(book => ({
+      ...book,
+      avg_rating: book.ratings.length > 0 
+        ? (book.ratings.reduce((a, b) => a + b, 0) / book.ratings.length).toFixed(1)
+        : null,
+      user_count: book.userCount
+    }));
+  } catch (error) {
+    console.error('Author search failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Find books by genre across all users' collections
+ * @param {string} genre - Genre to search for
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Books in this genre with ratings
+ */
+export async function findBooksByGenre(genre, limit = 20) {
+  try {
+    const { data, error } = await supabase
+      .from('reading_queue')
+      .select('book_title, book_author, description, genres, rating, isbn, cover_image_url')
+      .contains('genres', [genre])
+      .order('rating', { ascending: false, nullsFirst: false })
+      .limit(limit * 2); // Get more to allow for deduplication
+
+    if (error) {
+      // Try partial match if exact match fails
+      const { data: partialData, error: partialError } = await supabase
+        .from('reading_queue')
+        .select('book_title, book_author, description, genres, rating, isbn, cover_image_url')
+        .not('genres', 'is', null)
+        .order('rating', { ascending: false, nullsFirst: false })
+        .limit(100);
+
+      if (partialError) {
+        console.error('Genre search error:', partialError);
+        return [];
+      }
+
+      // Filter for partial genre match
+      const filtered = (partialData || []).filter(book => 
+        book.genres?.some(g => g.toLowerCase().includes(genre.toLowerCase()))
+      );
+      return deduplicateBooks(filtered).slice(0, limit);
+    }
+
+    return deduplicateBooks(data || []).slice(0, limit);
+  } catch (error) {
+    console.error('Genre search failed:', error);
+    return [];
+  }
+}
+
+// Helper to deduplicate books by title
+function deduplicateBooks(books) {
+  const bookMap = new Map();
+  books.forEach(book => {
+    const key = book.book_title.toLowerCase();
+    if (!bookMap.has(key)) {
+      bookMap.set(key, { ...book, ratings: [book.rating].filter(Boolean), userCount: 1 });
+    } else {
+      const existing = bookMap.get(key);
+      if (book.rating) existing.ratings.push(book.rating);
+      existing.userCount++;
+    }
+  });
+
+  return Array.from(bookMap.values()).map(book => ({
+    ...book,
+    avg_rating: book.ratings.length > 0 
+      ? (book.ratings.reduce((a, b) => a + b, 0) / book.ratings.length).toFixed(1)
+      : null,
+    user_count: book.userCount
+  }));
+}
+
+/**
+ * Get loved authors from a user's collection (authors of 4-5 star books)
+ * @param {string} userId - User ID
+ * @returns {Promise<Array>} Authors with their book counts and avg ratings
+ */
+export async function getLovedAuthors(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('reading_queue')
+      .select('book_author, rating')
+      .eq('user_id', userId)
+      .gte('rating', 4);
+
+    if (error) {
+      console.error('Loved authors error:', error);
+      return [];
+    }
+
+    // Aggregate by author
+    const authorStats = {};
+    (data || []).forEach(book => {
+      const author = book.book_author;
+      if (!author) return;
+      if (!authorStats[author]) {
+        authorStats[author] = { author, ratings: [], bookCount: 0 };
+      }
+      authorStats[author].ratings.push(book.rating);
+      authorStats[author].bookCount++;
+    });
+
+    return Object.values(authorStats)
+      .map(a => ({
+        author: a.author,
+        book_count: a.bookCount,
+        avg_rating: (a.ratings.reduce((x, y) => x + y, 0) / a.ratings.length).toFixed(1)
+      }))
+      .sort((a, b) => b.book_count - a.book_count || b.avg_rating - a.avg_rating);
+  } catch (error) {
+    console.error('Loved authors failed:', error);
+    return [];
+  }
+}
