@@ -599,8 +599,8 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
                   {isbnError && (
                     <p className="mt-1 text-xs text-red-600">{isbnError}</p>
                   )}
-                  <p className="mt-1 text-xs text-[#96A888]">
-                    Find the ISBN on the book's back cover or copyright page
+                  <p className="mt-2 text-xs text-[#7A8F6C] bg-[#F8F6EE] p-2 rounded-lg">
+                    <strong>Why ISBN?</strong> Using ISBN ensures we capture accurate metadata including cover image, description, and genre — making your collection richer and recommendations smarter.
                   </p>
                 </div>
 

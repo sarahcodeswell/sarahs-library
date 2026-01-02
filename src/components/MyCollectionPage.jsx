@@ -69,6 +69,20 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
             </div>
           )}
           
+          {/* Genres */}
+          {book.genres?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {book.genres.slice(0, 3).map((genre, idx) => (
+                <span 
+                  key={idx}
+                  className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+          
           {/* Description - shimmer while loading, then show content */}
           {isLoadingDescription && !hasDescription ? (
             <DescriptionShimmer />
