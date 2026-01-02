@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useBookEnrichment } from './BookCard';
+import { enrichBookReputation } from '../lib/reputationEnrichment';
 import booksData from '../books.json';
 
 import {
@@ -85,8 +86,29 @@ const themeInfo = {
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition, onUpdateBook }) {
   const [expanded, setExpanded] = useState(false);
+  const [reputation, setReputation] = useState(book.reputation || null);
+  const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
+  
+  // Auto-enrich reputation when expanded and missing
+  useEffect(() => {
+    if (expanded && !reputation && !isEnrichingReputation && book.book_title) {
+      setIsEnrichingReputation(true);
+      enrichBookReputation(book)
+        .then((rep) => {
+          if (rep) {
+            setReputation(rep);
+            // Update parent state if callback provided
+            if (onUpdateBook) {
+              onUpdateBook(book.id, { reputation: rep });
+            }
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsEnrichingReputation(false));
+    }
+  }, [expanded, reputation, isEnrichingReputation, book]);
   
   // Look up full book details from local catalog, or use stored data
   const bookDetails = useMemo(() => {
@@ -340,15 +362,22 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
               )}
               
               {/* Reputation & Accolades */}
-              {book.reputation && (
+              {reputation ? (
                 <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
                   <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
                     <Star className="w-3 h-3 text-amber-500" />
                     Reputation & Accolades:
                   </p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{book.reputation}</p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
                 </div>
-              )}
+              ) : isEnrichingReputation ? (
+                <div className="mb-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
+                  <p className="text-xs font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500/50" />
+                    Loading accolades...
+                  </p>
+                </div>
+              ) : null}
               
               {bookDetails.description && (
                 <div className="mb-3">
@@ -406,7 +435,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
 }
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
-  const { readingQueue, removeFromQueue, updateQueueStatus } = useReadingQueue();
+  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [showAcquisition, setShowAcquisition] = useState(false);
@@ -701,6 +730,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     isFirst={index === 0}
                     showAcquisition={showAcquisition}
                     onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
+                    onUpdateBook={updateQueueItem}
                   />
                 ))}
               </div>

@@ -257,6 +257,7 @@ export const db = {
       if (updates.status !== undefined) updateData.status = updates.status;
       if (updates.rating !== undefined) updateData.rating = updates.rating;
       if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.reputation !== undefined) updateData.reputation = updates.reputation;
       
       const { data, error } = await supabase
         .from('reading_queue')
