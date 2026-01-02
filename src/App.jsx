@@ -12,6 +12,7 @@ import { cacheUtils } from './lib/cache';
 import { normalizeTitle, normalizeAuthor, safeNumber, bumpLocalMetric } from './lib/textUtils';
 import { parseGoodreadsCsv } from './lib/csvParser';
 import { buildLibraryContext } from './lib/libraryContext';
+import { stripAccoladesFromDescription } from './lib/descriptionUtils';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -488,8 +489,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
           {(catalogBook?.description || enrichedDescription) && (
             <div className="mb-3">
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
-              <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-3">
-                {catalogBook?.description || enrichedDescription}
+              <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-4">
+                {stripAccoladesFromDescription(catalogBook?.description || enrichedDescription)}
               </p>
             </div>
           )}

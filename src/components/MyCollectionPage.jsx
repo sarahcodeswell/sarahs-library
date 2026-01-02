@@ -8,6 +8,7 @@ import { useBookEnrichment } from './BookCard';
 import StarRating from './StarRating';
 import booksData from '../books.json';
 import { db } from '../lib/supabase';
+import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { generateBookDescriptions } from '../lib/descriptionService';
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
@@ -37,7 +38,10 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   );
   
   // Description is already resolved in readBooks (with catalog fallback)
-  const description = book.description;
+  // Strip accolades from description since they're shown in Reputation section
+  const description = useMemo(() => {
+    return stripAccoladesFromDescription(book.description);
+  }, [book.description]);
   const hasDescription = !!description;
   
   // Check if description overflows 2 lines
@@ -113,7 +117,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
               <p 
                 ref={descriptionRef}
-                className={`text-xs text-[#5F7252] leading-relaxed ${!expanded && isLongDescription ? 'line-clamp-2' : ''}`}
+                className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-4'}`}
               >
                 {description}
               </p>

@@ -4,6 +4,7 @@ import { db } from '../lib/supabase';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useUser } from '../contexts/UserContext';
 import { fetchBookReputation } from '../lib/reputationEnrichment';
+import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -275,8 +276,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             {bookData.book_description && (
               <div className="mb-6">
                 <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-                <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-3">
-                  {bookData.book_description}
+                <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
+                  {stripAccoladesFromDescription(bookData.book_description)}
                 </p>
               </div>
             )}
@@ -419,8 +420,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           {bookData.book_description && (
             <div className="mb-6">
               <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-              <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-3">
-                {bookData.book_description}
+              <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
+                {stripAccoladesFromDescription(bookData.book_description)}
               </p>
             </div>
           )}

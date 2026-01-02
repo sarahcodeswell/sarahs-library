@@ -4,6 +4,7 @@ import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useBookEnrichment } from './BookCard';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
+import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import booksData from '../books.json';
 
 import {
@@ -382,7 +383,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
               {bookDetails.description && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-3">{bookDetails.description}</p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-4">{stripAccoladesFromDescription(bookDetails.description)}</p>
                 </div>
               )}
               

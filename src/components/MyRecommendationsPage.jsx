@@ -4,6 +4,7 @@ import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import { useBookEnrichment } from './BookCard';
 import { fetchBookReputation } from '../lib/reputationEnrichment';
+import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import ShareModal from './ShareModal';
 
 // Individual recommendation card with enrichment
@@ -102,8 +103,8 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
               ) : null}
               
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
-              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-3'}`}>
-                {description}
+              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-4'}`}>
+                {stripAccoladesFromDescription(description)}
               </p>
               <button
                 onClick={() => setExpanded(!expanded)}
