@@ -655,7 +655,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="relative flex-1">
+          <div className="relative sm:min-w-[220px] sm:flex-1 sm:max-w-[300px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
             <input
               type="text"
@@ -668,7 +668,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+            className="px-3 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent shrink-0"
           >
             <option value="date_added">Recently Added</option>
             <option value="title">A-Z by Title</option>
