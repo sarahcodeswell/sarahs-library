@@ -190,7 +190,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E8E8] rounded-full mb-4">
               <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
-              <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
+              <span className="text-sm text-[#C97B7B] font-medium">Book Recommendation</span>
             </div>
             <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-2">
               {recommenderName} thinks you'll love this book
