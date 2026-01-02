@@ -471,12 +471,28 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
               <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
             </div>
           )}
-          {fullDescription && (
-            <div className="mb-3">
-              <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
-              <p className="text-xs text-[#5F7252] leading-relaxed">{fullDescription}</p>
+          
+          {/* Reputation/Accolades - show prominently */}
+          {rec.reputation && (
+            <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-500" />
+                Reputation & Accolades:
+              </p>
+              <p className="text-xs text-[#5F7252] leading-relaxed">{rec.reputation}</p>
             </div>
           )}
+          
+          {/* About this book - use catalog description or enriched, NOT rec.description which may have reputation mixed in */}
+          {(catalogBook?.description || enrichedDescription) && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
+              <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-3">
+                {catalogBook?.description || enrichedDescription}
+              </p>
+            </div>
+          )}
+          
           {catalogBook?.themes && (
             <div>
               <p className="text-xs font-medium text-[#4A5940] mb-2">Themes:</p>
@@ -491,13 +507,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
                   );
                 })}
               </div>
-            </div>
-          )}
-          {rec.reputation && (
-            <div className="mt-2">
-              <p className="text-xs text-[#7A8F6C]">
-                <span className="font-medium">Reputation:</span> {rec.reputation}
-              </p>
             </div>
           )}
           
