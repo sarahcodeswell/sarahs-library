@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { enrichBook } from '../lib/bookEnrichment';
+import StarRating from './StarRating';
 
 /**
  * Shared Book Info Display - the core visual layout used across all book cards
