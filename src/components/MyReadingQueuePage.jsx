@@ -203,15 +203,6 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                   }`}>
                     {book.book_title}
                   </h3>
-                  {bookDetails && (
-                    <button
-                      onClick={() => setExpanded(!expanded)}
-                      className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0 mt-0.5"
-                      aria-label={expanded ? "Show less" : "Show more"}
-                    >
-                      <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                    </button>
-                  )}
                 </div>
                 {book.book_author && (
                   <p className="text-sm text-[#7A8F6C]">
@@ -233,11 +224,20 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                   </div>
                 )}
                 
-                {/* Brief description when collapsed */}
-                {!expanded && bookDetails?.description && (
-                  <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
-                    {bookDetails.description}
-                  </p>
+                {/* Description with Show more/less */}
+                {bookDetails?.description && (
+                  <div className="mt-2">
+                    <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>
+                      {bookDetails.description}
+                    </p>
+                    <button
+                      onClick={() => setExpanded(!expanded)}
+                      className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
+                    >
+                      <span>{expanded ? 'Show less' : 'Show more'}</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
