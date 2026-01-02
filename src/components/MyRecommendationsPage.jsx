@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil, ChevronDown } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import { useBookEnrichment } from './BookCard';
@@ -7,6 +7,7 @@ import ShareModal from './ShareModal';
 
 // Individual recommendation card with enrichment
 function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit, editingId, editNote, setEditNote, onSaveEdit, onCancelEdit, copyFeedback, formatDate }) {
+  const [expanded, setExpanded] = useState(false);
   const shareData = recommendation.shared_recommendations?.[0];
   const hasBeenShared = !!shareData;
   const viewCount = shareData?.view_count || 0;
@@ -63,11 +64,20 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
             </div>
           )}
           
-          {/* Description */}
+          {/* Description with Show more/less */}
           {description && (
-            <p className="text-xs text-[#5F7252] leading-relaxed mt-2 line-clamp-2">
-              {description}
-            </p>
+            <div className="mt-2">
+              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>
+                {description}
+              </p>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
+              >
+                <span>{expanded ? 'Show less' : 'Show more'}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           )}
         </div>
       </div>

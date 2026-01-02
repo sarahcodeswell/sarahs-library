@@ -224,20 +224,15 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                   </div>
                 )}
                 
-                {/* Description with Show more/less */}
-                {bookDetails?.description && (
-                  <div className="mt-2">
-                    <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>
-                      {bookDetails.description}
-                    </p>
-                    <button
-                      onClick={() => setExpanded(!expanded)}
-                      className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
-                    >
-                      <span>{expanded ? 'Show less' : 'Show more'}</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                    </button>
-                  </div>
+                {/* Show more/less toggle for book details */}
+                {bookDetails && (
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-2"
+                  >
+                    <span>{expanded ? 'Show less' : 'Show more'}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                  </button>
                 )}
               </div>
             </div>
