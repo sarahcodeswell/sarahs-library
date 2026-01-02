@@ -98,7 +98,8 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
           {isLoadingDescription && !hasDescription ? (
             <DescriptionShimmer />
           ) : hasDescription ? (
-            <div className="mt-2">
+            <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
               <p 
                 ref={descriptionRef}
                 className={`text-xs text-[#5F7252] leading-relaxed ${!expanded && isLongDescription ? 'line-clamp-2' : ''}`}
