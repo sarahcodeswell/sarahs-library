@@ -168,14 +168,14 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     return null;
   }, [rec.title]);
 
-  // Enrich non-catalog books with cover and genres from Google Books
+  // Enrich ALL books with cover and genres from Google Books
   useEffect(() => {
-    if (catalogBook || enrichedData || isEnriching) return;
+    if (enrichedData || isEnriching) return;
     
     const fetchEnrichment = async () => {
       setIsEnriching(true);
       try {
-        const data = await enrichBook(rec.title, rec.author);
+        const data = await enrichBook(rec.title, rec.author || catalogBook?.author);
         if (data) {
           setEnrichedData(data);
         }
@@ -187,7 +187,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     };
     
     fetchEnrichment();
-  }, [rec.title, rec.author, catalogBook, enrichedData, isEnriching]);
+  }, [rec.title, rec.author, catalogBook?.author, enrichedData, isEnriching]);
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim();
@@ -377,7 +377,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       <div className="mb-4">
         <div className="flex gap-3">
           {/* Cover Image */}
-          {coverUrl && !catalogBook && (
+          {coverUrl ? (
             <div className="flex-shrink-0">
               <img 
                 src={coverUrl} 
@@ -386,7 +386,9 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
-          )}
+          ) : isEnriching ? (
+            <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
+          ) : null}
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
@@ -424,8 +426,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
             </div>
             {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
             
-            {/* Genres for non-catalog books */}
-            {!catalogBook && genres.length > 0 && (
+            {/* Genres */}
+            {genres.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1 mb-1">
                 {genres.slice(0, 2).map((genre, idx) => (
                   <span 
