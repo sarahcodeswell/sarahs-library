@@ -50,8 +50,26 @@ export const auth = {
 
   getUser: async () => {
     if (!supabase) return null;
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    try {
+      // First try to get the session (which will auto-refresh if needed)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.warn('Session error:', sessionError.message);
+        return null;
+      }
+      
+      if (session?.user) {
+        return session.user;
+      }
+      
+      // Fallback to getUser if no session
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return null;
+    }
   },
 
   onAuthStateChange: (callback) => {
