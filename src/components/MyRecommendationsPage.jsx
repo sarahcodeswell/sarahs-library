@@ -84,24 +84,6 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
           {/* Description with Show more/less */}
           {description && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
-              {/* Reputation & Accolades - show when expanded */}
-              {expanded && reputation ? (
-                <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                  <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500" />
-                    Reputation & Accolades:
-                  </p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
-                </div>
-              ) : expanded && isEnrichingReputation ? (
-                <div className="mb-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
-                  <p className="text-xs font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500/50" />
-                    Loading accolades...
-                  </p>
-                </div>
-              ) : null}
-              
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
               <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-4'}`}>
                 {stripAccoladesFromDescription(description)}
@@ -113,6 +95,24 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
                 <span>{expanded ? 'Show less' : 'Show more'}</span>
                 <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
               </button>
+              
+              {/* Reputation & Accolades - show below description when expanded */}
+              {expanded && reputation ? (
+                <div className="mt-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500" />
+                    Reputation & Accolades:
+                  </p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
+                </div>
+              ) : expanded && isEnrichingReputation ? (
+                <div className="mt-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
+                  <p className="text-xs font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500/50" />
+                    Loading accolades...
+                  </p>
+                </div>
+              ) : null}
             </div>
           )}
         </div>

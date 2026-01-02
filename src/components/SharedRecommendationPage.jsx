@@ -254,7 +254,17 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </div>
             )}
 
-            {/* Reputation & Accolades */}
+            {/* Book Description */}
+            {bookData.book_description && (
+              <div className="mb-6">
+                <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
+                <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
+                  {stripAccoladesFromDescription(bookData.book_description)}
+                </p>
+              </div>
+            )}
+            
+            {/* Reputation & Accolades - below description */}
             {reputation ? (
               <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
                 <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
@@ -271,16 +281,6 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 </p>
               </div>
             ) : null}
-            
-            {/* Book Description */}
-            {bookData.book_description && (
-              <div className="mb-6">
-                <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-                <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
-                  {stripAccoladesFromDescription(bookData.book_description)}
-                </p>
-              </div>
-            )}
 
             {/* Goodreads Link */}
             <div className="flex items-center justify-center gap-4 mb-6 py-3 border-t border-b border-[#E8EBE4]">
@@ -398,7 +398,17 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             </div>
           )}
 
-          {/* Reputation & Accolades */}
+          {/* Book Description */}
+          {bookData.book_description && (
+            <div className="mb-6">
+              <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
+              <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
+                {stripAccoladesFromDescription(bookData.book_description)}
+              </p>
+            </div>
+          )}
+
+          {/* Reputation & Accolades - below description */}
           {reputation ? (
             <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
               <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
@@ -415,16 +425,6 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </p>
             </div>
           ) : null}
-
-          {/* Book Description */}
-          {bookData.book_description && (
-            <div className="mb-6">
-              <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-              <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-4">
-                {stripAccoladesFromDescription(bookData.book_description)}
-              </p>
-            </div>
-          )}
 
           {/* Goodreads Link */}
           <div className="flex items-center justify-center gap-4 mb-6 py-3 border-t border-b border-[#E8EBE4]">

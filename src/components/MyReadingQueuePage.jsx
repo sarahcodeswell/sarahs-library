@@ -362,24 +362,6 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 </div>
               )}
               
-              {/* Reputation & Accolades */}
-              {reputation ? (
-                <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                  <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500" />
-                    Reputation & Accolades:
-                  </p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
-                </div>
-              ) : isEnrichingReputation ? (
-                <div className="mb-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
-                  <p className="text-xs font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500/50" />
-                    Loading accolades...
-                  </p>
-                </div>
-              ) : null}
-              
               {bookDetails.description && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
