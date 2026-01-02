@@ -1990,6 +1990,7 @@ Find similar books from beyond my library that match this taste profile.
                 }}
                 user={user}
                 readingQueue={readingQueue}
+                userRecommendations={recommendations}
                 onAddToQueue={handleAddToReadingQueue}
                 onRemoveFromQueue={handleRemoveFromReadingQueue}
                 onShowAuthModal={() => setShowAuthModal(true)}
