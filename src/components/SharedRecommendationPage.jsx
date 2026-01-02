@@ -192,7 +192,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
               <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+            <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-2">
               {recommenderName} thinks you'll love this book
             </h1>
           </div>
@@ -202,7 +202,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             
             {/* Title & Author */}
             <div className="text-center mb-6">
-              <h2 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
+              <h2 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-1">
                 {bookData.book_title}
               </h2>
               {bookData.book_author && (
@@ -318,7 +318,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
             <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
           </div>
-          <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+          <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-2">
             {recommenderName} thinks you'll love this book
           </h1>
         </div>
@@ -328,7 +328,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           
           {/* Title & Author */}
           <div className="text-center mb-6">
-            <h2 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
+            <h2 className="font-serif text-lg sm:text-xl text-[#4A5940] mb-1">
               {bookData.book_title}
             </h2>
             {bookData.book_author && (
