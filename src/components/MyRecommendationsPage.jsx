@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil, ChevronDown, Star } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import { useBookEnrichment } from './BookCard';
+import { fetchBookReputation } from '../lib/reputationEnrichment';
 import ShareModal from './ShareModal';
 
 // Individual recommendation card with enrichment
 function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit, editingId, editNote, setEditNote, onSaveEdit, onCancelEdit, copyFeedback, formatDate }) {
   const [expanded, setExpanded] = useState(false);
+  const [reputation, setReputation] = useState(null);
+  const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   const shareData = recommendation.shared_recommendations?.[0];
   const hasBeenShared = !!shareData;
   const viewCount = shareData?.view_count || 0;
@@ -22,6 +25,19 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
   
   // Use stored description or enriched description
   const description = recommendation.book_description || enrichedDescription;
+  
+  // Auto-enrich reputation when expanded
+  useEffect(() => {
+    if (expanded && !reputation && !isEnrichingReputation) {
+      setIsEnrichingReputation(true);
+      fetchBookReputation(recommendation.book_title, recommendation.book_author)
+        .then((rep) => {
+          if (rep) setReputation(rep);
+        })
+        .catch(console.error)
+        .finally(() => setIsEnrichingReputation(false));
+    }
+  }, [expanded, reputation, isEnrichingReputation, recommendation.book_title, recommendation.book_author]);
 
   return (
     <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow">
@@ -67,8 +83,26 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
           {/* Description with Show more/less */}
           {description && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+              {/* Reputation & Accolades - show when expanded */}
+              {expanded && reputation ? (
+                <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500" />
+                    Reputation & Accolades:
+                  </p>
+                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
+                </div>
+              ) : expanded && isEnrichingReputation ? (
+                <div className="mb-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
+                  <p className="text-xs font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
+                    <Star className="w-3 h-3 text-amber-500/50" />
+                    Loading accolades...
+                  </p>
+                </div>
+              ) : null}
+              
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
-              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>
+              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-3'}`}>
                 {description}
               </p>
               <button

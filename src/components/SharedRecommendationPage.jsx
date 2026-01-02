@@ -3,6 +3,7 @@ import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles
 import { db } from '../lib/supabase';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useUser } from '../contexts/UserContext';
+import { fetchBookReputation } from '../lib/reputationEnrichment';
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -12,6 +13,8 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addedToQueue, setAddedToQueue] = useState(false);
+  const [reputation, setReputation] = useState(null);
+  const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   const { user } = useUser();
   const { addToQueue, readingQueue } = useReadingQueue();
 
@@ -56,6 +59,34 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
 
     loadRecommendation();
   }, [shareToken]);
+
+  // Auto-enrich reputation when recommendation loads
+  useEffect(() => {
+    const enrichReputation = async () => {
+      const bookData = recommendation?.user_recommendations;
+      if (!bookData || reputation || isEnrichingReputation) return;
+      
+      // Check if reputation already exists in the data
+      if (bookData.reputation) {
+        setReputation(bookData.reputation);
+        return;
+      }
+      
+      setIsEnrichingReputation(true);
+      try {
+        const rep = await fetchBookReputation(bookData.book_title, bookData.book_author);
+        if (rep) {
+          setReputation(rep);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reputation:', error);
+      } finally {
+        setIsEnrichingReputation(false);
+      }
+    };
+    
+    enrichReputation();
+  }, [recommendation, reputation, isEnrichingReputation]);
 
   const getBookshopUrl = (title, author) => {
     const query = encodeURIComponent(`${title} ${author}`);
@@ -223,21 +254,28 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
             )}
 
             {/* Reputation & Accolades */}
-            {bookData.reputation && (
+            {reputation ? (
               <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
                 <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
                   <Star className="w-4 h-4 text-amber-500" />
                   Reputation & Accolades:
                 </p>
-                <p className="text-sm text-[#5F7252] leading-relaxed">{bookData.reputation}</p>
+                <p className="text-sm text-[#5F7252] leading-relaxed">{reputation}</p>
               </div>
-            )}
+            ) : isEnrichingReputation ? (
+              <div className="mb-6 p-3 bg-amber-50/50 rounded-xl border border-amber-200/50 animate-pulse">
+                <p className="text-sm font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
+                  <Star className="w-4 h-4 text-amber-500/50" />
+                  Loading accolades...
+                </p>
+              </div>
+            ) : null}
             
             {/* Book Description */}
             {bookData.book_description && (
               <div className="mb-6">
                 <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-                <p className="text-sm text-[#5F7252] leading-relaxed">
+                <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-3">
                   {bookData.book_description}
                 </p>
               </div>
@@ -327,7 +365,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E8E8] rounded-full mb-4">
             <Heart className="w-4 h-4 text-[#C97B7B] fill-[#C97B7B]" />
-            <span className="text-sm text-[#5F7252] font-medium">Book Recommendation</span>
+            <span className="text-sm text-[#C97B7B] font-medium">Book Recommendation</span>
           </div>
           <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-2">
             {recommenderName} thinks you'll love this book
@@ -360,21 +398,28 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           )}
 
           {/* Reputation & Accolades */}
-          {bookData.reputation && (
+          {reputation ? (
             <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
               <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
                 <Star className="w-4 h-4 text-amber-500" />
                 Reputation & Accolades:
               </p>
-              <p className="text-sm text-[#5F7252] leading-relaxed">{bookData.reputation}</p>
+              <p className="text-sm text-[#5F7252] leading-relaxed">{reputation}</p>
             </div>
-          )}
+          ) : isEnrichingReputation ? (
+            <div className="mb-6 p-3 bg-amber-50/50 rounded-xl border border-amber-200/50 animate-pulse">
+              <p className="text-sm font-medium text-[#4A5940]/50 mb-1 flex items-center gap-1">
+                <Star className="w-4 h-4 text-amber-500/50" />
+                Loading accolades...
+              </p>
+            </div>
+          ) : null}
 
           {/* Book Description */}
           {bookData.book_description && (
             <div className="mb-6">
               <p className="text-sm text-[#96A888] mb-2 font-medium">About this book:</p>
-              <p className="text-sm text-[#5F7252] leading-relaxed">
+              <p className="text-sm text-[#5F7252] leading-relaxed line-clamp-3">
                 {bookData.book_description}
               </p>
             </div>
