@@ -172,35 +172,63 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
         
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-2 mb-1">
-                <h3 className={`font-medium ${
-                  isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
-                }`}>
-                  {book.book_title}
-                </h3>
-                {bookDetails && (
-                  <button
-                    onClick={() => setExpanded(!expanded)}
-                    className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0 mt-0.5"
-                    aria-label={expanded ? "Show less" : "Show more"}
-                  >
-                    <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                  </button>
-                )}
-              </div>
-              {book.book_author && (
-                <p className="text-sm text-[#7A8F6C]">
-                  by {book.book_author}
-                </p>
+            <div className="flex gap-3 flex-1 min-w-0">
+              {/* Cover Image */}
+              {book.cover_image_url && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={book.cover_image_url} 
+                    alt={`Cover of ${book.book_title}`}
+                    className="w-10 h-15 object-cover rounded shadow-sm"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
               )}
               
-              {/* Brief description when collapsed */}
-              {!expanded && bookDetails?.description && (
-                <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
-                  {bookDetails.description}
-                </p>
-              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-2 mb-1">
+                  <h3 className={`font-medium ${
+                    isFirst ? 'text-[#4A5940] text-base' : 'text-[#4A5940] text-sm'
+                  }`}>
+                    {book.book_title}
+                  </h3>
+                  {bookDetails && (
+                    <button
+                      onClick={() => setExpanded(!expanded)}
+                      className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0 mt-0.5"
+                      aria-label={expanded ? "Show less" : "Show more"}
+                    >
+                      <ChevronDown className={`w-4 h-4 text-[#7A8F6C] transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
+                </div>
+                {book.book_author && (
+                  <p className="text-sm text-[#7A8F6C]">
+                    by {book.book_author}
+                  </p>
+                )}
+                
+                {/* Genres */}
+                {book.genres?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {book.genres.slice(0, 2).map((genre, idx) => (
+                      <span 
+                        key={idx}
+                        className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Brief description when collapsed */}
+                {!expanded && bookDetails?.description && (
+                  <p className="text-xs text-[#5F7252] mt-2 line-clamp-2">
+                    {bookDetails.description}
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">

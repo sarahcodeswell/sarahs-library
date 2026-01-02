@@ -6,6 +6,7 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
 import { getRecommendations, parseRecommendations } from './lib/recommendationService';
+import { enrichBook } from './lib/bookEnrichment';
 import { validateMessage, validateBook } from './lib/validation';
 import { cacheUtils } from './lib/cache';
 import { normalizeTitle, normalizeAuthor, safeNumber, bumpLocalMetric } from './lib/textUtils';
@@ -149,6 +150,8 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [userRating, setUserRating] = useState(null);
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   const [markedAsRead, setMarkedAsRead] = useState(false);
+  const [enrichedData, setEnrichedData] = useState(null);
+  const [isEnriching, setIsEnriching] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -165,9 +168,32 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     return null;
   }, [rec.title]);
 
+  // Enrich non-catalog books with cover and genres from Google Books
+  useEffect(() => {
+    if (catalogBook || enrichedData || isEnriching) return;
+    
+    const fetchEnrichment = async () => {
+      setIsEnriching(true);
+      try {
+        const data = await enrichBook(rec.title, rec.author);
+        if (data) {
+          setEnrichedData(data);
+        }
+      } catch (err) {
+        console.warn('[RecommendationCard] Enrichment failed:', err);
+      } finally {
+        setIsEnriching(false);
+      }
+    };
+    
+    fetchEnrichment();
+  }, [rec.title, rec.author, catalogBook, enrichedData, isEnriching]);
+
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim();
-  const fullDescription = catalogBook?.description || rec.description;
+  const fullDescription = catalogBook?.description || enrichedData?.description || rec.description;
+  const coverUrl = enrichedData?.coverUrl || null;
+  const genres = enrichedData?.genres || [];
 
   // Check if book is in queue with "want_to_read" or "reading" status
   const isInQueue = readingQueue?.some(
@@ -205,12 +231,16 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     }
     
     setAddingToQueue(true);
-    // Pass the best available description (catalog > AI response)
-    const bookWithDescription = {
+    // Pass the best available data (catalog > enriched > AI response)
+    const bookWithEnrichment = {
       ...rec,
-      description: fullDescription || rec.description
+      description: fullDescription || rec.description,
+      cover_image_url: enrichedData?.coverUrl || null,
+      genres: enrichedData?.genres || [],
+      isbn: enrichedData?.isbn || null,
+      isbn13: enrichedData?.isbn13 || null,
     };
-    const success = await onAddToQueue(bookWithDescription);
+    const success = await onAddToQueue(bookWithEnrichment);
     setAddingToQueue(false);
     
     if (success) {
@@ -245,11 +275,15 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     // Set flag to prevent Want to Read button from activating
     setMarkedAsRead(true);
     
-    // Add to reading queue with 'finished' status and best description
+    // Add to reading queue with 'finished' status and best data
     setAddingToQueue(true);
     const success = await onAddToQueue({
       ...rec,
       description: fullDescription || rec.description,
+      cover_image_url: enrichedData?.coverUrl || null,
+      genres: enrichedData?.genres || [],
+      isbn: enrichedData?.isbn || null,
+      isbn13: enrichedData?.isbn13 || null,
       status: 'finished'
     });
     setAddingToQueue(false);
@@ -341,43 +375,74 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
       </div>
       {/* Book Info */}
       <div className="mb-4">
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Expand/Collapse Button */}
-            <button
-              onClick={() => {
-                const newExpandedState = !expanded;
-                setExpanded(newExpandedState);
-                
-                // Track card expansion
-                if (newExpandedState) {
-                  track('recommendation_expanded', {
-                    book_title: rec.title,
-                    book_author: displayAuthor,
-                    chat_mode: chatMode,
-                    has_description: !!fullDescription,
-                    has_themes: !!(catalogBook?.themes?.length)
-                  });
-                }
-              }}
-              className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
-              aria-label={expanded ? "Show less" : "Show more"}
-            >
-              {expanded ? (
-                <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
-              )}
-            </button>
+        <div className="flex gap-3">
+          {/* Cover Image */}
+          {coverUrl && !catalogBook && (
+            <div className="flex-shrink-0">
+              <img 
+                src={coverUrl} 
+                alt={`Cover of ${rec.title}`}
+                className="w-12 h-18 object-cover rounded shadow-sm"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-[#4A5940] text-sm">{rec.title}</h4>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Expand/Collapse Button */}
+                <button
+                  onClick={() => {
+                    const newExpandedState = !expanded;
+                    setExpanded(newExpandedState);
+                    
+                    // Track card expansion
+                    if (newExpandedState) {
+                      track('recommendation_expanded', {
+                        book_title: rec.title,
+                        book_author: displayAuthor,
+                        chat_mode: chatMode,
+                        has_description: !!fullDescription,
+                        has_themes: !!(catalogBook?.themes?.length)
+                      });
+                    }
+                  }}
+                  className="p-1 hover:bg-[#E8EBE4] rounded transition-colors flex-shrink-0"
+                  aria-label={expanded ? "Show less" : "Show more"}
+                >
+                  {expanded ? (
+                    <ChevronUp className="w-4 h-4 text-[#7A8F6C]" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-[#7A8F6C]" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
+            
+            {/* Genres for non-catalog books */}
+            {!catalogBook && genres.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                {genres.slice(0, 2).map((genre, idx) => (
+                  <span 
+                    key={idx}
+                    className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {displayWhy && (
+              <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>
+            )}
           </div>
         </div>
-        {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
-        {displayWhy && (
-          <p className="text-xs text-[#5F7252] mt-1">{displayWhy}</p>
-        )}
       </div>
 
       {/* Expanded Details */}
