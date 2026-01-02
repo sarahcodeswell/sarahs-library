@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import { useBookEnrichment } from './BookCard';
 import booksData from '../books.json';
 
 import {
@@ -115,6 +116,14 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
     return null;
   }, [book]);
 
+  // Auto-enrich with cover and genres if missing
+  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+    book.book_title,
+    book.book_author,
+    book.cover_image_url,
+    book.genres
+  );
+
   const {
     attributes,
     listeners,
@@ -174,16 +183,18 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
             <div className="flex gap-3 flex-1 min-w-0">
               {/* Cover Image */}
-              {book.cover_image_url && (
+              {coverUrl ? (
                 <div className="flex-shrink-0">
                   <img 
-                    src={book.cover_image_url} 
+                    src={coverUrl} 
                     alt={`Cover of ${book.book_title}`}
                     className="w-10 h-15 object-cover rounded shadow-sm"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 </div>
-              )}
+              ) : isEnriching ? (
+                <div className="flex-shrink-0 w-10 h-15 bg-[#E8EBE4] rounded animate-pulse" />
+              ) : null}
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2 mb-1">
@@ -209,9 +220,9 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 )}
                 
                 {/* Genres */}
-                {book.genres?.length > 0 && (
+                {genres?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {book.genres.slice(0, 2).map((genre, idx) => (
+                    {genres.slice(0, 2).map((genre, idx) => (
                       <span 
                         key={idx}
                         className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"

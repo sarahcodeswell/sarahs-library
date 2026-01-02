@@ -4,7 +4,7 @@ import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import RecommendationModal from './RecommendationModal';
-import StarRating from './StarRating';
+import { StarRating, useBookEnrichment } from './BookCard';
 import booksData from '../books.json';
 import { db } from '../lib/supabase';
 import { generateBookDescriptions } from '../lib/descriptionService';
@@ -27,6 +27,14 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   const [isLongDescription, setIsLongDescription] = useState(false);
   const descriptionRef = React.useRef(null);
   
+  // Auto-enrich with cover and genres if missing
+  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+    book.book_title,
+    book.book_author,
+    book.cover_image_url,
+    book.genres
+  );
+  
   // Description is already resolved in readBooks (with catalog fallback)
   const description = book.description;
   const hasDescription = !!description;
@@ -45,16 +53,18 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         {/* Cover Image */}
-        {book.cover_image_url && (
+        {coverUrl ? (
           <div className="flex-shrink-0">
             <img 
-              src={book.cover_image_url} 
+              src={coverUrl} 
               alt={`Cover of ${book.book_title}`}
               className="w-12 h-18 object-cover rounded shadow-sm"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>
-        )}
+        ) : isEnriching ? (
+          <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
+        ) : null}
         
         <div className="flex-1 min-w-0">
           {/* Title */}
@@ -70,9 +80,9 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
           )}
           
           {/* Genres */}
-          {book.genres?.length > 0 && (
+          {genres?.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1.5">
-              {book.genres.slice(0, 3).map((genre, idx) => (
+              {genres.slice(0, 3).map((genre, idx) => (
                 <span 
                   key={idx}
                   className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
