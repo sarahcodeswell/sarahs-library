@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronUp, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { enrichBook } from '../lib/bookEnrichment';
 
 /**
@@ -145,48 +145,6 @@ export function useBookEnrichment(title, author, existingCover, existingGenres) 
   };
 }
 
-/**
- * Star Rating Component
- */
-export function StarRating({ rating = 0, onRatingChange, size = 'sm', readOnly = false, showLegend = false }) {
-  const [hoverRating, setHoverRating] = useState(0);
-  
-  const starSize = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
-  
-  return (
-    <div className="flex items-center gap-1">
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => {
-          const isFilled = star <= (hoverRating || rating);
-          return (
-            <button
-              key={star}
-              type="button"
-              disabled={readOnly}
-              onClick={() => onRatingChange?.(star)}
-              onMouseEnter={() => !readOnly && setHoverRating(star)}
-              onMouseLeave={() => !readOnly && setHoverRating(0)}
-              className={`${readOnly ? 'cursor-default' : 'cursor-pointer'} transition-colors`}
-            >
-              <Star 
-                className={`${starSize} ${
-                  isFilled 
-                    ? 'text-amber-400 fill-amber-400' 
-                    : 'text-[#D4DAD0]'
-                }`} 
-              />
-            </button>
-          );
-        })}
-      </div>
-      {showLegend && rating > 0 && (
-        <span className="text-[10px] text-[#96A888] ml-1">
-          {rating === 5 ? 'Loved it' : rating === 4 ? 'Really liked' : rating === 3 ? 'Liked' : rating === 2 ? 'OK' : 'Not for me'}
-        </span>
-      )}
-    </div>
-  );
-}
 
 /**
  * Full BookCard component - wraps BookInfo with card styling and actions

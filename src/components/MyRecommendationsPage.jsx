@@ -2,7 +2,157 @@ import React, { useState } from 'react';
 import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
+import { useBookEnrichment } from './BookCard';
 import ShareModal from './ShareModal';
+
+// Individual recommendation card with enrichment
+function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit, editingId, editNote, setEditNote, onSaveEdit, onCancelEdit, copyFeedback, formatDate }) {
+  const shareData = recommendation.shared_recommendations?.[0];
+  const hasBeenShared = !!shareData;
+  const viewCount = shareData?.view_count || 0;
+  
+  // Auto-enrich with cover and genres
+  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+    recommendation.book_title,
+    recommendation.book_author,
+    null,
+    []
+  );
+
+  return (
+    <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow">
+      <div className="flex gap-3 mb-3">
+        {/* Cover Image */}
+        {coverUrl ? (
+          <div className="flex-shrink-0">
+            <img 
+              src={coverUrl} 
+              alt={`Cover of ${recommendation.book_title}`}
+              className="w-12 h-18 object-cover rounded shadow-sm"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        ) : isEnriching ? (
+          <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
+        ) : null}
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-[#4A5940] mb-0.5">
+            {recommendation.book_title}
+          </h3>
+          {recommendation.book_author && (
+            <p className="text-xs text-[#7A8F6C] font-light">
+              {recommendation.book_author}
+            </p>
+          )}
+          
+          {/* Genres */}
+          {genres?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {genres.slice(0, 3).map((genre, idx) => (
+                <span 
+                  key={idx}
+                  className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {editingId === recommendation.id ? (
+        <div className="mb-3">
+          <textarea
+            value={editNote}
+            onChange={(e) => setEditNote(e.target.value)}
+            placeholder="Why do you recommend this book?"
+            className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent resize-none"
+            rows={3}
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => onSaveEdit(recommendation)}
+              className="px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+            >
+              Save
+            </button>
+            <button
+              onClick={onCancelEdit}
+              className="px-3 py-1.5 border border-[#D4DAD0] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-white transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : recommendation.recommendation_note ? (
+        <div className="mb-3 p-3 bg-white/50 rounded-lg border border-[#E8EBE4]">
+          <p className="text-sm text-[#5F7252] leading-relaxed">
+            "{recommendation.recommendation_note}"
+          </p>
+        </div>
+      ) : (
+        <button
+          onClick={() => onStartEdit(recommendation)}
+          className="mb-3 text-sm text-[#96A888] hover:text-[#5F7252] transition-colors"
+        >
+          + Add a note about why you recommend this book
+        </button>
+      )}
+
+      <div className="flex items-center justify-between text-xs text-[#96A888] mb-3">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {formatDate(recommendation.created_at)}
+          </span>
+          {hasBeenShared && viewCount > 0 && (
+            <span className="flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              {viewCount} {viewCount === 1 ? 'view' : 'views'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onShare(recommendation)}
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center gap-2"
+        >
+          {copyFeedback[recommendation.id] ? (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Share2 className="w-3.5 h-3.5" />
+              Share
+            </>
+          )}
+        </button>
+        {editingId !== recommendation.id && recommendation.recommendation_note && (
+          <button
+            onClick={() => onStartEdit(recommendation)}
+            className="p-2 rounded-lg text-[#96A888] hover:text-[#5F7252] hover:bg-white transition-colors"
+            title="Edit note"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+        <button
+          onClick={() => onDelete(recommendation)}
+          className="p-2 rounded-lg text-[#96A888] hover:text-red-600 hover:bg-red-50 transition-colors"
+          title="Delete recommendation"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModal }) {
   const { recommendations, isLoading, deleteRecommendation, getShareLink, updateRecommendation } = useRecommendations();
@@ -145,120 +295,22 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
           </div>
         ) : (
           <div className="space-y-4">
-            {recommendations.map((recommendation) => {
-              const shareData = recommendation.shared_recommendations?.[0];
-              const hasBeenShared = !!shareData;
-              const viewCount = shareData?.view_count || 0;
-              
-              return (
-                <div
-                  key={recommendation.id}
-                  className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-[#4A5940] mb-1 truncate">
-                        {recommendation.book_title}
-                      </h3>
-                      {recommendation.book_author && (
-                        <p className="text-sm text-[#7A8F6C] mb-2">
-                          by {recommendation.book_author}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {editingId === recommendation.id ? (
-                    <div className="mb-3">
-                      <textarea
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
-                        placeholder="Why do you recommend this book?"
-                        className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent resize-none"
-                        rows={3}
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleSaveEdit(recommendation)}
-                          className="px-3 py-1.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="px-3 py-1.5 border border-[#D4DAD0] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-white transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : recommendation.recommendation_note ? (
-                    <div className="mb-3 p-3 bg-white/50 rounded-lg border border-[#E8EBE4]">
-                      <p className="text-sm text-[#5F7252] leading-relaxed">
-                        "{recommendation.recommendation_note}"
-                      </p>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleStartEdit(recommendation)}
-                      className="mb-3 text-sm text-[#96A888] hover:text-[#5F7252] transition-colors"
-                    >
-                      + Add a note about why you recommend this book
-                    </button>
-                  )}
-
-                  <div className="flex items-center justify-between text-xs text-[#96A888] mb-3">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatDate(recommendation.created_at)}
-                      </span>
-                      {hasBeenShared && viewCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {viewCount} {viewCount === 1 ? 'view' : 'views'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleShare(recommendation)}
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-[#5F7252] text-white hover:bg-[#4A5940] flex items-center gap-2"
-                    >
-                      {copyFeedback[recommendation.id] ? (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Share2 className="w-3.5 h-3.5" />
-                          Share
-                        </>
-                      )}
-                    </button>
-                    {editingId !== recommendation.id && recommendation.recommendation_note && (
-                      <button
-                        onClick={() => handleStartEdit(recommendation)}
-                        className="p-2 rounded-lg text-[#96A888] hover:text-[#5F7252] hover:bg-white transition-colors"
-                        title="Edit note"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(recommendation)}
-                      className="p-2 rounded-lg text-[#96A888] hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Delete recommendation"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {recommendations.map((recommendation) => (
+              <RecommendationBookCard
+                key={recommendation.id}
+                recommendation={recommendation}
+                onShare={handleShare}
+                onDelete={handleDelete}
+                onStartEdit={handleStartEdit}
+                editingId={editingId}
+                editNote={editNote}
+                setEditNote={setEditNote}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                copyFeedback={copyFeedback}
+                formatDate={formatDate}
+              />
+            ))}
           </div>
         )}
       </div>
