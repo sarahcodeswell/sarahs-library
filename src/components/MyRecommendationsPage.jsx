@@ -11,13 +11,16 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
   const hasBeenShared = !!shareData;
   const viewCount = shareData?.view_count || 0;
   
-  // Auto-enrich with cover and genres
-  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+  // Auto-enrich with cover, genres, and description
+  const { coverUrl, genres, description: enrichedDescription, isEnriching } = useBookEnrichment(
     recommendation.book_title,
     recommendation.book_author,
     null,
     []
   );
+  
+  // Use stored description or enriched description
+  const description = recommendation.book_description || enrichedDescription;
 
   return (
     <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow">
@@ -58,6 +61,13 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
                 </span>
               ))}
             </div>
+          )}
+          
+          {/* Description */}
+          {description && (
+            <p className="text-xs text-[#5F7252] leading-relaxed mt-2 line-clamp-2">
+              {description}
+            </p>
           )}
         </div>
       </div>

@@ -488,11 +488,17 @@ export const db = {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
+      console.log('[getSharedRecommendation] Looking up token:', shareToken);
+      
       const { data, error } = await supabase
         .from('shared_recommendations')
         .select(`
-          *,
+          id,
+          share_token,
+          recommendation_id,
           recommender_name,
+          view_count,
+          created_at,
           user_recommendations (
             book_title,
             book_author,
@@ -505,6 +511,13 @@ export const db = {
         .eq('share_token', shareToken)
         .single();
       
+      if (error) {
+        console.error('[getSharedRecommendation] Query error:', error);
+        return { data: null, error };
+      }
+      
+      console.log('[getSharedRecommendation] Found data:', data);
+      
       // Increment view count
       if (data) {
         await supabase
@@ -516,9 +529,9 @@ export const db = {
           .eq('id', data.id);
       }
       
-      return { data, error };
+      return { data, error: null };
     } catch (err) {
-      console.error('getSharedRecommendation: Exception', err);
+      console.error('[getSharedRecommendation] Exception:', err);
       return { data: null, error: { message: err.message || 'Fetch failed' } };
     }
   },
