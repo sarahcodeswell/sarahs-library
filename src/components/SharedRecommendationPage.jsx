@@ -317,7 +317,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 <span className="font-serif text-lg text-[#4A5940]">Sarah's Books</span>
               </div>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                To encourage a love of reading and support the local ecosystems that make it possible.
+                <strong>Our Mission:</strong> To encourage a love of reading and support the local ecosystems that make it possible.
               </p>
             </div>
             
@@ -348,7 +348,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </div>
             </div>
 
-            <p className="text-xs text-center text-[#96A888] mt-6">
+            <p className="text-xs text-center text-[#5F7252] mt-6">
               <strong>Already use Goodreads?</strong> No problem — Sarah's Books works alongside it.
             </p>
           </div>
