@@ -189,6 +189,11 @@ export const db = {
       insertData.why_recommended = book.why;
     }
     
+    // Include reputation/accolades if provided
+    if (book.reputation) {
+      insertData.reputation = book.reputation;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('reading_queue')

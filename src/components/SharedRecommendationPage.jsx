@@ -222,6 +222,17 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </div>
             )}
 
+            {/* Reputation & Accolades */}
+            {bookData.reputation && (
+              <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                  <Star className="w-4 h-4 text-amber-500" />
+                  Reputation & Accolades:
+                </p>
+                <p className="text-sm text-[#5F7252] leading-relaxed">{bookData.reputation}</p>
+              </div>
+            )}
+            
             {/* Book Description */}
             {bookData.book_description && (
               <div className="mb-6">
@@ -345,6 +356,17 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               <p className="text-[#4A5940] leading-relaxed text-lg italic">
                 "{bookData.recommendation_note}"
               </p>
+            </div>
+          )}
+
+          {/* Reputation & Accolades */}
+          {bookData.reputation && (
+            <div className="mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <p className="text-sm font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                <Star className="w-4 h-4 text-amber-500" />
+                Reputation & Accolades:
+              </p>
+              <p className="text-sm text-[#5F7252] leading-relaxed">{bookData.reputation}</p>
             </div>
           )}
 

@@ -238,6 +238,7 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
       genres: enrichedData?.genres || [],
       isbn: enrichedData?.isbn || null,
       isbn13: enrichedData?.isbn13 || null,
+      reputation: rec.reputation || null,
     };
     const success = await onAddToQueue(bookWithEnrichment);
     setAddingToQueue(false);
