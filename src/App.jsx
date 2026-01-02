@@ -6,7 +6,7 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
 import { getRecommendations, parseRecommendations } from './lib/recommendationService';
-import { enrichBook } from './lib/bookEnrichment';
+import { useBookEnrichment } from './components/BookCard';
 import { validateMessage, validateBook } from './lib/validation';
 import { cacheUtils } from './lib/cache';
 import { normalizeTitle, normalizeAuthor, safeNumber, bumpLocalMetric } from './lib/textUtils';
@@ -150,8 +150,6 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
   const [userRating, setUserRating] = useState(null);
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   const [markedAsRead, setMarkedAsRead] = useState(false);
-  const [enrichedData, setEnrichedData] = useState(null);
-  const [isEnriching, setIsEnriching] = useState(false);
   
   // Look up full book details from local catalog
   const catalogBook = React.useMemo(() => {
@@ -168,32 +166,17 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, onAddToQueue, o
     return null;
   }, [rec.title]);
 
-  // Enrich ALL books with cover and genres from Google Books
-  useEffect(() => {
-    if (enrichedData || isEnriching) return;
-    
-    const fetchEnrichment = async () => {
-      setIsEnriching(true);
-      try {
-        const data = await enrichBook(rec.title, rec.author || catalogBook?.author);
-        if (data) {
-          setEnrichedData(data);
-        }
-      } catch (err) {
-        console.warn('[RecommendationCard] Enrichment failed:', err);
-      } finally {
-        setIsEnriching(false);
-      }
-    };
-    
-    fetchEnrichment();
-  }, [rec.title, rec.author, catalogBook?.author, enrichedData, isEnriching]);
+  // Auto-enrich with cover and genres using shared hook
+  const { coverUrl, genres, description: enrichedDescription, isbn, isEnriching, enrichedData } = useBookEnrichment(
+    rec.title,
+    rec.author || catalogBook?.author,
+    null, // No existing cover
+    []    // No existing genres
+  );
 
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim();
-  const fullDescription = catalogBook?.description || enrichedData?.description || rec.description;
-  const coverUrl = enrichedData?.coverUrl || null;
-  const genres = enrichedData?.genres || [];
+  const fullDescription = catalogBook?.description || enrichedDescription || rec.description;
 
   // Check if book is in queue with "want_to_read" or "reading" status
   const isInQueue = readingQueue?.some(
