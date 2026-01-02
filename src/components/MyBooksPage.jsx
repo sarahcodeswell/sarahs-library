@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2, Camera, BookOpen, BookMarked, Upload, Loader2, Barcode } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useUserBooks } from '../contexts/UserBooksContext';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import PhotoCaptureModal from './PhotoCaptureModal';
 import StarRating from './StarRating';
 import { generateBookDescriptions } from '../lib/descriptionService';
+import { lookupISBN, isValidISBN, formatBookForQueue } from '../lib/isbnLookup';
 import booksData from '../books.json';
 
 // CSV parsing helper
@@ -62,6 +63,11 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [recognizedBooks, setRecognizedBooks] = useState([]);
   const [newBook, setNewBook] = useState({ title: '', author: '', notes: '' });
+  const [isbnInput, setIsbnInput] = useState('');
+  const [isbnLookupResult, setIsbnLookupResult] = useState(null);
+  const [isLookingUpIsbn, setIsLookingUpIsbn] = useState(false);
+  const [isbnError, setIsbnError] = useState('');
+  const [addMode, setAddMode] = useState('isbn'); // 'isbn' or 'manual'
   const [isUploadingGoodreads, setIsUploadingGoodreads] = useState(false);
   const [goodreadsError, setGoodreadsError] = useState('');
   const goodreadsInputRef = useRef(null);
@@ -82,6 +88,68 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       book.book_author?.toLowerCase().includes(query)
     );
   }, [sortedBooks, searchQuery]);
+
+  const handleIsbnLookup = async () => {
+    if (!isbnInput.trim()) {
+      setIsbnError('Please enter an ISBN');
+      return;
+    }
+
+    if (!isValidISBN(isbnInput)) {
+      setIsbnError('Invalid ISBN format. Enter 10 or 13 digits.');
+      return;
+    }
+
+    setIsLookingUpIsbn(true);
+    setIsbnError('');
+    setIsbnLookupResult(null);
+
+    try {
+      const bookData = await lookupISBN(isbnInput);
+      setIsbnLookupResult(bookData);
+      track('isbn_lookup_success', { isbn: isbnInput });
+    } catch (error) {
+      setIsbnError(error.message || 'Book not found. Try a different ISBN.');
+      track('isbn_lookup_failed', { isbn: isbnInput, error: error.message });
+    } finally {
+      setIsLookingUpIsbn(false);
+    }
+  };
+
+  const handleAddFromIsbn = async () => {
+    if (!user) {
+      onShowAuthModal();
+      return;
+    }
+
+    if (!isbnLookupResult) return;
+
+    const bookData = formatBookForQueue(isbnLookupResult);
+    
+    const result = await addBook({
+      title: bookData.book_title,
+      author: bookData.book_author,
+      description: bookData.description,
+      isbn: bookData.isbn,
+      isbn13: bookData.isbn13,
+      isbn10: bookData.isbn10,
+      cover_image_url: bookData.cover_image_url,
+      genres: bookData.genres,
+      addedVia: 'isbn',
+    });
+
+    if (result.success) {
+      track('book_added_via_isbn', {
+        book_title: bookData.book_title,
+        isbn: bookData.isbn,
+      });
+      setIsbnInput('');
+      setIsbnLookupResult(null);
+      setShowAddModal(false);
+    } else {
+      alert('Failed to add book. Please try again.');
+    }
+  };
 
   const handleAddBook = async (e) => {
     e.preventDefault();
@@ -366,8 +434,8 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             onClick={() => setShowAddModal(true)}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252] text-sm font-medium transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Manually
+            <Barcode className="w-4 h-4" />
+            Add by ISBN
           </button>
           <button
             onClick={() => goodreadsInputRef.current?.click()}
@@ -475,70 +543,181 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="font-serif text-2xl text-[#4A5940] mb-4">Add Book</h2>
+            <h2 className="font-serif text-2xl text-[#4A5940] mb-4">Add Book by ISBN</h2>
             
-            <form onSubmit={handleAddBook}>
+            {/* Mode toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setAddMode('isbn')}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  addMode === 'isbn' 
+                    ? 'bg-[#5F7252] text-white' 
+                    : 'bg-[#F8F6EE] text-[#5F7252] hover:bg-[#E8EBE4]'
+                }`}
+              >
+                By ISBN
+              </button>
+              <button
+                onClick={() => setAddMode('manual')}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  addMode === 'manual' 
+                    ? 'bg-[#5F7252] text-white' 
+                    : 'bg-[#F8F6EE] text-[#5F7252] hover:bg-[#E8EBE4]'
+                }`}
+              >
+                Manual Entry
+              </button>
+            </div>
+
+            {addMode === 'isbn' ? (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[#5F7252] mb-1">
-                    Title *
+                    ISBN (10 or 13 digits)
                   </label>
-                  <input
-                    type="text"
-                    value={newBook.title}
-                    onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
-                    placeholder="Enter book title"
-                    className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
-                    autoFocus
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={isbnInput}
+                      onChange={(e) => {
+                        setIsbnInput(e.target.value);
+                        setIsbnError('');
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && handleIsbnLookup()}
+                      placeholder="e.g., 9780316204262"
+                      className="flex-1 px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleIsbnLookup}
+                      disabled={isLookingUpIsbn}
+                      className="px-4 py-2 rounded-lg bg-[#5F7252] hover:bg-[#4A5940] text-white text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {isLookingUpIsbn ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Look Up'}
+                    </button>
+                  </div>
+                  {isbnError && (
+                    <p className="mt-1 text-xs text-red-600">{isbnError}</p>
+                  )}
+                  <p className="mt-1 text-xs text-[#96A888]">
+                    Find the ISBN on the book's back cover or copyright page
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-[#5F7252] mb-1">
-                    Author
-                  </label>
-                  <input
-                    type="text"
-                    value={newBook.author}
-                    onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
-                    placeholder="Enter author name"
-                    className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
-                  />
-                </div>
+                {/* ISBN Lookup Result */}
+                {isbnLookupResult && (
+                  <div className="p-4 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
+                    <div className="flex gap-3">
+                      {isbnLookupResult.coverUrl && (
+                        <img 
+                          src={isbnLookupResult.coverUrl} 
+                          alt={isbnLookupResult.title}
+                          className="w-16 h-24 object-cover rounded shadow-sm"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-[#4A5940] text-sm truncate">
+                          {isbnLookupResult.title}
+                        </h3>
+                        <p className="text-xs text-[#7A8F6C] mt-0.5">
+                          {isbnLookupResult.author || isbnLookupResult.authors?.join(', ')}
+                        </p>
+                        {isbnLookupResult.categories?.length > 0 && (
+                          <p className="text-xs text-[#96A888] mt-1">
+                            {isbnLookupResult.categories.slice(0, 2).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-[#5F7252] mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    value={newBook.notes}
-                    onChange={(e) => setNewBook({ ...newBook, notes: e.target.value })}
-                    placeholder="Add any notes (optional)"
-                    rows={3}
-                    className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent resize-none"
-                  />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setIsbnInput('');
+                      setIsbnLookupResult(null);
+                      setIsbnError('');
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252] text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddFromIsbn}
+                    disabled={!isbnLookupResult}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-[#5F7252] hover:bg-[#4A5940] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Book
+                  </button>
                 </div>
               </div>
+            ) : (
+              <form onSubmit={handleAddBook}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#5F7252] mb-1">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={newBook.title}
+                      onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
+                      placeholder="Enter book title"
+                      className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+                      autoFocus
+                    />
+                  </div>
 
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setNewBook({ title: '', author: '', notes: '' });
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252] text-sm font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-[#5F7252] hover:bg-[#4A5940] text-white text-sm font-medium transition-colors"
-                >
-                  Add Book
-                </button>
-              </div>
-            </form>
+                  <div>
+                    <label className="block text-sm font-medium text-[#5F7252] mb-1">
+                      Author
+                    </label>
+                    <input
+                      type="text"
+                      value={newBook.author}
+                      onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
+                      placeholder="Enter author name"
+                      className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#5F7252] mb-1">
+                      Notes
+                    </label>
+                    <textarea
+                      value={newBook.notes}
+                      onChange={(e) => setNewBook({ ...newBook, notes: e.target.value })}
+                      placeholder="Add any notes (optional)"
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setNewBook({ title: '', author: '', notes: '' });
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white hover:bg-[#F8F6EE] text-[#5F7252] text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-[#5F7252] hover:bg-[#4A5940] text-white text-sm font-medium transition-colors"
+                  >
+                    Add Book
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
