@@ -3,24 +3,31 @@
  */
 
 /**
- * Common patterns that indicate accolades/awards at the start of descriptions
- * These often come from Google Books API and duplicate the Reputation section
+ * Phrases that indicate the START of actual book content
+ * These help us find where the real description begins after accolades
  */
-const ACCOLADE_PATTERNS = [
-  /^(WINNER|FINALIST|NOMINATED|LONGLISTED|SHORTLISTED)\s+(OF|FOR)\s+THE\s+\d{4}\s+/i,
-  /^(A\s+)?(NEW YORK TIMES|NYT|WASHINGTON POST|NPR|USA TODAY)\s+(BEST\s*SELLER|BESTSELLER|BEST\s+BOOK)/i,
-  /^(WINNER|RECIPIENT)\s+OF\s+(THE\s+)?(PULITZER|BOOKER|NATIONAL BOOK|NOBEL|MAN BOOKER|HUGO|NEBULA)/i,
-  /^(PULITZER|BOOKER|NATIONAL BOOK|NOBEL|EDGAR|AGATHA|HUGO|NEBULA)\s+(PRIZE\s+)?(WINNER|WINNING|AWARD)/i,
-  /^#\d+\s+(NEW YORK TIMES|NYT|BESTSELLER|BEST\s*SELLER)/i,
-  /^(A\s+)?BEST\s+BOOK\s+OF\s+(THE\s+YEAR|20\d{2})/i,
-  /^(AN?\s+)?(INSTANT\s+)?(NEW YORK TIMES|NYT|#\d+)?\s*(BEST\s*SELLER|BESTSELLER)/i,
+const CONTENT_START_MARKERS = [
+  // Story openers
+  /^(In |On |At |The |A |An |When |After |Before |From |Set in |It's |It is |This is |Based on )/i,
+  // Character introductions
+  /^[A-Z][a-z]+( [A-Z][a-z]+)? (is |was |has |had |lives |lived |works |worked )/i,
+  // Year references in narrative context
+  /^(In |It's |It is )\d{4}/i,
+  // Quote that starts the description (curly or straight)
+  /^[""][A-Z]/,
 ];
 
 /**
- * Patterns for award lists that appear at the start of descriptions
- * e.g., "WINNER OF THE 2021 PULITZER PRIZE FOR FICTION NEW YORK TIMES BESTSELLER..."
+ * Publications and sources commonly listed in accolades
  */
-const AWARD_LIST_PATTERN = /^([A-Z\s\d#•\-–—,&]+(?:WINNER|BESTSELLER|BEST BOOK|AWARD|PRIZE|PICK|SELECTION|CHOICE|FINALIST|LIST)[A-Z\s\d#•\-–—,&]*)+/i;
+const PUBLICATION_NAMES = [
+  'Washington Post', 'New York Times', 'NYT', 'NPR', 'USA Today', 'Entertainment Weekly',
+  'Real Simple', 'Marie Claire', 'Lit Hub', 'The Skimm', 'LibraryReads', 'Goodreads',
+  'Publishers Weekly', 'Kirkus', 'Booklist', 'Library Journal', 'People', 'Time',
+  'Oprah', 'Reese', 'Book Club', 'Barnes & Noble', 'Amazon', 'Apple Books',
+  'New York Public Library', 'Chicago Tribune', 'LA Times', 'Boston Globe',
+  'Lit Reactor', 'Book Riot', 'Electric Literature', 'The Guardian', 'BBC'
+];
 
 /**
  * Strip accolades/awards from the beginning of a description
@@ -33,63 +40,87 @@ export function stripAccoladesFromDescription(description) {
   }
   
   let cleaned = description.trim();
+  let iterations = 0;
+  const maxIterations = 10; // Prevent infinite loops
   
-  // First, try to find where the actual description starts
-  // Look for common transition phrases that indicate the start of actual content
-  const contentStartPatterns = [
-    /\b(Based on|In this|This is|Set in|When|After|Before|From|The story|A story|A novel|A tale|In\s+\d{4}|It's\s+\d{4}|It is\s+\d{4})/i,
-    /"[A-Z]/,  // Quote starting with capital letter often indicates review quote followed by description
-  ];
-  
-  // Check if description starts with all-caps award text
-  const firstSentenceMatch = cleaned.match(/^([^.!?"]+[.!?])\s*/);
-  if (firstSentenceMatch) {
-    const firstSentence = firstSentenceMatch[1];
-    // If first sentence is mostly uppercase and contains award keywords, it's likely accolades
-    const upperCaseRatio = (firstSentence.match(/[A-Z]/g) || []).length / firstSentence.length;
-    const hasAwardKeywords = /\b(WINNER|BESTSELLER|BEST BOOK|AWARD|PRIZE|PULITZER|BOOKER|NPR|WASHINGTON POST|NEW YORK TIMES|FINALIST|PICK|SELECTION)\b/i.test(firstSentence);
+  while (iterations < maxIterations) {
+    iterations++;
+    const before = cleaned;
     
-    if (upperCaseRatio > 0.5 && hasAwardKeywords) {
-      // Remove this sentence and continue checking
-      cleaned = cleaned.substring(firstSentenceMatch[0].length).trim();
-      
-      // Recursively clean in case there are multiple award sentences
-      return stripAccoladesFromDescription(cleaned);
+    // 1. Remove leading colons, bullets, dashes (leftover from partial strips)
+    cleaned = cleaned.replace(/^[:\s•\-–—·]+/, '').trim();
+    
+    // 2. Remove "A BEST BOOK OF THE YEAR" style headers with publication lists
+    // Pattern: "A BEST BOOK OF THE YEAR: Pub1 • Pub2 • Pub3"
+    const bestBookPattern = /^(A\s+)?(BEST\s+BOOK|NAMED\s+(ONE\s+OF\s+)?THE\s+BEST|ONE\s+OF\s+THE\s+BEST|MOST\s+ANTICIPATED)[^"']*?(?=["'"]|[A-Z][a-z]{2,}\s+(is|was|has|had|lives|works)|In\s+\d{4}|When\s|After\s|Before\s|From\s|Set\s|The\s+story|Based\s+on|This\s+(is|novel|book)|$)/i;
+    const bestBookMatch = cleaned.match(bestBookPattern);
+    if (bestBookMatch && bestBookMatch[0].length > 10) {
+      cleaned = cleaned.substring(bestBookMatch[0].length).trim();
+      continue;
     }
-  }
-  
-  // Also check for award lists without periods (just space-separated)
-  const awardListMatch = cleaned.match(AWARD_LIST_PATTERN);
-  if (awardListMatch && awardListMatch[0].length > 20) {
-    // Find where the actual content starts after the award list
-    const afterAwards = cleaned.substring(awardListMatch[0].length).trim();
     
-    // Look for a transition to actual content
-    for (const pattern of contentStartPatterns) {
-      const match = afterAwards.match(pattern);
-      if (match && match.index !== undefined && match.index < 50) {
-        // Found content start, use everything from there
-        cleaned = afterAwards.substring(match.index);
-        break;
+    // 3. Remove "#1 NEW YORK TIMES BESTSELLER" style headers
+    const bestsellerPattern = /^(AN?\s+)?(#\d+\s+)?(INSTANT\s+)?(NEW\s+YORK\s+TIMES|NYT|NATIONAL|INTERNATIONAL|USA\s+TODAY)?\s*(BEST\s*SELLER|BESTSELLER|BESTSELLING)[^"']*?(?=["'"]|[A-Z][a-z]{2,}\s+(is|was|has|had)|In\s+\d{4}|When\s|After\s|The\s+story|Based\s+on|This\s+|$)/i;
+    const bestsellerMatch = cleaned.match(bestsellerPattern);
+    if (bestsellerMatch && bestsellerMatch[0].length > 10) {
+      cleaned = cleaned.substring(bestsellerMatch[0].length).trim();
+      continue;
+    }
+    
+    // 4. Remove "WINNER OF THE PULITZER PRIZE" style headers
+    const winnerPattern = /^(WINNER|FINALIST|LONGLISTED|SHORTLISTED|NOMINATED|RECIPIENT)\s+(OF|FOR)\s+[^"']+?(?=["'"]|[A-Z][a-z]{2,}\s+(is|was|has|had)|In\s+\d{4}|When\s|After\s|The\s+story|Based\s+on|This\s+|$)/i;
+    const winnerMatch = cleaned.match(winnerPattern);
+    if (winnerMatch && winnerMatch[0].length > 15) {
+      cleaned = cleaned.substring(winnerMatch[0].length).trim();
+      continue;
+    }
+    
+    // 5. Remove publication lists (": Washington Post • NPR • Entertainment Weekly...")
+    // This catches orphaned lists after other patterns were stripped
+    const pubListPattern = new RegExp(
+      `^[:\\s•\\-–—·]*(${PUBLICATION_NAMES.join('|')})[\\s•\\-–—·]+(${PUBLICATION_NAMES.join('|')})[^"'"]*?(?=["'"]|[A-Z][a-z]{2,}\\s+(is|was|has|had)|In\\s+\\d{4}|When\\s|After\\s|The\\s+story|Based\\s+on|This\\s+|$)`,
+      'i'
+    );
+    const pubListMatch = cleaned.match(pubListPattern);
+    if (pubListMatch) {
+      cleaned = cleaned.substring(pubListMatch[0].length).trim();
+      continue;
+    }
+    
+    // 6. Remove review quotes at the start: "A masterpiece" —NYT
+    const reviewQuotePattern = /^[""][^""]{5,200}[""]\s*[—–-]\s*[A-Za-z\s,\.]+\s*/;
+    const reviewMatch = cleaned.match(reviewQuotePattern);
+    if (reviewMatch) {
+      cleaned = cleaned.substring(reviewMatch[0].length).trim();
+      continue;
+    }
+    
+    // 7. Check if first "sentence" is all-caps award text
+    const firstChunk = cleaned.match(/^([^.!?"]+[.!?])\s*/);
+    if (firstChunk) {
+      const chunk = firstChunk[1];
+      const upperRatio = (chunk.match(/[A-Z]/g) || []).length / chunk.replace(/\s/g, '').length;
+      const hasAwardWords = /\b(WINNER|BESTSELLER|BEST\s*BOOK|AWARD|PRIZE|PULITZER|BOOKER|FINALIST|PICK|SELECTION|NAMED|LONGLISTED|SHORTLISTED)\b/i.test(chunk);
+      
+      if (upperRatio > 0.6 && hasAwardWords) {
+        cleaned = cleaned.substring(firstChunk[0].length).trim();
+        continue;
       }
     }
     
-    // If we found a significant award list but no clear content start,
-    // just remove the award list
-    if (cleaned === description.trim() && afterAwards.length > 50) {
-      cleaned = afterAwards;
-    }
+    // No more changes, we're done
+    if (cleaned === before) break;
   }
   
-  // Clean up any leading quotes that might be review snippets
-  // e.g., "A masterpiece" —NYT  Based on...
-  const reviewQuotePattern = /^"[^"]{10,200}"\s*[—–-]\s*[A-Za-z\s,]+\s*/;
-  const reviewMatch = cleaned.match(reviewQuotePattern);
-  if (reviewMatch) {
-    cleaned = cleaned.substring(reviewMatch[0].length).trim();
+  // Final cleanup: remove any remaining leading punctuation/whitespace
+  cleaned = cleaned.replace(/^[:\s•\-–—·"'"]+/, '').trim();
+  
+  // If we stripped everything or result is too short, return original
+  if (!cleaned || cleaned.length < 20) {
+    return description.trim();
   }
   
-  return cleaned || description; // Return original if we stripped everything
+  return cleaned;
 }
 
 /**

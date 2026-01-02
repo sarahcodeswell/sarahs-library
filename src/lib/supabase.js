@@ -2,6 +2,7 @@
 // Install: npm install @supabase/supabase-js
 
 import { createClient } from '@supabase/supabase-js';
+import { stripAccoladesFromDescription } from './descriptionUtils';
 
 // These will come from environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -197,9 +198,9 @@ export const db = {
       insertData.rating = book.rating;
     }
     
-    // Include description if provided (from recommendations)
+    // Include description if provided (from recommendations) - strip accolades for clean data
     if (book.description) {
-      insertData.description = book.description;
+      insertData.description = stripAccoladesFromDescription(book.description);
     }
     
     // Include why_recommended if provided
@@ -274,7 +275,7 @@ export const db = {
       const updateData = {};
       if (updates.status !== undefined) updateData.status = updates.status;
       if (updates.rating !== undefined) updateData.rating = updates.rating;
-      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.description !== undefined) updateData.description = stripAccoladesFromDescription(updates.description);
       if (updates.reputation !== undefined) updateData.reputation = updates.reputation;
       
       const { data, error } = await supabase
@@ -420,7 +421,7 @@ export const db = {
           book_title: book.book_title || book.title,
           book_author: book.book_author || book.author,
           book_isbn: book.isbn || null,
-          book_description: book.description || book.why_recommended || null,
+          book_description: stripAccoladesFromDescription(book.description || book.why_recommended) || null,
           recommendation_note: note,
           is_from_collection: true
         })
