@@ -29,11 +29,14 @@ const books = JSON.parse(fs.readFileSync(booksPath, 'utf8'));
 
 // Function to generate embedding for a book
 async function generateEmbedding(book) {
+  // Note: "Themes" are Sarah's curator themes (women, emotional, identity, justice, spiritual)
+  // "Genre" is the book category (Literary Fiction, Memoir, Thriller, etc.)
   const text = `
     Title: ${book.title}
     Author: ${book.author || 'Unknown'}
+    Genre: ${book.genre || ''}
     Description: ${book.description || ''}
-    Themes: ${(book.themes || []).join(', ')}
+    Curator Themes: ${(book.themes || []).join(', ')}
     Sarah's Assessment: ${book.sarah_assessment || ''}
   `.trim();
 
@@ -76,6 +79,7 @@ async function generateAllEmbeddings() {
       .insert({
         title: book.title,
         author: book.author,
+        genre: book.genre || null,
         description: book.description,
         themes: book.themes || [],
         sarah_assessment: book.sarah_assessment,

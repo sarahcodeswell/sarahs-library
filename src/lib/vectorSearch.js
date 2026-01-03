@@ -350,6 +350,83 @@ function deduplicateBooks(books) {
 }
 
 /**
+ * Find books by genre from Sarah's curated catalog (books table)
+ * @param {string} genre - Genre to search for (e.g., "Literary Fiction", "Memoir")
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Books in this genre from the catalog
+ */
+export async function findCatalogBooksByGenre(genre, limit = 20) {
+  try {
+    const { data, error } = await supabase.rpc('find_books_by_genre', {
+      genre_filter: genre,
+      limit_count: limit
+    });
+
+    if (error) {
+      console.error('Catalog genre search error:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Catalog genre search failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Find books by author from Sarah's curated catalog (books table)
+ * @param {string} authorName - Author name to search for
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Books by this author from the catalog
+ */
+export async function findCatalogBooksByAuthor(authorName, limit = 20) {
+  try {
+    const { data, error } = await supabase.rpc('find_books_by_author', {
+      author_filter: authorName,
+      limit_count: limit
+    });
+
+    if (error) {
+      console.error('Catalog author search error:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Catalog author search failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Find books by curator theme from Sarah's curated catalog (books table)
+ * Curator themes: women, emotional, identity, justice, spiritual
+ * @param {string[]} themes - Array of theme names
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Books matching these themes from the catalog
+ */
+export async function findCatalogBooksByTheme(themes, limit = 20) {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, author, description, themes, genre, sarah_assessment')
+      .contains('themes', themes)
+      .limit(limit);
+
+    if (error) {
+      console.error('Catalog theme search error:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Catalog theme search failed:', error);
+    return [];
+  }
+}
+
+/**
  * Get loved authors from a user's collection (authors of 4-5 star books)
  * @param {string} userId - User ID
  * @returns {Promise<Array>} Authors with their book counts and avg ratings
