@@ -113,7 +113,10 @@ export function stripAccoladesFromDescription(description) {
   }
   
   // Final cleanup: remove any remaining leading punctuation/whitespace
-  cleaned = cleaned.replace(/^[:\s•\-–—·"'"]+/, '').trim();
+  // Be careful not to strip apostrophes that are part of contractions like "It's"
+  cleaned = cleaned.replace(/^[:\s•\-–—·]+/, '').trim();
+  // Only strip leading quotes if they're not followed by a letter (i.e., orphaned quotes)
+  cleaned = cleaned.replace(/^["'"]+(?![A-Za-z])/, '').trim();
   
   // If we stripped everything or result is too short, return original
   if (!cleaned || cleaned.length < 20) {

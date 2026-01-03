@@ -85,7 +85,7 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
           {description && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
-              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-4'}`}>
+              <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-4' : ''}`}>
                 {stripAccoladesFromDescription(description)}
               </p>
               <button

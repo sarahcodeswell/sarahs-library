@@ -44,13 +44,13 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   }, [book.description]);
   const hasDescription = !!description;
   
-  // Check if description overflows 2 lines
+  // Check if description overflows 4 lines
   React.useEffect(() => {
     if (descriptionRef.current) {
       const lineHeight = parseFloat(getComputedStyle(descriptionRef.current).lineHeight);
       const height = descriptionRef.current.scrollHeight;
-      // If more than ~2.5 lines, consider it long
-      setIsLongDescription(height > lineHeight * 2.5);
+      // If more than ~4.5 lines, consider it long
+      setIsLongDescription(height > lineHeight * 4.5);
     }
   }, [description]);
 
@@ -117,7 +117,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
               <p 
                 ref={descriptionRef}
-                className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-2' : 'line-clamp-4'}`}
+                className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-4' : ''}`}
               >
                 {description}
               </p>
