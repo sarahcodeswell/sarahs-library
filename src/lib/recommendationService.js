@@ -2,7 +2,7 @@
 // Handles all recommendation logic with clear separation of concerns
 
 import { db } from './supabase';
-import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks, findBooksByAuthor, findBooksByGenre } from './vectorSearch';
+import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks, findBooksByAuthor, findBooksByGenre, findCatalogBooksByAuthor, findCatalogBooksByGenre } from './vectorSearch';
 
 /**
  * Detect search intent from user message
@@ -293,14 +293,26 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       console.log('[RecommendationService] Detected intent:', intent.type, '-', intent.value);
 
       if (intent.type === 'author') {
-        // Author-specific search
-        const authorBooks = await findBooksByAuthor(intent.value, 10);
+        // Author-specific search - check BOTH Sarah's catalog AND community
+        const catalogBooks = await findCatalogBooksByAuthor(intent.value, 10);
+        const communityBooks = await findBooksByAuthor(intent.value, 10);
         
         // Check if user is asking for "new/latest" book
         const wantsNew = /\b(new|latest|newest|recent|2024|2025)\b/i.test(userMessage);
         
-        if (authorBooks.length > 0) {
-          vectorContext = `\n\nBOOKS BY ${intent.value.toUpperCase()} IN OUR COMMUNITY:\n${authorBooks.slice(0, 5).map((book, i) => 
+        // Prioritize catalog books (Sarah's curated collection)
+        if (catalogBooks.length > 0) {
+          vectorContext = `\n\nSARAH'S CURATED BOOKS BY ${intent.value.toUpperCase()}:\n${catalogBooks.map((book, i) => 
+            `${i + 1}. "${book.title}" (${book.genre || 'Fiction'})\n   Sarah's take: ${book.sarah_assessment || 'A wonderful read.'}`
+          ).join('\n')}`;
+          
+          if (wantsNew) {
+            vectorContext += `\n\nIMPORTANT: The user specifically wants ${intent.value}'s NEWEST/LATEST book. The books above are from Sarah's catalog. Use your knowledge of this author's full bibliography to recommend their most recently published work (2024 or later if available). If the newest book is in the list above, recommend it. Otherwise, recommend their actual newest release.`;
+          } else {
+            vectorContext += `\n\nThese are ${intent.value}'s books that Sarah has personally curated. Recommend from this list first, as Sarah has vetted these.`;
+          }
+        } else if (communityBooks.length > 0) {
+          vectorContext = `\n\nBOOKS BY ${intent.value.toUpperCase()} IN OUR COMMUNITY:\n${communityBooks.slice(0, 5).map((book, i) => 
             `${i + 1}. "${book.book_title}"${book.avg_rating ? ` - ${book.avg_rating}/5 avg` : ''}`
           ).join('\n')}`;
           
@@ -313,14 +325,22 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
           if (wantsNew) {
             vectorContext = `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work (2024 or later if available). Be specific about the publication year.`;
           } else {
-            vectorContext = `\n\nNote: No books by "${intent.value}" found in our community yet. Use your knowledge to recommend their best works.`;
+            vectorContext = `\n\nNote: No books by "${intent.value}" found in Sarah's catalog or our community yet. Use your knowledge to recommend their best works.`;
           }
         }
       } else if (intent.type === 'genre') {
-        // Genre-specific search
-        const genreBooks = await findBooksByGenre(intent.value, 15);
-        if (genreBooks.length > 0) {
-          const topRated = genreBooks.filter(b => b.avg_rating && parseFloat(b.avg_rating) >= 4).slice(0, 5);
+        // Genre-specific search - check BOTH Sarah's catalog AND community
+        const catalogBooks = await findCatalogBooksByGenre(intent.value, 15);
+        const communityBooks = await findBooksByGenre(intent.value, 15);
+        
+        // Prioritize catalog books
+        if (catalogBooks.length > 0) {
+          vectorContext = `\n\nSARAH'S CURATED ${intent.value.toUpperCase()} BOOKS:\n${catalogBooks.slice(0, 5).map((book, i) => 
+            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'}\n   Sarah's take: ${book.sarah_assessment || 'A wonderful read.'}`
+          ).join('\n')}`;
+          vectorContext += `\n\nThese are ${intent.value} books that Sarah has personally curated. Recommend from this list first.`;
+        } else if (communityBooks.length > 0) {
+          const topRated = communityBooks.filter(b => b.avg_rating && parseFloat(b.avg_rating) >= 4).slice(0, 5);
           vectorContext = `\n\nTOP ${intent.value.toUpperCase()} BOOKS IN OUR COMMUNITY:\n${topRated.map((book, i) => 
             `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg`
           ).join('\n')}`;
