@@ -319,7 +319,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
               if (webData.results && webData.results.length > 0) {
                 console.log('[RecommendationService] Web search results:', webData.results.length);
                 
-                // Look for ISBN in results
+                // Look for ISBN or extract book title from results
                 let foundISBN = null;
                 let foundTitle = null;
                 
@@ -331,14 +331,26 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
                   }
                 }
                 
-                // If we found ISBN, get exact book data
-                if (foundISBN) {
-                  console.log('[RecommendationService] Found ISBN:', foundISBN);
+                // If no ISBN, extract title from knowledge graph or first result
+                if (!foundISBN) {
+                  const knowledge = webData.results.find(r => r.type === 'knowledge');
+                  if (knowledge) {
+                    foundTitle = knowledge.title;
+                  } else if (webData.results.length > 0) {
+                    const first = webData.results[0];
+                    const match = first.title?.match(/^([^-–|]+?)(?:\s*[-–|]|\s+by\s+)/i);
+                    foundTitle = match ? match[1].trim() : first.title?.split(' - ')[0]?.trim();
+                  }
+                  console.log('[RecommendationService] Extracted title:', foundTitle);
+                }
+                
+                // Get book data using ISBN or title+author
+                if (foundISBN || foundTitle) {
+                  console.log('[RecommendationService] Looking up book:', foundTitle, foundISBN || '(no ISBN)');
                   try {
                     const { enrichBook } = await import('./bookEnrichment.js');
-                    const bookData = await enrichBook(foundTitle, intent.value, foundISBN);
+                    const bookData = await enrichBook(foundTitle || '', intent.value, foundISBN || '');
                     if (bookData) {
-                      // Store verified data to use in response (uses outer scope variable)
                       verifiedBookData = {
                         title: bookData.title,
                         author: bookData.author,
@@ -346,7 +358,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
                         description: bookData.description,
                         coverUrl: bookData.coverUrl
                       };
-                      webSearchContext = `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY AS SHOWN):\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13 || bookData.isbn}\nDescription: ${bookData.description || 'A highly anticipated new release.'}\n\n⚠️ CRITICAL: This is a SPECIFIC book request. Your FIRST recommendation MUST be this exact book with this exact title and author. Do NOT change or modify the title. Do NOT recommend a different book first.`;
+                      webSearchContext = `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY AS SHOWN):\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13 || bookData.isbn || 'N/A'}\nDescription: ${bookData.description || 'A highly anticipated new release.'}\n\n⚠️ CRITICAL: This is a SPECIFIC book request. Your FIRST recommendation MUST be this exact book with this exact title and author. Do NOT change or modify the title. Do NOT recommend a different book first.`;
                     }
                   } catch (err) {
                     console.log('[RecommendationService] Book lookup failed:', err.message);
