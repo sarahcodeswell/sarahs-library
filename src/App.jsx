@@ -169,10 +169,11 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
   }, [rec.title]);
 
   // Auto-enrich with cover and genres using shared hook
+  // Skip enrichment if we already have verified data from the recommendation service
   const { coverUrl, genres, description: enrichedDescription, isbn, isEnriching, enrichedData } = useBookEnrichment(
     rec.title,
     rec.author || catalogBook?.author,
-    null, // No existing cover
+    rec.coverUrl || null, // Use verified cover if available
     []    // No existing genres
   );
 
@@ -475,12 +476,12 @@ function RecommendationCard({ rec, chatMode, user, readingQueue, userRecommendat
             </div>
           )}
           
-          {/* About this book - use catalog description or enriched, NOT rec.description which may have reputation mixed in */}
-          {(catalogBook?.description || enrichedDescription) && (
+          {/* About this book - use catalog description, verified description, enriched, or Claude's description */}
+          {(catalogBook?.description || rec.description || enrichedDescription) && (
             <div className="mb-3">
               <p className="text-xs font-medium text-[#4A5940] mb-1">About this book:</p>
               <ExpandableDescription 
-                text={stripAccoladesFromDescription(catalogBook?.description || enrichedDescription)}
+                text={stripAccoladesFromDescription(catalogBook?.description || rec.description || enrichedDescription)}
               />
             </div>
           )}
@@ -1534,7 +1535,29 @@ Find similar books from beyond my library that match this taste profile.
       // POST-AI FILTERING: Remove duplicates and excluded books
       let cleanedText = result.text;
       const exclusionList = result.exclusionList || [];
-      const recs = parseRecommendations(result.text);
+      const verifiedBookData = result.verifiedBookData || null;
+      let recs = parseRecommendations(result.text);
+      
+      // If we have verified book data, merge it into the first recommendation
+      // This ensures the correct title, author, and description are used
+      if (verifiedBookData && recs.length > 0) {
+        const firstRec = recs[0];
+        // Only merge if the titles are similar (Claude may have used the verified data)
+        const verifiedNorm = normalizeTitle(verifiedBookData.title);
+        const firstNorm = normalizeTitle(firstRec.title);
+        if (verifiedNorm === firstNorm || firstNorm.includes(verifiedNorm) || verifiedNorm.includes(firstNorm)) {
+          recs[0] = {
+            ...firstRec,
+            title: verifiedBookData.title, // Use exact verified title
+            author: verifiedBookData.author, // Use exact verified author
+            description: verifiedBookData.description || firstRec.description, // Use verified description
+            isbn: verifiedBookData.isbn,
+            coverUrl: verifiedBookData.coverUrl,
+            verified: true // Flag to skip enrichment
+          };
+          if (import.meta.env.DEV) console.log('[Verified] Merged verified book data:', verifiedBookData.title);
+        }
+      }
       
       // Remove duplicates (case-insensitive title matching)
       const seenTitles = new Set();
