@@ -37,29 +37,37 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    // Rate limiting check (optional)
+    // Rate limiting check (optional - skip if table doesn't exist)
     const userId = req.headers['x-user-id'];
     if (userId) {
-      const { data: rateLimit } = await supabase
-        .from('api_usage')
-        .select('count')
-        .eq('user_id', userId)
-        .eq('endpoint', 'embeddings')
-        .gte('created_at', new Date(Date.now() - 60000).toISOString()) // Last minute
-        .single();
+      try {
+        const { data: rateLimit, error: rateLimitError } = await supabase
+          .from('api_usage')
+          .select('count')
+          .eq('user_id', userId)
+          .eq('endpoint', 'embeddings')
+          .gte('created_at', new Date(Date.now() - 60000).toISOString())
+          .single();
 
-      if (rateLimit && rateLimit.count > 10) {
-        return res.status(429).json({ error: 'Rate limit exceeded' });
+        // Only enforce rate limit if table exists and has data
+        if (!rateLimitError && rateLimit && rateLimit.count > 10) {
+          return res.status(429).json({ error: 'Rate limit exceeded' });
+        }
+
+        // Try to log usage (ignore errors if table doesn't exist)
+        if (!rateLimitError) {
+          await supabase
+            .from('api_usage')
+            .insert({
+              user_id: userId,
+              endpoint: 'embeddings',
+              created_at: new Date().toISOString()
+            }).catch(() => {}); // Silently ignore insert errors
+        }
+      } catch (e) {
+        // Rate limiting is optional, continue without it
+        console.log('Rate limiting skipped:', e.message);
       }
-
-      // Log usage
-      await supabase
-        .from('api_usage')
-        .insert({
-          user_id: userId,
-          endpoint: 'embeddings',
-          created_at: new Date().toISOString()
-        });
     }
 
     // Generate embedding
