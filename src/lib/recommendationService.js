@@ -315,17 +315,46 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
               const webData = await searchResponse.json();
               if (webData.results && webData.results.length > 0) {
                 console.log('[RecommendationService] Web search results:', webData.results.length);
-                // Format web results for context
-                const webInfo = webData.results.slice(0, 3).map(r => {
-                  if (r.type === 'knowledge') {
-                    return `${r.title}: ${r.description || ''}`;
-                  } else if (r.type === 'answer') {
-                    return `${r.answer || r.title}`;
-                  } else {
-                    return `${r.title}: ${r.snippet || ''}`;
+                
+                // Look for ISBN in results
+                let foundISBN = null;
+                let foundTitle = null;
+                
+                for (const result of webData.results) {
+                  if (result.isbn) {
+                    foundISBN = result.isbn;
+                    foundTitle = result.title;
+                    break;
                   }
-                }).join('\n');
-                webSearchContext = `\n\n🌐 CURRENT WEB SEARCH RESULTS FOR "${intent.value} newest book":\n${webInfo}\n\nIMPORTANT: Use this current information from the web to identify ${intent.value}'s NEWEST book. The web results are more current than your training data.`;
+                }
+                
+                // If we found ISBN, get exact book data
+                if (foundISBN) {
+                  console.log('[RecommendationService] Found ISBN:', foundISBN);
+                  try {
+                    const { enrichBook } = await import('./bookEnrichment.js');
+                    const bookData = await enrichBook(foundTitle, intent.value, foundISBN);
+                    if (bookData) {
+                      webSearchContext = `\n\n🌐 EXACT BOOK DATA FROM WEB SEARCH:\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13}\nDescription: ${bookData.description || 'No description available'}\n\nIMPORTANT: This is ${intent.value}'s NEWEST book. Use THIS EXACT title and author in your recommendation. Do NOT change the title or author.`;
+                    }
+                  } catch (err) {
+                    console.log('[RecommendationService] Book lookup failed:', err.message);
+                  }
+                }
+                
+                // Fallback to text-based context if no ISBN lookup
+                if (!webSearchContext) {
+                  const webInfo = webData.results.slice(0, 3).map(r => {
+                    if (r.type === 'knowledge') {
+                      return `${r.title}: ${r.description || ''}`;
+                    } else if (r.type === 'answer') {
+                      return `${r.answer || r.title}`;
+                    } else {
+                      return `${r.title}: ${r.snippet || ''}`;
+                    }
+                  }).join('\n');
+                  webSearchContext = `\n\n🌐 CURRENT WEB SEARCH RESULTS FOR "${intent.value} newest book":\n${webInfo}\n\nIMPORTANT: Use this current information from the web to identify ${intent.value}'s NEWEST book.`;
+                }
               }
             }
           } catch (err) {

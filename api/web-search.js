@@ -71,11 +71,16 @@ export default async function handler(req, res) {
     // Add organic results
     if (data.organic) {
       data.organic.slice(0, 5).forEach(result => {
+        // Extract ISBN from snippet if present
+        const isbnMatch = result.snippet?.match(/ISBN[-\s]?(\d{10,13})/i);
+        const isbn = isbnMatch ? isbnMatch[1].replace(/[-\s]/g, '') : null;
+        
         results.push({
           type: 'organic',
           title: result.title,
           snippet: result.snippet,
-          link: result.link
+          link: result.link,
+          isbn: isbn
         });
       });
     }

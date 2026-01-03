@@ -23,8 +23,8 @@ if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
 
-// Load Sarah's book catalog
-const booksPath = path.join(process.cwd(), 'src', 'books.json');
+// Load Sarah's book catalog (enriched with ISBNs)
+const booksPath = path.join(process.cwd(), 'src', 'books-enriched.json');
 const books = JSON.parse(fs.readFileSync(booksPath, 'utf8'));
 
 // Function to generate embedding for a book
@@ -83,6 +83,9 @@ async function generateAllEmbeddings() {
         description: book.description,
         themes: book.themes || [],
         sarah_assessment: book.sarah_assessment,
+        isbn13: book.isbn13 || null,
+        isbn10: book.isbn10 || null,
+        cover_url: book.coverUrl || null,
         embedding: embedding,
         updated_at: new Date().toISOString()
       });

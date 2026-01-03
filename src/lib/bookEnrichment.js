@@ -8,14 +8,20 @@
  * @param {string} author - Book author (optional but improves accuracy)
  * @returns {Promise<Object>} Enriched book data
  */
-export async function enrichBook(title, author = '') {
+export async function enrichBook(title, author = '', isbn = '') {
   try {
-    // Build search query
-    const query = author 
-      ? `intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`
-      : `intitle:${encodeURIComponent(title)}`;
+    let url;
     
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`;
+    // Use ISBN if provided (exact match)
+    if (isbn) {
+      url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`;
+    } else {
+      // Fallback to title/author search
+      const query = author 
+        ? `intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`
+        : `intitle:${encodeURIComponent(title)}`;
+      url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`;
+    }
     
     const response = await fetch(url);
     if (!response.ok) {
