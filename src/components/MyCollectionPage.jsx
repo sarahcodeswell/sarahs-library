@@ -245,8 +245,10 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     // Add finished books from reading queue
     finishedBooks.forEach(book => {
       const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
-      // Fallback to catalog description if not stored
-      const description = book.description || getCatalogDescription(book.book_title, book.book_author);
+      // Prefer catalog description for curated books (clean, no accolades)
+      // Fall back to stored description for non-catalog books
+      const catalogDesc = getCatalogDescription(book.book_title, book.book_author);
+      const description = catalogDesc || book.description;
       bookMap.set(key, {
         ...book,
         description,
@@ -258,8 +260,10 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     userBooks.forEach(book => {
       const key = `${book.book_title?.toLowerCase()}:${book.book_author?.toLowerCase()}`;
       if (!bookMap.has(key)) {
-        // Fallback to catalog description if not stored
-        const description = book.description || getCatalogDescription(book.book_title, book.book_author);
+        // Prefer catalog description for curated books (clean, no accolades)
+        // Fall back to stored description for non-catalog books
+        const catalogDesc = getCatalogDescription(book.book_title, book.book_author);
+        const description = catalogDesc || book.description;
         bookMap.set(key, {
           ...book,
           description,
