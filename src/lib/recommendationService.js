@@ -287,6 +287,8 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
 
     // Add vector search context if available - now includes intelligent search detection
     let vectorContext = '';
+    let isSpecificBookRequest = false; // Track if this is a specific single-book request
+    let verifiedBookData = null; // Store verified book data for specific requests
     try {
       // Detect search intent (author, genre, theme, or general)
       const intent = detectSearchIntent(userMessage);
@@ -297,8 +299,9 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         const catalogBooks = await findCatalogBooksByAuthor(intent.value, 10);
         const communityBooks = await findBooksByAuthor(intent.value, 10);
         
-        // Check if user is asking for "new/latest" book
+        // Check if user is asking for "new/latest" book - this is a SPECIFIC request
         const wantsNew = /\b(new|latest|newest|recent|upcoming|2024|2025|2026)\b/i.test(userMessage);
+        isSpecificBookRequest = wantsNew; // Flag for single-book response (uses outer scope variable)
         
         // If user wants NEW book, do a web search to get current info
         let webSearchContext = '';
@@ -335,7 +338,15 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
                     const { enrichBook } = await import('./bookEnrichment.js');
                     const bookData = await enrichBook(foundTitle, intent.value, foundISBN);
                     if (bookData) {
-                      webSearchContext = `\n\n🌐 EXACT BOOK DATA FROM WEB SEARCH:\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13}\nDescription: ${bookData.description || 'No description available'}\n\nIMPORTANT: This is ${intent.value}'s NEWEST book. Use THIS EXACT title and author in your recommendation. Do NOT change the title or author.`;
+                      // Store verified data to use in response (uses outer scope variable)
+                      verifiedBookData = {
+                        title: bookData.title,
+                        author: bookData.author,
+                        isbn: bookData.isbn13 || bookData.isbn,
+                        description: bookData.description,
+                        coverUrl: bookData.coverUrl
+                      };
+                      webSearchContext = `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY AS SHOWN):\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13 || bookData.isbn}\nDescription: ${bookData.description || 'A highly anticipated new release.'}\n\n⚠️ CRITICAL: This is a SPECIFIC book request. Your FIRST recommendation MUST be this exact book with this exact title and author. Do NOT change or modify the title. Do NOT recommend a different book first.`;
                     }
                   } catch (err) {
                     console.log('[RecommendationService] Book lookup failed:', err.message);
@@ -383,7 +394,12 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         
         // Add web search context (prioritized for "new" requests)
         if (webSearchContext) {
-          vectorContext = webSearchContext + vectorContext;
+          // For specific book requests, web search context is PRIMARY - don't dilute with catalog
+          if (isSpecificBookRequest && verifiedBookData) {
+            vectorContext = webSearchContext; // ONLY use verified data, skip catalog context
+          } else {
+            vectorContext = webSearchContext + vectorContext;
+          }
         } else if (wantsNew && !webSearchContext) {
           // Fallback if web search didn't work
           vectorContext += `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work.`;
@@ -425,18 +441,20 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         }
       }
 
-      // Always add cross-user learning context (crowd wisdom)
-      const crowdFavorites = await findSimilarBooksAcrossUsers(userMessage, 5, 0.5);
-      if (crowdFavorites.length > 0) {
-        const crowdContext = crowdFavorites
-          .filter(b => b.avg_rating >= 4 && b.user_count >= 1)
-          .slice(0, 3)
-          .map((book, i) => 
-            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
-          ).join('\n');
-        
-        if (crowdContext) {
-          vectorContext += `\n\nBOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
+      // Add cross-user learning context (crowd wisdom) - but NOT for specific book requests
+      if (!isSpecificBookRequest || !verifiedBookData) {
+        const crowdFavorites = await findSimilarBooksAcrossUsers(userMessage, 5, 0.5);
+        if (crowdFavorites.length > 0) {
+          const crowdContext = crowdFavorites
+            .filter(b => b.avg_rating >= 4 && b.user_count >= 1)
+            .slice(0, 3)
+            .map((book, i) => 
+              `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
+            ).join('\n');
+          
+          if (crowdContext) {
+            vectorContext += `\n\nBOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
+          }
         }
       }
 
