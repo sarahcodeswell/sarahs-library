@@ -63,9 +63,11 @@ function detectSearchIntent(message) {
   
   for (const genre of genres) {
     if (lowerMessage.includes(genre)) {
-      // Check if it's a genre request
-      if (/(?:want|looking for|recommend|suggest|give me|show me|find).+/i.test(lowerMessage) ||
-          lowerMessage.includes('books') || lowerMessage.includes('read')) {
+      // Check if it's a genre request - be flexible with phrasing
+      if (/(?:want|looking for|recommend|suggest|give me|show me|find|try|into|like|love|enjoy|need|craving)/i.test(lowerMessage) ||
+          lowerMessage.includes('books') || lowerMessage.includes('read') ||
+          lowerMessage.startsWith("let's") || lowerMessage.startsWith('how about') ||
+          lowerMessage.length < 50) { // Short messages with genre are likely genre requests
         return { type: 'genre', value: genre };
       }
     }
