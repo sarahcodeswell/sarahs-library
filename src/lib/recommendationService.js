@@ -298,17 +298,48 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         const communityBooks = await findBooksByAuthor(intent.value, 10);
         
         // Check if user is asking for "new/latest" book
-        const wantsNew = /\b(new|latest|newest|recent|2024|2025)\b/i.test(userMessage);
+        const wantsNew = /\b(new|latest|newest|recent|upcoming|2024|2025|2026)\b/i.test(userMessage);
         
-        // Prioritize catalog books (Sarah's curated collection)
+        // If user wants NEW book, do a web search to get current info
+        let webSearchContext = '';
+        if (wantsNew) {
+          try {
+            const searchResponse = await fetch('/api/web-search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                query: `${intent.value} newest book 2025 2026 release date` 
+              }),
+            });
+            if (searchResponse.ok) {
+              const webData = await searchResponse.json();
+              if (webData.results && webData.results.length > 0) {
+                console.log('[RecommendationService] Web search results:', webData.results.length);
+                // Format web results for context
+                const webInfo = webData.results.slice(0, 3).map(r => {
+                  if (r.type === 'knowledge') {
+                    return `${r.title}: ${r.description || ''}`;
+                  } else if (r.type === 'answer') {
+                    return `${r.answer || r.title}`;
+                  } else {
+                    return `${r.title}: ${r.snippet || ''}`;
+                  }
+                }).join('\n');
+                webSearchContext = `\n\n🌐 CURRENT WEB SEARCH RESULTS FOR "${intent.value} newest book":\n${webInfo}\n\nIMPORTANT: Use this current information from the web to identify ${intent.value}'s NEWEST book. The web results are more current than your training data.`;
+              }
+            }
+          } catch (err) {
+            console.log('[RecommendationService] Web search failed:', err.message);
+          }
+        }
+        
+        // Build catalog context
         if (catalogBooks.length > 0) {
           vectorContext = `\n\nSARAH'S CURATED BOOKS BY ${intent.value.toUpperCase()}:\n${catalogBooks.map((book, i) => 
             `${i + 1}. "${book.title}" (${book.genre || 'Fiction'})\n   Sarah's take: ${book.sarah_assessment || 'A wonderful read.'}`
           ).join('\n')}`;
           
-          if (wantsNew) {
-            vectorContext += `\n\nIMPORTANT: The user specifically wants ${intent.value}'s NEWEST/LATEST book. The books above are from Sarah's catalog. Use your knowledge of this author's full bibliography to recommend their most recently published work (2024 or later if available). If the newest book is in the list above, recommend it. Otherwise, recommend their actual newest release.`;
-          } else {
+          if (!wantsNew) {
             vectorContext += `\n\nThese are ${intent.value}'s books that Sarah has personally curated. Recommend from this list first, as Sarah has vetted these.`;
           }
         } else if (communityBooks.length > 0) {
@@ -316,17 +347,17 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
             `${i + 1}. "${book.book_title}"${book.avg_rating ? ` - ${book.avg_rating}/5 avg` : ''}`
           ).join('\n')}`;
           
-          if (wantsNew) {
-            vectorContext += `\n\nIMPORTANT: The user specifically wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work (2024 or later if available). Do NOT recommend older books unless you're certain there's nothing newer.`;
-          } else {
+          if (!wantsNew) {
             vectorContext += `\n\nIMPORTANT: The user is asking about ${intent.value}. Recommend OTHER books by this author NOT in the list above, or suggest similar authors if they've read most of their work.`;
           }
-        } else {
-          if (wantsNew) {
-            vectorContext = `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work (2024 or later if available). Be specific about the publication year.`;
-          } else {
-            vectorContext = `\n\nNote: No books by "${intent.value}" found in Sarah's catalog or our community yet. Use your knowledge to recommend their best works.`;
-          }
+        }
+        
+        // Add web search context (prioritized for "new" requests)
+        if (webSearchContext) {
+          vectorContext = webSearchContext + vectorContext;
+        } else if (wantsNew && !webSearchContext) {
+          // Fallback if web search didn't work
+          vectorContext += `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work.`;
         }
       } else if (intent.type === 'genre') {
         // Genre-specific search - check BOTH Sarah's catalog AND community
