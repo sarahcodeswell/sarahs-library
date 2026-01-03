@@ -65,10 +65,15 @@ async function generateAllEmbeddings() {
       continue;
     }
     
-    // Insert into database
+    // Delete existing entry if present, then insert
+    await supabase
+      .from('books')
+      .delete()
+      .eq('title', book.title);
+    
     const { error } = await supabase
       .from('books')
-      .upsert({
+      .insert({
         title: book.title,
         author: book.author,
         description: book.description,
@@ -76,8 +81,6 @@ async function generateAllEmbeddings() {
         sarah_assessment: book.sarah_assessment,
         embedding: embedding,
         updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'title' // Use title as unique identifier
       });
     
     if (error) {
