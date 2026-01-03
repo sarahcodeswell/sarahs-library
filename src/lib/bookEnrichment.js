@@ -2,6 +2,38 @@
 // Fetches cover images, genres, and ISBN for any book by title/author
 // Used to enrich AI recommendations and ensure consistent data across the app
 
+import catalogBooks from '../books-enriched.json';
+
+// In-memory cache to prevent repeated API calls and 429 errors
+const enrichmentCache = new Map();
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+
+// Build catalog index for fast lookups (normalized title -> book)
+const catalogIndex = new Map();
+catalogBooks.forEach(book => {
+  const normalizedTitle = book.title.toLowerCase().trim();
+  catalogIndex.set(normalizedTitle, book);
+});
+
+/**
+ * Check if a book is in Sarah's catalog and return its data
+ */
+function findInCatalog(title, author) {
+  const normalizedTitle = title?.toLowerCase().trim();
+  const catalogBook = catalogIndex.get(normalizedTitle);
+  
+  if (catalogBook) {
+    // Verify author matches (if provided)
+    if (author && catalogBook.author) {
+      const authorMatch = catalogBook.author.toLowerCase().includes(author.toLowerCase()) ||
+                         author.toLowerCase().includes(catalogBook.author.toLowerCase());
+      if (!authorMatch) return null;
+    }
+    return catalogBook;
+  }
+  return null;
+}
+
 /**
  * Enrich a book with cover image, genres, and ISBN from Google Books API
  * @param {string} title - Book title
@@ -10,6 +42,36 @@
  */
 export async function enrichBook(title, author = '', isbn = '') {
   try {
+    // Create cache key
+    const cacheKey = `${title}|${author}|${isbn}`.toLowerCase();
+    
+    // Check cache first
+    const cached = enrichmentCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    
+    // Check catalog first - no API call needed for known books
+    const catalogBook = findInCatalog(title, author);
+    if (catalogBook) {
+      const result = {
+        title: catalogBook.title,
+        author: catalogBook.author,
+        authors: [catalogBook.author],
+        description: catalogBook.description || null,
+        coverUrl: catalogBook.coverUrl || null,
+        cover_image_url: catalogBook.coverUrl || null,
+        genres: catalogBook.genre ? [catalogBook.genre] : [],
+        isbn: catalogBook.isbn13 || catalogBook.isbn10 || null,
+        isbn13: catalogBook.isbn13 || null,
+        isbn10: catalogBook.isbn10 || null,
+        fromCatalog: true
+      };
+      enrichmentCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return result;
+    }
+    
+    // For non-catalog books, use Google Books API
     let url;
     
     // Use ISBN if provided (exact match)
@@ -26,6 +88,10 @@ export async function enrichBook(title, author = '', isbn = '') {
     const response = await fetch(url);
     if (!response.ok) {
       console.warn('[BookEnrichment] Google Books API error:', response.status);
+      // Cache the failure to prevent repeated 429 errors
+      if (response.status === 429) {
+        enrichmentCache.set(cacheKey, { data: null, timestamp: Date.now() });
+      }
       return null;
     }
     
@@ -33,6 +99,8 @@ export async function enrichBook(title, author = '', isbn = '') {
     
     if (!data.items || data.items.length === 0) {
       console.warn('[BookEnrichment] No results for:', title, author);
+      // Cache empty results too
+      enrichmentCache.set(cacheKey, { data: null, timestamp: Date.now() });
       return null;
     }
     
@@ -55,13 +123,13 @@ export async function enrichBook(title, author = '', isbn = '') {
       }
     }
     
-    return {
+    const result = {
       title: book.title || title,
       author: book.authors?.[0] || author,
       authors: book.authors || [author],
       description: book.description || null,
       coverUrl,
-      cover_image_url: coverUrl, // Alias for consistency with DB schema
+      cover_image_url: coverUrl,
       genres: book.categories || [],
       isbn: isbn13 || isbn10 || null,
       isbn13,
@@ -69,7 +137,12 @@ export async function enrichBook(title, author = '', isbn = '') {
       publisher: book.publisher || null,
       publishedDate: book.publishedDate || null,
       pageCount: book.pageCount || null,
+      fromCatalog: false
     };
+    
+    // Cache the result
+    enrichmentCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   } catch (error) {
     console.error('[BookEnrichment] Error enriching book:', error);
     return null;
