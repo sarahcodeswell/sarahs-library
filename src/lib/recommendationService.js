@@ -1,106 +1,11 @@
-// Clean recommendation service - single source of truth
-// Handles all recommendation logic with clear separation of concerns
+// Recommendation Service - Spec-compliant implementation
+// Single source of truth for recommendation logic
+// Uses: Query Classifier → Recommendation Paths → Response Templates
 
 import { db } from './supabase';
-import { findSimilarBooks, getBooksByThemes, findSimilarBooksAcrossUsers, getPopularBooks, findBooksByAuthor, findBooksByGenre, findCatalogBooksByAuthor, findCatalogBooksByGenre } from './vectorSearch';
-
-/**
- * Detect search intent from user message
- * Returns { type: 'author'|'genre'|'theme'|'general', value: string }
- */
-function detectSearchIntent(message) {
-  const lowerMessage = message.toLowerCase().trim();
-  
-  // Author patterns - order matters, more specific first
-  const authorPatterns = [
-    // "the new Paula McLain book", "the latest Kristin Hannah book"
-    /(?:the\s+)?(?:new|latest|newest|recent)\s+([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+book/i,
-    // "a Paula McLain book", "any Paula McLain book"
-    /(?:a|any|another)\s+([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+book/i,
-    // "Paula McLain's new book", "Paula McLain's latest"
-    /([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)(?:'s|s)\s+(?:new|latest|newest|book)/i,
-    // "books by Paula McLain"
-    /books?\s+(?:by|from)\s+(.+)/i,
-    // "more by Paula McLain"
-    /more\s+(?:by|from)\s+(.+)/i,
-    // "author Paula McLain"
-    /(?:author|writer)\s+(.+)/i,
-    // "Paula McLain books"
-    /([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)\s+books?/i,
-    // "recommend something by Paula McLain"
-    /recommend.+(?:by|from)\s+(.+)/i,
-    // "anything by Paula McLain"
-    /anything\s+(?:by|from)\s+(.+)/i,
-    // "read Paula McLain" or "read the Paula McLain"
-    /read\s+(?:the\s+)?(?:new\s+)?([A-Z][a-z]+\s+[A-Z][a-zA-Z]+)/i,
-  ];
-  
-  for (const pattern of authorPatterns) {
-    const match = message.match(pattern);
-    if (match && match[1]) {
-      const author = match[1].trim().replace(/[?.,!]$/, '').replace(/\s+book$/i, '');
-      // Check if it looks like a name (has capital letters, reasonable length)
-      if (/^[A-Z][a-z]+\s+[A-Z]/.test(author) && author.length > 5 && author.length < 40) {
-        return { type: 'author', value: author };
-      }
-    }
-  }
-  
-  // Check for standalone name pattern (e.g., "Paula McLain")
-  if (/^[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(message.trim())) {
-    return { type: 'author', value: message.trim() };
-  }
-
-  // Genre patterns - common book genres
-  const genres = [
-    'fiction', 'non-fiction', 'nonfiction', 'mystery', 'thriller', 'romance', 
-    'sci-fi', 'science fiction', 'fantasy', 'horror', 'biography', 'autobiography',
-    'memoir', 'history', 'historical fiction', 'literary fiction', 'young adult',
-    'self-help', 'self help', 'business', 'psychology', 'philosophy', 'religion',
-    'spirituality', 'travel', 'cooking', 'art', 'poetry', 'drama', 'comedy',
-    'adventure', 'crime', 'suspense', 'dystopian', 'contemporary'
-  ];
-  
-  for (const genre of genres) {
-    if (lowerMessage.includes(genre)) {
-      // Check if it's a genre request - be flexible with phrasing
-      if (/(?:want|looking for|recommend|suggest|give me|show me|find|try|into|like|love|enjoy|need|craving)/i.test(lowerMessage) ||
-          lowerMessage.includes('books') || lowerMessage.includes('read') ||
-          lowerMessage.startsWith("let's") || lowerMessage.startsWith('how about') ||
-          lowerMessage.length < 50) { // Short messages with genre are likely genre requests
-        return { type: 'genre', value: genre };
-      }
-    }
-  }
-
-  // Theme patterns (our curated themes)
-  const themeMap = {
-    "women's stories": 'women',
-    "women's fiction": 'women',
-    'female protagonists': 'women',
-    'emotional': 'emotional',
-    'emotional depth': 'emotional',
-    'moving': 'emotional',
-    'identity': 'identity',
-    'belonging': 'identity',
-    'cultural identity': 'identity',
-    'spiritual': 'spiritual',
-    'spirituality': 'spiritual',
-    'meaning': 'spiritual',
-    'mindfulness': 'spiritual',
-    'justice': 'justice',
-    'social justice': 'justice',
-    'systemic': 'justice'
-  };
-
-  for (const [phrase, theme] of Object.entries(themeMap)) {
-    if (lowerMessage.includes(phrase)) {
-      return { type: 'theme', value: theme };
-    }
-  }
-
-  return { type: 'general', value: message };
-}
+import { classifyQuery, getRecommendationPath, getTasteAlignmentLabel } from './queryClassifier';
+import { executeRecommendationPath } from './recommendationPaths';
+import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
 
 /**
  * Build system prompt for Claude
@@ -239,36 +144,69 @@ function buildExclusionMessage(exclusionList) {
 }
 
 /**
- * Get book recommendations from Claude
- * Single source of truth for recommendation logic
+ * Get book recommendations - Spec-compliant implementation
+ * Flow: Classify Query → Route to Path → Build Context → Generate Response
  */
 export async function getRecommendations(userId, userMessage, readingQueue = [], themeFilters = []) {
   try {
-    // 1. Fetch exclusion list (single fast query)
+    console.log('[RecommendationService] Starting recommendation flow');
+    
+    // 1. Fetch exclusion list
     let exclusionList = [];
     if (userId) {
       const { data: excludedTitles, error } = await db.getUserExclusionList(userId);
       if (!error && excludedTitles) {
         exclusionList = excludedTitles;
         console.log('[RecommendationService] Exclusion list loaded:', exclusionList.length, 'books');
-      } else if (error) {
-        console.error('[RecommendationService] Failed to load exclusion list:', error);
       }
     }
 
-    // 2. Build system prompt (cached)
+    // 2. Classify the query (lightweight Claude call)
+    const classification = await classifyQuery(userMessage);
+    console.log('[RecommendationService] Classification:', {
+      intent: classification.intent,
+      tasteAlignment: classification.tasteAlignment.score,
+      specificity: classification.specificity,
+      temporalIntent: classification.temporalIntent
+    });
+
+    // 3. Determine recommendation path
+    const path = getRecommendationPath(classification);
+    console.log('[RecommendationService] Using path:', path);
+
+    // 4. Execute the appropriate path to get context
+    const pathResult = await executeRecommendationPath(path, userMessage, classification, userId);
+    
+    // 5. Build retrieved context for Claude
+    const retrievedContext = {
+      catalogBooks: pathResult.books?.filter(b => b.source === 'catalog') || [],
+      worldBooks: pathResult.books?.filter(b => b.source === 'world' || b.source === 'temporal') || [],
+      verifiedBook: pathResult.verifiedBookData || null
+    };
+
+    // Handle hybrid path sections
+    if (pathResult.sections) {
+      retrievedContext.catalogBooks = pathResult.sections
+        .filter(s => s.alignmentCategory === 'sarahs_collection')
+        .flatMap(s => s.books);
+      retrievedContext.worldBooks = pathResult.sections
+        .filter(s => s.alignmentCategory !== 'sarahs_collection')
+        .flatMap(s => s.books);
+    }
+
+    // 6. Build system prompt
     const systemPrompt = buildSystemPrompt();
 
-    // 3. Build user message
+    // 7. Build user message with context
     const messageParts = [];
 
-    // Add user preferences
+    // Add user preferences from reading history
     const preferences = buildUserPreferences(readingQueue);
     if (preferences) {
       messageParts.push(preferences);
     }
 
-    // Add theme filter requirements (STRICT)
+    // Add theme filter requirements
     if (themeFilters && themeFilters.length > 0) {
       const themeLabels = {
         women: "Women's stories",
@@ -278,7 +216,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         justice: "Justice & systems"
       };
       const selectedThemes = themeFilters.map(t => themeLabels[t] || t).join(', ');
-      messageParts.push(`🎯 MANDATORY THEME REQUIREMENT:\nALL recommendations MUST match at least one of these themes: ${selectedThemes}\nDo NOT recommend books that don't fit these themes, even if they're excellent books.`);
+      messageParts.push(`🎯 MANDATORY THEME REQUIREMENT:\nALL recommendations MUST match at least one of these themes: ${selectedThemes}`);
     }
 
     // Add exclusion list
@@ -287,212 +225,59 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       messageParts.push(exclusionMessage);
     }
 
-    // Add vector search context if available - now includes intelligent search detection
-    let vectorContext = '';
-    let isSpecificBookRequest = false; // Track if this is a specific single-book request
-    let verifiedBookData = null; // Store verified book data for specific requests
-    try {
-      // Detect search intent (author, genre, theme, or general)
-      const intent = detectSearchIntent(userMessage);
-      console.log('[RecommendationService] Detected intent:', intent.type, '-', intent.value);
+    // Add classification context
+    const alignmentLabel = getTasteAlignmentLabel(classification.tasteAlignment.score);
+    messageParts.push(`QUERY ANALYSIS:
+- Taste alignment: ${classification.tasteAlignment.score.toFixed(2)} (${alignmentLabel})
+- Intent: ${classification.intent}
+- Path: ${path}`);
 
-      if (intent.type === 'author') {
-        // Author-specific search - check BOTH Sarah's catalog AND community
-        const catalogBooks = await findCatalogBooksByAuthor(intent.value, 10);
-        const communityBooks = await findBooksByAuthor(intent.value, 10);
-        
-        // Check if user is asking for "new/latest" book - this is a SPECIFIC request
-        const wantsNew = /\b(new|latest|newest|recent|upcoming|2024|2025|2026)\b/i.test(userMessage);
-        isSpecificBookRequest = wantsNew; // Flag for single-book response (uses outer scope variable)
-        
-        // If user wants NEW book, do a web search to get current info
-        let webSearchContext = '';
-        if (wantsNew) {
-          try {
-            const searchResponse = await fetch('/api/web-search', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                query: `${intent.value} newest book 2025 2026 release date` 
-              }),
-            });
-            if (searchResponse.ok) {
-              const webData = await searchResponse.json();
-              if (webData.results && webData.results.length > 0) {
-                console.log('[RecommendationService] Web search results:', webData.results.length);
-                
-                // Look for ISBN or extract book title from results
-                let foundISBN = null;
-                let foundTitle = null;
-                
-                for (const result of webData.results) {
-                  if (result.isbn) {
-                    foundISBN = result.isbn;
-                    foundTitle = result.title;
-                    break;
-                  }
-                }
-                
-                // If no ISBN, extract title from knowledge graph or first result
-                if (!foundISBN) {
-                  const knowledge = webData.results.find(r => r.type === 'knowledge');
-                  if (knowledge) {
-                    foundTitle = knowledge.title;
-                  } else if (webData.results.length > 0) {
-                    const first = webData.results[0];
-                    const match = first.title?.match(/^([^-–|]+?)(?:\s*[-–|]|\s+by\s+)/i);
-                    foundTitle = match ? match[1].trim() : first.title?.split(' - ')[0]?.trim();
-                  }
-                  console.log('[RecommendationService] Extracted title:', foundTitle);
-                }
-                
-                // Get book data using ISBN or title+author
-                if (foundISBN || foundTitle) {
-                  console.log('[RecommendationService] Looking up book:', foundTitle, foundISBN || '(no ISBN)');
-                  try {
-                    const { enrichBook } = await import('./bookEnrichment.js');
-                    const bookData = await enrichBook(foundTitle || '', intent.value, foundISBN || '');
-                    if (bookData) {
-                      verifiedBookData = {
-                        title: bookData.title,
-                        author: bookData.author,
-                        isbn: bookData.isbn13 || bookData.isbn,
-                        description: bookData.description,
-                        coverUrl: bookData.coverUrl
-                      };
-                      webSearchContext = `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY AS SHOWN):\nTitle: ${bookData.title}\nAuthor: ${bookData.author}\nISBN: ${bookData.isbn13 || bookData.isbn || 'N/A'}\nDescription: ${bookData.description || 'A highly anticipated new release.'}\n\n⚠️ CRITICAL: This is a SPECIFIC book request. Your FIRST recommendation MUST be this exact book with this exact title and author. Do NOT change or modify the title. Do NOT recommend a different book first.`;
-                    }
-                  } catch (err) {
-                    console.log('[RecommendationService] Book lookup failed:', err.message);
-                  }
-                }
-                
-                // Fallback to text-based context if no ISBN lookup
-                if (!webSearchContext) {
-                  const webInfo = webData.results.slice(0, 3).map(r => {
-                    if (r.type === 'knowledge') {
-                      return `${r.title}: ${r.description || ''}`;
-                    } else if (r.type === 'answer') {
-                      return `${r.answer || r.title}`;
-                    } else {
-                      return `${r.title}: ${r.snippet || ''}`;
-                    }
-                  }).join('\n');
-                  webSearchContext = `\n\n🌐 CURRENT WEB SEARCH RESULTS FOR "${intent.value} newest book":\n${webInfo}\n\nIMPORTANT: Use this current information from the web to identify ${intent.value}'s NEWEST book.`;
-                }
-              }
-            }
-          } catch (err) {
-            console.log('[RecommendationService] Web search failed:', err.message);
-          }
-        }
-        
-        // Build catalog context
-        if (catalogBooks.length > 0) {
-          vectorContext = `\n\nSARAH'S CURATED BOOKS BY ${intent.value.toUpperCase()}:\n${catalogBooks.map((book, i) => 
-            `${i + 1}. "${book.title}" (${book.genre || 'Fiction'})\n   Sarah's take: ${book.sarah_assessment || 'A wonderful read.'}`
-          ).join('\n')}`;
-          
-          if (!wantsNew) {
-            vectorContext += `\n\nThese are ${intent.value}'s books that Sarah has personally curated. Recommend from this list first, as Sarah has vetted these.`;
-          }
-        } else if (communityBooks.length > 0) {
-          vectorContext = `\n\nBOOKS BY ${intent.value.toUpperCase()} IN OUR COMMUNITY:\n${communityBooks.slice(0, 5).map((book, i) => 
-            `${i + 1}. "${book.book_title}"${book.avg_rating ? ` - ${book.avg_rating}/5 avg` : ''}`
-          ).join('\n')}`;
-          
-          if (!wantsNew) {
-            vectorContext += `\n\nIMPORTANT: The user is asking about ${intent.value}. Recommend OTHER books by this author NOT in the list above, or suggest similar authors if they've read most of their work.`;
-          }
-        }
-        
-        // Add web search context (prioritized for "new" requests)
-        if (webSearchContext) {
-          // For specific book requests, web search context is PRIMARY - don't dilute with catalog
-          if (isSpecificBookRequest && verifiedBookData) {
-            vectorContext = webSearchContext; // ONLY use verified data, skip catalog context
-          } else {
-            vectorContext = webSearchContext + vectorContext;
-          }
-        } else if (wantsNew && !webSearchContext) {
-          // Fallback if web search didn't work
-          vectorContext += `\n\nIMPORTANT: The user wants ${intent.value}'s NEWEST/LATEST book. Use your knowledge of this author's bibliography to recommend their most recently published work.`;
-        }
-      } else if (intent.type === 'genre') {
-        // Genre-specific search - check BOTH Sarah's catalog AND community
-        const catalogBooks = await findCatalogBooksByGenre(intent.value, 15);
-        const communityBooks = await findBooksByGenre(intent.value, 15);
-        
-        // Prioritize catalog books
-        if (catalogBooks.length > 0) {
-          vectorContext = `\n\nSARAH'S CURATED ${intent.value.toUpperCase()} BOOKS:\n${catalogBooks.slice(0, 5).map((book, i) => 
-            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'}\n   Sarah's take: ${book.sarah_assessment || 'A wonderful read.'}`
-          ).join('\n')}`;
-          vectorContext += `\n\nThese are ${intent.value} books that Sarah has personally curated. Recommend from this list first.`;
-        } else if (communityBooks.length > 0) {
-          const topRated = communityBooks.filter(b => b.avg_rating && parseFloat(b.avg_rating) >= 4).slice(0, 5);
-          vectorContext = `\n\nTOP ${intent.value.toUpperCase()} BOOKS IN OUR COMMUNITY:\n${topRated.map((book, i) => 
-            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg`
-          ).join('\n')}`;
-          vectorContext += `\n\nThese are highly-rated ${intent.value} books from our readers. Recommend similar books in this genre, prioritizing ones NOT in this list.`;
-        }
-      } else if (intent.type === 'theme' || (themeFilters && themeFilters.length > 0)) {
-        // Theme-specific search (use curated catalog)
-        const themes = themeFilters?.length > 0 ? themeFilters : [intent.value];
-        const themeBooks = await getBooksByThemes(themes, 10);
-        if (themeBooks.length > 0) {
-          vectorContext = `\n\nSARAH'S CURATED BOOKS MATCHING THEME "${intent.value}":\n${themeBooks.slice(0, 5).map((book, i) => 
-            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'}\n   Sarah's take: ${book.sarah_assessment || 'No assessment available'}`
-          ).join('\n\n')}`;
-        }
-      } else {
-        // General semantic search
-        const similarBooks = await findSimilarBooks(userMessage, 5, 0.6);
-        if (similarBooks.length > 0) {
-          vectorContext = `\n\nSARAH'S CURATED BOOKS SIMILAR TO YOUR REQUEST:\n${similarBooks.map((book, i) => 
-            `${i + 1}. "${book.title}" by ${book.author || 'Unknown'} (similarity: ${book.similarity.toFixed(2)})\n   Sarah's take: ${book.sarah_assessment || 'No assessment available'}`
-          ).join('\n\n')}`;
-        }
-      }
+    // Add retrieved context
+    let contextText = '';
+    
+    if (retrievedContext.verifiedBook) {
+      contextText += `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY):
+Title: ${retrievedContext.verifiedBook.title}
+Author: ${retrievedContext.verifiedBook.author}
+Description: ${retrievedContext.verifiedBook.description || 'A highly anticipated release.'}
 
-      // Add cross-user learning context (crowd wisdom) - but NOT for specific book requests
-      if (!isSpecificBookRequest || !verifiedBookData) {
-        const crowdFavorites = await findSimilarBooksAcrossUsers(userMessage, 5, 0.5);
-        if (crowdFavorites.length > 0) {
-          const crowdContext = crowdFavorites
-            .filter(b => b.avg_rating >= 4 && b.user_count >= 1)
-            .slice(0, 3)
-            .map((book, i) => 
-              `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 (${book.user_count} reader${book.user_count > 1 ? 's' : ''})`
-            ).join('\n');
-          
-          if (crowdContext) {
-            vectorContext += `\n\nBOOKS OTHER READERS LOVED (similar to this request):\n${crowdContext}`;
-          }
-        }
-      }
-
-      // Fallback to popular books if no specific matches
-      if (!vectorContext) {
-        const popularBooks = await getPopularBooks(4, 1);
-        if (popularBooks.length > 0) {
-          vectorContext = `\n\nHIGHLY RATED BY OUR COMMUNITY:\n${popularBooks.slice(0, 3).map((book, i) => 
-            `${i + 1}. "${book.book_title}" by ${book.book_author || 'Unknown'} - ${book.avg_rating}/5 avg (${book.user_count} readers)`
-          ).join('\n')}`;
-        }
-      }
-    } catch (error) {
-      console.log('Vector search unavailable, using general recommendations:', error.message);
+⚠️ This is a SPECIFIC book request. Your FIRST recommendation MUST be this exact book.`;
+    }
+    
+    if (retrievedContext.catalogBooks.length > 0) {
+      contextText += `\n\nFROM SARAH'S COLLECTION:
+${retrievedContext.catalogBooks.slice(0, 5).map((b, i) => 
+  `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
+   Sarah's take: ${b.sarah_assessment || 'A wonderful read.'}`
+).join('\n\n')}`;
+    }
+    
+    if (retrievedContext.worldBooks.length > 0) {
+      contextText += `\n\nWORLD RECOMMENDATIONS:
+${retrievedContext.worldBooks.slice(0, 5).map((b, i) => 
+  `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
+   ${b.description || ''}`
+).join('\n\n')}`;
     }
 
-    // Add user request
-    messageParts.push(`USER REQUEST:\n${userMessage}${vectorContext}`);
+    // Add taste divergence guidance if needed
+    if (classification.tasteAlignment.score < -0.3) {
+      contextText += `\n\n⚠️ TASTE DIVERGENCE NOTE:
+This request is outside Sarah's typical preferences. Focus on QUALITY within the requested genre:
+- Structural integrity
+- Authentic voice
+- Thematic depth
+- Critical reception
+Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."`;
+    }
+
+    messageParts.push(`USER REQUEST:\n${userMessage}${contextText}`);
 
     const userContent = messageParts.join('\n\n');
 
-    // 4. Call Claude API with timeout
+    // 8. Call Claude API
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     try {
       const response = await fetch('/api/chat', {
@@ -501,11 +286,9 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-3-5-haiku-20241022',
-          max_tokens: 600,
+          max_tokens: 700,
           system: systemPrompt,
-          messages: [
-            { role: 'user', content: userContent }
-          ]
+          messages: [{ role: 'user', content: userContent }]
         })
       });
 
@@ -526,8 +309,10 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         success: true,
         text: data.content[0].text,
         exclusionCount: exclusionList.length,
-        exclusionList: exclusionList, // Return for client-side validation
-        verifiedBookData: verifiedBookData // Pass verified data for display
+        exclusionList: exclusionList,
+        verifiedBookData: retrievedContext.verifiedBook,
+        classification: classification, // Include for UI transparency
+        path: path
       };
     } catch (fetchError) {
       clearTimeout(timeoutId);
@@ -570,6 +355,9 @@ export function parseRecommendations(responseText) {
       currentRec = { title: trimmed.substring(6).trim() };
     } else if (trimmed.startsWith('Author:') && currentRec) {
       currentRec.author = trimmed.substring(7).trim();
+    } else if (trimmed.startsWith('Source:') && currentRec) {
+      // New: Parse source/transparency badge
+      currentRec.source = trimmed.substring(7).trim();
     } else if (trimmed.startsWith('Why This Fits:') && currentRec) {
       currentRec.why = trimmed.substring(14).trim();
     } else if (trimmed.startsWith('Why:') && currentRec) {
@@ -578,7 +366,7 @@ export function parseRecommendations(responseText) {
       currentRec.description = trimmed.substring(12).trim();
     } else if (trimmed.startsWith('Reputation:') && currentRec) {
       currentRec.reputation = trimmed.substring(11).trim();
-    } else if (currentRec && currentRec.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('Author:') && !trimmed.startsWith('Why') && !trimmed.startsWith('Reputation:') && trimmed.length > 0) {
+    } else if (currentRec && currentRec.description && !trimmed.startsWith('Title:') && !trimmed.startsWith('Author:') && !trimmed.startsWith('Source:') && !trimmed.startsWith('Why') && !trimmed.startsWith('Reputation:') && trimmed.length > 0) {
       // Also clean any [RECOMMENDATION X] from continuation lines
       const cleanedLine = trimmed.replace(/\[RECOMMENDATION\s*\d+\]/gi, '').trim();
       if (cleanedLine) {
