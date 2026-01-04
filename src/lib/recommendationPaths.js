@@ -127,11 +127,14 @@ export async function worldSearchPath(query, classification) {
       const webData = await searchResponse.json();
       
       if (webData.results?.length > 0) {
-        // Extract book information from web results
-        const webBooks = extractBooksFromWebResults(webData.results);
+        // Extract book information from web results using LLM
+        const webBooks = await extractBooksFromWebResults(webData.results);
+        console.log('[WorldPath] Extracted', webBooks.length, 'books from web results');
         
-        // Apply quality filter via Claude
-        const qualityFiltered = await applyQualityFilter(webBooks, genre, classification);
+        // Apply quality filter via Claude (skip if we already have few books)
+        const qualityFiltered = webBooks.length > 3 
+          ? await applyQualityFilter(webBooks, genre, classification)
+          : webBooks;
         
         results.books = qualityFiltered.map(b => ({
           ...b,
@@ -261,8 +264,8 @@ export async function temporalSearchPath(query, classification, userId = null) {
           }];
           results.verifiedBookData = bookData;
         } else {
-          // Fallback to web result summaries
-          const webBooks = extractBooksFromWebResults(webData.results);
+          // Fallback to LLM extraction from web results
+          const webBooks = await extractBooksFromWebResults(webData.results);
           results.books = webBooks.slice(0, 5).map(b => ({
             ...b,
             source: 'temporal',
@@ -290,31 +293,74 @@ export async function temporalSearchPath(query, classification, userId = null) {
 }
 
 /**
- * Extract book information from web search results
+ * Extract book information from web search results using LLM
+ * More robust than regex-based extraction
  */
-function extractBooksFromWebResults(results) {
-  const books = [];
+async function extractBooksFromWebResults(webResults) {
+  if (!webResults || webResults.length === 0) return [];
   
-  for (const result of results) {
-    // Skip non-book results
-    if (!result.title) continue;
-    
-    // Try to extract book title and author from result
-    const titleMatch = result.title.match(/^([^-–|]+?)(?:\s*[-–|]|\s+by\s+)/i);
-    const authorMatch = result.title.match(/by\s+([^-–|]+)/i) || 
-                        result.snippet?.match(/by\s+([A-Z][a-z]+\s+[A-Z][a-z]+)/);
-    
-    if (titleMatch || result.type === 'knowledge') {
-      books.push({
-        title: titleMatch ? titleMatch[1].trim() : result.title,
-        author: authorMatch ? authorMatch[1].trim() : null,
-        description: result.snippet || result.description || '',
-        webSource: result.link
-      });
+  const extractionPrompt = `Extract book recommendations from these web search results.
+
+WEB RESULTS:
+${webResults.map((r, i) => `[${i + 1}] ${r.title || ''}\n${r.snippet || r.description || ''}`).join('\n\n')}
+
+For each book mentioned, extract:
+- title: The book's title (required)
+- author: The author's name (if mentioned)
+- description: Brief context about why it was recommended
+
+Return as JSON array. If no books are clearly mentioned, return empty array.
+Only include actual book titles, not article titles or website names.
+Maximum 5 books.
+
+Example output:
+[
+  {"title": "The Nightingale", "author": "Kristin Hannah", "description": "heartbreaking WWII novel about sisters in occupied France"},
+  {"title": "All the Light We Cannot See", "author": "Anthony Doerr", "description": "Pulitzer Prize winner, beautifully written"}
+]`;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        messages: [{ role: 'user', content: extractionPrompt }],
+        max_tokens: 800
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('[extractBooksFromWebResults] API call failed');
+      return [];
     }
+
+    const data = await response.json();
+    const resultText = data.content?.[0]?.text?.trim() || '';
+    
+    // Extract JSON from response (handle markdown code blocks)
+    const jsonMatch = resultText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.warn('[extractBooksFromWebResults] No JSON array found in response');
+      return [];
+    }
+
+    const books = JSON.parse(jsonMatch[0]);
+    
+    // Validate and normalize
+    return books
+      .filter(b => b.title && typeof b.title === 'string')
+      .map(b => ({
+        title: b.title.trim(),
+        author: b.author?.trim() || null,
+        description: b.description?.trim() || '',
+        webSource: null
+      }));
+
+  } catch (err) {
+    console.error('[extractBooksFromWebResults] Error:', err);
+    return [];
   }
-  
-  return books;
 }
 
 /**
