@@ -19,7 +19,6 @@ import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
-import BasicSearchUI from './components/BasicSearchUI';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
@@ -2142,44 +2141,6 @@ Find similar books from beyond my library that match this taste profile.
               </div>
             </div>
           )}
-
-          {/* Basic Search UI - Genre/Author filters */}
-          <BasicSearchUI 
-            onResults={(results) => {
-              // Convert basic search results to message format
-              const catalogRecs = results.catalog.map(book => ({
-                title: book.title,
-                author: book.author,
-                why: book.sarah_assessment || 'From my curated collection.',
-                description: book.description,
-                badge: 'From My Library'
-              }));
-              
-              const webRecs = results.web.map(book => ({
-                title: book.title,
-                author: book.author,
-                why: book.why || 'Matches my curatorial standards.',
-                badge: 'World Discovery'
-              }));
-              
-              const allRecs = [...catalogRecs, ...webRecs];
-              
-              if (allRecs.length > 0) {
-                setMessages(prev => [...prev, {
-                  text: `Here are my ${results.searchType} recommendations for "${results.searchValue}":`,
-                  isUser: false,
-                  recommendations: allRecs
-                }]);
-              } else {
-                setMessages(prev => [...prev, {
-                  text: `I couldn't find any ${results.searchType} matches for "${results.searchValue}". Try a different search or ask me directly!`,
-                  isUser: false
-                }]);
-              }
-            }}
-            onLoading={setIsLoading}
-            disabled={isLoading}
-          />
 
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <textarea
