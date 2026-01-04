@@ -193,6 +193,12 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         .filter(s => s.alignmentCategory !== 'sarahs_collection')
         .flatMap(s => s.books);
     }
+    
+    console.log('[RecommendationService] Retrieved context:', {
+      catalogBooks: retrievedContext.catalogBooks.length,
+      worldBooks: retrievedContext.worldBooks.length,
+      hasVerifiedBook: !!retrievedContext.verifiedBook
+    });
 
     // 6. Build system prompt
     const systemPrompt = buildSystemPrompt();
@@ -258,6 +264,17 @@ ${retrievedContext.worldBooks.slice(0, 5).map((b, i) =>
   `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
    ${b.description || ''}`
 ).join('\n\n')}`;
+    }
+    
+    // Fallback when no books found from any path
+    if (retrievedContext.catalogBooks.length === 0 && 
+        retrievedContext.worldBooks.length === 0 && 
+        !retrievedContext.verifiedBook) {
+      contextText += `\n\n⚠️ NO SPECIFIC BOOKS RETRIEVED:
+I couldn't find specific books from my catalog or web search for this request.
+Please use your knowledge to recommend high-quality books that match the user's request.
+Focus on well-known, critically acclaimed books in the requested genre/style.
+Be honest that these are general recommendations, not from my curated collection.`;
     }
 
     // Add taste divergence guidance if needed
