@@ -390,6 +390,7 @@ Respond with ONLY the numbers of the 3 best books, comma-separated (e.g., "1, 3,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
         messages: [{ role: 'user', content: qualityPrompt }],
         max_tokens: 50
       })

@@ -105,6 +105,7 @@ Respond in this exact JSON format:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
         messages: [{ role: 'user', content: classificationPrompt }],
         max_tokens: 500
       })
