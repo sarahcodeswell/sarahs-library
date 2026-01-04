@@ -6,6 +6,7 @@ import { db } from './supabase';
 import { routeQuery, fallbackRoute } from './deterministicRouter';
 import { executeRecommendationPath } from './recommendationPaths';
 import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
+import { getTasteAlignmentLabel } from './queryClassifier';
 
 /**
  * Build system prompt for Claude
