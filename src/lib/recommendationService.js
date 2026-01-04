@@ -1,9 +1,9 @@
 // Recommendation Service - Spec-compliant implementation
 // Single source of truth for recommendation logic
-// Uses: Query Classifier → Recommendation Paths → Response Templates
+// Uses: Deterministic Router → Recommendation Paths → Response Templates
 
 import { db } from './supabase';
-import { classifyQuery, getRecommendationPath, getTasteAlignmentLabel } from './queryClassifier';
+import { routeQuery, fallbackRoute } from './deterministicRouter';
 import { executeRecommendationPath } from './recommendationPaths';
 import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
 
@@ -161,18 +161,46 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       }
     }
 
-    // 2. Classify the query (lightweight Claude call)
-    const classification = await classifyQuery(userMessage);
-    console.log('[RecommendationService] Classification:', {
-      intent: classification.intent,
-      tasteAlignment: classification.tasteAlignment.score,
-      specificity: classification.specificity,
-      temporalIntent: classification.temporalIntent
+    // 2. DETERMINISTIC ROUTING - Single source of truth
+    // Uses 3-stage process: keywords → embeddings → decision matrix
+    // Same query ALWAYS routes to same path (no LLM randomness)
+    const routingDecision = fallbackRoute(userMessage, themeFilters);
+    
+    // Map routing decision to path name (lowercase for executeRecommendationPath)
+    const pathMap = {
+      'CATALOG': 'catalog',
+      'WORLD': 'world',
+      'HYBRID': 'hybrid',
+      'TEMPORAL': 'temporal'
+    };
+    const path = pathMap[routingDecision.path] || 'hybrid';
+    
+    // Build classification object from routing decision for downstream use
+    const classification = {
+      intent: routingDecision.path.toLowerCase() + '_search',
+      tasteAlignment: { 
+        score: routingDecision.tasteAlignment || (routingDecision.path === 'CATALOG' ? 1.0 : 0.0),
+        signals: [routingDecision.reason],
+        matchedThemes: routingDecision.themeFilters || []
+      },
+      specificity: routingDecision.themeFilters?.length > 0 ? 'genre_specific' : 'vague_mood',
+      temporalIntent: routingDecision.path === 'TEMPORAL' ? 'recent' : 'any_time',
+      entities: { 
+        genres: [], 
+        authors: [], 
+        titles: [], 
+        moods: routingDecision.themeFilters || [], 
+        timeframe: null 
+      },
+      originalQuery: userMessage
+    };
+    
+    console.log('[RecommendationService] Routing decision:', {
+      path: routingDecision.path,
+      reason: routingDecision.reason,
+      confidence: routingDecision.confidence,
+      themeFilters: routingDecision.themeFilters
     });
-
-    // 3. Determine recommendation path
-    const path = getRecommendationPath(classification);
-    console.log('[RecommendationService] Using path:', path);
 
     // 4. Execute the appropriate path to get context
     const pathResult = await executeRecommendationPath(path, userMessage, classification, userId);

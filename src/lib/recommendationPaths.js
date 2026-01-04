@@ -43,23 +43,27 @@ export async function catalogSearchPath(query, classification) {
       results.explanation = `Here are my favorite ${genre} books.`;
       
     } else if (entities.moods?.length > 0) {
-      // Theme/mood search
+      // Theme/mood search - handles both direct theme keys and descriptive words
       const themeMap = {
-        'emotional': 'emotional',
-        'moving': 'emotional',
+        // Direct theme keys (from curated list selection)
         'women': 'women',
-        'female': 'women',
+        'emotional': 'emotional',
         'identity': 'identity',
-        'belonging': 'identity',
         'spiritual': 'spiritual',
-        'mindful': 'spiritual',
         'justice': 'justice',
+        // Descriptive words that map to themes
+        'moving': 'emotional',
+        'female': 'women',
+        'belonging': 'identity',
+        'mindful': 'spiritual',
         'systemic': 'justice'
       };
       
       const themes = entities.moods
-        .map(m => themeMap[m.toLowerCase()])
-        .filter(Boolean);
+        .map(m => themeMap[m.toLowerCase()] || m.toLowerCase())
+        .filter(t => ['women', 'emotional', 'identity', 'spiritual', 'justice'].includes(t));
+      
+      console.log('[CatalogPath] Theme search for:', themes);
       
       if (themes.length > 0) {
         const books = await getBooksByThemes(themes, 10);
@@ -68,7 +72,16 @@ export async function catalogSearchPath(query, classification) {
           source: 'catalog',
           badge: 'From Sarah\'s Collection'
         }));
-        results.explanation = `Books from my collection that match your mood.`;
+        
+        const themeLabels = {
+          women: "Women's Stories",
+          emotional: "Emotional Truth",
+          identity: "Identity & Belonging",
+          spiritual: "Spirituality & Meaning",
+          justice: "Justice & Systems"
+        };
+        const themeLabel = themeLabels[themes[0]] || themes[0];
+        results.explanation = `Here are books from my ${themeLabel} collection.`;
       }
     }
     
