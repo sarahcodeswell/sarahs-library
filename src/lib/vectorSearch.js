@@ -63,20 +63,25 @@ export async function findSimilarBooks(query, limit = 10, threshold = 0.7) {
  */
 export async function getBooksByThemes(themes, limit = 20) {
   try {
+    console.log('[getBooksByThemes] Searching for themes:', themes);
+    
+    // Use overlaps (&&) operator - finds books where themes array overlaps with search themes
+    // This is more flexible than contains - matches if ANY theme matches
     const { data, error } = await supabase
       .from('books')
-      .select('*')
-      .contains('themes', themes)
+      .select('id, title, author, description, themes, genre, sarah_assessment')
+      .overlaps('themes', themes)
       .limit(limit);
 
     if (error) {
-      console.error('Theme search error:', error);
+      console.error('[getBooksByThemes] Error:', error);
       return [];
     }
 
+    console.log('[getBooksByThemes] Found', data?.length || 0, 'books');
     return data || [];
   } catch (error) {
-    console.error('Theme search failed:', error);
+    console.error('[getBooksByThemes] Failed:', error);
     return [];
   }
 }
