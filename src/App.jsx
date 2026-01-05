@@ -1539,9 +1539,9 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      // FAST PATH: If the recommendation service already handled filtering (curated lists),
+      // FAST PATH: If the recommendation service already handled filtering (curated lists or world fallback),
       // skip post-processing and use the response directly
-      if (result.fastPath) {
+      if (result.fastPath || result.worldFallback) {
         console.log('[App] Fast path response, skipping post-processing');
         setMessages(prev => [...prev, { text: result.text, isUser: false }]);
         return;
