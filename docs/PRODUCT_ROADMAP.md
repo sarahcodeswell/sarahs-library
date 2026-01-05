@@ -79,6 +79,19 @@
 3. **Never Fail Silently** - Always return 3 recommendations
 4. **Respect History** - Never recommend books they've read/dismissed
 
+### Exclusion List (CRITICAL)
+
+The system maintains an exclusion list per user that includes:
+- All books in their `reading_queue` (saved, reading, finished - any status)
+- All books in `dismissed_recommendations`
+
+**Enforcement points:**
+1. **Fast path (curated lists)** - Filtered before response generation
+2. **Claude prompt** - Exclusion list sent as "CRITICAL EXCLUSION LIST"
+3. **Post-processing (App.jsx)** - Final filter before display
+
+This ensures a user **never** sees a book they already have in their collection.
+
 ### Technical Foundation (Already Built)
 
 - [x] Deterministic router (keyword + embedding + decision matrix)
