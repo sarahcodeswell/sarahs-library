@@ -551,3 +551,4 @@ export function parseRecommendations(responseText) {
   if (currentRec) recommendations.push(currentRec);
 
   return recommendations;
+}
