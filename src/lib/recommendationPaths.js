@@ -125,13 +125,19 @@ export async function worldSearchPath(query, classification) {
   };
 
   try {
-    const { entities, tasteAlignment } = classification;
+    const { entities, tasteAlignment, originalQuery } = classification;
     const genre = entities.genres?.[0] || 'books';
     
-    // Build quality-focused search query
-    const searchQuery = entities.authors?.length > 0
-      ? `best books by ${entities.authors[0]} highly rated`
-      : `best ${genre} books highly rated award winning`;
+    // Build search query - use original query for specific topics, fallback to genre search
+    let searchQuery;
+    if (originalQuery && originalQuery.length > 20) {
+      // Use the original query for specific requests (add "book" to help search)
+      searchQuery = `${originalQuery} book recommendations`;
+    } else if (entities.authors?.length > 0) {
+      searchQuery = `best books by ${entities.authors[0]} highly rated`;
+    } else {
+      searchQuery = `best ${genre} books highly rated award winning`;
+    }
     
     // Web search for quality books
     const searchResponse = await fetch('/api/web-search', {

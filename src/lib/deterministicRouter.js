@@ -32,12 +32,20 @@ export const ROUTING_THRESHOLDS = {
 
 // Keywords that trigger immediate routing (no embedding needed)
 export const ROUTING_KEYWORDS = {
+  // Temporal keywords must be book-specific to avoid false positives
+  // "recent events" should NOT trigger temporal, but "recent book" should
   temporal: [
-    'new', 'recent', 'latest', 'upcoming', 'coming out', 'coming soon',
-    '2024', '2025', '2026', 'this year', 'this month', 'this week',
+    'new book', 'new novel', 'newest book', 'newest novel',
+    'recent book', 'recent release', 'recent novel',
+    'latest book', 'latest novel', 'latest release',
+    'upcoming book', 'upcoming novel', 'upcoming release',
+    'coming out soon', 'coming soon book',
+    '2024 release', '2025 release', '2026 release',
+    'this year release', 'published this year', 'released this year',
     'just released', 'just came out', 'new releases', 'newly published',
-    'what\'s new', 'recently published', 'brand new', 'hot off',
-    'pre-order', 'preorder', 'not yet released', 'publishing soon'
+    'what\'s new from', 'recently published', 'brand new book',
+    'pre-order', 'preorder', 'not yet released', 'publishing soon',
+    'newest from', 'latest from' // "latest from [author]"
   ],
   
   catalog: [
