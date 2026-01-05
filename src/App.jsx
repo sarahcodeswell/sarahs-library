@@ -15,6 +15,11 @@ import { buildLibraryContext } from './lib/libraryContext';
 import { stripAccoladesFromDescription } from './lib/descriptionUtils';
 import { ExpandableDescription } from './components/ExpandableDescription';
 import RecommendationCard from './components/RecommendationCard';
+import BookDetail from './components/BookDetail';
+import ChatMessage from './components/ChatMessage';
+import FormattedText from './components/FormattedText';
+import FormattedRecommendations from './components/FormattedRecommendations';
+import { getBookshopSearchUrl, getAmazonKindleUrl, getLibbyUrl, getLibroFmUrl, getAudibleUrl, getGoodreadsSearchUrl } from './lib/affiliateLinks';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -60,67 +65,8 @@ const CATALOG_TITLE_INDEX = (() => {
 // CSV parsing imported from ./lib/csvParser
 // Library context builder imported from ./lib/libraryContext
 
-function FormattedText({ text }) {
-  const lines = String(text || '').split('\n');
 
-  const renderLineWithIcons = (line) => {
-    // Replace icon markers with actual Lucide icons
-    const parts = [];
-    let currentText = line;
-    let key = 0;
-
-    // Check for icon markers and replace with components
-    const iconMap = {
-      '[shopping-bag]': <ShoppingBag key={key++} className="w-3.5 h-3.5 inline-block align-text-bottom" />,
-      '[star]': <Star key={key++} className="w-3.5 h-3.5 inline-block align-text-bottom" />,
-      '[share]': <Share2 key={key++} className="w-3.5 h-3.5 inline-block align-text-bottom" />,
-      '[bookmark]': <Bookmark key={key++} className="w-3.5 h-3.5 inline-block align-text-bottom" />
-    };
-
-    // Split by icon markers and rebuild with components
-    Object.entries(iconMap).forEach(([marker, icon]) => {
-      if (currentText.includes(marker)) {
-        const segments = currentText.split(marker);
-        const newParts = [];
-        segments.forEach((segment, idx) => {
-          if (idx > 0) newParts.push(icon);
-          newParts.push(segment);
-        });
-        currentText = newParts;
-      }
-    });
-
-    // Handle bold text
-    const renderInlineBold = (content) => {
-      if (typeof content === 'string') {
-        const boldParts = content.split('**');
-        return boldParts.map((part, idx) =>
-          idx % 2 === 1 ? <strong key={`bold-${idx}`}>{part}</strong> : <React.Fragment key={`text-${idx}`}>{part}</React.Fragment>
-        );
-      }
-      return content;
-    };
-
-    if (Array.isArray(currentText)) {
-      return currentText.map((part, idx) => (
-        <React.Fragment key={idx}>{renderInlineBold(part)}</React.Fragment>
-      ));
-    }
-
-    return renderInlineBold(currentText);
-  };
-
-  return (
-    <>
-      {lines.map((line, idx) => (
-        <React.Fragment key={idx}>
-          {renderLineWithIcons(line)}
-          {idx < lines.length - 1 && <br />}
-        </React.Fragment>
-      ))}
-    </>
-  );
-}
+// FormattedText extracted to ./components/FormattedText.jsx
 
 const themeInfo = {
   women: { icon: BookHeart, label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
@@ -140,263 +86,14 @@ const themeDescriptions = {
 
 // parseRecommendations moved to recommendationService.js
 
-// Check if message contains structured recommendations
-function hasStructuredRecommendations(text) {
-  const t = String(text || '');
-  return t.includes('Title:') && (t.includes('Author:') || t.includes('Why This Fits:') || t.includes('Why:') || t.includes('Description:') || t.includes('Reputation:'));
-}
 
 
-// RecommendationCard extracted to ./components/RecommendationCard.jsx
+// Components extracted to ./components/
+// - RecommendationCard.jsx
+// - FormattedRecommendations.jsx (includes RecommendationActionPanel)
 
-function RecommendationActionPanel({ onShowMore }) {
-  return (
-    <div className="mt-4">
-      <button
-        onClick={() => onShowMore && onShowMore()}
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-      >
-        <Sparkles className="w-4 h-4" />
-        Show Me More Like These
-      </button>
-    </div>
-  );
-}
-
-function FormattedRecommendations({ text, chatMode, onActionPanelInteraction, user, readingQueue, userRecommendations, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
-  const recommendations = React.useMemo(() => parseRecommendations(String(text || '')), [text]);
-  
-  // Extract the header (everything before the first recommendation)
-  const header = React.useMemo(() => {
-    const lines = String(text || '').split('\n');
-    const headerLines = [];
-    for (const line of lines) {
-      // Stop at the first recommendation indicator
-      if (line.includes('Title:') || line.match(/^\*\*[^*]+\*\*$/) || line.includes('[RECOMMENDATION')) {
-        break;
-      }
-      // Skip lines that look like book titles (bold text at start)
-      if (line.match(/^\*\*[^*]+\*\*/)) {
-        break;
-      }
-      headerLines.push(line);
-    }
-    let headerText = headerLines.join('\n').trim();
-    // Remove any recommendation markers
-    headerText = headerText.replace(/\*\*RECOMMENDATION\s+\d+\*\*/gi, '').trim();
-    // Remove any trailing book titles that got captured
-    headerText = headerText.replace(/\*\*[^*]+\*\*\s*$/, '').trim();
-    return headerText;
-  }, [text]);
-  
-  return (
-    <div className="space-y-3">
-      {header && (
-        <p className="text-sm font-medium text-[#4A5940]">{header}</p>
-      )}
-      {recommendations.map((rec, idx) => (
-        <RecommendationCard 
-          key={idx} 
-          rec={rec} 
-          chatMode={chatMode}
-          user={user}
-          readingQueue={readingQueue}
-          userRecommendations={userRecommendations}
-          onAddToQueue={onAddToQueue}
-          onRemoveFromQueue={onRemoveFromQueue}
-          onShowAuthModal={onShowAuthModal}
-        />
-      ))}
-      
-      {/* Action panel appears after recommendations */}
-      {recommendations.length > 0 && onActionPanelInteraction && (
-        <RecommendationActionPanel 
-          onShowMore={() => onActionPanelInteraction('show_more', null, recommendations)}
-        />
-      )}
-    </div>
-  );
-}
-
-const getBookshopSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://bookshop.org/search?keywords=${searchQuery}&a_aid=${BOOKSHOP_AFFILIATE_ID}`;
-};
-
-const getAmazonKindleUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''} kindle`);
-  return `https://www.amazon.com/s?k=${searchQuery}&i=digital-text&tag=${AMAZON_AFFILIATE_TAG}`;
-};
-
-const getLibbyUrl = (title, author) => {
-  // Libby app deep link - opens app if installed, otherwise directs to app store
-  // Note: This doesn't search automatically, but opens the app for manual search
-  return `https://libbyapp.com/library`;
-};
-
-const getLibroFmUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://libro.fm/search?q=${searchQuery}&affiliate=${LIBRO_FM_AFFILIATE_ID}`;
-};
-
-const getAudibleUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://www.audible.com/search?keywords=${searchQuery}&tag=${AUDIBLE_AFFILIATE_TAG}`;
-};
-
-const getGoodreadsSearchUrl = (title, author) => {
-  const searchQuery = encodeURIComponent(`${title} ${author || ''}`);
-  return `https://www.goodreads.com/search?q=${searchQuery}`;
-};
-
-// getSystemPrompt removed - now handled in recommendationService.js
-
-function BookDetail({ book, onClose }) {
-  const handleLinkClick = (destination) => {
-    track('book_link_click', {
-      book_title: book.title,
-      book_author: book.author,
-      book_genre: book.genre,
-      is_favorite: book.favorite || false,
-      destination: destination,
-      source: 'book_detail'
-    });
-
-    if (destination === 'goodreads') {
-      bumpLocalMetric('goodreads_link_clicks_v1', 1);
-      track('goodreads_link_click', { source: 'book_detail' });
-    }
-    if (destination === 'bookshop') {
-      bumpLocalMetric('bookshop_link_clicks_v1', 1);
-      track('bookshop_link_click', { source: 'book_detail' });
-    }
-  };
-
-  const goodreadsUrl = getGoodreadsSearchUrl(book.title, book.author);
-  const bookshopUrl = getBookshopSearchUrl(book.title, book.author);
-
-  return (
-    <div className="fixed inset-0 bg-[#4A5940]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div 
-        className="bg-[#FDFBF4] rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-[#D4DAD0]"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="font-serif text-2xl text-[#4A5940]">{book.title}</h2>
-                {book.favorite && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
-              </div>
-              <p className="text-[#7A8F6C] font-light">{book.author}</p>
-            </div>
-            <button onClick={onClose} className="text-[#96A888] hover:text-[#4A5940] transition-colors p-1">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          
-          <div className="mb-5">
-            <span className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Genre</span>
-            <div className="mt-1">
-              <span className="inline-block px-4 py-1.5 bg-[#E8EBE4] text-[#4A5940] text-sm rounded-full font-medium">
-                {book.genre}
-              </span>
-            </div>
-          </div>
-          
-          <p className="text-[#5F7252] leading-relaxed mb-6">{book.description}</p>
-          
-          <div className="mb-6">
-            <span className="text-xs text-[#7A8F6C] font-medium uppercase tracking-wider">Themes</span>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {book.themes.map(theme => {
-                const ThemeIcon = themeInfo[theme]?.icon;
-                return (
-                  <span 
-                    key={theme} 
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border ${themeInfo[theme]?.color} flex items-center gap-1.5`}
-                  >
-                    {ThemeIcon && <ThemeIcon className="w-4 h-4" />}
-                    {themeInfo[theme]?.label}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a 
-              href={goodreadsUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={() => handleLinkClick('goodreads')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Find on Goodreads
-            </a>
-            <a 
-              href={bookshopUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={() => handleLinkClick('bookshop')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#4A7C59] text-white rounded-xl hover:bg-[#3d6649] transition-colors font-medium text-sm"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Buy Local
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user, readingQueue, userRecommendations, onAddToQueue, onRemoveFromQueue, onShowAuthModal }) {
-  const isStructured = !isUser && hasStructuredRecommendations(message);
-  const isWelcomeMessage = !isUser && message.includes("Hi, I'm Sarah!");
-
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      {!isUser && (
-        <img 
-          src="/sarah.png" 
-          alt="Sarah"
-          className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
-        />
-      )}
-      <div className={`max-w-[85%] sm:max-w-[75%] ${
-        isUser 
-          ? 'bg-[#5F7252] text-white rounded-2xl rounded-br-sm px-5 py-3' 
-          : 'bg-[#F8F6EE] text-[#4A5940] rounded-2xl rounded-bl-sm px-5 py-3'
-      }`}>
-        {isStructured ? (
-          <FormattedRecommendations 
-            text={message} 
-            chatMode={chatMode} 
-            onActionPanelInteraction={onActionPanelInteraction}
-            user={user}
-            readingQueue={readingQueue}
-            userRecommendations={userRecommendations}
-            onAddToQueue={onAddToQueue}
-            onRemoveFromQueue={onRemoveFromQueue}
-            onShowAuthModal={onShowAuthModal}
-          />
-        ) : isWelcomeMessage ? (
-          <div className="text-sm leading-relaxed">
-            <p className="mb-3">Hi, I'm Sarah!</p>
-            <p className="mb-3">I'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.</p>
-            <p>I'll help you find your next great read, whether it's <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span>.</p>
-          </div>
-        ) : (
-          <div className="text-sm leading-relaxed">
-            <FormattedText text={message} />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+// Affiliate links extracted to ./lib/affiliateLinks.js
+// ChatMessage, BookDetail, FormattedText, FormattedRecommendations extracted to ./components/
 
 function AboutSection({ onShare }) {
   return (
