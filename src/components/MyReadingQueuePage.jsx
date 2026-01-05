@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Check, BookMarked } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Book } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { db } from '../lib/supabase';
@@ -89,11 +89,12 @@ const themeInfo = {
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition, onUpdateBook, onToggleOwned }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   const [owned, setOwned] = useState(book.owned || false);
+  const [showAcquisition, setShowAcquisition] = useState(false);
   
   // Auto-enrich reputation when expanded and missing
   useEffect(() => {
@@ -264,7 +265,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Ownership toggle */}
+              {/* Ownership toggle - single book icon, gray when unowned, green when owned */}
               <button
                 onClick={() => {
                   const newOwned = !owned;
@@ -278,13 +279,13 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                 }`}
                 title={owned ? 'I own this book (click to unmark)' : 'Mark as owned'}
               >
-                {owned ? <Check className="w-4 h-4" /> : <BookMarked className="w-4 h-4" />}
+                <Book className="w-4 h-4" />
               </button>
               
-              {/* Only show Get It button for first book AND if not owned */}
-              {isFirst && !owned && (
+              {/* Show Get It button on all books, hide when owned */}
+              {!owned && (
                 <button
-                  onClick={onToggleAcquisition}
+                  onClick={() => setShowAcquisition(!showAcquisition)}
                   className={`px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
                     showAcquisition 
                       ? 'bg-[#5F7252] text-white' 
@@ -313,8 +314,8 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
             </div>
           </div>
           
-          {/* Inline Acquisition Options - Only for #1 book when expanded */}
-          {isFirst && showAcquisition && (
+          {/* Inline Acquisition Options - Show when Get It is expanded and book not owned */}
+          {showAcquisition && !owned && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
               <p className="text-xs text-[#7A8F6C] mb-2 italic">
                 We encourage readers to support local bookstores, independent audiobook sellers, and public libraries
@@ -442,7 +443,6 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
-  const [showAcquisition, setShowAcquisition] = useState(false);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
 
   // Handle ownership toggle
@@ -742,8 +742,6 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     onMarkAsRead={handleMarkAsRead}
                     onRemove={handleRemoveBook}
                     isFirst={index === 0}
-                    showAcquisition={showAcquisition}
-                    onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
                     onUpdateBook={updateQueueItem}
                     onToggleOwned={handleToggleOwned}
                   />
