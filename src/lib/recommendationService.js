@@ -283,6 +283,13 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     // 4. Execute the appropriate path to get context
     const pathResult = await executeRecommendationPath(path, userMessage, classification, userId);
     
+    console.log('[RecommendationService] Path result:', {
+      hasBooks: !!pathResult.books,
+      booksCount: pathResult.books?.length,
+      hasSections: !!pathResult.sections,
+      source: pathResult.source
+    });
+    
     // 5. Build retrieved context for Claude
     const retrievedContext = {
       catalogBooks: pathResult.books?.filter(b => b.source === 'catalog') || [],
@@ -312,13 +319,10 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
       console.log('[RecommendationService] Fast path: returning catalog books directly for curated list');
       
-      // Filter out excluded books
+      // Filter out excluded books (books user has already read/saved/dismissed)
       const availableBooks = retrievedContext.catalogBooks.filter(
         b => !exclusionList.some(ex => ex.toLowerCase() === b.title?.toLowerCase())
       );
-      
-      // Take top 3 books
-      const topBooks = availableBooks.slice(0, 3);
       
       // Build response text in the format parseRecommendations expects
       const themeLabels = {
@@ -329,6 +333,37 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         justice: "Justice & Systems"
       };
       const themeName = themeLabels[themeFilters[0]] || themeFilters[0];
+      
+      // Handle case where user has read all books in this theme
+      if (availableBooks.length === 0) {
+        // Show favorites from this theme that user has already read
+        const allThemeBooks = retrievedContext.catalogBooks;
+        const favorites = allThemeBooks
+          .filter(b => b.favorite || b.sarah_assessment?.toLowerCase().includes('favorite'))
+          .slice(0, 3);
+        
+        const booksToShow = favorites.length > 0 ? favorites : allThemeBooks.slice(0, 3);
+        
+        const responseText = booksToShow.map((book) => {
+          return `Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
+        }).join('\n\n');
+        
+        return {
+          success: true,
+          text: `You've explored all the unread books in my ${themeName} collection! Here are my all-time favorites from this theme that are worth revisiting:\n\n${responseText}`,
+          exclusionCount: exclusionList.length,
+          exclusionList: exclusionList,
+          classification: classification,
+          path: path,
+          fastPath: true,
+          allRead: true
+        };
+      }
+      
+      // Take top 3 available books
+      const topBooks = availableBooks.slice(0, 3);
       
       // Format each book in the structured format the UI expects
       const responseText = topBooks.map((book) => {
