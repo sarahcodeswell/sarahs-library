@@ -484,6 +484,10 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
     messageParts.push(`USER REQUEST:\n${userMessage}${contextText}`);
 
     const userContent = messageParts.join('\n\n');
+    
+    // Debug: Log what we're sending to Claude
+    console.log('[RecommendationService] World books in context:', retrievedContext.worldBooks.length);
+    console.log('[RecommendationService] Context preview:', contextText.slice(0, 500));
 
     // 8. Call Claude API
     const controller = new AbortController();
