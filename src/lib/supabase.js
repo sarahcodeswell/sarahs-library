@@ -131,7 +131,6 @@ export const db = {
           .from('reading_queue')
           .select('*')
           .eq('user_id', userId)
-          .order('priority', { ascending: true, nullsFirst: false })
           .order('added_at', { ascending: false });
         
         if (!error || error.code !== 'PGRST301') {
@@ -171,16 +170,11 @@ export const db = {
       console.log('addToReadingQueue: Starting insert for', { userId, book });
     }
     
-    // Get next priority for this user's queue
-    const { priority: nextPriority } = await db.getNextPriority(userId, book.status || 'want_to_read');
-    
     const insertData = {
       user_id: userId,
       book_title: book.title,
       book_author: book.author,
       status: book.status || 'want_to_read',
-      priority: nextPriority,
-      owned: book.owned || false,
     };
     
     // Include ISBN if provided (primary identifier)
@@ -294,99 +288,6 @@ export const db = {
     } catch (err) {
       console.error('updateReadingQueueItem: Exception', err);
       return { data: null, error: { message: err.message || 'Update failed' } };
-    }
-  },
-
-  // Toggle book ownership status
-  updateBookOwnership: async (id, owned) => {
-    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
-    
-    try {
-      const { data, error } = await supabase
-        .from('reading_queue')
-        .update({ owned })
-        .eq('id', id)
-        .select();
-      
-      return { data, error };
-    } catch (err) {
-      console.error('updateBookOwnership: Exception', err);
-      return { data: null, error: { message: err.message || 'Update failed' } };
-    }
-  },
-
-  // Update book priority (swap with adjacent book)
-  updateBookPriority: async (userId, bookId, direction) => {
-    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
-    
-    try {
-      // Get current book's priority
-      const { data: currentBook, error: fetchError } = await supabase
-        .from('reading_queue')
-        .select('id, priority, status')
-        .eq('id', bookId)
-        .single();
-      
-      if (fetchError || !currentBook) {
-        return { data: null, error: fetchError || { message: 'Book not found' } };
-      }
-      
-      const currentPriority = currentBook.priority || 1;
-      const newPriority = direction === 'up' ? currentPriority - 1 : currentPriority + 1;
-      
-      // Can't move up if already at top
-      if (newPriority < 1) {
-        return { data: currentBook, error: null };
-      }
-      
-      // Find the book at the target priority position
-      const { data: swapBook } = await supabase
-        .from('reading_queue')
-        .select('id, priority')
-        .eq('user_id', userId)
-        .eq('status', currentBook.status)
-        .eq('priority', newPriority)
-        .single();
-      
-      // If there's a book to swap with, swap priorities
-      if (swapBook) {
-        await supabase
-          .from('reading_queue')
-          .update({ priority: currentPriority })
-          .eq('id', swapBook.id);
-      }
-      
-      // Update current book's priority
-      const { data, error } = await supabase
-        .from('reading_queue')
-        .update({ priority: newPriority })
-        .eq('id', bookId)
-        .select();
-      
-      return { data, error };
-    } catch (err) {
-      console.error('updateBookPriority: Exception', err);
-      return { data: null, error: { message: err.message || 'Update failed' } };
-    }
-  },
-
-  // Get next available priority for a user's queue
-  getNextPriority: async (userId, status = 'saved') => {
-    if (!supabase) return { priority: 1, error: null };
-    
-    try {
-      const { data, error } = await supabase
-        .from('reading_queue')
-        .select('priority')
-        .eq('user_id', userId)
-        .eq('status', status)
-        .order('priority', { ascending: false })
-        .limit(1);
-      
-      const maxPriority = data?.[0]?.priority || 0;
-      return { priority: maxPriority + 1, error };
-    } catch (err) {
-      return { priority: 1, error: { message: err.message } };
     }
   },
 

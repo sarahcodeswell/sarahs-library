@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Check, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
-import { db } from '../lib/supabase';
 import { useBookEnrichment } from './BookCard';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
@@ -89,14 +88,10 @@ const themeInfo = {
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, isNextUp, showAcquisition, onToggleAcquisition, onUpdateBook, onMoveUp, onMoveDown, onToggleOwned, totalCount }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition, onUpdateBook }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
-  const [owned, setOwned] = useState(book.owned || false);
-  
-  // Priority badges for top 3
-  const priorityBadges = ['🥇', '🥈', '🥉'];
   
   // Auto-enrich reputation when expanded and missing
   useEffect(() => {
@@ -181,39 +176,13 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, isNext
         isDragging ? 'shadow-lg' : ''
       }`}
     >
-      {/* Priority Badge and Ownership for Next Up books */}
-      {isNextUp && (
-        <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-[#E8EBE4]">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{priorityBadges[index]}</span>
-            <span className="px-2 py-0.5 bg-[#5F7252] text-white text-xs font-medium rounded-full">
-              Next Up
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              const newOwned = !owned;
-              setOwned(newOwned);
-              onToggleOwned(book.id, newOwned);
-            }}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              owned 
-                ? 'bg-green-100 text-green-700 border border-green-200' 
-                : 'bg-[#F8F6EE] text-[#5F7252] border border-[#E8EBE4] hover:bg-[#E8EBE4]'
-            }`}
-          >
-            {owned ? (
-              <>
-                <Check className="w-3 h-3" />
-                I Own This
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3 h-3" />
-                Get It
-              </>
-            )}
-          </button>
+      {/* Next Up Badge for first book */}
+      {isFirst && (
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#E8EBE4]">
+          <span className="px-2 py-0.5 bg-[#5F7252] text-white text-xs font-medium rounded-full">
+            Next Up
+          </span>
+          <span className="text-xs text-[#7A8F6C]">Ready to read? Get your copy below.</span>
         </div>
       )}
       
@@ -293,53 +262,6 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, isNext
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Priority controls */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  onClick={() => onMoveUp(book.id)}
-                  disabled={index === 0}
-                  className={`p-1 rounded transition-colors ${
-                    index === 0 
-                      ? 'text-[#D4DAD0] cursor-not-allowed' 
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
-                  }`}
-                  title="Move up"
-                >
-                  <ArrowUp className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onMoveDown(book.id)}
-                  disabled={index === totalCount - 1}
-                  className={`p-1 rounded transition-colors ${
-                    index === totalCount - 1 
-                      ? 'text-[#D4DAD0] cursor-not-allowed' 
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
-                  }`}
-                  title="Move down"
-                >
-                  <ArrowDown className="w-4 h-4" />
-                </button>
-              </div>
-              
-              {/* Ownership toggle for non-NextUp books */}
-              {!isNextUp && (
-                <button
-                  onClick={() => {
-                    const newOwned = !owned;
-                    setOwned(newOwned);
-                    onToggleOwned(book.id, newOwned);
-                  }}
-                  className={`p-1.5 rounded transition-colors ${
-                    owned 
-                      ? 'text-green-600 bg-green-50' 
-                      : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
-                  }`}
-                  title={owned ? 'I own this book' : 'Mark as owned'}
-                >
-                  {owned ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
-                </button>
-              )}
-              
               {isFirst && (
                 <button
                   onClick={onToggleAcquisition}
@@ -497,53 +419,11 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, isNext
 }
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
-  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem, refreshQueue } = useReadingQueue();
+  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [showAcquisition, setShowAcquisition] = useState(false);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
-
-  // Handle ownership toggle
-  const handleToggleOwned = async (bookId, owned) => {
-    const result = await db.updateBookOwnership(bookId, owned);
-    if (result.error) {
-      console.error('Failed to update ownership:', result.error);
-    } else {
-      track('book_ownership_toggled', { book_id: bookId, owned });
-    }
-  };
-
-  // Handle priority move up
-  const handleMoveUp = async (bookId) => {
-    if (!user) return;
-    const result = await db.updateBookPriority(user.id, bookId, 'up');
-    if (!result.error) {
-      // Update local order
-      const currentIndex = filteredBooks.findIndex(b => b.id === bookId);
-      if (currentIndex > 0) {
-        const newOrder = [...filteredBooks];
-        [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
-        setLocalOrder(newOrder.map(b => b.id));
-      }
-      track('book_priority_changed', { direction: 'up' });
-    }
-  };
-
-  // Handle priority move down
-  const handleMoveDown = async (bookId) => {
-    if (!user) return;
-    const result = await db.updateBookPriority(user.id, bookId, 'down');
-    if (!result.error) {
-      // Update local order
-      const currentIndex = filteredBooks.findIndex(b => b.id === bookId);
-      if (currentIndex < filteredBooks.length - 1) {
-        const newOrder = [...filteredBooks];
-        [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
-        setLocalOrder(newOrder.map(b => b.id));
-      }
-      track('book_priority_changed', { direction: 'down' });
-    }
-  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -562,26 +442,15 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   }, [readingQueue]);
 
   const sortedBooks = useMemo(() => {
-    let books = [...queueBooks];
-    
-    // First sort by priority (if exists), then by added_at
-    books.sort((a, b) => {
-      // Priority takes precedence (lower = higher priority)
-      if (a.priority != null && b.priority != null) {
-        return a.priority - b.priority;
-      }
-      if (a.priority != null) return -1;
-      if (b.priority != null) return 1;
-      
-      // Fallback to added_at
+    const books = [...queueBooks].sort((a, b) => {
       const dateA = new Date(a.added_at || 0);
       const dateB = new Date(b.added_at || 0);
-      return dateB - dateA;
+      return dateB - dateA; // Most recent first
     });
     
-    // Apply local order if exists (for drag-and-drop)
+    // Apply local order if exists
     if (localOrder.length > 0) {
-      books = books.sort((a, b) => {
+      return books.sort((a, b) => {
         const indexA = localOrder.indexOf(a.id);
         const indexB = localOrder.indexOf(b.id);
         if (indexA === -1) return 1;
@@ -601,10 +470,6 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       book.book_author?.toLowerCase().includes(query)
     );
   }, [sortedBooks, searchQuery]);
-
-  // Split into "Next Up" (top 3) and "Later" sections
-  const nextUpBooks = useMemo(() => filteredBooks.slice(0, 3), [filteredBooks]);
-  const laterBooks = useMemo(() => filteredBooks.slice(3), [filteredBooks]);
 
   const handleMarkAsRead = async (book) => {
     console.log('🔍 [handleMarkAsRead] Starting process for:', {
@@ -838,65 +703,21 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
               items={filteredBooks.map(b => b.id)}
               strategy={verticalListSortingStrategy}
             >
-              {/* Next Up Section (Top 3) */}
-              {nextUpBooks.length > 0 && (
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-lg font-serif text-[#4A5940]">📚 Next Up</h2>
-                    <span className="text-xs text-[#96A888]">Your top {Math.min(3, nextUpBooks.length)} picks</span>
-                  </div>
-                  <div className="space-y-3">
-                    {nextUpBooks.map((book, index) => (
-                      <SortableBookCard
-                        key={book.id}
-                        book={book}
-                        index={index}
-                        onMarkAsRead={handleMarkAsRead}
-                        onRemove={handleRemoveBook}
-                        isFirst={index === 0}
-                        isNextUp={true}
-                        showAcquisition={showAcquisition}
-                        onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
-                        onUpdateBook={updateQueueItem}
-                        onMoveUp={handleMoveUp}
-                        onMoveDown={handleMoveDown}
-                        onToggleOwned={handleToggleOwned}
-                        totalCount={filteredBooks.length}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Later Section */}
-              {laterBooks.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-lg font-serif text-[#4A5940]">📋 Later</h2>
-                    <span className="text-xs text-[#96A888]">{laterBooks.length} more {laterBooks.length === 1 ? 'book' : 'books'}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {laterBooks.map((book, index) => (
-                      <SortableBookCard
-                        key={book.id}
-                        book={book}
-                        index={index + 3}
-                        onMarkAsRead={handleMarkAsRead}
-                        onRemove={handleRemoveBook}
-                        isFirst={false}
-                        isNextUp={false}
-                        showAcquisition={false}
-                        onToggleAcquisition={() => {}}
-                        onUpdateBook={updateQueueItem}
-                        onMoveUp={handleMoveUp}
-                        onMoveDown={handleMoveDown}
-                        onToggleOwned={handleToggleOwned}
-                        totalCount={filteredBooks.length}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="space-y-3">
+                {filteredBooks.map((book, index) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    index={index}
+                    onMarkAsRead={handleMarkAsRead}
+                    onRemove={handleRemoveBook}
+                    isFirst={index === 0}
+                    showAcquisition={showAcquisition}
+                    onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
+                    onUpdateBook={updateQueueItem}
+                  />
+                ))}
+              </div>
             </SortableContext>
           </DndContext>
         )}
@@ -905,7 +726,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         {filteredBooks.length > 0 && (
           <div className="mt-6 flex items-center gap-2 text-xs text-[#96A888]">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Use arrows or drag to reorder. Mark books as owned with the checkmark. Tap "Finished" to move to your collection.</span>
+            <span>Drag the handle to reorder your queue. Tap "Finished" to move books to your collection.</span>
           </div>
         )}
       </div>
