@@ -2007,50 +2007,47 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Card Catalog - library drawer style */}
+          {/* Card Catalog */}
           {messages.length <= 1 && (
             <>
-              <div className="bg-[#D4C4A8] rounded-lg p-3 shadow-inner mb-6 overflow-x-auto">
-                <div className="flex gap-2 min-w-max sm:min-w-0 sm:grid sm:grid-cols-5">
-                  {Object.entries(themeInfo).map(([key, info]) => {
-                    const isSelected = selectedThemes.includes(key);
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedThemes([]);
-                            setInputValue('');
-                            track('theme_filter_removed', { theme: key, theme_label: info.label });
-                          } else {
-                            setSelectedThemes([key]);
-                            const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                            setInputValue(themeText);
-                            track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                          }
-                        }}
-                        className={`group relative flex flex-col items-center p-3 rounded-md transition-all w-24 sm:w-auto flex-shrink-0 sm:flex-shrink ${
-                          isSelected 
-                            ? 'bg-[#5F7252] shadow-md -translate-y-1' 
-                            : 'bg-[#F5F0E1] hover:bg-[#EDE6D3] hover:-translate-y-0.5 shadow'
-                        }`}
-                        aria-label={`${info.label} collection`}
-                        aria-pressed={isSelected}
-                      >
-                        {/* Card catalog tab look */}
-                        <div className={`w-full h-1 rounded-full mb-2 ${isSelected ? 'bg-white/30' : 'bg-[#C4B896]'}`}></div>
-                        <div className={`mb-2 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`}>
-                          {info.icon && <info.icon className="w-5 h-5" />}
-                        </div>
-                        <span className={`text-[10px] sm:text-xs font-medium text-center leading-tight ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
-                          {info.label}
-                        </span>
-                        {/* Drawer pull */}
-                        <div className={`mt-2 w-4 h-1 rounded-full ${isSelected ? 'bg-white/40' : 'bg-[#B8A88C]'}`}></div>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="space-y-2 mb-6">
+                {Object.entries(themeInfo).map(([key, info]) => {
+                  const isSelected = selectedThemes.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedThemes([]);
+                          setInputValue('');
+                          track('theme_filter_removed', { theme: key, theme_label: info.label });
+                        } else {
+                          setSelectedThemes([key]);
+                          const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                          setInputValue(themeText);
+                          track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                        isSelected 
+                          ? 'bg-[#5F7252] border-[#5F7252] shadow-md' 
+                          : 'bg-[#F8F6EE] border-[#D4DAD0] hover:border-[#5F7252] hover:bg-[#5F7252]/5'
+                      }`}
+                      aria-label={`${info.label} collection`}
+                      aria-pressed={isSelected}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        isSelected ? 'bg-white/20' : 'bg-[#5F7252]/10'
+                      }`}>
+                        {info.icon && <info.icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
+                      </div>
+                      <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
+                        {info.label}
+                      </span>
+                      <ChevronRight className={`w-4 h-4 ml-auto ${isSelected ? 'text-white/60' : 'text-[#96A888]'}`} />
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Divider */}
