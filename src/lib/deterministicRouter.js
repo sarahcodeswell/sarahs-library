@@ -140,8 +140,8 @@ export function preFilterRoute(query, themeFilters = []) {
     const withoutBookWord = afterNew.replace(/\b(book|novel|release|work)s?\s*$/i, '').trim();
     const potentialAuthor = endsWithBookWord ? withoutBookWord : afterNew;
     
-    // Author pattern: starts with capital, 2-4 words total
-    if (potentialAuthor && /^[A-Z]/.test(potentialAuthor) && potentialAuthor.split(/\s+/).length <= 3) {
+    // Author pattern: 2-3 words that look like a name (case-insensitive)
+    if (potentialAuthor && potentialAuthor.split(/\s+/).length >= 2 && potentialAuthor.split(/\s+/).length <= 3) {
       return {
         path: 'TEMPORAL',
         confidence: 'high',
