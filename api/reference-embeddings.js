@@ -20,8 +20,14 @@ export default async function handler(req, res) {
   }
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('[reference-embeddings] Missing Supabase credentials');
-    return res.status(500).json({ error: 'Server configuration error' });
+    console.error('[reference-embeddings] Missing Supabase credentials:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseServiceKey
+    });
+    return res.status(500).json({ 
+      error: 'Server configuration error',
+      details: `Missing: ${!supabaseUrl ? 'VITE_SUPABASE_URL ' : ''}${!supabaseServiceKey ? 'SUPABASE_SERVICE_ROLE_KEY' : ''}`.trim()
+    });
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
