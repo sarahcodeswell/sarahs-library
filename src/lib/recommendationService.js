@@ -388,8 +388,7 @@ Why Sarah recommends: ${book.sarah_assessment || 'A wonderful addition to this c
     // Add retrieved context
     let contextText = '';
     
-    // For curated list (catalog path with theme filters), ONLY use catalog books
-    const isCuratedListRequest = themeFilters && themeFilters.length > 0;
+    // isCuratedListRequest already defined above for fast path
     
     if (retrievedContext.verifiedBook) {
       contextText += `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY):
