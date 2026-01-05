@@ -1,7 +1,18 @@
 // Web search API endpoint using Serper (Google Search API)
 // Used for getting current information about books, authors, new releases
 
+import { withRetry, isRetryableError } from './utils/retry.js';
+
 export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -23,17 +34,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://google.serper.dev/search', {
-      method: 'POST',
-      headers: {
-        'X-API-KEY': serperApiKey,
-        'Content-Type': 'application/json'
+    // Use retry logic for transient failures
+    const response = await withRetry(
+      async () => {
+        const resp = await fetch('https://google.serper.dev/search', {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': serperApiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            q: query,
+            num: 5
+          }),
+        });
+        
+        if (!resp.ok && resp.status >= 500) {
+          const error = new Error(`Serper API error: ${resp.status}`);
+          error.status = resp.status;
+          throw error;
+        }
+        
+        return resp;
       },
-      body: JSON.stringify({
-        q: query,
-        num: 5
-      }),
-    });
+      { maxRetries: 2, initialDelay: 500 }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

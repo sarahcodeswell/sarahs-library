@@ -3,22 +3,20 @@ import { getClientIdentifier } from './utils/auth.js';
 import { checkDailyLimit } from './utils/userLimits.js';
 import { validateMessages, sanitizeUserInput } from './utils/inputSanitization.js';
 import { trackCost } from './utils/costMonitoring.js';
+import { getCorsHeaders, handlePreflight } from './utils/cors.js';
+import { fetchWithRetry } from './utils/retry.js';
 
 export const config = {
   runtime: 'edge',
 };
 
 export default async function handler(req) {
-  // CORS headers
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-key',
-  };
+  // CORS headers - restricted to known domains
+  const corsHeaders = getCorsHeaders(req);
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return handlePreflight(req);
   }
 
   if (req.method !== 'POST') {
@@ -125,21 +123,42 @@ export default async function handler(req) {
       );
     }
 
-    // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
-      },
-      body: JSON.stringify(body),
-    });
+    // Call Anthropic API with retry logic for transient failures
+    let response;
+    let data;
+    try {
+      response = await fetchWithRetry(
+        'https://api.anthropic.com/v1/messages',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'prompt-caching-2024-07-31',
+          },
+          body: JSON.stringify(body),
+          timeout: 30000, // 30 second timeout for AI responses
+        },
+        { maxRetries: 2, initialDelay: 1000 }
+      );
+      data = await response.json();
+    } catch (fetchError) {
+      // If all retries failed (5xx errors or network issues)
+      console.error('Anthropic API failed after retries:', fetchError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Service temporarily unavailable',
+          message: 'Please try again in a moment.'
+        }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
 
-    const data = await response.json();
-
-    // Log errors from Anthropic
+    // Log errors from Anthropic (4xx errors returned without retry)
     if (!response.ok) {
       console.error('Anthropic API error:', data);
     } else {
