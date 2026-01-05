@@ -1985,15 +1985,67 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
-          <div className="mb-4 sm:mb-6 rounded-2xl overflow-hidden shadow-lg">
-            <img
-              src="/books.jpg"
-              alt="Open book on desk"
-              loading="lazy"
-              className="block w-full h-[clamp(120px,16vh,220px)] object-cover object-center"
-            />
-          </div>
+          {/* Header - only show when no conversation yet */}
+          {messages.length <= 1 && (
+            <div className="mb-6 text-center">
+              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
+              <p className="text-sm text-[#7A8F6C]">
+                Browse my curated collections or ask me anything
+              </p>
+            </div>
+          )}
 
+          {/* Themes - show first when no conversation */}
+          {messages.length <= 1 && (
+            <>
+              <div className="mb-4">
+                <p className="text-xs text-[#7A8F6C] text-center mb-3">Browse by theme</p>
+                <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
+                  {Object.entries(themeInfo).map(([key, info]) => {
+                    const isSelected = selectedThemes.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedThemes([]);
+                            setInputValue('');
+                            track('theme_filter_removed', { theme: key, theme_label: info.label });
+                          } else {
+                            setSelectedThemes([key]);
+                            const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                            setInputValue(themeText);
+                            track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                          }
+                        }}
+                        className={`px-3 py-1.5 text-xs rounded-full transition-all flex items-center gap-1.5 border ${
+                          isSelected
+                            ? 'bg-[#5F7252] text-white border-[#5F7252]'
+                            : 'bg-white text-[#5F7252] border-[#D4DAD0] hover:bg-[#F8F6EE]'
+                        }`}
+                        aria-label={`${info.label} theme filter`}
+                        aria-pressed={isSelected}
+                        title={themeDescriptions[key]}
+                      >
+                        {info.icon && <info.icon className="w-3 h-3 flex-shrink-0" />}
+                        <span>{info.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-4 max-w-md mx-auto">
+                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+                <span className="text-xs text-[#96A888]">or ask me anything</span>
+                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+              </div>
+            </>
+          )}
+
+          {/* Chat messages - only show after user engages */}
+          {messages.length > 1 && (
           <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
             {messages.map((msg, idx) => (
               <ChatMessage 
@@ -2138,6 +2190,7 @@ Find similar books from beyond my library that match this taste profile.
             )}
             <div ref={chatEndRef} />
           </div>
+          )}
 
           {/* Sign-In Nudge Banner - Shows after recommendations for non-signed-in users */}
           {showSignInNudge && !user && (
@@ -2187,7 +2240,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="Or ask me anything..."
+                placeholder="What are you in the mood for?"
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
@@ -2246,69 +2299,6 @@ Find similar books from beyond my library that match this taste profile.
               </div>
             </div>
           )}
-
-          {/* Sarah's Curated Collections - Always visible, above search */}
-          <div className="mb-4">
-            <p className="text-xs text-[#7A8F6C] text-center mb-3">Browse my curated collections</p>
-            <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
-              {Object.entries(themeInfo).map(([key, info]) => {
-                const isSelected = selectedThemes.includes(key);
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedThemes([]);
-                        setInputValue('');
-                        
-                        track('theme_filter_removed', {
-                          theme: key,
-                          theme_label: info.label
-                        });
-                      } else {
-                        setSelectedThemes([key]);
-                        const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                        setInputValue(themeText);
-                        
-                        track('theme_filter_selected', {
-                          theme: key,
-                          theme_label: info.label,
-                          chat_mode: chatMode
-                        });
-                        
-                        setTimeout(() => {
-                          const textarea = document.querySelector('textarea[placeholder="Or ask me anything..."]');
-                          if (textarea) {
-                            textarea.style.height = '24px';
-                            const newHeight = Math.min(textarea.scrollHeight, 200);
-                            textarea.style.height = newHeight + 'px';
-                          }
-                        }, 0);
-                      }
-                    }}
-                    className={`px-3 py-1.5 text-xs rounded-full transition-all flex items-center gap-1.5 border ${
-                      isSelected
-                        ? 'bg-[#5F7252] text-white border-[#5F7252]'
-                        : 'bg-white text-[#5F7252] border-[#D4DAD0] hover:bg-[#F8F6EE]'
-                    }`}
-                    aria-label={`${info.label} theme filter`}
-                    aria-pressed={isSelected}
-                    title={themeDescriptions[key]}
-                  >
-                    {info.icon && <info.icon className="w-3 h-3 flex-shrink-0" />}
-                    <span>{info.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-4 max-w-md mx-auto">
-            <div className="flex-1 h-px bg-[#E8EBE4]"></div>
-            <span className="text-xs text-[#96A888]">or</span>
-            <div className="flex-1 h-px bg-[#E8EBE4]"></div>
-          </div>
 
           <input
             ref={importFileInputRef}
