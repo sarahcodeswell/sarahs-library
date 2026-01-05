@@ -131,15 +131,20 @@ export function preFilterRoute(query, themeFilters = []) {
     }
   }
   
-  // Special case: "new [Author Name]" pattern (e.g., "New Paula McLain")
-  // Detects queries starting with "new" followed by capitalized words (likely author)
-  if (normalizedQuery.startsWith('new ') && query.split(' ').length <= 4) {
-    // Check if remaining words look like a name (original query has capitals)
+  // Special case: "new [Author Name]" or "new [Author] book/novel" pattern
+  // e.g., "New Paula McLain", "new Paula McLain novel", "new paula MCLAIN NOVEL"
+  if (normalizedQuery.startsWith('new ')) {
     const afterNew = query.substring(4).trim();
-    if (afterNew && /^[A-Z]/.test(afterNew)) {
+    // Check if it ends with book/novel (optional) and has author-like words
+    const endsWithBookWord = /\b(book|novel|release|work)s?\s*$/i.test(afterNew);
+    const withoutBookWord = afterNew.replace(/\b(book|novel|release|work)s?\s*$/i, '').trim();
+    const potentialAuthor = endsWithBookWord ? withoutBookWord : afterNew;
+    
+    // Author pattern: starts with capital, 2-4 words total
+    if (potentialAuthor && /^[A-Z]/.test(potentialAuthor) && potentialAuthor.split(/\s+/).length <= 3) {
       return {
         path: 'TEMPORAL',
-        confidence: 'high', // Must be 'high' to trigger early return in router
+        confidence: 'high',
         reason: 'new_author_pattern',
         matchedKeyword: 'new [author]'
       };
