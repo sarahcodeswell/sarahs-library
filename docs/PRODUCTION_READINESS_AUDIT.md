@@ -29,22 +29,36 @@
 - ✅ **Auth via Supabase**: PKCE flow, JWT verification, session management
 - ✅ **Zod Validation**: Schema validation on client-side inputs
 
-### Issues to Address
+### Issues Addressed ✅
 
-#### 🔴 CRITICAL: Admin Key Hardcoded
+#### ✅ FIXED: Admin Key Hardcoded
 ```javascript
-// api/chat.js:60
-const isAdmin = adminKey === (globalThis?.process?.env?.ADMIN_BACKFILL_KEY || 'sarah-backfill-2024');
+// api/chat.js - NOW:
+const isAdmin = adminEnvKey && adminKey === adminEnvKey;
 ```
-**Risk:** Default admin key is in source code. If env var not set, anyone can bypass limits.
-**Fix:** Remove default, require env var, fail closed.
+**Status:** Fixed - fails closed if env var not set.
 
-#### 🟡 MEDIUM: CORS Too Permissive
+#### ✅ FIXED: CORS Restricted
 ```javascript
-'Access-Control-Allow-Origin': '*'
+// api/utils/cors.js - NOW:
+const ALLOWED_ORIGINS = ['https://sarahsbooks.com', 'https://sarahs-library.vercel.app', ...]
 ```
-**Risk:** Any domain can call your APIs.
-**Fix:** Restrict to your domains: `sarahsbooks.com`, `sarahs-library.vercel.app`
+**Status:** Fixed - restricted to known domains.
+
+#### ✅ FIXED: Retry Logic Added
+```javascript
+// api/utils/retry.js - NEW:
+fetchWithRetry(url, options, { maxRetries: 2, initialDelay: 1000 })
+```
+**Status:** Fixed - exponential backoff for Anthropic/Serper APIs.
+
+#### ✅ FIXED: Security Headers
+```json
+// vercel.json - NOW includes:
+X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
+```
+
+### Remaining Issues
 
 #### 🟡 MEDIUM: No Request Signing
 **Risk:** API requests can be replayed.
@@ -100,18 +114,37 @@ const memoryStore = new Map();
 
 ---
 
-## 3. RELIABILITY ASSESSMENT ⚠️ Needs Work (6/10)
+## 3. RELIABILITY ASSESSMENT ✅ Improved (7/10)
 
 ### What's Working Well
 - ✅ **Graceful Degradation**: Falls back to keyword routing when embeddings fail
 - ✅ **Error Boundaries**: Try-catch in critical paths
 - ✅ **Health Endpoint**: `/api/health` exists
+- ✅ **Retry Logic**: Exponential backoff for external API calls (NEW)
+- ✅ **World Books Fallback**: Direct formatting if Claude fails (NEW)
 
-### Issues to Address
+### Issues Addressed ✅
 
-#### 🔴 CRITICAL: Silent Failures in Recommendation Flow
+#### ✅ FIXED: Retry Logic for External APIs
 ```javascript
-// Multiple places return empty results on error without user feedback
+// api/utils/retry.js - NOW:
+fetchWithRetry(url, { timeout: 30000 }, { maxRetries: 2, initialDelay: 1000 })
+```
+**Status:** Fixed - retries on 5xx errors and network issues.
+
+#### ✅ FIXED: World Books Fallback
+```javascript
+// recommendationService.js - NOW:
+if (hasNoRecommendations && retrievedContext.worldBooks.length > 0) {
+  // Format world books directly if Claude fails
+}
+```
+
+### Remaining Issues
+
+#### 🟡 MEDIUM: Silent Failures in Some Paths
+```javascript
+// Some error paths still return generic messages
 if (!response.ok) {
   return { results: [] }; // User sees nothing, no error
 }
