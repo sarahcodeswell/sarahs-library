@@ -382,6 +382,29 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
         fastPath: true
       };
     }
+    
+    // FAST PATH: For WORLD route with world books, format directly (skip Claude)
+    // This ensures world books are always displayed correctly
+    if (path === 'world' && retrievedContext.worldBooks.length >= 1) {
+      console.log('[RecommendationService] Fast path: formatting world books directly');
+      const worldBookText = retrievedContext.worldBooks.slice(0, 3).map((book) => {
+        return `Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+Why This Fits: This recommendation matches your specific request.
+Description: ${book.description || 'A quality book from web search.'}`;
+      }).join('\n\n');
+      
+      return {
+        success: true,
+        text: `Here are some recommendations from beyond my curated collection:\n\n${worldBookText}`,
+        exclusionCount: exclusionList.length,
+        exclusionList: exclusionList,
+        classification: classification,
+        path: path,
+        fastPath: true,
+        worldPath: true
+      };
+    }
 
     // 6. Build system prompt
     const systemPrompt = buildSystemPrompt();
@@ -521,11 +544,22 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
 
       const responseText = data.content[0].text;
       
+      // Debug: Log Claude's response to diagnose issues
+      console.log('[RecommendationService] Claude response preview:', responseText.slice(0, 200));
+      
       // Check if Claude returned an error message instead of recommendations
       // If we have world books but Claude didn't use them, format them directly
-      const hasNoRecommendations = responseText.toLowerCase().includes("trouble finding") || 
-                                    responseText.toLowerCase().includes("can't find") ||
+      const lowerResponse = responseText.toLowerCase();
+      const hasNoRecommendations = lowerResponse.includes("trouble finding") || 
+                                    lowerResponse.includes("can't find") ||
+                                    lowerResponse.includes("having trouble") ||
+                                    lowerResponse.includes("couldn't find") ||
                                     !responseText.includes("Title:");
+      
+      console.log('[RecommendationService] Fallback check:', { 
+        hasNoRecommendations, 
+        worldBooksCount: retrievedContext.worldBooks.length 
+      });
       
       if (hasNoRecommendations && retrievedContext.worldBooks.length > 0) {
         console.log('[RecommendationService] Claude failed to use world books, formatting directly');
