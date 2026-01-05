@@ -208,7 +208,7 @@ function buildExclusionMessage(exclusionList) {
  */
 export async function getRecommendations(userId, userMessage, readingQueue = [], themeFilters = []) {
   try {
-    console.log('[RecommendationService] Starting recommendation flow');
+    // Production logging - keep minimal
     
     // 1. Fetch exclusion list
     let exclusionList = [];
@@ -216,7 +216,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       const { data: excludedTitles, error } = await db.getUserExclusionList(userId);
       if (!error && excludedTitles) {
         exclusionList = excludedTitles;
-        console.log('[RecommendationService] Exclusion list loaded:', exclusionList.length, 'books');
+        // Exclusion list loaded
       }
     }
 
@@ -274,22 +274,13 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       originalQuery: userMessage
     };
     
-    console.log('[RecommendationService] Routing decision:', {
-      path: routingDecision.path,
-      reason: routingDecision.reason,
-      confidence: routingDecision.confidence,
-      themeFilters: routingDecision.themeFilters
-    });
+    // Routing: path, reason logged if needed
 
     // 4. Execute the appropriate path to get context
     const pathResult = await executeRecommendationPath(path, userMessage, classification, userId);
     
-    console.log('[RecommendationService] Path result:', {
-      hasBooks: !!pathResult.books,
-      booksCount: pathResult.books?.length,
-      hasSections: !!pathResult.sections,
-      source: pathResult.source
-    });
+    // Path result processed
+
     
     // 5. Build retrieved context for Claude
     const retrievedContext = {
@@ -308,17 +299,13 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
         .flatMap(s => s.books);
     }
     
-    console.log('[RecommendationService] Retrieved context:', {
-      catalogBooks: retrievedContext.catalogBooks.length,
-      worldBooks: retrievedContext.worldBooks.length,
-      hasVerifiedBook: !!retrievedContext.verifiedBook
-    });
+    // Context built
 
     // FAST PATH: For curated list requests, bypass Claude and return catalog books directly
     // This guarantees 100% catalog-only results for theme browsing
     const isCuratedListRequest = themeFilters && themeFilters.length > 0;
     if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
-      console.log('[RecommendationService] Fast path: returning catalog books directly for curated list');
+      // Fast path: curated list
       
       // Filter out excluded books (books user has already read/saved/dismissed)
       const availableBooks = retrievedContext.catalogBooks.filter(
@@ -495,9 +482,7 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
 
     const userContent = messageParts.join('\n\n');
     
-    // Debug: Log what we're sending to Claude
-    console.log('[RecommendationService] World books in context:', retrievedContext.worldBooks.length);
-    console.log('[RecommendationService] Context preview:', contextText.slice(0, 500));
+    // Context prepared for Claude
 
     // 8. Call Claude API
     const controller = new AbortController();
@@ -531,8 +516,7 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
 
       const responseText = data.content[0].text;
       
-      // Debug: Log Claude's response to diagnose issues
-      console.log('[RecommendationService] Claude response preview:', responseText.slice(0, 200));
+      // Claude response received
       
       // Check if Claude returned an error message instead of recommendations
       // If we have world books but Claude didn't use them, format them directly
@@ -543,13 +527,10 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
                                     lowerResponse.includes("couldn't find") ||
                                     !responseText.includes("Title:");
       
-      console.log('[RecommendationService] Fallback check:', { 
-        hasNoRecommendations, 
-        worldBooksCount: retrievedContext.worldBooks.length 
-      });
+      // Fallback check complete
       
       if (hasNoRecommendations && retrievedContext.worldBooks.length > 0) {
-        console.log('[RecommendationService] Claude failed to use world books, formatting directly');
+        // Using world books fallback
         const worldBookText = retrievedContext.worldBooks.slice(0, 3).map((book) => {
           return `Title: ${book.title}
 Author: ${book.author || 'Unknown'}
