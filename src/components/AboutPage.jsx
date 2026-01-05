@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User } from 'lucide-react';
 
 export default function AboutPage({ onNavigate }) {
 
@@ -18,11 +18,11 @@ export default function AboutPage({ onNavigate }) {
           Back to Home
         </button>
 
-        {/* Header - The WHY */}
+        {/* Header - What we are and what's in it for you */}
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
-            Great books educate without feeling clinical. They bring topics like justice, identity, and history to life through narrative—not textbooks.
+            Sarah is a curator who knows what makes a great story. Get personalized recommendations from her collection—or let her guide you to the perfect book from the world's library.
           </p>
         </div>
 
@@ -38,22 +38,9 @@ export default function AboutPage({ onNavigate }) {
               <div className="flex-1">
                 <h3 className="font-serif text-xl text-[#4A5940] mb-1">Ask</h3>
                 <p className="text-sm text-[#7A8F6C]">
-                  Tell me what you're in the mood for. Get 3 recommendations instantly.
+                  Tell me what you're looking for. I'll search my curated library first—and if there's a better match out there, I'll find it from the world's library too.
                 </p>
               </div>
-            </div>
-            <div className="mt-4 pl-18 ml-[4.5rem]">
-              <p className="text-xs text-[#96A888] italic">
-                Just want your next great read? Stop here. That's enough.
-              </p>
-            </div>
-          </div>
-
-          {/* Arrow Down */}
-          <div className="flex justify-center">
-            <div className="flex flex-col items-center text-[#96A888]">
-              <span className="text-xs mb-1">Want more personalized recs?</span>
-              <ChevronDown className="w-5 h-5" />
             </div>
           </div>
 
@@ -84,14 +71,6 @@ export default function AboutPage({ onNavigate }) {
             </div>
           </div>
 
-          {/* Arrow Down */}
-          <div className="flex justify-center">
-            <div className="flex flex-col items-center text-[#96A888]">
-              <span className="text-xs mb-1">Want to help others?</span>
-              <ChevronDown className="w-5 h-5" />
-            </div>
-          </div>
-
           {/* Step 3: SHARE */}
           <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
             <div className="flex items-center gap-4">
@@ -104,14 +83,6 @@ export default function AboutPage({ onNavigate }) {
                   Be the friend with great book recommendations. Send your picks to people who trust your taste.
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Arrow Down */}
-          <div className="flex justify-center">
-            <div className="flex flex-col items-center text-[#96A888]">
-              <span className="text-xs mb-1">Ready for the next level?</span>
-              <ChevronDown className="w-5 h-5" />
             </div>
           </div>
 
