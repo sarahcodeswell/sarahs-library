@@ -122,12 +122,69 @@ function FormattedText({ text }) {
 }
 
 const themeInfo = {
-  women: { icon: BookHeart, label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  emotional: { icon: Heart, label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  identity: { icon: Users, label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
-  spiritual: { icon: Sparkles, label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
-  justice: { icon: Scale, label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+  women: { icon: BookHeart, label: "Women's Untold Stories", color: '#7D5A5A' },
+  emotional: { icon: Heart, label: "Emotional Truth", color: '#9B6B6B' },
+  identity: { icon: Users, label: "Identity & Belonging", color: '#5B7355' },
+  spiritual: { icon: Sparkles, label: "Spiritual Seeking", color: '#8B7355' },
+  justice: { icon: Scale, label: "Invisible Injustices", color: '#5A6B7D' }
 };
+
+// Hero SVG - Bookshelf with colored spines
+const HeroBookshelf = () => (
+  <svg 
+    viewBox="0 0 400 120" 
+    className="w-full h-auto"
+    style={{ maxHeight: '140px' }}
+    aria-label="Decorative bookshelf illustration"
+  >
+    {/* Background */}
+    <rect width="400" height="120" fill="#FAF8F5" />
+    
+    {/* Book 1 - Women's Untold Stories color */}
+    <rect x="85" y="25" width="24" height="70" rx="2" fill="#7D5A5A" />
+    <rect x="85" y="27" width="3" height="66" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Book 2 - Emotional Truth color */}
+    <rect x="112" y="15" width="28" height="80" rx="2" fill="#9B6B6B" />
+    <rect x="112" y="17" width="3" height="76" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Book 3 - Cream */}
+    <rect x="143" y="23" width="22" height="72" rx="2" fill="#E8E4DC" />
+    <rect x="143" y="25" width="3" height="68" rx="1" fill="#FAF8F5" opacity="0.9" />
+    
+    {/* Book 4 - Cream with heart (center book) */}
+    <rect x="168" y="11" width="30" height="84" rx="2" fill="#E8E4DC" />
+    <rect x="168" y="13" width="3" height="80" rx="1" fill="#FAF8F5" opacity="0.9" />
+    {/* Heart accent */}
+    <path 
+      d="M183 43 c-2-2-5-2-7 0-2 2-2 5 0 7l7 7 7-7c2-2 2-5 0-7-2-2-5-2-7 0z" 
+      fill="#C8727D"
+    />
+    
+    {/* Book 5 - Identity & Belonging color (sage) */}
+    <rect x="201" y="19" width="24" height="76" rx="2" fill="#5B7355" />
+    <rect x="201" y="21" width="3" height="72" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Book 6 - Spiritual Seeking color */}
+    <rect x="228" y="27" width="26" height="68" rx="2" fill="#8B7355" />
+    <rect x="228" y="29" width="3" height="64" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Book 7 - Cream */}
+    <rect x="257" y="17" width="20" height="78" rx="2" fill="#D4D0C8" />
+    <rect x="257" y="19" width="3" height="74" rx="1" fill="#FAF8F5" opacity="0.9" />
+    
+    {/* Book 8 - Invisible Injustices color */}
+    <rect x="280" y="23" width="26" height="72" rx="2" fill="#5A6B7D" />
+    <rect x="280" y="25" width="3" height="68" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Book 9 - Light sage */}
+    <rect x="309" y="29" width="22" height="66" rx="2" fill="#7A9374" />
+    <rect x="309" y="31" width="3" height="62" rx="1" fill="#F5F2EC" opacity="0.7" />
+    
+    {/* Dark wood shelf */}
+    <rect x="60" y="95" width="280" height="10" rx="2" fill="#4A3C32" />
+  </svg>
+);
 
 const themeDescriptions = {
   women: 'Women-led lives, resilience, sisterhood.',
@@ -1987,33 +2044,35 @@ Find similar books from beyond my library that match this taste profile.
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
           {/* Hero Image - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src="/books.jpg"
-                alt="Cozy reading atmosphere"
-                loading="lazy"
-                className="block w-full h-[clamp(100px,14vh,180px)] object-cover object-center"
-              />
+            <div 
+              className="mb-6 rounded-xl overflow-hidden" 
+              style={{ border: '1px solid #E8E4DC' }}
+            >
+              <HeroBookshelf />
             </div>
           )}
 
           {/* Header - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-6 text-center">
-              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
-              <p className="text-sm text-[#7A8F6C]">
+            <div className="mb-8 text-center">
+              <h1 
+                className="font-serif text-2xl font-normal mb-2"
+                style={{ color: '#3D4D39' }}
+              >
+                Find Your Next Great Read
+              </h1>
+              <p className="text-sm" style={{ color: '#6B6B6B' }}>
                 Browse my curated themes or ask me anything
               </p>
             </div>
           )}
 
-          {/* Stacked Books */}
+          {/* Curator Theme Buttons */}
           {messages.length <= 1 && (
             <>
-              <div className="flex flex-col items-center gap-1 mb-6">
-                {Object.entries(themeInfo).map(([key, info], index) => {
+              <div className="space-y-2 mb-8">
+                {Object.entries(themeInfo).map(([key, info]) => {
                   const isSelected = selectedThemes.includes(key);
-                  const offsets = ['-rotate-1', 'rotate-0.5', '-rotate-0.5', 'rotate-1', '-rotate-0.5'];
                   return (
                     <button
                       key={key}
@@ -2029,17 +2088,22 @@ Find similar books from beyond my library that match this taste profile.
                           track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
                         }
                       }}
-                      className={`w-full max-w-sm flex items-center gap-3 px-4 py-2.5 rounded-sm border-l-4 transition-all ${offsets[index]} ${
-                        isSelected 
-                          ? 'bg-[#5F7252] border-l-[#4A5940] shadow-lg scale-105 rotate-0 z-10' 
-                          : 'bg-[#F8F6EE] border-l-[#5F7252] hover:scale-102 hover:shadow-md'
-                      }`}
-                      style={{ boxShadow: isSelected ? undefined : '0 1px 2px rgba(0,0,0,0.1)' }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all"
+                      style={{
+                        backgroundColor: isSelected ? info.color : 'transparent',
+                        color: isSelected ? 'white' : '#3D4D39',
+                        border: '1px solid',
+                        borderColor: isSelected ? info.color : '#E8E4DC',
+                        borderLeftWidth: '4px',
+                        borderLeftColor: info.color,
+                      }}
                       aria-label={`${info.label} collection`}
                       aria-pressed={isSelected}
                     >
-                      {info.icon && <info.icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
-                      <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
+                      <span style={{ color: isSelected ? 'white' : info.color }}>
+                        {info.icon && <info.icon className="w-5 h-5" />}
+                      </span>
+                      <span className="font-medium text-sm">
                         {info.label}
                       </span>
                     </button>
@@ -2048,10 +2112,12 @@ Find similar books from beyond my library that match this taste profile.
               </div>
 
               {/* Divider */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
-                <span className="text-xs text-[#96A888]">or ask me anything</span>
-                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1 h-px" style={{ backgroundColor: '#E8E4DC' }} />
+                <span className="text-sm italic" style={{ color: '#9B9B9B' }}>
+                  or ask me anything
+                </span>
+                <div className="flex-1 h-px" style={{ backgroundColor: '#E8E4DC' }} />
               </div>
             </>
           )}
@@ -2238,7 +2304,16 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
+          {/* Search/Chat Input */}
+          <div 
+            className="rounded-xl overflow-hidden"
+            style={{
+              backgroundColor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              border: '1px solid #E8E4DC',
+            }}
+          >
+            <div className="flex items-center">
               <textarea
                 value={inputValue}
                 onChange={e => {
@@ -2252,20 +2327,42 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="What are you in the mood for?"
-                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
+                placeholder="I'm looking for something that..."
+                className="flex-1 px-4 py-3.5 outline-none text-base resize-none overflow-hidden bg-transparent"
+                style={{ color: '#3D4D39', minHeight: '24px', maxHeight: '200px', height: '48px' }}
                 disabled={isLoading}
-                style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !inputValue.trim()}
-                className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
+                className="p-2.5 m-1.5 rounded-lg transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#5B7355' }}
                 aria-label="Send message"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-[18px] h-[18px] text-white" />
               </button>
             </div>
+          </div>
+
+          {/* Quick Prompts - only show when no conversation yet */}
+          {messages.length <= 1 && (
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {["Book club pick", "Quick read", "Make me think"].map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => setInputValue(prompt)}
+                  className="px-3 py-1.5 rounded-full text-sm transition-colors hover:bg-white"
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#5B7355',
+                    border: '1px solid #D4D0C8',
+                  }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
 
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
