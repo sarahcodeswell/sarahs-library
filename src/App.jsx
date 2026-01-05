@@ -2010,8 +2010,8 @@ Find similar books from beyond my library that match this taste profile.
           {/* Card Catalog - library drawer style */}
           {messages.length <= 1 && (
             <>
-              <div className="bg-[#D4C4A8] rounded-lg p-3 shadow-inner mb-6">
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              <div className="bg-[#D4C4A8] rounded-lg p-3 shadow-inner mb-6 overflow-x-auto">
+                <div className="flex gap-2 min-w-max sm:min-w-0 sm:grid sm:grid-cols-5">
                   {Object.entries(themeInfo).map(([key, info]) => {
                     const isSelected = selectedThemes.includes(key);
                     return (
@@ -2029,7 +2029,7 @@ Find similar books from beyond my library that match this taste profile.
                             track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
                           }
                         }}
-                        className={`group relative flex flex-col items-center p-3 rounded-md transition-all ${
+                        className={`group relative flex flex-col items-center p-3 rounded-md transition-all w-24 sm:w-auto flex-shrink-0 sm:flex-shrink ${
                           isSelected 
                             ? 'bg-[#5F7252] shadow-md -translate-y-1' 
                             : 'bg-[#F5F0E1] hover:bg-[#EDE6D3] hover:-translate-y-0.5 shadow'
