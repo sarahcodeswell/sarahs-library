@@ -270,6 +270,9 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     // Add retrieved context
     let contextText = '';
     
+    // For curated list (catalog path with theme filters), ONLY use catalog books
+    const isCuratedListRequest = themeFilters && themeFilters.length > 0;
+    
     if (retrievedContext.verifiedBook) {
       contextText += `\n\n🎯 VERIFIED BOOK DATA (USE EXACTLY):
 Title: ${retrievedContext.verifiedBook.title}
@@ -285,9 +288,15 @@ ${retrievedContext.catalogBooks.slice(0, 5).map((b, i) =>
   `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
    Sarah's take: ${b.sarah_assessment || 'A wonderful read.'}`
 ).join('\n\n')}`;
+      
+      // For curated lists, enforce catalog-only recommendations
+      if (isCuratedListRequest) {
+        contextText += `\n\n⚠️ CURATED LIST REQUEST: You MUST ONLY recommend books from Sarah's Collection above. Do NOT suggest any books outside this list.`;
+      }
     }
     
-    if (retrievedContext.worldBooks.length > 0) {
+    // Only include world books if NOT a curated list request
+    if (retrievedContext.worldBooks.length > 0 && !isCuratedListRequest) {
       contextText += `\n\nWORLD RECOMMENDATIONS:
 ${retrievedContext.worldBooks.slice(0, 5).map((b, i) => 
   `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
