@@ -455,15 +455,21 @@ ${retrievedContext.worldBooks.slice(0, 5).map((b, i) =>
 ═══════════════════════════════════════`;
     }
     
-    // Fallback when no books found from any path
+    // WORLD PATH: Let Claude use its knowledge for requests outside catalog
+    // This is intentional - we trust Claude's book knowledge for open discovery
     if (retrievedContext.catalogBooks.length === 0 && 
         retrievedContext.worldBooks.length === 0 && 
         !retrievedContext.verifiedBook) {
-      contextText += `\n\n⚠️ NO SPECIFIC BOOKS RETRIEVED:
-I couldn't find specific books from my catalog or web search for this request.
-Please use your knowledge to recommend high-quality books that match the user's request.
-Focus on well-known, critically acclaimed books in the requested genre/style.
-Be honest that these are general recommendations, not from my curated collection.`;
+      contextText += `\n\n📚 OUTSIDE MY CURATED COLLECTION:
+This request doesn't match books in my personal catalog. Use your broad book knowledge to recommend excellent books.
+
+IMPORTANT FRAMING:
+- Start with: "This is outside my curated collection, but I know some great options..."
+- Recommend well-known, critically acclaimed books that truly match the request
+- Be specific about WHY each book fits their criteria
+- Focus on quality: Goodreads 4.0+, award winners, critical acclaim
+
+This is honest and helpful - we're building features to expand my catalog over time.`;
     }
 
     // Add taste divergence guidance if needed

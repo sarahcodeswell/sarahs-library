@@ -114,71 +114,32 @@ export async function catalogSearchPath(query, classification) {
  * Uses web search + quality framework
  */
 export async function worldSearchPath(query, classification) {
-  console.log('[WorldPath] Starting world search');
+  console.log('[WorldPath] Using Claude knowledge for world recommendations');
+  
+  // SIMPLIFIED: For open discovery queries, let Claude use its knowledge
+  // Web search is reserved for TEMPORAL path (new releases) only
+  // This is more reliable and produces better quality results
   
   const results = {
     source: 'world',
     alignmentCategory: 'quality_outside_taste',
-    books: [],
+    books: [], // Empty - Claude will use its knowledge directly
     explanation: '',
-    transparencyNote: "These aren't my usual picks, but they're the best of their genre."
+    transparencyNote: "This request is outside my curated collection, so I'm drawing on my broader book knowledge.",
+    useClaudeKnowledge: true // Flag to tell recommendationService to let Claude recommend freely
   };
 
-  try {
-    const { entities, tasteAlignment, originalQuery } = classification;
-    const genre = entities.genres?.[0] || 'books';
-    
-    // Build search query - use original query for specific topics, fallback to genre search
-    let searchQuery;
-    if (originalQuery && originalQuery.length > 20) {
-      // Use the original query for specific requests (add "book" to help search)
-      searchQuery = `${originalQuery} book recommendations`;
-    } else if (entities.authors?.length > 0) {
-      searchQuery = `best books by ${entities.authors[0]} highly rated`;
-    } else {
-      searchQuery = `best ${genre} books highly rated award winning`;
-    }
-    
-    // Web search for quality books
-    const searchResponse = await fetch('/api/web-search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: searchQuery })
-    });
+  const { tasteAlignment } = classification;
+  const genre = classification.entities?.genres?.[0] || 'books';
 
-    if (searchResponse.ok) {
-      const webData = await searchResponse.json();
-      
-      if (webData.results?.length > 0) {
-        // Extract book information from web results using LLM
-        const webBooks = await extractBooksFromWebResults(webData.results, originalQuery);
-        console.log('[WorldPath] Extracted', webBooks.length, 'books from web results');
-        
-        // Apply quality filter via Claude (skip if we already have few books)
-        const qualityFiltered = webBooks.length > 3 
-          ? await applyQualityFilter(webBooks, genre, classification)
-          : webBooks;
-        
-        results.books = qualityFiltered.map(b => ({
-          ...b,
-          source: 'world',
-          badge: 'Quality Pick'
-        }));
-      }
-    }
-
-    // Build explanation based on taste divergence
-    if (tasteAlignment.score < -0.3) {
-      results.explanation = `This isn't my usual genre, but here's what makes a great ${genre}—I've picked the best based on quality markers.`;
-    } else {
-      results.explanation = `Here are highly-rated ${genre} recommendations from beyond my collection.`;
-    }
-
-  } catch (err) {
-    console.error('[WorldPath] Error:', err);
+  // Build explanation based on taste divergence
+  if (tasteAlignment.score < -0.3) {
+    results.explanation = `This isn't my usual genre, but I can still help you find great ${genre}.`;
+  } else {
+    results.explanation = `This is outside my curated collection, but I know some excellent options.`;
   }
 
-  console.log('[WorldPath] Found', results.books.length, 'books');
+  console.log('[WorldPath] Delegating to Claude knowledge');
   return results;
 }
 
