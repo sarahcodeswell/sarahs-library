@@ -290,9 +290,12 @@ const timeoutId = setTimeout(() => controller.abort(), 25000);
 ### Today (Before Demo)
 1. ✅ Fix routing issues (completed)
 2. ✅ Add missing env vars to Vercel (completed)
-3. 🔲 Remove hardcoded admin key default
-4. 🔲 Test all 5 routing scenarios end-to-end
-5. 🔲 Verify no console errors in production
+3. ✅ Remove hardcoded admin key default (completed)
+4. ✅ Add CORS restrictions to known domains (completed)
+5. ✅ Add retry logic with exponential backoff (completed)
+6. ✅ Fix curated list display for users who read all books (completed)
+7. 🔲 Test all 5 routing scenarios end-to-end
+8. 🔲 Verify no console errors in production
 
 ### This Week
 1. Move rate limiting to Vercel KV
