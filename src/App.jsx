@@ -1514,9 +1514,16 @@ Find similar books from beyond my library that match this taste profile.
     });
 
     try {
-      // Update progress
-      setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 500);
-      setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 1000);
+      // Update progress - skip world step for curated lists (fast path)
+      const isCuratedList = selectedThemes && selectedThemes.length > 0;
+      if (isCuratedList) {
+        // Fast path: library → matching → preparing
+        setTimeout(() => setLoadingProgress({ step: 'matching', progress: 50 }), 300);
+      } else {
+        // Normal path: library → world → matching → preparing
+        setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 500);
+        setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 1000);
+      }
 
       // NEW CLEAN RECOMMENDATION SERVICE
       const result = await getRecommendations(user?.id, userMessage, readingQueue, selectedThemes);

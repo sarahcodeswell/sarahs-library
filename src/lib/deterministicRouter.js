@@ -556,7 +556,50 @@ export function fallbackRoute(query, themeFilters = []) {
     };
   }
   
-  // Default to HYBRID when we can't determine
+  // Smart fallback: detect specific/niche queries that should go to WORLD
+  const lowerQuery = query.toLowerCase();
+  
+  // Specific geographic/historical/cultural topics → WORLD
+  const specificTopicPatterns = [
+    /\b(history|historical)\b.*\b(of|about|from)\b/i,
+    /\b(venezuela|argentina|brazil|chile|peru|colombia|mexico|cuba|haiti|jamaica)\b/i,
+    /\b(african|asian|middle eastern|european|latin american|caribbean)\b/i,
+    /\b(wwii|ww2|world war|civil war|revolution|colonial|independence)\b/i,
+    /\b(19th century|18th century|medieval|ancient|victorian|renaissance)\b/i,
+    /\b(true story|based on|real events|biography|memoir)\b/i,
+    /\b(science fiction|sci-fi|fantasy|horror|thriller|mystery|crime|detective)\b/i,
+    /\b(best|top|greatest|most popular|award.?winning|pulitzer|booker|nobel)\b/i,
+  ];
+  
+  const isSpecificTopic = specificTopicPatterns.some(pattern => pattern.test(lowerQuery));
+  
+  // Check if query mentions Sarah's themes (more likely in catalog)
+  const sarahsThemes = ['women', 'emotional', 'identity', 'belonging', 'spiritual', 'justice', 'family', 'mother', 'daughter', 'sister'];
+  const mentionsSarahsThemes = sarahsThemes.some(theme => lowerQuery.includes(theme));
+  
+  // Specific topic WITHOUT Sarah's themes → WORLD
+  if (isSpecificTopic && !mentionsSarahsThemes) {
+    return {
+      path: 'WORLD',
+      subtype: 'specific_topic',
+      reason: 'specific_topic_outside_catalog',
+      confidence: 'medium',
+      isFallback: true
+    };
+  }
+  
+  // Mentions Sarah's themes → CATALOG first
+  if (mentionsSarahsThemes) {
+    return {
+      path: 'CATALOG',
+      subtype: 'theme_match',
+      reason: 'matches_sarahs_themes',
+      confidence: 'medium',
+      isFallback: true
+    };
+  }
+  
+  // Default to HYBRID when truly ambiguous
   return {
     path: 'HYBRID',
     subtype: 'balanced',
