@@ -383,29 +383,6 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
       };
     }
     
-    // FAST PATH: For WORLD route with world books, format directly (skip Claude)
-    // This ensures world books are always displayed correctly
-    if (path === 'world' && retrievedContext.worldBooks.length >= 1) {
-      console.log('[RecommendationService] Fast path: formatting world books directly');
-      const worldBookText = retrievedContext.worldBooks.slice(0, 3).map((book) => {
-        return `Title: ${book.title}
-Author: ${book.author || 'Unknown'}
-Why This Fits: This recommendation matches your specific request.
-Description: ${book.description || 'A quality book from web search.'}`;
-      }).join('\n\n');
-      
-      return {
-        success: true,
-        text: `Here are some recommendations from beyond my curated collection:\n\n${worldBookText}`,
-        exclusionCount: exclusionList.length,
-        exclusionList: exclusionList,
-        classification: classification,
-        path: path,
-        fastPath: true,
-        worldPath: true
-      };
-    }
-
     // 6. Build system prompt
     const systemPrompt = buildSystemPrompt();
 
@@ -473,13 +450,22 @@ ${retrievedContext.catalogBooks.slice(0, 5).map((b, i) =>
     
     // Only include world books if NOT a curated list request
     if (retrievedContext.worldBooks.length > 0 && !isCuratedListRequest) {
-      contextText += `\n\nWORLD RECOMMENDATIONS (use these for your response):
+      contextText += `\n\n═══════════════════════════════════════
+📚 WORLD BOOK RECOMMENDATIONS - YOU MUST USE THESE:
+═══════════════════════════════════════
 ${retrievedContext.worldBooks.slice(0, 5).map((b, i) => 
   `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
    ${b.description || ''}`
 ).join('\n\n')}
 
-⚠️ IMPORTANT: You MUST recommend from the WORLD RECOMMENDATIONS above. These are quality books from web search that match the user's request. Format them using the standard response format with Title:, Author:, Why This Fits:, Description:, and Reputation:.`;
+🚨 CRITICAL INSTRUCTION: 
+- These books were found specifically for this request
+- You MUST recommend these books in your response
+- Format each using: Title:, Author:, Why This Fits:, Description:
+- Explain how each book matches the user's specific criteria
+- Do NOT say you cannot find books - the books are listed above
+- Do NOT apologize or say you're having trouble
+═══════════════════════════════════════`;
     }
     
     // Fallback when no books found from any path
