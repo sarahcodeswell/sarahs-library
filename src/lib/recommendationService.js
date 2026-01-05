@@ -254,6 +254,16 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       (routingDecision.scores?.tasteAlignment) ?? 
       (routingDecision.path === 'CATALOG' ? 1.0 : 0.0);
     
+    // Extract author from "new [author]" pattern if detected
+    let extractedAuthors = [];
+    if (routingDecision.reason === 'new_author_pattern') {
+      // Query is "new Paula McLain" - extract "Paula McLain" as author
+      const authorPart = userMessage.substring(4).trim(); // Remove "new "
+      if (authorPart) {
+        extractedAuthors = [authorPart];
+      }
+    }
+    
     const classification = {
       intent: routingDecision.path.toLowerCase() + '_search',
       tasteAlignment: { 
@@ -265,7 +275,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       temporalIntent: routingDecision.path === 'TEMPORAL' ? 'recent' : 'any_time',
       entities: { 
         genres: [], 
-        authors: [], 
+        authors: extractedAuthors, 
         titles: [], 
         moods: routingDecision.themeFilters || [], 
         timeframe: null 
