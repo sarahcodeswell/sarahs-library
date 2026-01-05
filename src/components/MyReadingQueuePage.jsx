@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Check, BookMarked } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { db } from '../lib/supabase';
@@ -276,12 +276,13 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
                     ? 'text-green-600 bg-green-50 hover:bg-green-100' 
                     : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
                 }`}
-                title={owned ? 'I own this book' : 'Mark as owned'}
+                title={owned ? 'I own this book (click to unmark)' : 'Mark as owned'}
               >
-                {owned ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+                {owned ? <Check className="w-4 h-4" /> : <BookMarked className="w-4 h-4" />}
               </button>
               
-              {isFirst && (
+              {/* Only show Get It button for first book AND if not owned */}
+              {isFirst && !owned && (
                 <button
                   onClick={onToggleAcquisition}
                   className={`px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
