@@ -25,6 +25,7 @@ const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
 const MeetSarahPage = lazy(() => import('./components/MeetSarahPage'));
 const BecomeCuratorPage = lazy(() => import('./components/BecomeCuratorPage'));
+const CuratorThemesPage = lazy(() => import('./components/CuratorThemesPage'));
 const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
@@ -1903,6 +1904,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'become-curator' && (
         <Suspense fallback={<LoadingFallback message="Loading..." />}>
           <BecomeCuratorPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'curator-themes' && (
+        <Suspense fallback={<LoadingFallback message="Loading..." />}>
+          <CuratorThemesPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
       

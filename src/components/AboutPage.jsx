@@ -18,11 +18,11 @@ export default function AboutPage({ onNavigate }) {
           Back to Home
         </button>
 
-        {/* Header - Problem/Solution */}
+        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
-            Finding your next great read shouldn't feel overwhelming. Sarah is a curator who's done the hard work—200+ books read, organized by themes that matter. Ask her anything or browse her collections.
+            I've spent years building this collection—books I couldn't stop thinking about long after I finished them. Browse by my curated themes, or tell me what you're looking for. I love helping people find their next great read.
           </p>
         </div>
 
@@ -41,6 +41,17 @@ export default function AboutPage({ onNavigate }) {
                   Tell me what you're looking for, or browse my curated theme collections. I'll help you find your next great read—whether it's in my library or from the world's.
                 </p>
               </div>
+            </div>
+            <div className="mt-4 ml-[4.5rem]">
+              <button
+                onClick={() => {
+                  onNavigate('curator-themes');
+                  window.scrollTo(0, 0);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium hover:bg-[#5F7252]/20 transition-colors"
+              >
+                Browse Curator Themes
+              </button>
             </div>
           </div>
 
