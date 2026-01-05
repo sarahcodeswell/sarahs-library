@@ -55,9 +55,10 @@ export default async function handler(req) {
       );
     }
 
-    // Admin bypass for backfill scripts
+    // Admin bypass for backfill scripts - MUST have env var set, no default
     const adminKey = req.headers.get('x-admin-key');
-    const isAdmin = adminKey === (globalThis?.process?.env?.ADMIN_BACKFILL_KEY || 'sarah-backfill-2024');
+    const adminEnvKey = globalThis?.process?.env?.ADMIN_BACKFILL_KEY;
+    const isAdmin = adminEnvKey && adminKey === adminEnvKey;
 
     // Check daily limit (50 recommendations per day per user) - skip for admin
     const dailyLimit = isAdmin ? { allowed: true } : checkDailyLimit(clientId, 'recommendation');
