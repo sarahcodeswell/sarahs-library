@@ -265,17 +265,17 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpda
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Ownership toggle - single book icon, gray when unowned, green when owned */}
+              {/* Ownership toggle - single book icon, gray when unowned, dark sage with white outline when owned */}
               <button
                 onClick={() => {
                   const newOwned = !owned;
                   setOwned(newOwned);
                   onToggleOwned(book.id, newOwned);
                 }}
-                className={`p-1.5 rounded transition-colors ${
+                className={`p-1.5 rounded border transition-colors ${
                   owned 
-                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
-                    : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
+                    ? 'bg-[#5F7252] text-white border-white shadow-sm hover:bg-[#4A5940]' 
+                    : 'text-[#96A888] border-transparent hover:text-[#5F7252] hover:bg-[#F8F6EE]'
                 }`}
                 title={owned ? 'I own this book (click to unmark)' : 'Mark as owned'}
               >
