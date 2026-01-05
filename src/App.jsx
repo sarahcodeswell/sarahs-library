@@ -2002,7 +2002,7 @@ Find similar books from beyond my library that match this taste profile.
             <div className="mb-6 text-center">
               <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
               <p className="text-sm text-[#7A8F6C]">
-                Browse my collections or ask me anything
+                Browse my card catalog or ask me anything
               </p>
             </div>
           )}
@@ -2011,7 +2011,7 @@ Find similar books from beyond my library that match this taste profile.
           {messages.length <= 1 && (
             <>
               <div className="bg-[#D4C4A8] rounded-lg p-3 shadow-inner mb-6">
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {Object.entries(themeInfo).map(([key, info]) => {
                     const isSelected = selectedThemes.includes(key);
                     return (
