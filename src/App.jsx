@@ -2043,7 +2043,7 @@ Find similar books from beyond my library that match this taste profile.
                           {info.icon && <info.icon className="w-5 h-5" />}
                         </div>
                         <span className={`text-[10px] sm:text-xs font-medium text-center leading-tight ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
-                          {info.label.split(' ').slice(0, 2).join(' ')}
+                          {info.label}
                         </span>
                         {/* Drawer pull */}
                         <div className={`mt-2 w-4 h-1 rounded-full ${isSelected ? 'bg-white/40' : 'bg-[#B8A88C]'}`}></div>
