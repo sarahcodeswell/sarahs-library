@@ -20,6 +20,8 @@ import ChatMessage from './components/ChatMessage';
 import FormattedText from './components/FormattedText';
 import FormattedRecommendations from './components/FormattedRecommendations';
 import { getBookshopSearchUrl, getAmazonKindleUrl, getLibbyUrl, getLibroFmUrl, getAudibleUrl, getGoodreadsSearchUrl } from './lib/affiliateLinks';
+import { themeInfo, themeDescriptions } from './lib/constants';
+import { CATALOG_TITLE_INDEX, findCatalogBook } from './lib/catalogIndex';
 import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -47,42 +49,14 @@ const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20'; // Uses Amazon Associates
 const CURRENT_YEAR = new Date().getFullYear();
 
 // Text utilities imported from ./lib/textUtils
-
-const CATALOG_TITLE_INDEX = (() => {
-  const map = new Map();
-  try {
-    for (const b of (bookCatalog || [])) {
-      const key = normalizeTitle(b?.title);
-      if (!key) continue;
-      if (!map.has(key)) map.set(key, b);
-    }
-  } catch (e) {
-    void e;
-  }
-  return map;
-})();
+// CATALOG_TITLE_INDEX imported from ./lib/catalogIndex.js
 
 // CSV parsing imported from ./lib/csvParser
 // Library context builder imported from ./lib/libraryContext
 
 
 // FormattedText extracted to ./components/FormattedText.jsx
-
-const themeInfo = {
-  women: { icon: BookHeart, label: "Women's Untold Stories", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  emotional: { icon: Heart, label: "Emotional Truth", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  identity: { icon: Users, label: "Identity & Belonging", color: "bg-violet-50 text-violet-700 border-violet-200" },
-  spiritual: { icon: Sparkles, label: "Spiritual Seeking", color: "bg-teal-50 text-teal-700 border-teal-200" },
-  justice: { icon: Scale, label: "Invisible Injustices", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
-};
-
-const themeDescriptions = {
-  women: 'Women-led lives, resilience, sisterhood.',
-  emotional: 'Heartbreak, healing, and catharsis.',
-  identity: 'Belonging, reinvention, selfhood.',
-  spiritual: 'Meaning, faith, inner work.',
-  justice: 'Systems, power, and what’s unseen.',
-};
+// themeInfo and themeDescriptions imported from ./lib/constants.js
 
 // parseRecommendations moved to recommendationService.js
 

@@ -6,37 +6,9 @@ import { normalizeTitle } from '../lib/textUtils';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';
 import { useBookEnrichment } from './BookCard';
-import bookCatalog from '../books.json';
-
-// Theme info for displaying curator themes
-const themeInfo = {
-  women: { icon: null, label: "Women's Untold Stories", color: '#7D5A5A' },
-  emotional: { icon: Heart, label: "Emotional Truth", color: '#9B6B6B' },
-  identity: { icon: null, label: "Identity & Belonging", color: '#5B7355' },
-  spiritual: { icon: Sparkles, label: "Spiritual Seeking", color: '#8B7355' },
-  justice: { icon: null, label: "Invisible Injustices", color: '#5A6B7D' }
-};
-
-// Build catalog index for fast lookups
-const CATALOG_TITLE_INDEX = (() => {
-  const map = new Map();
-  try {
-    for (const b of (bookCatalog || [])) {
-      const key = normalizeTitle(b?.title);
-      if (!key) continue;
-      map.set(key, b);
-    }
-  } catch (e) {
-    console.error('Failed to build catalog index:', e);
-  }
-  return map;
-})();
-
-// Goodreads search URL helper
-const getGoodreadsSearchUrl = (title, author) => {
-  const query = author ? `${title} ${author}` : title;
-  return `https://www.goodreads.com/search?q=${encodeURIComponent(query)}`;
-};
+import { themeInfo } from '../lib/constants';
+import { findCatalogBook } from '../lib/catalogIndex';
+import { getGoodreadsSearchUrl } from '../lib/affiliateLinks';
 
 /**
  * RecommendationCard - Displays a single book recommendation with actions
@@ -70,20 +42,8 @@ export default function RecommendationCard({
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   const [markedAsRead, setMarkedAsRead] = useState(false);
   
-  // Look up full book details from local catalog
-  const catalogBook = useMemo(() => {
-    const t = String(rec?.title || '');
-    const key = normalizeTitle(t);
-    if (key && CATALOG_TITLE_INDEX.has(key)) return CATALOG_TITLE_INDEX.get(key);
-
-    // Fallback for slight title mismatches (cheap partial match).
-    const needle = normalizeTitle(t);
-    if (!needle) return null;
-    for (const [k, b] of CATALOG_TITLE_INDEX.entries()) {
-      if (k.includes(needle) || needle.includes(k)) return b;
-    }
-    return null;
-  }, [rec.title]);
+  // Look up full book details from local catalog using shared function
+  const catalogBook = useMemo(() => findCatalogBook(rec?.title), [rec.title]);
 
   // Auto-enrich with cover and genres using shared hook
   // Skip enrichment if we already have verified data from the recommendation service

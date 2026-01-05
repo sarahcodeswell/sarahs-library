@@ -3,15 +3,7 @@ import { X, Star, ExternalLink, ShoppingBag } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { bumpLocalMetric } from '../lib/textUtils';
 import { getGoodreadsSearchUrl, getBookshopSearchUrl } from '../lib/affiliateLinks';
-
-// Theme info for displaying curator themes
-const themeInfo = {
-  women: { icon: null, label: "Women's Untold Stories", color: 'bg-rose-50 text-rose-700 border-rose-200' },
-  emotional: { icon: null, label: "Emotional Truth", color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  identity: { icon: null, label: "Identity & Belonging", color: 'bg-violet-50 text-violet-700 border-violet-200' },
-  spiritual: { icon: null, label: "Spiritual Seeking", color: 'bg-teal-50 text-teal-700 border-teal-200' },
-  justice: { icon: null, label: "Invisible Injustices", color: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
-};
+import { themeInfo } from '../lib/constants';
 
 /**
  * BookDetail - Modal showing full book details from Sarah's catalog
