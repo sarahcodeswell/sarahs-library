@@ -291,6 +291,24 @@ export const db = {
     }
   },
 
+  // Toggle book ownership status
+  updateBookOwnership: async (id, owned) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('reading_queue')
+        .update({ owned })
+        .eq('id', id)
+        .select();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateBookOwnership: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
+  },
+
   // User Books operations
   getUserBooks: async (userId) => {
     if (!supabase) return { data: null, error: null };

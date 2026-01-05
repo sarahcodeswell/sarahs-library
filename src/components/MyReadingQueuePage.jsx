@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import { db } from '../lib/supabase';
 import { useBookEnrichment } from './BookCard';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
@@ -88,10 +89,11 @@ const themeInfo = {
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition, onUpdateBook }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAcquisition, onToggleAcquisition, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
+  const [owned, setOwned] = useState(book.owned || false);
   
   // Auto-enrich reputation when expanded and missing
   useEffect(() => {
@@ -262,6 +264,23 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, showAc
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Ownership toggle */}
+              <button
+                onClick={() => {
+                  const newOwned = !owned;
+                  setOwned(newOwned);
+                  onToggleOwned(book.id, newOwned);
+                }}
+                className={`p-1.5 rounded transition-colors ${
+                  owned 
+                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                    : 'text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE]'
+                }`}
+                title={owned ? 'I own this book' : 'Mark as owned'}
+              >
+                {owned ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+              </button>
+              
               {isFirst && (
                 <button
                   onClick={onToggleAcquisition}
@@ -424,6 +443,16 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [localOrder, setLocalOrder] = useState([]);
   const [showAcquisition, setShowAcquisition] = useState(false);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
+
+  // Handle ownership toggle
+  const handleToggleOwned = async (bookId, owned) => {
+    const result = await db.updateBookOwnership(bookId, owned);
+    if (result.error) {
+      console.error('Failed to update ownership:', result.error);
+    } else {
+      track('book_ownership_toggled', { book_id: bookId, owned });
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -715,6 +744,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     showAcquisition={showAcquisition}
                     onToggleAcquisition={() => setShowAcquisition(!showAcquisition)}
                     onUpdateBook={updateQueueItem}
+                    onToggleOwned={handleToggleOwned}
                   />
                 ))}
               </div>
