@@ -1145,10 +1145,9 @@ Find similar books from beyond my library that match this taste profile.
           {/* Stacked Books */}
           {messages.length <= 1 && (
             <>
-              <div className="flex flex-col items-center gap-1 mb-6">
-                {Object.entries(themeInfo).map(([key, info], index) => {
+              <div className="flex flex-col items-center gap-1.5 mb-6">
+                {Object.entries(themeInfo).map(([key, info]) => {
                   const isSelected = selectedThemes.includes(key);
-                  const offsets = ['-rotate-1', 'rotate-0.5', '-rotate-0.5', 'rotate-1', '-rotate-0.5'];
                   return (
                     <button
                       key={key}
@@ -1164,12 +1163,12 @@ Find similar books from beyond my library that match this taste profile.
                           track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
                         }
                       }}
-                      className={`w-full max-w-sm flex items-center gap-3 px-4 py-2.5 rounded-sm border-l-4 transition-all ${offsets[index]} ${
+                      className={`w-full max-w-sm flex items-center gap-3 px-4 py-2.5 rounded-lg border-l-4 transition-all ${
                         isSelected 
-                          ? 'bg-[#5F7252] border-l-[#4A5940] shadow-lg scale-105 rotate-0 z-10' 
-                          : 'bg-[#F8F6EE] border-l-[#5F7252] hover:scale-102 hover:shadow-md'
+                          ? 'bg-[#5F7252] border-l-[#4A5940] shadow-lg scale-[1.02] z-10' 
+                          : 'bg-[#F8F6EE] border-l-[#5F7252] hover:scale-[1.01] hover:shadow-md'
                       }`}
-                      style={{ boxShadow: isSelected ? undefined : '0 1px 2px rgba(0,0,0,0.1)' }}
+                      style={{ boxShadow: isSelected ? undefined : '0 1px 3px rgba(0,0,0,0.08)' }}
                       aria-label={`${info.label} collection`}
                       aria-pressed={isSelected}
                     >
