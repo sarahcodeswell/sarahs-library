@@ -45,7 +45,8 @@ export const ROUTING_KEYWORDS = {
     'just released', 'just came out', 'new releases', 'newly published',
     'what\'s new from', 'recently published', 'brand new book',
     'pre-order', 'preorder', 'not yet released', 'publishing soon',
-    'newest from', 'latest from' // "latest from [author]"
+    'newest from', 'latest from', // "latest from [author]"
+    'new by', 'new from' // "new by Paula McLain", "new from Paula McLain"
   ],
   
   catalog: [
@@ -126,6 +127,21 @@ export function preFilterRoute(query, themeFilters = []) {
         confidence: 'high',
         reason: 'temporal_keyword',
         matchedKeyword: keyword
+      };
+    }
+  }
+  
+  // Special case: "new [Author Name]" pattern (e.g., "New Paula McLain")
+  // Detects queries starting with "new" followed by capitalized words (likely author)
+  if (normalizedQuery.startsWith('new ') && query.split(' ').length <= 4) {
+    // Check if remaining words look like a name (original query has capitals)
+    const afterNew = query.substring(4).trim();
+    if (afterNew && /^[A-Z]/.test(afterNew)) {
+      return {
+        path: 'TEMPORAL',
+        confidence: 'medium',
+        reason: 'new_author_pattern',
+        matchedKeyword: 'new [author]'
       };
     }
   }

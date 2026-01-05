@@ -1539,10 +1539,12 @@ Find similar books from beyond my library that match this taste profile.
       // Update progress: preparing recommendations
       setLoadingProgress({ step: 'preparing', progress: 100 });
       
-      // FAST PATH: If the recommendation service already handled filtering (curated lists or world fallback),
-      // skip post-processing and use the response directly
-      if (result.fastPath || result.worldFallback) {
-        console.log('[App] Fast path response, skipping post-processing');
+      // FAST PATH: Skip post-processing for:
+      // - Curated lists (fastPath)
+      // - World fallback (worldFallback)  
+      // - World path using Claude knowledge (skipPostProcessing)
+      if (result.fastPath || result.worldFallback || result.skipPostProcessing) {
+        console.log('[App] Skipping post-processing for:', result.fastPath ? 'fastPath' : result.worldFallback ? 'worldFallback' : 'worldPath');
         setMessages(prev => [...prev, { text: result.text, isUser: false }]);
         return;
       }

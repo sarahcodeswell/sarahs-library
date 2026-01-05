@@ -554,6 +554,10 @@ Description: ${book.description || 'A quality book recommendation from web searc
         };
       }
 
+      // For WORLD path (outside catalog), skip post-processing filter
+      // Claude is using its knowledge, not our catalog, so exclusion list doesn't apply
+      const isWorldPath = path === 'world' && retrievedContext.catalogBooks.length === 0;
+      
       return {
         success: true,
         text: responseText,
@@ -561,7 +565,8 @@ Description: ${book.description || 'A quality book recommendation from web searc
         exclusionList: exclusionList,
         verifiedBookData: retrievedContext.verifiedBook,
         classification: classification,
-        path: path
+        path: path,
+        skipPostProcessing: isWorldPath // Skip exclusion filter for world path
       };
     } catch (fetchError) {
       clearTimeout(timeoutId);
