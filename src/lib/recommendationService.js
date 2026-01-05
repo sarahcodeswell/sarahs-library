@@ -8,6 +8,63 @@ import { executeRecommendationPath } from './recommendationPaths';
 import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
 import { getTasteAlignmentLabel } from './queryClassifier';
 
+// Cache for reference embeddings (loaded once per session)
+let cachedReferenceEmbeddings = null;
+let embeddingsLoadAttempted = false;
+
+/**
+ * Load reference embeddings from API (cached)
+ */
+async function loadReferenceEmbeddings() {
+  if (cachedReferenceEmbeddings) return cachedReferenceEmbeddings;
+  if (embeddingsLoadAttempted) return null; // Don't retry if already failed
+  
+  embeddingsLoadAttempted = true;
+  
+  try {
+    const response = await fetch('/api/reference-embeddings');
+    if (!response.ok) {
+      console.warn('[RecommendationService] Failed to load reference embeddings:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    if (data.success && data.referenceEmbeddings) {
+      cachedReferenceEmbeddings = data.referenceEmbeddings;
+      console.log('[RecommendationService] Loaded reference embeddings:', data.stats);
+      return cachedReferenceEmbeddings;
+    }
+  } catch (err) {
+    console.warn('[RecommendationService] Error loading reference embeddings:', err.message);
+  }
+  
+  return null;
+}
+
+/**
+ * Generate embedding for a query using the embeddings API
+ */
+async function generateQueryEmbedding(query) {
+  try {
+    const response = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: query })
+    });
+    
+    if (!response.ok) {
+      console.warn('[RecommendationService] Failed to generate query embedding');
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.embedding || null;
+  } catch (err) {
+    console.warn('[RecommendationService] Error generating embedding:', err.message);
+    return null;
+  }
+}
+
 /**
  * Build system prompt for Claude
  * Clean, focused, no library references
@@ -165,7 +222,23 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     // 2. DETERMINISTIC ROUTING - Single source of truth
     // Uses 3-stage process: keywords → embeddings → decision matrix
     // Same query ALWAYS routes to same path (no LLM randomness)
-    const routingDecision = fallbackRoute(userMessage, themeFilters);
+    
+    // Try to load reference embeddings for full routing
+    const referenceEmbeddings = await loadReferenceEmbeddings();
+    
+    let routingDecision;
+    if (referenceEmbeddings) {
+      // Full 3-stage routing with embeddings
+      routingDecision = await routeQuery(userMessage, {
+        themeFilters,
+        getEmbedding: generateQueryEmbedding,
+        referenceEmbeddings,
+        quickCatalogSearch: null // TODO: implement quick catalog search
+      });
+    } else {
+      // Fallback to keyword-only routing
+      routingDecision = fallbackRoute(userMessage, themeFilters);
+    }
     
     // Map routing decision to path name (lowercase for executeRecommendationPath)
     const pathMap = {
@@ -177,10 +250,14 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     const path = pathMap[routingDecision.path] || 'hybrid';
     
     // Build classification object from routing decision for downstream use
+    const tasteScore = routingDecision.tasteAlignment ?? 
+      (routingDecision.scores?.tasteAlignment) ?? 
+      (routingDecision.path === 'CATALOG' ? 1.0 : 0.0);
+    
     const classification = {
       intent: routingDecision.path.toLowerCase() + '_search',
       tasteAlignment: { 
-        score: routingDecision.tasteAlignment || (routingDecision.path === 'CATALOG' ? 1.0 : 0.0),
+        score: tasteScore,
         signals: [routingDecision.reason],
         matchedThemes: routingDecision.themeFilters || []
       },
