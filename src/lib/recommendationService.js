@@ -229,6 +229,47 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       hasVerifiedBook: !!retrievedContext.verifiedBook
     });
 
+    // FAST PATH: For curated list requests, bypass Claude and return catalog books directly
+    // This guarantees 100% catalog-only results for theme browsing
+    const isCuratedListRequest = themeFilters && themeFilters.length > 0;
+    if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
+      console.log('[RecommendationService] Fast path: returning catalog books directly for curated list');
+      
+      // Filter out excluded books
+      const availableBooks = retrievedContext.catalogBooks.filter(
+        b => !exclusionList.some(ex => ex.toLowerCase() === b.title?.toLowerCase())
+      );
+      
+      // Take top 3 books
+      const topBooks = availableBooks.slice(0, 3);
+      
+      // Build response text with book recommendations
+      const themeLabels = {
+        women: "Women's Untold Stories",
+        emotional: "Emotional Truth",
+        identity: "Identity & Belonging",
+        spiritual: "Spirituality & Meaning",
+        justice: "Justice & Systems"
+      };
+      const themeName = themeLabels[themeFilters[0]] || themeFilters[0];
+      
+      const responseText = topBooks.map((book, i) => {
+        return `**${book.title}** by ${book.author || 'Unknown'}
+
+Why Sarah recommends: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
+      }).join('\n\n');
+      
+      return {
+        success: true,
+        text: `Here are my top picks from the ${themeName} collection:\n\n${responseText}`,
+        exclusionCount: exclusionList.length,
+        exclusionList: exclusionList,
+        classification: classification,
+        path: path,
+        fastPath: true
+      };
+    }
+
     // 6. Build system prompt
     const systemPrompt = buildSystemPrompt();
 
@@ -433,4 +474,3 @@ export function parseRecommendations(responseText) {
   if (currentRec) recommendations.push(currentRec);
 
   return recommendations;
-}
