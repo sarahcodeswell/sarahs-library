@@ -24,6 +24,7 @@ import { useUser, useReadingQueue, useRecommendations } from './contexts';
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
 const MeetSarahPage = lazy(() => import('./components/MeetSarahPage'));
+const BecomeCuratorPage = lazy(() => import('./components/BecomeCuratorPage'));
 const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
@@ -1896,6 +1897,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'meet-sarah' && (
         <Suspense fallback={<LoadingFallback message="Loading Meet Sarah..." />}>
           <MeetSarahPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'become-curator' && (
+        <Suspense fallback={<LoadingFallback message="Loading..." />}>
+          <BecomeCuratorPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
       

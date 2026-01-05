@@ -18,11 +18,11 @@ export default function AboutPage({ onNavigate }) {
           Back to Home
         </button>
 
-        {/* Header - What we are and what's in it for you */}
+        {/* Header - Problem/Solution */}
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
-            Sarah is a curator who knows what makes a great story. Get personalized recommendations from her collection—or let her guide you to the perfect book from the world's library.
+            Finding your next great read shouldn't feel overwhelming. Sarah is a curator who's done the hard work—200+ books read, organized by themes that matter. Ask her anything or browse her collections.
           </p>
         </div>
 
@@ -38,7 +38,7 @@ export default function AboutPage({ onNavigate }) {
               <div className="flex-1">
                 <h3 className="font-serif text-xl text-[#4A5940] mb-1">Ask</h3>
                 <p className="text-sm text-[#7A8F6C]">
-                  Tell me what you're looking for. I'll search my curated library first—and if there's a better match out there, I'll find it from the world's library too.
+                  Tell me what you're looking for, or browse my curated theme collections. I'll help you find your next great read—whether it's in my library or from the world's.
                 </p>
               </div>
             </div>
@@ -97,9 +97,18 @@ export default function AboutPage({ onNavigate }) {
                   <h3 className="font-serif text-xl text-[#4A5940]">Curate</h3>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252]">Coming Soon</span>
                 </div>
-                <p className="text-sm text-[#7A8F6C]">
+                <p className="text-sm text-[#7A8F6C] mb-3">
                   Become a curator yourself. Create your own themes, build your library, and help others find their next great read.
                 </p>
+                <button
+                  onClick={() => {
+                    onNavigate('become-curator');
+                    window.scrollTo(0, 0);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                >
+                  Join the Waitlist
+                </button>
               </div>
             </div>
           </div>

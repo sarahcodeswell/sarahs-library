@@ -37,6 +37,12 @@ export default function Footer({ onNavigate, currentPage }) {
           >
             Shop
           </button>
+          <button
+            onClick={() => handleNavigation('become-curator', '/become-curator')}
+            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'become-curator' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
+          >
+            Become a Curator
+          </button>
           <a
             href="mailto:hello@sarahsbooks.com"
             className="text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors flex items-center gap-1.5"
