@@ -2002,91 +2002,55 @@ Find similar books from beyond my library that match this taste profile.
             <div className="mb-6 text-center">
               <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
               <p className="text-sm text-[#7A8F6C]">
-                Pull a book from the shelf or ask me anything
+                Browse my collections or ask me anything
               </p>
             </div>
           )}
 
-          {/* Bookshelf with Spines - show first when no conversation */}
+          {/* Theme Cards - clean, on-brand */}
           {messages.length <= 1 && (
             <>
-              {/* Bookshelf */}
-              <div className="mb-6">
-                <div className="bg-[#8B7355] rounded-t-sm p-2 pb-3 shadow-md">
-                  <div className="flex justify-center gap-1 overflow-x-auto pb-1">
-                    {Object.entries(themeInfo).map(([key, info]) => {
-                      const isSelected = selectedThemes.includes(key);
-                      const spineColors = {
-                        womens_stories: 'from-[#C97B7B] to-[#B56A6A]',
-                        emotional_truth: 'from-[#D4A574] to-[#C49464]',
-                        identity: 'from-[#7BA3A8] to-[#6A9298]',
-                        spiritual: 'from-[#9B8AA8] to-[#8A7998]',
-                        justice: 'from-[#6B8E6B] to-[#5A7D5A]',
-                        adventure: 'from-[#B8956B] to-[#A8855B]'
-                      };
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedThemes([]);
-                              setInputValue('');
-                              track('theme_filter_removed', { theme: key, theme_label: info.label });
-                            } else {
-                              setSelectedThemes([key]);
-                              const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                              setInputValue(themeText);
-                              track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                            }
-                          }}
-                          className={`relative flex-shrink-0 w-14 sm:w-16 h-32 sm:h-40 rounded-sm transition-all duration-200 ${
-                            isSelected 
-                              ? 'transform -translate-y-3 shadow-lg' 
-                              : 'hover:-translate-y-2 hover:shadow-md'
-                          }`}
-                          aria-label={`${info.label} collection`}
-                          aria-pressed={isSelected}
-                          title={themeDescriptions[key]}
-                        >
-                          {/* Book spine */}
-                          <div className={`absolute inset-0 bg-gradient-to-r ${spineColors[key]} rounded-sm shadow-inner`}>
-                            {/* Spine decoration lines */}
-                            <div className="absolute top-2 left-1 right-1 h-px bg-white/20"></div>
-                            <div className="absolute bottom-2 left-1 right-1 h-px bg-white/20"></div>
-                            
-                            {/* Title - vertical */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span 
-                                className="text-white text-[10px] sm:text-xs font-medium tracking-wide whitespace-nowrap"
-                                style={{ 
-                                  writingMode: 'vertical-rl', 
-                                  textOrientation: 'mixed',
-                                  transform: 'rotate(180deg)'
-                                }}
-                              >
-                                {info.label}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Selection indicator */}
-                          {isSelected && (
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#5F7252] rounded-full"></div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {/* Shelf edge */}
-                <div className="h-3 bg-gradient-to-b from-[#6B5344] to-[#5A4434] rounded-b-sm shadow-md"></div>
-                <p className="text-[10px] text-[#96A888] text-center mt-2">Click a spine to browse that collection</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                {Object.entries(themeInfo).map(([key, info]) => {
+                  const isSelected = selectedThemes.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedThemes([]);
+                          setInputValue('');
+                          track('theme_filter_removed', { theme: key, theme_label: info.label });
+                        } else {
+                          setSelectedThemes([key]);
+                          const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                          setInputValue(themeText);
+                          track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                        }
+                      }}
+                      className={`group p-4 rounded-xl border transition-all text-left ${
+                        isSelected 
+                          ? 'bg-[#5F7252] border-[#5F7252] shadow-md' 
+                          : 'bg-white border-[#D4DAD0] hover:border-[#5F7252] hover:shadow-sm'
+                      }`}
+                      aria-label={`${info.label} collection`}
+                      aria-pressed={isSelected}
+                    >
+                      <div className={`mb-1.5 ${isSelected ? 'text-white/80' : 'text-[#7A8F6C]'}`}>
+                        {info.icon && <info.icon className="w-4 h-4" />}
+                      </div>
+                      <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
+                        {info.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Divider */}
-              <div className="flex items-center gap-3 mb-4 max-w-md mx-auto">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-[#E8EBE4]"></div>
-                <span className="text-xs text-[#96A888]">or tell me what you're looking for</span>
+                <span className="text-xs text-[#96A888]">or ask me anything</span>
                 <div className="flex-1 h-px bg-[#E8EBE4]"></div>
               </div>
             </>
