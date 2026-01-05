@@ -257,8 +257,10 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     // Extract author from "new [author]" pattern if detected
     let extractedAuthors = [];
     if (routingDecision.reason === 'new_author_pattern') {
-      // Query is "new Paula McLain" - extract "Paula McLain" as author
-      const authorPart = userMessage.substring(4).trim(); // Remove "new "
+      // Query is "new Paula McLain" or "new Paula McLain novel" - extract author name
+      let authorPart = userMessage.substring(4).trim(); // Remove "new "
+      // Strip trailing book/novel/release words
+      authorPart = authorPart.replace(/\b(book|novel|release|work)s?\s*$/i, '').trim();
       if (authorPart) {
         extractedAuthors = [authorPart];
       }
