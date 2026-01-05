@@ -920,8 +920,8 @@ function ChatMessage({ message, isUser, chatMode, onActionPanelInteraction, user
         ) : isWelcomeMessage ? (
           <div className="text-sm leading-relaxed">
             <p className="mb-3">Hi, I'm Sarah!</p>
-            <p className="mb-3">I'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.</p>
-            <p>Look for <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> to see the source!</p>
+            <p className="mb-3">I'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.</p>
+            <p>I'll help you find your next great read, whether it's <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span>.</p>
           </div>
         ) : (
           <div className="text-sm leading-relaxed">
@@ -993,7 +993,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.\n\nWhat are you in the mood for?", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's in my library or from the world's.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1211,7 +1211,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'll recommend the perfect book for you—whether from my curated collection of 200+ beloved titles or discoveries from the world's library.\n\nWhat are you in the mood for?",
+      text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's in my library or from the world's.",
       isUser: false
     }];
   };
@@ -2180,7 +2180,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="Describe your perfect next read..."
+                placeholder="Or ask me anything..."
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
@@ -2240,19 +2240,11 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Sarah's Curated Lists - Collapsible */}
-          <div className="mb-6 mt-3">
-            <button
-              onClick={() => setShowThemeLists(prev => !prev)}
-              className="mx-auto flex items-center gap-1.5 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
-            >
-              <span>Or browse Sarah's Curated Lists</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showThemeLists ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showThemeLists && (
-              <div className="mt-3 max-w-sm mx-auto">
-                {Object.entries(themeInfo).map(([key, info]) => {
+          {/* Sarah's Curated Collections - Always visible, above search */}
+          <div className="mb-4">
+            <p className="text-xs text-[#7A8F6C] text-center mb-3">Browse my curated collections</p>
+            <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
+              {Object.entries(themeInfo).map(([key, info]) => {
                 const isSelected = selectedThemes.includes(key);
                 return (
                   <button
@@ -2278,7 +2270,7 @@ Find similar books from beyond my library that match this taste profile.
                         });
                         
                         setTimeout(() => {
-                          const textarea = document.querySelector('textarea[placeholder="Describe your perfect next read..."]');
+                          const textarea = document.querySelector('textarea[placeholder="Or ask me anything..."]');
                           if (textarea) {
                             textarea.style.height = '24px';
                             const newHeight = Math.min(textarea.scrollHeight, 200);
@@ -2287,23 +2279,28 @@ Find similar books from beyond my library that match this taste profile.
                         }, 0);
                       }
                     }}
-                    className={`w-full px-3 py-2 text-left text-sm transition-all flex items-center gap-2 border-b border-[#E8EBE4] last:border-b-0 ${
+                    className={`px-3 py-1.5 text-xs rounded-full transition-all flex items-center gap-1.5 border ${
                       isSelected
-                        ? 'bg-[#5F7252]/10 text-[#4A5940] font-medium'
-                        : 'text-[#5F7252] hover:bg-[#F8F6EE]'
+                        ? 'bg-[#5F7252] text-white border-[#5F7252]'
+                        : 'bg-white text-[#5F7252] border-[#D4DAD0] hover:bg-[#F8F6EE]'
                     }`}
                     aria-label={`${info.label} theme filter`}
                     aria-pressed={isSelected}
                     title={themeDescriptions[key]}
                   >
-                    {info.icon && <info.icon className="w-4 h-4 flex-shrink-0" />}
+                    {info.icon && <info.icon className="w-3 h-3 flex-shrink-0" />}
                     <span>{info.label}</span>
-                    {isSelected && <span className="ml-auto text-xs text-[#5F7252]">✓</span>}
                   </button>
                 );
               })}
-              </div>
-            )}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4 max-w-md mx-auto">
+            <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+            <span className="text-xs text-[#96A888]">or</span>
+            <div className="flex-1 h-px bg-[#E8EBE4]"></div>
           </div>
 
           <input
