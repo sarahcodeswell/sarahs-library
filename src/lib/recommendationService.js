@@ -450,11 +450,13 @@ ${retrievedContext.catalogBooks.slice(0, 5).map((b, i) =>
     
     // Only include world books if NOT a curated list request
     if (retrievedContext.worldBooks.length > 0 && !isCuratedListRequest) {
-      contextText += `\n\nWORLD RECOMMENDATIONS:
+      contextText += `\n\nWORLD RECOMMENDATIONS (use these for your response):
 ${retrievedContext.worldBooks.slice(0, 5).map((b, i) => 
   `${i + 1}. "${b.title}" by ${b.author || 'Unknown'}
    ${b.description || ''}`
-).join('\n\n')}`;
+).join('\n\n')}
+
+⚠️ IMPORTANT: You MUST recommend from the WORLD RECOMMENDATIONS above. These are quality books from web search that match the user's request. Format them using the standard response format with Title:, Author:, Why This Fits:, Description:, and Reputation:.`;
     }
     
     // Fallback when no books found from any path
