@@ -151,7 +151,7 @@ export async function worldSearchPath(query, classification) {
       
       if (webData.results?.length > 0) {
         // Extract book information from web results using LLM
-        const webBooks = await extractBooksFromWebResults(webData.results);
+        const webBooks = await extractBooksFromWebResults(webData.results, originalQuery);
         console.log('[WorldPath] Extracted', webBooks.length, 'books from web results');
         
         // Apply quality filter via Claude (skip if we already have few books)
@@ -319,21 +319,25 @@ export async function temporalSearchPath(query, classification, userId = null) {
  * Extract book information from web search results using LLM
  * More robust than regex-based extraction
  */
-async function extractBooksFromWebResults(webResults) {
+async function extractBooksFromWebResults(webResults, originalQuery = '') {
   if (!webResults || webResults.length === 0) return [];
   
-  const extractionPrompt = `Extract book recommendations from these web search results.
+  const extractionPrompt = `Extract book recommendations from these web search results that are RELEVANT to the search topic.
+
+SEARCH TOPIC: ${originalQuery || 'book recommendations'}
 
 WEB RESULTS:
 ${webResults.map((r, i) => `[${i + 1}] ${r.title || ''}\n${r.snippet || r.description || ''}`).join('\n\n')}
 
-For each book mentioned, extract:
+For each book mentioned that MATCHES THE SEARCH TOPIC, extract:
 - title: The book's title (required)
 - author: The author's name (if mentioned)
-- description: Brief context about why it was recommended
+- description: Brief context about why it fits the search topic
 
-Return as JSON array. If no books are clearly mentioned, return empty array.
-Only include actual book titles, not article titles or website names.
+IMPORTANT: Only include books that actually match the search topic.
+For example, if searching for "Venezuela historical fiction", only include books set in Venezuela.
+Do NOT include unrelated books just because they appear in the results.
+Return as JSON array. If no relevant books are found, return empty array.
 Maximum 5 books.
 
 Example output:
