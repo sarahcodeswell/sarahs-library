@@ -2031,7 +2031,7 @@ Find similar books from beyond my library that match this taste profile.
                       className={`group p-4 rounded-xl border transition-all text-left ${
                         isSelected 
                           ? 'bg-[#5F7252] border-[#5F7252] shadow-md' 
-                          : 'bg-white border-[#D4DAD0] hover:border-[#5F7252] hover:shadow-sm'
+                          : 'bg-[#F8F6EE] border-[#D4DAD0] hover:bg-[#5F7252]/10 hover:border-[#5F7252]'
                       }`}
                       aria-label={`${info.label} collection`}
                       aria-pressed={isSelected}
