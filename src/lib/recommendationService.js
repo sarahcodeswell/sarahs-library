@@ -519,13 +519,41 @@ Be honest: "This isn't my usual genre, but here's what makes a great [genre]..."
         throw new Error('Invalid API response format');
       }
 
+      const responseText = data.content[0].text;
+      
+      // Check if Claude returned an error message instead of recommendations
+      // If we have world books but Claude didn't use them, format them directly
+      const hasNoRecommendations = responseText.toLowerCase().includes("trouble finding") || 
+                                    responseText.toLowerCase().includes("can't find") ||
+                                    !responseText.includes("Title:");
+      
+      if (hasNoRecommendations && retrievedContext.worldBooks.length > 0) {
+        console.log('[RecommendationService] Claude failed to use world books, formatting directly');
+        const worldBookText = retrievedContext.worldBooks.slice(0, 3).map((book) => {
+          return `Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+Why This Fits: This book matches your request for ${classification.originalQuery || 'this topic'}.
+Description: ${book.description || 'A quality book recommendation from web search.'}`;
+        }).join('\n\n');
+        
+        return {
+          success: true,
+          text: `Here are some quality recommendations from beyond my collection:\n\n${worldBookText}`,
+          exclusionCount: exclusionList.length,
+          exclusionList: exclusionList,
+          classification: classification,
+          path: path,
+          worldFallback: true
+        };
+      }
+
       return {
         success: true,
-        text: data.content[0].text,
+        text: responseText,
         exclusionCount: exclusionList.length,
         exclusionList: exclusionList,
         verifiedBookData: retrievedContext.verifiedBook,
-        classification: classification, // Include for UI transparency
+        classification: classification,
         path: path
       };
     } catch (fetchError) {
