@@ -139,7 +139,7 @@ export function preFilterRoute(query, themeFilters = []) {
     if (afterNew && /^[A-Z]/.test(afterNew)) {
       return {
         path: 'TEMPORAL',
-        confidence: 'medium',
+        confidence: 'high', // Must be 'high' to trigger early return in router
         reason: 'new_author_pattern',
         matchedKeyword: 'new [author]'
       };
