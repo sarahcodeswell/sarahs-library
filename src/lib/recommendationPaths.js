@@ -67,11 +67,15 @@ export async function catalogSearchPath(query, classification) {
       
       if (themes.length > 0) {
         const books = await getBooksByThemes(themes, 10);
-        results.books = books.map(b => ({
-          ...b,
-          source: 'catalog',
-          badge: 'From Sarah\'s Collection'
-        }));
+        console.log('[CatalogPath] getBooksByThemes returned:', books?.length, 'books');
+        if (books && books.length > 0) {
+          results.books = books.map(b => ({
+            ...b,
+            source: 'catalog',
+            badge: 'From Sarah\'s Collection'
+          }));
+          console.log('[CatalogPath] Mapped to results.books:', results.books.length);
+        }
         
         const themeLabels = {
           women: "Women's Stories",
