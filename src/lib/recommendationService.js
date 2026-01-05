@@ -31,7 +31,6 @@ async function loadReferenceEmbeddings() {
     const data = await response.json();
     if (data.success && data.referenceEmbeddings) {
       cachedReferenceEmbeddings = data.referenceEmbeddings;
-      console.log('[RecommendationService] Loaded reference embeddings:', data.stats);
       return cachedReferenceEmbeddings;
     }
   } catch (err) {
