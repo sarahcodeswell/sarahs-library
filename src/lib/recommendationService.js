@@ -320,7 +320,7 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       // Take top 3 books
       const topBooks = availableBooks.slice(0, 3);
       
-      // Build response text with book recommendations
+      // Build response text in the format parseRecommendations expects
       const themeLabels = {
         women: "Women's Untold Stories",
         emotional: "Emotional Truth",
@@ -330,10 +330,11 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       };
       const themeName = themeLabels[themeFilters[0]] || themeFilters[0];
       
-      const responseText = topBooks.map((book, i) => {
-        return `**${book.title}** by ${book.author || 'Unknown'}
-
-Why Sarah recommends: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
+      // Format each book in the structured format the UI expects
+      const responseText = topBooks.map((book) => {
+        return `Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
       }).join('\n\n');
       
       return {
