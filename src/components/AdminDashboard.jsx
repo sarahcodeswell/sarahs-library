@@ -118,7 +118,8 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
       const result = await response.json();
       
       if (response.ok) {
-        setSentNotes(prev => new Set([...prev, noteModal.book.bookId]));
+        // Use queueId as unique identifier (bookId can be null)
+        setSentNotes(prev => new Set([...prev, noteModal.book.queueId || noteModal.book.bookId]));
         setNoteModal({ isOpen: false, book: null });
         setNoteContent('');
         alert(result.message || 'Note sent!');
@@ -208,7 +209,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
                       {b.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
-                      {sentNotes.has(b.bookId) ? (
+                      {sentNotes.has(b.queueId || b.bookId) ? (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
                           <Check className="w-3 h-3" /> Sent
                         </span>

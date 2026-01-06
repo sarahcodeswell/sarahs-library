@@ -94,6 +94,8 @@ export default async function handler(req) {
         const result = {
           email: u?.email || 'Unknown',
           books: (queue || []).map(q => ({
+            bookId: q.book_id,
+            queueId: q.id,
             title: q.book_title,
             author: q.book_author,
             owned: q.owned,
