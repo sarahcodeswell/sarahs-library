@@ -807,9 +807,9 @@ export default function AdminDashboard({ onNavigate }) {
             onClick={() => setModal({ isOpen: true, type: 'users', title: 'All Users', icon: Users })}
           />
           <StatCard
-            title="Books Queued"
-            value={stats?.queue?.totalBooks || 0}
-            subtitle={`Avg ${stats?.queue?.avgPerUser || 0} per user`}
+            title="Want to Read"
+            value={stats?.queue?.wantToRead || 0}
+            subtitle={`${stats?.queue?.finished || 0} finished (imported)`}
             icon={BookMarked}
             onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Reading Queues', icon: BookMarked })}
           />

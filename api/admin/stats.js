@@ -108,9 +108,14 @@ export default async function handler(req) {
       withProfiles: profiles.length
     };
 
-    // Queue stats
+    // Queue stats - separate "want to read" from "finished/read"
+    const wantToReadBooks = queue.filter(q => q.status === 'want_to_read' || q.status === 'reading');
+    const finishedBooks = queue.filter(q => q.status === 'finished');
+    
     const queueStats = {
       totalBooks: queue.length,
+      wantToRead: wantToReadBooks.length,
+      finished: finishedBooks.length,
       inPeriod: queueInPeriod.length,
       uniqueBooks: new Set(queue.map(q => q.book_title?.toLowerCase())).size,
       avgPerUser: profiles.length > 0 ? (queue.length / profiles.length).toFixed(1) : 0
