@@ -169,7 +169,7 @@ export default function App() {
     return () => window.removeEventListener('closeProfile', handleCloseProfile);
   }, []);
 
-  // Handle browser back/forward navigation
+  // Handle browser back/forward navigation and referral tracking
   useEffect(() => {
     // Set initial page based on URL
     const getPageFromPath = (pathname) => {
@@ -186,6 +186,17 @@ export default function App() {
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
     };
+
+    // Check for referral code in URL and store it
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      // Store referral code in localStorage for later use when user signs up
+      localStorage.setItem('referral_code', refCode);
+      // Clean up URL without losing the page
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
 
     // Set initial page from URL on mount
     const { page: initialPage, token } = getPageFromPath(window.location.pathname);

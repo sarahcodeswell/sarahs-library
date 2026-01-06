@@ -32,12 +32,34 @@ export function UserProvider({ children }) {
 
     initAuth();
 
-    const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         const newUser = session?.user ?? null;
         setUser(newUser);
         if (newUser) {
           setUserContext(newUser);
+          
+          // Check for referral code and record it for new signups
+          if (_event === 'SIGNED_IN' || _event === 'SIGNED_UP') {
+            const referralCode = localStorage.getItem('referral_code');
+            if (referralCode) {
+              try {
+                await fetch('/api/record-referral', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    referralCode,
+                    newUserId: newUser.id,
+                    newUserEmail: newUser.email
+                  })
+                });
+                // Clear the referral code after recording
+                localStorage.removeItem('referral_code');
+              } catch (error) {
+                console.error('Failed to record referral:', error);
+              }
+            }
+          }
         } else {
           clearUserContext();
         }
