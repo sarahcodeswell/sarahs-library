@@ -175,6 +175,36 @@ export function preFilterRoute(query, themeFilters = []) {
     }
   }
   
+  // Check for specific geographic/historical/cultural topics that are unlikely in catalog
+  // These should route to WORLD unless they also mention Sarah's core themes
+  const specificTopicPatterns = [
+    /\b(venezuela|argentina|brazil|chile|peru|colombia|mexico|cuba|haiti|jamaica|puerto rico)\b/i,
+    /\b(nigeria|kenya|south africa|egypt|morocco|ethiopia|ghana|senegal)\b/i,
+    /\b(india|pakistan|bangladesh|vietnam|thailand|philippines|indonesia|malaysia)\b/i,
+    /\b(russia|ukraine|poland|hungary|czech|romania|serbia|croatia)\b/i,
+    /\b(china|japan|korea|taiwan)\b/i,
+    /\b(iran|iraq|syria|lebanon|palestine|israel|saudi|yemen|afghanistan)\b/i,
+    /\b(wwii|ww2|world war|civil war|revolution|colonial|independence)\b/i,
+    /\b(19th century|18th century|medieval|ancient|victorian|renaissance)\b/i,
+    /\b(sci-fi|science fiction|fantasy|horror|thriller|mystery|detective|crime fiction)\b/i,
+  ];
+  
+  const sarahsThemes = ['women', 'woman', 'female', 'mother', 'daughter', 'sister', 'emotional', 'identity', 'belonging', 'spiritual', 'justice', 'family'];
+  const mentionsSarahsThemes = sarahsThemes.some(theme => normalizedQuery.includes(theme));
+  
+  // If specific topic detected WITHOUT Sarah's themes, route to WORLD
+  for (const pattern of specificTopicPatterns) {
+    const match = normalizedQuery.match(pattern);
+    if (match && !mentionsSarahsThemes) {
+      return {
+        path: 'WORLD',
+        confidence: 'high',
+        reason: 'specific_topic_outside_catalog',
+        matchedKeyword: match[0]
+      };
+    }
+  }
+  
   // No explicit signal found
   return {
     path: null,
