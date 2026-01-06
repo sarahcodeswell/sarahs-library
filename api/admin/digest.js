@@ -271,27 +271,49 @@ export default async function handler(req) {
     const resendApiKey = process.env.RESEND_API_KEY;
     
     if (resendApiKey) {
-      const emailResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'Sarah\'s Books <hello@sarahsbooks.com>',
-          to: [MASTER_ADMIN_EMAIL],
-          subject,
-          html: emailHtml
-        })
-      });
+      try {
+        // Use onboarding@resend.dev if domain not verified, otherwise use your domain
+        // Once sarahsbooks.com is verified in Resend, change this to hello@sarahsbooks.com
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+        
+        const emailResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: `Sarah's Books <${fromEmail}>`,
+            to: [MASTER_ADMIN_EMAIL],
+            subject,
+            html: emailHtml
+          })
+        });
 
-      if (!emailResponse.ok) {
-        const errorData = await emailResponse.json();
-        console.error('Email send error:', errorData);
+        const responseData = await emailResponse.json();
+        
+        if (!emailResponse.ok) {
+          console.error('Email send error:', responseData);
+          return json({ 
+            success: false, 
+            message: 'Failed to send email',
+            error: responseData,
+            hint: 'If you see "domain not verified", add RESEND_FROM_EMAIL=onboarding@resend.dev to test, or verify sarahsbooks.com in Resend dashboard',
+            stats: {
+              newUsers24h: newUsers24h.length,
+              newQueue24h: newQueue24h.length,
+              hasSpike
+            }
+          }, 500);
+        }
+        
+        console.log('Email sent successfully:', responseData);
+      } catch (emailErr) {
+        console.error('Email fetch error:', emailErr);
         return json({ 
           success: false, 
-          message: 'Failed to send email',
-          error: errorData,
+          message: 'Email service error',
+          error: emailErr.message,
           stats: {
             newUsers24h: newUsers24h.length,
             newQueue24h: newQueue24h.length,
