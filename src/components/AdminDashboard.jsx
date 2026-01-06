@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -44,6 +44,7 @@ export default function AdminDashboard({ onNavigate }) {
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('lifetime');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -82,6 +83,35 @@ export default function AdminDashboard({ onNavigate }) {
   useEffect(() => {
     fetchStats();
   }, [period]);
+
+  const exportCSV = async () => {
+    setExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/export', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sarahs-books-users-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Export failed: ' + err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading && !stats) {
     return (
@@ -158,8 +188,17 @@ export default function AdminDashboard({ onNavigate }) {
                 onClick={fetchStats}
                 disabled={loading}
                 className="p-2 border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors disabled:opacity-50"
+                title="Refresh"
               >
                 <RefreshCw className={`w-4 h-4 text-[#5F7252] ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={exportCSV}
+                disabled={exporting}
+                className="p-2 border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                title="Export CSV"
+              >
+                <Download className={`w-4 h-4 text-[#5F7252] ${exporting ? 'animate-pulse' : ''}`} />
               </button>
             </div>
           </div>
