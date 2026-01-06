@@ -42,6 +42,7 @@ const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsP
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -146,6 +147,7 @@ export default function App() {
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
+  const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
   const [showThemeLists, setShowThemeLists] = useState(false);
@@ -182,7 +184,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin', 'reset-password'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -460,6 +462,7 @@ Find similar books from beyond my library that match this taste profile.
   const handleNewConversation = () => {
     setMessages(getInitialMessages());
     setSelectedThemes([]);
+    setShownBooksInSession([]); // Reset shown books on new conversation
     setInputValue('');
     setHasEngaged(false);
     setLikedBooks([]);
@@ -471,6 +474,7 @@ Find similar books from beyond my library that match this taste profile.
   const handleNewSearch = () => {
     setMessages(getInitialMessages());
     setSelectedThemes([]);
+    setShownBooksInSession([]); // Reset shown books on new search
     setInputValue('');
     lastActivityRef.current = Date.now();
     
@@ -676,7 +680,7 @@ Find similar books from beyond my library that match this taste profile.
       }
 
       // NEW CLEAN RECOMMENDATION SERVICE
-      const result = await getRecommendations(user?.id, userMessage, readingQueue, selectedThemes);
+      const result = await getRecommendations(user?.id, userMessage, readingQueue, selectedThemes, shownBooksInSession);
       
       if (!result.success) {
         setMessages(prev => [...prev, {
@@ -695,6 +699,10 @@ Find similar books from beyond my library that match this taste profile.
       // - World path using Claude knowledge (skipPostProcessing)
       if (result.fastPath || result.worldFallback || result.skipPostProcessing) {
         console.log('[App] Skipping post-processing for:', result.fastPath ? 'fastPath' : result.worldFallback ? 'worldFallback' : 'worldPath');
+        // Track shown books for pagination (avoid repeats on "Show me more")
+        if (result.shownBooks && result.shownBooks.length > 0) {
+          setShownBooksInSession(prev => [...prev, ...result.shownBooks]);
+        }
         setMessages(prev => [...prev, { text: result.text, isUser: false }]);
         return;
       }
@@ -1095,6 +1103,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'admin' && user?.email === 'sarah@darkridge.com' && (
         <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
           <AdminDashboard onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'reset-password' && (
+        <Suspense fallback={<LoadingFallback message="Loading..." />}>
+          <ResetPasswordPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
 

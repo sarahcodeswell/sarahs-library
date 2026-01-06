@@ -205,7 +205,7 @@ function buildExclusionMessage(exclusionList) {
  * Get book recommendations - Spec-compliant implementation
  * Flow: Classify Query → Route to Path → Build Context → Generate Response
  */
-export async function getRecommendations(userId, userMessage, readingQueue = [], themeFilters = []) {
+export async function getRecommendations(userId, userMessage, readingQueue = [], themeFilters = [], shownBooksInSession = []) {
   try {
     // Production logging - keep minimal
     
@@ -318,9 +318,11 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
       // Fast path: curated list
       
-      // Filter out excluded books (books user has already read/saved/dismissed)
+      // Filter out excluded books AND books already shown in this session
+      const shownTitlesLower = (shownBooksInSession || []).map(t => t.toLowerCase());
       const availableBooks = retrievedContext.catalogBooks.filter(
-        b => !exclusionList.some(ex => ex.toLowerCase() === b.title?.toLowerCase())
+        b => !exclusionList.some(ex => ex.toLowerCase() === b.title?.toLowerCase()) &&
+             !shownTitlesLower.includes(b.title?.toLowerCase())
       );
       
       // Build response text in the format parseRecommendations expects
@@ -333,10 +335,12 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       };
       const themeName = themeLabels[themeFilters[0]] || themeFilters[0];
       
-      // Handle case where user has read all books in this theme
+      // Handle case where user has seen all available books in this theme
       if (availableBooks.length === 0) {
-        // Show favorites from this theme that user has already read
-        const allThemeBooks = retrievedContext.catalogBooks;
+        // Show favorites from this theme that user has already seen
+        const allThemeBooks = retrievedContext.catalogBooks.filter(
+          b => !exclusionList.some(ex => ex.toLowerCase() === b.title?.toLowerCase())
+        );
         const favorites = allThemeBooks
           .filter(b => b.favorite || b.sarah_assessment?.toLowerCase().includes('favorite'))
           .slice(0, 3);
@@ -351,17 +355,18 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
         
         return {
           success: true,
-          text: `You've explored all the unread books in my ${themeName} collection! Here are my all-time favorites from this theme that are worth revisiting:\n\n${responseText}`,
+          text: `You've explored all the books in my ${themeName} collection! Here are my favorites from this theme:\n\n${responseText}`,
           exclusionCount: exclusionList.length,
           exclusionList: exclusionList,
           classification: classification,
           path: path,
           fastPath: true,
-          allRead: true
+          allRead: true,
+          shownBooks: booksToShow.map(b => b.title)
         };
       }
       
-      // Take top 3 available books
+      // Take top 3 available books (not yet shown in session)
       const topBooks = availableBooks.slice(0, 3);
       
       // Format each book in the structured format the UI expects
@@ -378,7 +383,8 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
         exclusionList: exclusionList,
         classification: classification,
         path: path,
-        fastPath: true
+        fastPath: true,
+        shownBooks: topBooks.map(b => b.title)
       };
     }
     
