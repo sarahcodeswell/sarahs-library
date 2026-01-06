@@ -28,6 +28,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
 
+// Legacy constant for backward compatibility during migration
+const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
+
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
@@ -112,7 +115,7 @@ function AboutSection({ onShare }) {
 }
 
 export default function App() {
-  const { user, authLoading, showAuthModal, setShowAuthModal, signOut } = useUser();
+  const { user, authLoading, showAuthModal, setShowAuthModal, signOut, isAdmin } = useUser();
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
   const { recommendations } = useRecommendations();
   
@@ -1021,7 +1024,7 @@ Find similar books from beyond my library that match this taste profile.
                       </button>
                       
                       {/* Admin Dashboard - only for master admin */}
-                      {user?.email === 'sarah@darkridge.com' && (
+                      {(isAdmin || user?.email === MASTER_ADMIN_EMAIL) && (
                         <>
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <button
@@ -1137,7 +1140,7 @@ Find similar books from beyond my library that match this taste profile.
         </Suspense>
       )}
 
-      {currentPage === 'admin' && user?.email === 'sarah@darkridge.com' && (
+      {currentPage === 'admin' && (isAdmin || user?.email === MASTER_ADMIN_EMAIL) && (
         <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
           <AdminDashboard onNavigate={setCurrentPage} />
         </Suspense>
