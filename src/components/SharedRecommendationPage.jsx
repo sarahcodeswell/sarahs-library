@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, RefreshCw, Star, ExternalLink, Check } from 'lucide-react';
+import { Heart, BookOpen, ShoppingBag, BookMarked, Library, Headphones, Sparkles, Users, RefreshCw, Star, ExternalLink, Check, BookCheck } from 'lucide-react';
 import { db } from '../lib/supabase';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useUser } from '../contexts/UserContext';
@@ -15,6 +15,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addedToQueue, setAddedToQueue] = useState(false);
+  const [markedAsRead, setMarkedAsRead] = useState(false);
   const [reputation, setReputation] = useState(null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   const { user } = useUser();
@@ -115,7 +116,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
     return `https://www.goodreads.com/search?q=${query}`;
   };
 
-  const handleAddToQueue = async () => {
+  const handleAddToQueue = async (status = 'want_to_read') => {
     if (!user) {
       onShowAuthModal();
       return;
@@ -126,23 +127,39 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
       book_title: bookData.book_title,
       book_author: bookData.book_author,
       book_isbn: bookData.book_isbn,
-      status: 'want_to_read'
+      status: status
     });
 
     if (result.success) {
-      setAddedToQueue(true);
+      if (status === 'already_read') {
+        setMarkedAsRead(true);
+      } else {
+        setAddedToQueue(true);
+      }
+      
+      // Track acceptance on the shared recommendation
+      if (shareToken) {
+        await db.markSharedRecommendationAccepted(shareToken, user.id);
+      }
     }
   };
 
+  // Handle "Already Read" action
+  const handleAlreadyRead = () => {
+    handleAddToQueue('already_read');
+  };
+
   // Handle accept recommendation (for logged-out users)
-  const handleAcceptRecommendation = () => {
+  const handleAcceptRecommendation = (status = 'want_to_read') => {
     // Store the book data in sessionStorage so we can add it after sign up
     const bookData = recommendation.user_recommendations;
     sessionStorage.setItem('pendingRecommendation', JSON.stringify({
       book_title: bookData.book_title,
       book_author: bookData.book_author,
       book_isbn: bookData.book_isbn,
-      book_description: bookData.book_description
+      book_description: bookData.book_description,
+      status: status,
+      shareToken: shareToken
     }));
     onShowAuthModal();
   };
@@ -298,16 +315,25 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
               </a>
             </div>
 
-            {/* Single Clear CTA */}
-            <button
-              onClick={handleAcceptRecommendation}
-              className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
-            >
-              <BookMarked className="w-5 h-5" />
-              Accept This Recommendation
-            </button>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={() => handleAcceptRecommendation('want_to_read')}
+                className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
+              >
+                <BookMarked className="w-5 h-5" />
+                Add to My Reading Queue
+              </button>
+              <button
+                onClick={() => handleAcceptRecommendation('already_read')}
+                className="w-full px-4 py-3 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-xl hover:bg-[#F8F6EE] transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <BookCheck className="w-5 h-5" />
+                I've Already Read This
+              </button>
+            </div>
             <p className="text-xs text-center text-[#96A888] mt-3">
-              Create a free account to add this to your reading queue
+              Create a free account to track your reading
             </p>
           </div>
 
@@ -446,19 +472,28 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
           {/* Action Buttons */}
           <div className="space-y-4">
             
-            {/* Add to Reading Queue */}
-            {!isInQueue && !addedToQueue ? (
-              <button
-                onClick={handleAddToQueue}
-                className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
-              >
-                <BookMarked className="w-5 h-5" />
-                Add to My Reading Queue
-              </button>
+            {/* Add to Reading Queue / Already Read */}
+            {!isInQueue && !addedToQueue && !markedAsRead ? (
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleAddToQueue('want_to_read')}
+                  className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
+                >
+                  <BookMarked className="w-5 h-5" />
+                  Add to My Reading Queue
+                </button>
+                <button
+                  onClick={handleAlreadyRead}
+                  className="w-full px-4 py-3 bg-white border border-[#D4DAD0] text-[#5F7252] rounded-xl hover:bg-[#F8F6EE] transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <BookCheck className="w-5 h-5" />
+                  I've Already Read This
+                </button>
+              </div>
             ) : (
               <div className="w-full px-6 py-4 bg-[#5F7252]/10 text-[#5F7252] rounded-xl flex items-center justify-center gap-3 font-medium text-lg">
                 <Check className="w-5 h-5" />
-                {addedToQueue ? 'Added to Your Queue!' : 'Already in Your Queue'}
+                {markedAsRead ? 'Added to Your Collection!' : addedToQueue ? 'Added to Your Queue!' : 'Already in Your Queue'}
               </div>
             )}
 

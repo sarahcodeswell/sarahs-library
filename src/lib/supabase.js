@@ -604,6 +604,29 @@ export const db = {
     }
   },
 
+  // Track when a shared recommendation is accepted (added to queue)
+  markSharedRecommendationAccepted: async (shareToken, acceptedByUserId) => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { error } = await supabase
+        .from('shared_recommendations')
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by: acceptedByUserId
+        })
+        .eq('share_token', shareToken);
+      
+      if (error) {
+        console.error('[markSharedRecommendationAccepted] Error:', error);
+      }
+      return { error };
+    } catch (err) {
+      console.error('[markSharedRecommendationAccepted] Exception:', err);
+      return { error: { message: err.message || 'Update failed' } };
+    }
+  },
+
   // Chat History operations
   getChatHistory: async (userId, sessionId = null) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };

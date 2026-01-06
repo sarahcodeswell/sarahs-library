@@ -43,12 +43,20 @@ export function ReadingQueueProvider({ children }) {
           sessionStorage.removeItem('pendingRecommendation');
           // Add to queue after a short delay to ensure queue is loaded
           setTimeout(async () => {
+            // Use the status from the pending recommendation (want_to_read or already_read)
+            const status = bookData.status || 'want_to_read';
             await db.addToReadingQueue(user.id, {
               title: bookData.book_title,
               author: bookData.book_author,
-              status: 'want_to_read',
+              status: status,
               description: bookData.book_description
             });
+            
+            // Track acceptance if this came from a shared recommendation
+            if (bookData.shareToken) {
+              await db.markSharedRecommendationAccepted(bookData.shareToken, user.id);
+            }
+            
             loadReadingQueue();
           }, 500);
         } catch (err) {

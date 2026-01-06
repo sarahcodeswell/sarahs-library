@@ -480,7 +480,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
             <div className="flex items-center gap-2">
               {Icon && <Icon className="w-5 h-5 text-[#5F7252]" />}
               <h2 className="text-lg font-semibold text-[#4A5940]">{title}</h2>
-              {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length}</span>}
+              {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length} {data.length === 1 ? 'user' : 'users'}</span>}
             </div>
             <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
               <X className="w-5 h-5 text-[#96A888]" />
@@ -835,11 +835,11 @@ export default function AdminDashboard({ onNavigate }) {
         {/* Engagement Stats - 4 cards per row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <StatCard
-            title="Recommendations"
+            title="Recs Saved"
             value={stats?.recommendations?.total || 0}
-            subtitle={`${stats?.recommendations?.users || 0} users, ${stats?.recommendations?.shared || 0} shared`}
+            subtitle={`${stats?.recommendations?.users || 0} users`}
             icon={Heart}
-            onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations', icon: Heart })}
+            onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations Saved', icon: Heart })}
           />
           <StatCard
             title="Referrals"
