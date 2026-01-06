@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -33,6 +33,10 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userBooks, setUserBooks] = useState(null);
+  const [noteModal, setNoteModal] = useState({ isOpen: false, book: null });
+  const [noteContent, setNoteContent] = useState('');
+  const [sendingNote, setSendingNote] = useState(false);
+  const [sentNotes, setSentNotes] = useState(new Set());
 
   useEffect(() => {
     if (!isOpen) {
@@ -109,6 +113,48 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
     }
   };
 
+  const sendNote = async () => {
+    if (!noteContent.trim() || !noteModal.book || !selectedUser) return;
+    
+    setSendingNote(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/send-note', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: selectedUser.userId,
+          userEmail: selectedUser.email,
+          bookId: noteModal.book.bookId,
+          bookTitle: noteModal.book.title,
+          bookAuthor: noteModal.book.author,
+          noteContent: noteContent.trim()
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setSentNotes(prev => new Set([...prev, noteModal.book.bookId]));
+        setNoteModal({ isOpen: false, book: null });
+        setNoteContent('');
+        alert(result.message || 'Note sent!');
+      } else {
+        alert(result.error || 'Failed to send note');
+      }
+    } catch (err) {
+      console.error('Error sending note:', err);
+      alert('Failed to send note');
+    } finally {
+      setSendingNote(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const renderContent = () => {
@@ -175,15 +221,27 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
               <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Queue</p>
               <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
                 {userBooks.books?.map((b, i) => (
-                  <div key={i} className="py-2.5 flex items-start justify-between">
-                    <div>
+                  <div key={i} className="py-2.5 flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
                       <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
                       {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
                       {b.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
+                      {sentNotes.has(b.bookId) ? (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Sent
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setNoteModal({ isOpen: true, book: b })}
+                          className="text-xs bg-[#5F7252] text-white px-2 py-1 rounded hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+                        >
+                          <MessageSquare className="w-3 h-3" /> Note
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -374,23 +432,108 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden border border-[#E8EBE4]">
-        <div className="flex items-center justify-between p-4 border-b border-[#E8EBE4]">
-          <div className="flex items-center gap-2">
-            {Icon && <Icon className="w-5 h-5 text-[#5F7252]" />}
-            <h2 className="text-lg font-semibold text-[#4A5940]">{title}</h2>
-            {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length}</span>}
+    <>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden border border-[#E8EBE4]">
+          <div className="flex items-center justify-between p-4 border-b border-[#E8EBE4]">
+            <div className="flex items-center gap-2">
+              {Icon && <Icon className="w-5 h-5 text-[#5F7252]" />}
+              <h2 className="text-lg font-semibold text-[#4A5940]">{title}</h2>
+              {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length}</span>}
+            </div>
+            <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
+              <X className="w-5 h-5 text-[#96A888]" />
+            </button>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
-            <X className="w-5 h-5 text-[#96A888]" />
-          </button>
-        </div>
-        <div className="p-4">
-          {renderContent()}
+          <div className="p-4">
+            {renderContent()}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Note Modal */}
+      {noteModal.isOpen && noteModal.book && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-[#E8EBE4]">
+            <div className="bg-gradient-to-r from-[#5F7252] to-[#4A5940] p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  <MessageSquare className="w-5 h-5" />
+                  <h3 className="font-semibold">Send Personal Note</h3>
+                </div>
+                <button 
+                  onClick={() => { setNoteModal({ isOpen: false, book: null }); setNoteContent(''); }}
+                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-4">
+              {/* Book info */}
+              <div className="bg-[#F8F6EE] rounded-lg p-3 mb-4 border-l-4 border-[#5F7252]">
+                <p className="text-sm font-medium text-[#4A5940]">{noteModal.book.title}</p>
+                <p className="text-xs text-[#7A8F6C]">by {noteModal.book.author}</p>
+                <p className="text-xs text-[#96A888] mt-1">To: {selectedUser?.email}</p>
+              </div>
+              
+              {/* Note input */}
+              <label className="block text-xs text-[#5F7252] font-medium mb-2">
+                Why I love this book...
+              </label>
+              <textarea
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                placeholder="Share your personal thoughts about this book..."
+                className="w-full h-32 p-3 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
+              />
+              
+              {/* Quick starters */}
+              <div className="flex flex-wrap gap-1.5 mt-3 mb-4">
+                <button
+                  onClick={() => setNoteContent(prev => prev + "This is one of my all-time favorites because ")}
+                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                >
+                  All-time favorite...
+                </button>
+                <button
+                  onClick={() => setNoteContent(prev => prev + "I think you'll especially love ")}
+                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                >
+                  You'll love...
+                </button>
+                <button
+                  onClick={() => setNoteContent(prev => prev + "The writing style is ")}
+                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                >
+                  Writing style...
+                </button>
+              </div>
+              
+              {/* Send button */}
+              <button
+                onClick={sendNote}
+                disabled={!noteContent.trim() || sendingNote}
+                className="w-full bg-gradient-to-r from-[#5F7252] to-[#4A5940] text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingNote ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send Note to {selectedUser?.email?.split('@')[0]}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
