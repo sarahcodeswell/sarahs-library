@@ -1,10 +1,158 @@
 # Recommendation System Audit
 **Date:** January 4, 2026  
-**Status:** In Progress
+**Last Updated:** January 6, 2026  
+**Status:** Active - See Recent Fixes
 
 ## Executive Summary
 
 The recommendation system has accumulated technical debt through iterative fixes. This audit identifies root causes and proposes a systematic fix plan.
+
+---
+
+## RECENT FIXES (January 6, 2026)
+
+### Fix 1: Geographic/Historical Queries → WORLD Path
+**Problem:** Queries like "books about Venezuela" were routing to CATALOG/HYBRID because embedding-based routing gave them medium taste alignment scores.
+
+**Solution:** Added specific topic detection to `preFilterRoute()` in `deterministicRouter.js`:
+- Geographic patterns (Venezuela, Japan, Nigeria, etc.)
+- Historical patterns (WWII, Victorian, medieval, etc.)
+- Genre patterns (sci-fi, thriller, mystery, etc.)
+
+These now route to WORLD with `confidence: 'high'` BEFORE embedding scoring runs.
+
+**Exception:** If query also mentions Sarah's themes (women, identity, emotional, etc.), it stays in CATALOG/HYBRID.
+
+### Fix 2: Temporal Author Queries → Single Verified Book
+**Problem:** "New Paula McLain novel" correctly found SKYLARK but Claude added unrelated books (Americanah, The Immortalists).
+
+**Solution:** Added fast path in `recommendationService.js`:
+- If `path === 'temporal'` AND `verifiedBookData` exists
+- Return ONLY that verified book, bypass Claude entirely
+- Prevents LLM from "helping" by adding tangentially related books
+
+### Fix 3: Curated List Fast Path (Previous)
+**Problem:** Theme browsing was going through Claude, causing inconsistent results.
+
+**Solution:** Fast path returns catalog books directly without LLM processing.
+
+---
+
+## ARCHITECTURAL IMPROVEMENTS (Proposed)
+
+### The Problem: Whack-a-Mole Routing
+
+Current approach adds regex patterns for each edge case discovered. This doesn't scale:
+- Venezuela → add regex
+- Japan → add regex  
+- WWII → add regex
+- ...forever
+
+### The Solution: Catalog-First with Confidence Scoring
+
+**Principle:** Instead of trying to predict what's NOT in the catalog, always check the catalog first and let the RESULTS determine the path.
+
+```
+User Query
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│ STAGE 1: FAST KEYWORD DETECTION                         │
+│ - Temporal keywords → TEMPORAL path (bypass everything) │
+│ - Explicit catalog keywords → CATALOG path              │
+│ - Explicit world keywords → WORLD path                  │
+│ - Theme filter selected → CATALOG fast path             │
+└─────────────────────────────────────────────────────────┘
+    ↓ (if no keyword match)
+┌─────────────────────────────────────────────────────────┐
+│ STAGE 2: CATALOG PROBE (always run first)               │
+│ - Quick vector search against catalog (top 5)           │
+│ - Compute: max_similarity, avg_similarity, count        │
+│ - Takes ~50ms                                           │
+└─────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│ STAGE 3: CONFIDENCE-BASED ROUTING                       │
+│                                                         │
+│ IF max_similarity > 0.75 AND count >= 3:                │
+│   → CATALOG path (high confidence match)                │
+│                                                         │
+│ ELIF max_similarity > 0.60 AND count >= 2:              │
+│   → HYBRID path (partial match, supplement with world)  │
+│                                                         │
+│ ELSE:                                                   │
+│   → WORLD path (catalog can't help)                     │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│ STAGE 4: PATH EXECUTION                                 │
+│ - CATALOG: Return probe results + expand if needed      │
+│ - HYBRID: Probe results + web search                    │
+│ - WORLD: Web search only (Claude knowledge fallback)    │
+│ - TEMPORAL: Web search for new releases                 │
+└─────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────┐
+│ STAGE 5: RESPONSE GENERATION                            │
+│ - Fast paths: Return directly (no LLM)                  │
+│ - LLM paths: Claude formats with strict constraints     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Why This Is Better
+
+1. **No more regex whack-a-mole**: Venezuela routes to WORLD because catalog probe returns low similarity, not because we added "venezuela" to a list.
+
+2. **Self-correcting**: As catalog grows, queries that used to go to WORLD will naturally start matching catalog.
+
+3. **Transparent**: Routing decision is based on measurable data (similarity scores), not heuristics.
+
+4. **Fast**: Catalog probe is ~50ms. We're already doing this work, just not using it for routing.
+
+### Implementation Plan
+
+**Phase 1: Catalog Probe (1-2 hours)**
+- Add `quickCatalogProbe(query)` function
+- Returns: `{ topMatch, avgSimilarity, matchCount, books }`
+- Wire into routing decision
+
+**Phase 2: Confidence-Based Routing (1 hour)**
+- Replace embedding-based taste alignment with probe results
+- Keep keyword pre-filter for explicit signals
+- Remove geographic/historical regex patterns (no longer needed)
+
+**Phase 3: Strict LLM Constraints (1 hour)**
+- When LLM is used, constrain it to ONLY format provided books
+- Never let LLM add its own recommendations
+- LLM role: formatting and explanation, not book selection
+
+**Phase 4: Monitoring (ongoing)**
+- Log routing decisions with probe scores
+- Track: query → probe_score → path → user_action
+- Identify patterns where routing is wrong
+
+### Fast Path Summary
+
+| Scenario | Detection | Path | LLM Used? |
+|----------|-----------|------|-----------|
+| Theme filter clicked | UI signal | CATALOG | No |
+| "New [Author]" | Keyword | TEMPORAL | No (if verified) |
+| High catalog match | Probe score > 0.75 | CATALOG | No |
+| Medium catalog match | Probe score 0.60-0.75 | HYBRID | Yes (constrained) |
+| Low catalog match | Probe score < 0.60 | WORLD | Yes (constrained) |
+| Explicit "bestsellers" | Keyword | WORLD | Yes |
+
+### LLM Constraint Rules
+
+When LLM IS used, enforce these rules:
+
+1. **CATALOG path**: "You MUST ONLY recommend books from this list: [books]. Do not add any other books."
+
+2. **HYBRID path**: "Section 1 MUST be from this catalog list: [catalog_books]. Section 2 MUST be from this world list: [world_books]. Do not add any other books."
+
+3. **WORLD path**: "You MUST ONLY recommend books from this list: [world_books]. If the list is empty, use your knowledge but clearly label as 'From my broader book knowledge'."
+
+4. **TEMPORAL path**: "Return ONLY this verified book: [book]. Do not add any other recommendations."
 
 ---
 
