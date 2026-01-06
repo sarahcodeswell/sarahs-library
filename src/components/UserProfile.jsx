@@ -117,13 +117,16 @@ export default function UserProfile({ tasteProfile }) {
     return new Date().getFullYear() - parseInt(year);
   };
 
-  // Validate birth year for COPPA
+  // Validate birth year for COPPA (warning only, not blocking)
   const validateBirthYear = (year) => {
-    if (!year) return true;
+    if (!year) {
+      setAgeError('');
+      return true;
+    }
     const age = calculateAge(year);
     if (age < 13) {
-      setAgeError('You must be 13 or older to use this service');
-      return false;
+      setAgeError('Note: Users under 13 should have parental permission to use this service.');
+      return true; // Allow save but show warning
     }
     if (age > 120) {
       setAgeError('Please enter a valid birth year');
@@ -722,7 +725,7 @@ export default function UserProfile({ tasteProfile }) {
               className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
             />
             {ageError && (
-              <p className="text-xs text-red-500 mt-1">{ageError}</p>
+              <p className={`text-xs mt-1 ${ageError.startsWith('Note:') ? 'text-amber-600' : 'text-red-500'}`}>{ageError}</p>
             )}
             {birthYear && !ageError && (
               <p className="text-xs text-[#96A888] mt-1">Age: {calculateAge(birthYear)}</p>
@@ -839,26 +842,39 @@ export default function UserProfile({ tasteProfile }) {
           Favorite Local Bookstore
         </h4>
         <p className="text-xs text-[#96A888] mb-3">
-          Support your local bookstore! We'll include them in your book recommendations.
+          Pin your favorite local bookstore to your profile as a reminder to shop local.
         </p>
 
         {favoriteBookstore ? (
-          <div className="bg-[#F8F6EE] rounded-lg p-3 flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-[#4A5940]">{favoriteBookstore.name}</p>
-              {favoriteBookstore.address && (
-                <p className="text-xs text-[#7A8F6C] mt-0.5 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {favoriteBookstore.address}
-                </p>
-              )}
+          <div className="bg-[#F8F6EE] rounded-lg p-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#4A5940]">{favoriteBookstore.name}</p>
+                {favoriteBookstore.address && (
+                  <p className="text-xs text-[#7A8F6C] mt-0.5 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {favoriteBookstore.address}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleRemoveBookstore}
+                className="p-1 hover:bg-[#E8EBE4] rounded transition-colors"
+              >
+                <X className="w-4 h-4 text-[#96A888]" />
+              </button>
             </div>
-            <button
-              onClick={handleRemoveBookstore}
-              className="p-1 hover:bg-[#E8EBE4] rounded transition-colors"
-            >
-              <X className="w-4 h-4 text-[#96A888]" />
-            </button>
+            {favoriteBookstore.name && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(favoriteBookstore.name + ' ' + (favoriteBookstore.address || ''))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              >
+                <MapPin className="w-3 h-3" />
+                View on Google Maps
+              </a>
+            )}
           </div>
         ) : (
           <div className="relative">
