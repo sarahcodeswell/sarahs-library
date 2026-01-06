@@ -159,12 +159,12 @@ export default async function handler(req) {
       acceptRate: 0
     };
 
-    // Sharing stats
+    // Sharing stats (handle case where accepted_at column might not exist)
     const shareStats = {
       totalShares: sharedRecs.length,
       uniqueBooks: new Set(sharedRecs.map(s => s.recommendation_id)).size,
       usersWhoShared: new Set(sharedRecs.map(s => s.recommender_name).filter(Boolean)).size,
-      accepted: sharedRecs.filter(s => s.accepted_at).length
+      accepted: sharedRecs.filter(s => s.accepted_at != null).length
     };
 
     // Referral stats with K-factor
