@@ -87,6 +87,28 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
     }
   };
 
+  const fetchUserDetails = async (detailType, userId, email) => {
+    setSelectedUser({ userId, email });
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`/api/admin/details?type=${detailType}&userId=${userId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setUserBooks(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching user details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const renderContent = () => {
@@ -188,19 +210,47 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
         );
 
       case 'read':
+        // If viewing a specific user's books
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Books Read</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.books?.map((b, i) => (
+                  <div key={i} className="py-2.5 flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
+                      <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                    </div>
+                    {b.rating && (
+                      <span className="text-sm text-[#C97B7B]">{'♥'.repeat(b.rating)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with book counts
         return (
           <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
-            {data.map((b, i) => (
-              <div key={i} className="py-2.5 flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-[#4A5940] font-medium">{b.bookTitle}</p>
-                  <p className="text-xs text-[#7A8F6C]">by {b.bookAuthor}</p>
-                  <p className="text-xs text-[#96A888] mt-1">Read by {b.email}</p>
-                </div>
-                {b.rating && (
-                  <span className="text-sm text-[#C97B7B]">{'♥'.repeat(b.rating)}</span>
-                )}
-              </div>
+            {data.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => fetchUserDetails('read-user', u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                  {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
+                </span>
+              </button>
             ))}
           </div>
         );
@@ -218,45 +268,102 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
         );
 
       case 'recommendations':
+        // If viewing a specific user's recommendations
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Recommendations</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.books?.map((b, i) => (
+                  <div key={i} className="py-2.5">
+                    <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
+                    <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                    <p className="text-xs text-[#96A888] mt-1">{new Date(b.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with rec counts
         return (
           <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
-            {data.map((r, i) => (
-              <div key={i} className="py-2.5">
-                <p className="text-sm text-[#4A5940] font-medium">{r.bookTitle}</p>
-                <p className="text-xs text-[#7A8F6C]">by {r.bookAuthor}</p>
-                <p className="text-xs text-[#96A888] mt-1">
-                  Recommended to {r.email} • {new Date(r.createdAt).toLocaleDateString()}
-                </p>
-              </div>
+            {data.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => fetchUserDetails('recommendations-user', u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                  {u.recCount} {u.recCount === 1 ? 'rec' : 'recs'}
+                </span>
+              </button>
             ))}
           </div>
         );
 
       case 'referrals':
+        // If viewing a specific user's referrals
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Referrals</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.referrals?.map((r, i) => (
+                  <div key={i} className="py-2.5 flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-[#4A5940]">{r.invitedEmail}</p>
+                      <p className="text-xs text-[#96A888] mt-0.5">
+                        {r.type === 'link' ? '🔗 Link' : '📧 Email'} • {new Date(r.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {r.status === 'accepted' ? (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Joined
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Pending
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with referral counts
         return (
           <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
-            {data.map((r, i) => (
-              <div key={i} className="py-2.5 flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-[#4A5940]">
-                    <span className="font-medium">{r.inviterEmail}</span>
-                    <span className="text-[#96A888]"> → </span>
-                    {r.invitedEmail}
-                  </p>
-                  <p className="text-xs text-[#96A888] mt-0.5">
-                    {r.type === 'link' ? '🔗 Link' : '📧 Email'} • {new Date(r.createdAt).toLocaleDateString()}
-                  </p>
+            {data.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => fetchUserDetails('referrals-user', u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                    {u.accepted} joined
+                  </span>
+                  <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                    {u.refCount} sent
+                  </span>
                 </div>
-                {r.status === 'accepted' ? (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Joined
-                  </span>
-                ) : (
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> Pending
-                  </span>
-                )}
-              </div>
+              </button>
             ))}
           </div>
         );
@@ -444,20 +551,9 @@ export default function AdminDashboard({ onNavigate }) {
           </button>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-[#4A5940]" style={{ fontFamily: 'Crimson Pro' }}>
-                  Admin Dashboard
-                </h1>
-                {stats?.dataQualityScore && (
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                    stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
-                    stats.dataQualityScore >= 40 ? 'bg-amber-100 text-amber-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    Quality: {stats.dataQualityScore}/100
-                  </span>
-                )}
-              </div>
+              <h1 className="text-2xl font-semibold text-[#4A5940]" style={{ fontFamily: 'Crimson Pro' }}>
+                Admin Dashboard
+              </h1>
               {lastUpdated && (
                 <p className="text-xs text-[#96A888] mt-1">
                   Last updated: {lastUpdated.toLocaleTimeString()}
@@ -676,7 +772,18 @@ export default function AdminDashboard({ onNavigate }) {
 
         {/* Data Quality Breakdown */}
         <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-          <h3 className="text-sm font-semibold text-[#4A5940] mb-4">Data Quality Breakdown</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-[#4A5940]">Data Quality Breakdown</h3>
+            {stats?.dataQualityScore != null && (
+              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
+                stats.dataQualityScore >= 40 ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+              }`}>
+                {stats.dataQualityScore}/100
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
             <ProgressBar
               label="Profile Completeness"

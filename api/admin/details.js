@@ -128,18 +128,46 @@ export default async function handler(req) {
 
       case 'read': {
         const { data: userBooks } = await supabase.from('user_books').select('*').eq('status', 'read');
-        const result = (userBooks || []).map(b => {
+        // Group by user
+        const userReads = new Map();
+        (userBooks || []).forEach(b => {
           const u = userMap.get(b.user_id);
-          return {
-            email: u?.email || 'Unknown',
-            bookTitle: b.title,
-            bookAuthor: b.author,
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userReads.has(email)) {
+            userReads.set(email, { email, userId: b.user_id, books: [] });
+          }
+          userReads.get(email).books.push({
+            title: b.title,
+            author: b.author,
             rating: b.rating,
             readAt: b.updated_at
-          };
-        }).sort((a, b) => new Date(b.readAt) - new Date(a.readAt));
+          });
+        });
+        const result = Array.from(userReads.values())
+          .map(u => ({ ...u, bookCount: u.books.length }))
+          .sort((a, b) => b.bookCount - a.bookCount);
         
         return json({ type: 'read', data: result });
+      }
+
+      case 'read-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: userBooks } = await supabase.from('user_books').select('*').eq('user_id', userId).eq('status', 'read');
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (userBooks || []).map(b => ({
+            title: b.title,
+            author: b.author,
+            rating: b.rating,
+            readAt: b.updated_at
+          })).sort((a, b) => new Date(b.readAt) - new Date(a.readAt))
+        };
+        
+        return json({ type: 'read-user', data: result });
       }
 
       case 'waitlist': {
@@ -154,36 +182,97 @@ export default async function handler(req) {
 
       case 'recommendations': {
         const { data: recs } = await supabase.from('recommendations').select('*');
-        const result = (recs || []).map(r => {
+        // Group by user
+        const userRecs = new Map();
+        (recs || []).forEach(r => {
           const u = userMap.get(r.user_id);
-          return {
-            email: u?.email || 'Unknown',
-            bookTitle: r.book_title,
-            bookAuthor: r.book_author,
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userRecs.has(email)) {
+            userRecs.set(email, { email, userId: r.user_id, books: [] });
+          }
+          userRecs.get(email).books.push({
+            title: r.book_title,
+            author: r.book_author,
             source: r.source,
             createdAt: r.created_at
-          };
-        }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          });
+        });
+        const result = Array.from(userRecs.values())
+          .map(u => ({ ...u, recCount: u.books.length }))
+          .sort((a, b) => b.recCount - a.recCount);
         
         return json({ type: 'recommendations', data: result });
       }
 
+      case 'recommendations-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: recs } = await supabase.from('recommendations').select('*').eq('user_id', userId);
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (recs || []).map(r => ({
+            title: r.book_title,
+            author: r.book_author,
+            source: r.source,
+            createdAt: r.created_at
+          })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        };
+        
+        return json({ type: 'recommendations-user', data: result });
+      }
+
       case 'referrals': {
         const { data: referrals } = await supabase.from('referrals').select('*');
-        const result = (referrals || []).map(r => {
+        // Group by inviter
+        const inviterRefs = new Map();
+        (referrals || []).forEach(r => {
           const inviter = userMap.get(r.inviter_id);
+          const email = inviter?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!inviterRefs.has(email)) {
+            inviterRefs.set(email, { email, userId: r.inviter_id, referrals: [], accepted: 0 });
+          }
           const invited = userMap.get(r.invited_user_id);
-          return {
-            inviterEmail: inviter?.email || 'Unknown',
+          inviterRefs.get(email).referrals.push({
             invitedEmail: r.invited_email || invited?.email || 'Unknown',
             status: r.status,
             type: r.referral_type,
-            createdAt: r.created_at,
-            acceptedAt: r.accepted_at
-          };
-        }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            createdAt: r.created_at
+          });
+          if (r.status === 'accepted') {
+            inviterRefs.get(email).accepted++;
+          }
+        });
+        const result = Array.from(inviterRefs.values())
+          .map(u => ({ ...u, refCount: u.referrals.length }))
+          .sort((a, b) => b.accepted - a.accepted || b.refCount - a.refCount);
         
         return json({ type: 'referrals', data: result });
+      }
+
+      case 'referrals-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: referrals } = await supabase.from('referrals').select('*').eq('inviter_id', userId);
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          referrals: (referrals || []).map(r => {
+            const invited = userMap.get(r.invited_user_id);
+            return {
+              invitedEmail: r.invited_email || invited?.email || 'Unknown',
+              status: r.status,
+              type: r.referral_type,
+              createdAt: r.created_at
+            };
+          }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        };
+        
+        return json({ type: 'referrals-user', data: result });
       }
 
       default:
