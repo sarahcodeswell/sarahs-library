@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -291,6 +291,62 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                 <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
                   {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
                 </span>
+              </button>
+            ))}
+          </div>
+        );
+
+      case 'collection':
+        // If viewing a specific user's collection
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Collection</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.books?.map((b, i) => (
+                  <div key={i} className="py-2.5 flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
+                      <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                      {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {b.status === 'read' && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Read</span>}
+                      {b.rating && <span className="text-xs text-[#C97B7B]">{'♥'.repeat(b.rating)}</span>}
+                      {b.inAdminCollection && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Match</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with book counts and overlap %
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => fetchUserDetails('collection-user', u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <div className="flex items-center gap-2">
+                  {u.overlapPercent > 0 && (
+                    <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                      {u.overlapPercent}% match
+                    </span>
+                  )}
+                  <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                    {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
@@ -755,6 +811,14 @@ export default function AdminDashboard({ onNavigate }) {
             subtitle={`Avg ${stats?.queue?.avgPerUser || 0} per user`}
             icon={BookMarked}
             onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Reading Queues', icon: BookMarked })}
+          />
+          <StatCard
+            title="Collections"
+            value={stats?.collection?.totalBooks || 0}
+            subtitle={`${stats?.collection?.usersWithCollection || 0} users with books`}
+            icon={Library}
+            color="bg-amber-500"
+            onClick={() => setModal({ isOpen: true, type: 'collection', title: 'User Collections', icon: Library })}
           />
           <StatCard
             title="Books Read"

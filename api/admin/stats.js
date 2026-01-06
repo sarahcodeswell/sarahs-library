@@ -116,6 +116,14 @@ export default async function handler(req) {
       avgPerUser: profiles.length > 0 ? (queue.length / profiles.length).toFixed(1) : 0
     };
 
+    // Collection stats (all books in user_books)
+    const collectionStats = {
+      totalBooks: userBooks.length,
+      inPeriod: userBooksInPeriod.length,
+      uniqueBooks: new Set(userBooks.map(b => b.book_title?.toLowerCase())).size,
+      usersWithCollection: new Set(userBooks.map(b => b.user_id)).size
+    };
+
     // Read/rated stats
     const readBooks = userBooks.filter(b => b.status === 'read');
     const ratedBooks = userBooks.filter(b => b.rating != null);
@@ -284,6 +292,7 @@ export default async function handler(req) {
       dataQualityScore: dataQuality.overall,
       users: userStats,
       queue: queueStats,
+      collection: collectionStats,
       read: readStats,
       recommendations: recStats,
       referrals: referralStats,

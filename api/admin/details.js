@@ -223,6 +223,79 @@ export default async function handler(req) {
         return json({ type: 'recommendations-user', data: result });
       }
 
+      case 'collection': {
+        // Get all user books (collections)
+        const { data: userBooks } = await supabase.from('user_books').select('*');
+        
+        // Get admin's collection for overlap calculation
+        const adminUser = Array.from(userMap.entries()).find(([id, u]) => u.email === MASTER_ADMIN_EMAIL);
+        const adminId = adminUser?.[0];
+        const adminBooks = (userBooks || []).filter(b => b.user_id === adminId);
+        const adminTitles = new Set(adminBooks.map(b => b.book_title?.toLowerCase()));
+        
+        // Group by user
+        const userCollections = new Map();
+        (userBooks || []).forEach(b => {
+          const u = userMap.get(b.user_id);
+          const email = u?.email || 'Unknown';
+          if (email === MASTER_ADMIN_EMAIL) return; // Exclude admin
+          if (!userCollections.has(email)) {
+            userCollections.set(email, { email, userId: b.user_id, books: [], overlap: 0 });
+          }
+          userCollections.get(email).books.push({
+            title: b.book_title,
+            author: b.book_author,
+            addedAt: b.added_at,
+            rating: b.rating,
+            status: b.status
+          });
+          // Check overlap with admin collection
+          if (adminTitles.has(b.book_title?.toLowerCase())) {
+            userCollections.get(email).overlap++;
+          }
+        });
+        
+        const result = Array.from(userCollections.values())
+          .map(u => ({ 
+            ...u, 
+            bookCount: u.books.length,
+            overlapPercent: u.books.length > 0 ? Math.round((u.overlap / u.books.length) * 100) : 0
+          }))
+          .sort((a, b) => b.bookCount - a.bookCount);
+        
+        return json({ type: 'collection', data: result });
+      }
+
+      case 'collection-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        // Get user's books and admin's books for overlap
+        const [{ data: userBooks }, { data: adminBooksResult }] = await Promise.all([
+          supabase.from('user_books').select('*').eq('user_id', userId),
+          supabase.from('user_books').select('book_title').eq('user_id', 
+            Array.from(userMap.entries()).find(([id, u]) => u.email === MASTER_ADMIN_EMAIL)?.[0]
+          )
+        ]);
+        
+        const adminTitles = new Set((adminBooksResult || []).map(b => b.book_title?.toLowerCase()));
+        const u = userMap.get(userId);
+        
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (userBooks || []).map(b => ({
+            title: b.book_title,
+            author: b.book_author,
+            addedAt: b.added_at,
+            rating: b.rating,
+            status: b.status,
+            inAdminCollection: adminTitles.has(b.book_title?.toLowerCase())
+          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+        };
+        
+        return json({ type: 'collection-user', data: result });
+      }
+
       case 'referrals': {
         const { data: referrals } = await supabase.from('referrals').select('*');
         // Group by inviter
