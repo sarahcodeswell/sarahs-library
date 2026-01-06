@@ -797,6 +797,7 @@ export default function AdminDashboard({ onNavigate }) {
         </div>
 
         {/* Overview Stats */}
+        {/* Core Stats - 4 cards per row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <StatCard
             title="Total Users"
@@ -827,16 +828,9 @@ export default function AdminDashboard({ onNavigate }) {
             icon={BookOpen}
             onClick={() => setModal({ isOpen: true, type: 'read', title: 'Books Read', icon: BookOpen })}
           />
-          <StatCard
-            title="Curator Waitlist"
-            value={stats?.curatorWaitlist?.total || 0}
-            subtitle="Pending curators"
-            icon={UserPlus}
-            color="bg-violet-500"
-            onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
-          />
         </div>
 
+        {/* Engagement Stats - 4 cards per row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <StatCard
             title="Recommendations"
@@ -860,10 +854,12 @@ export default function AdminDashboard({ onNavigate }) {
             color="bg-emerald-500"
           />
           <StatCard
-            title="Avg Age"
-            value={stats?.demographics?.averageAge || '—'}
-            subtitle="Years old"
-            icon={Calendar}
+            title="Curator Waitlist"
+            value={stats?.curatorWaitlist?.total || 0}
+            subtitle="Pending curators"
+            icon={UserPlus}
+            color="bg-violet-500"
+            onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
           />
         </div>
 
