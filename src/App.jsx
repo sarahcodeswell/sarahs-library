@@ -657,13 +657,10 @@ Find similar books from beyond my library that match this taste profile.
 
     // Smart theme clearing: If user typed a custom query (not the auto-generated theme text),
     // clear the theme filter so routing works correctly
-    const themeTexts = Object.values({
-      women: "Show me options in women's untold stories.",
-      emotional: "Show me options in emotional truth.",
-      identity: "Show me options in identity & belonging.",
-      spiritual: "Show me options in spirituality & meaning.",
-      justice: "Show me options in justice & systems."
-    });
+    // Generate theme texts dynamically from themeInfo to stay in sync
+    const themeTexts = Object.values(themeInfo).map(info => 
+      `Show me options in ${info.label.toLowerCase()}.`
+    );
     const isThemeQuery = themeTexts.some(t => userMessage.toLowerCase() === t.toLowerCase());
     
     // Determine effective themes for this request
@@ -678,7 +675,11 @@ Find similar books from beyond my library that match this taste profile.
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
-    setLoadingProgress({ step: 'library', progress: 0 });
+    
+    // Determine loading mode based on query type
+    const isCuratedList = effectiveThemes && effectiveThemes.length > 0;
+    const loadingMode = isCuratedList ? 'catalog' : 'full';
+    setLoadingProgress({ step: 'library', progress: 0, mode: loadingMode });
     lastActivityRef.current = Date.now();
 
     track('chat_message', {
@@ -687,15 +688,14 @@ Find similar books from beyond my library that match this taste profile.
     });
 
     try {
-      // Update progress - skip world step for curated lists (fast path)
-      const isCuratedList = effectiveThemes && effectiveThemes.length > 0;
+      // Update progress based on routing mode
       if (isCuratedList) {
-        // Fast path: library → matching → preparing
-        setTimeout(() => setLoadingProgress({ step: 'matching', progress: 50 }), 300);
+        // Catalog-only: library → preparing (no world search)
+        setTimeout(() => setLoadingProgress({ step: 'preparing', progress: 50, mode: 'catalog' }), 400);
       } else {
-        // Normal path: library → world → matching → preparing
-        setTimeout(() => setLoadingProgress({ step: 'world', progress: 50 }), 500);
-        setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0 }), 1000);
+        // Full search: library → world → matching → preparing
+        setTimeout(() => setLoadingProgress({ step: 'world', progress: 50, mode: 'full' }), 500);
+        setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0, mode: 'full' }), 1000);
       }
 
       // NEW CLEAN RECOMMENDATION SERVICE
@@ -710,7 +710,7 @@ Find similar books from beyond my library that match this taste profile.
       }
 
       // Update progress: preparing recommendations
-      setLoadingProgress({ step: 'preparing', progress: 100 });
+      setLoadingProgress(prev => ({ ...prev, step: 'preparing', progress: 100 }));
       
       // FAST PATH: Skip post-processing for:
       // - Curated lists (fastPath)
@@ -1352,66 +1352,98 @@ Find similar books from beyond my library that match this taste profile.
                 />
                 <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
                   <div className="space-y-2.5">
-                    {/* Library Check */}
-                    <div className="flex items-center gap-2">
-                      {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
-                        <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
+                    {/* Catalog-only mode: simpler steps */}
+                    {loadingProgress.mode === 'catalog' ? (
+                      <>
+                        {/* Searching my collection */}
+                        <div className="flex items-center gap-2">
+                          {loadingProgress.step === 'library' ? (
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          <span className={`text-xs ${loadingProgress.step === 'library' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Searching my collection
+                          </span>
                         </div>
-                      )}
-                      <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                        Checking my library
-                      </span>
-                    </div>
-
-                    {/* World Search */}
-                    {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                      <div className="flex items-center gap-2">
-                        {loadingProgress.step === 'world' ? (
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                        {/* Preparing picks */}
+                        {loadingProgress.step === 'preparing' && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-[#5F7252] font-medium">
+                              Preparing your picks
+                            </span>
                           </div>
                         )}
-                        <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                          Searching the world's library
-                        </span>
-                      </div>
-                    )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Full mode: Library Check */}
+                        <div className="flex items-center gap-2">
+                          {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Checking my library
+                          </span>
+                        </div>
 
-                    {/* Finding Best Matches */}
-                    {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                      <div className="flex items-center gap-2">
-                        {loadingProgress.step === 'matching' ? (
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                        {/* World Search */}
+                        {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                          <div className="flex items-center gap-2">
+                            {loadingProgress.step === 'world' ? (
+                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                              Searching the world's library
+                            </span>
                           </div>
                         )}
-                        <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                          Finding your best matches
-                        </span>
-                      </div>
-                    )}
 
-                    {/* Preparing */}
-                    {loadingProgress.step === 'preparing' && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs text-[#5F7252] font-medium">
-                          Preparing your picks
-                        </span>
-                      </div>
+                        {/* Finding Best Matches */}
+                        {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                          <div className="flex items-center gap-2">
+                            {loadingProgress.step === 'matching' ? (
+                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                              Finding your best matches
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Preparing */}
+                        {loadingProgress.step === 'preparing' && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-[#5F7252] font-medium">
+                              Preparing your picks
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
