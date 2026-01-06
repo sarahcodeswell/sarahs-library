@@ -292,13 +292,13 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
         const aiDescKey = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
         const description = catalogDesc || descriptions[aiDescKey] || null;
 
-        // Add books from Goodreads CSV directly to reading queue with status='finished'
-        // This ensures they're counted in collection and excluded from recommendations
+        // Add books from Goodreads CSV with status='already_read'
+        // This distinguishes imported books from books finished in-app
         const result = await addToQueue({
           title: book.title,
           author: book.author || '',
           description: description,
-          status: 'finished',
+          status: 'already_read',
         });
         
         if (result.success) {

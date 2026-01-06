@@ -807,26 +807,26 @@ export default function AdminDashboard({ onNavigate }) {
             onClick={() => setModal({ isOpen: true, type: 'users', title: 'All Users', icon: Users })}
           />
           <StatCard
-            title="Want to Read"
-            value={stats?.queue?.wantToRead || 0}
-            subtitle={`${stats?.queue?.finished || 0} finished (imported)`}
+            title="Books Queued"
+            value={stats?.queue?.queued || 0}
+            subtitle="Want to read"
             icon={BookMarked}
-            onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Reading Queues', icon: BookMarked })}
-          />
-          <StatCard
-            title="Collections"
-            value={stats?.collection?.totalBooks || 0}
-            subtitle={`${stats?.collection?.usersWithCollection || 0} users with books`}
-            icon={Library}
-            color="bg-amber-500"
-            onClick={() => setModal({ isOpen: true, type: 'collection', title: 'User Collections', icon: Library })}
+            onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Books Queued', icon: BookMarked })}
           />
           <StatCard
             title="Books Read"
-            value={stats?.read?.totalFinished || 0}
-            subtitle={`${stats?.read?.totalRated || 0} rated (avg ${stats?.read?.avgRating || 0}★)`}
+            value={stats?.queue?.finished || 0}
+            subtitle="Finished in app"
             icon={BookOpen}
-            onClick={() => setModal({ isOpen: true, type: 'read', title: 'Books Read', icon: BookOpen })}
+            onClick={() => setModal({ isOpen: true, type: 'finished', title: 'Books Read', icon: BookOpen })}
+          />
+          <StatCard
+            title="In Collection"
+            value={stats?.queue?.alreadyRead || 0}
+            subtitle="Imported / already read"
+            icon={Library}
+            color="bg-amber-500"
+            onClick={() => setModal({ isOpen: true, type: 'collection', title: 'Books in Collection', icon: Library })}
           />
         </div>
 

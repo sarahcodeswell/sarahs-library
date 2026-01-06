@@ -60,7 +60,8 @@ export default async function handler(req) {
       }
 
       case 'queue': {
-        const { data: queue } = await supabase.from('reading_queue').select('*');
+        // Only show "want to read" and "reading" books
+        const { data: queue } = await supabase.from('reading_queue').select('*').in('status', ['want_to_read', 'reading']);
         // Group by user
         const userQueues = new Map();
         (queue || []).forEach(q => {
@@ -73,6 +74,7 @@ export default async function handler(req) {
           userQueues.get(email).books.push({
             title: q.book_title,
             author: q.book_author,
+            status: q.status,
             owned: q.owned,
             priority: q.priority,
             addedAt: q.created_at
@@ -83,6 +85,58 @@ export default async function handler(req) {
           .sort((a, b) => b.bookCount - a.bookCount);
         
         return json({ type: 'queue', data: result });
+      }
+
+      case 'finished': {
+        // Books marked as "finished" (read in-app)
+        const { data: finished } = await supabase.from('reading_queue').select('*').eq('status', 'finished');
+        // Group by user
+        const userFinished = new Map();
+        (finished || []).forEach(q => {
+          const u = userMap.get(q.user_id);
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userFinished.has(email)) {
+            userFinished.set(email, { email, userId: q.user_id, books: [] });
+          }
+          userFinished.get(email).books.push({
+            title: q.book_title,
+            author: q.book_author,
+            rating: q.rating,
+            addedAt: q.created_at
+          });
+        });
+        const result = Array.from(userFinished.values())
+          .map(u => ({ ...u, bookCount: u.books.length }))
+          .sort((a, b) => b.bookCount - a.bookCount);
+        
+        return json({ type: 'finished', data: result });
+      }
+
+      case 'collection': {
+        // Books marked as "already_read" (imported or indicated as already read)
+        const { data: collection } = await supabase.from('reading_queue').select('*').eq('status', 'already_read');
+        // Group by user
+        const userCollection = new Map();
+        (collection || []).forEach(q => {
+          const u = userMap.get(q.user_id);
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userCollection.has(email)) {
+            userCollection.set(email, { email, userId: q.user_id, books: [] });
+          }
+          userCollection.get(email).books.push({
+            title: q.book_title,
+            author: q.book_author,
+            rating: q.rating,
+            addedAt: q.created_at
+          });
+        });
+        const result = Array.from(userCollection.values())
+          .map(u => ({ ...u, bookCount: u.books.length }))
+          .sort((a, b) => b.bookCount - a.bookCount);
+        
+        return json({ type: 'collection', data: result });
       }
 
       case 'queue-user': {

@@ -161,7 +161,7 @@ export default function RecommendationCard({
       genres: enrichedData?.genres || [],
       isbn: enrichedData?.isbn || null,
       isbn13: enrichedData?.isbn13 || null,
-      status: 'finished'
+      status: 'already_read'
     });
     setAddingToQueue(false);
     
