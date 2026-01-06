@@ -31,9 +31,15 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'bg-[#5F7252]', 
 function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userBooks, setUserBooks] = useState(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setSelectedUser(null);
+      setUserBooks(null);
+      return;
+    }
     
     const fetchDetails = async () => {
       setLoading(true);
@@ -58,6 +64,28 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
 
     fetchDetails();
   }, [isOpen, type]);
+
+  const fetchUserBooks = async (userId, email) => {
+    setSelectedUser({ userId, email });
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`/api/admin/details?type=queue-user&userId=${userId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setUserBooks(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching user books:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -112,20 +140,49 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
         );
 
       case 'queue':
+        // If viewing a specific user's books
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Queue</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.books?.map((b, i) => (
+                  <div key={i} className="py-2.5 flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
+                      <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                      <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
+                      {b.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with book counts
         return (
           <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
-            {data.map((q, i) => (
-              <div key={i} className="py-2.5 flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-[#4A5940] font-medium">{q.bookTitle}</p>
-                  <p className="text-xs text-[#7A8F6C]">by {q.bookAuthor}</p>
-                  <p className="text-xs text-[#96A888] mt-1">Added by {q.email}</p>
-                </div>
-                <div className="flex gap-1">
-                  {q.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
-                  {q.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
-                </div>
-              </div>
+            {data.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => fetchUserBooks(u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                  {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
+                </span>
+              </button>
             ))}
           </div>
         );

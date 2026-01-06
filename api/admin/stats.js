@@ -104,14 +104,20 @@ export default async function handler(req) {
       supabase.from('curator_waitlist').select('*')
     ]);
 
-    const users = usersResult.data?.users || [];
-    const profiles = profilesResult.data || [];
-    const queue = queueResult.data || [];
-    const userBooks = userBooksResult.data || [];
-    const recommendations = recommendationsResult.data || [];
+    // Exclude admin from stats
+    const adminEmail = 'sarah@darkridge.com';
+    const allUsers = usersResult.data?.users || [];
+    const adminUser = allUsers.find(u => u.email === adminEmail);
+    const adminId = adminUser?.id;
+    
+    const users = allUsers.filter(u => u.email !== adminEmail);
+    const profiles = (profilesResult.data || []).filter(p => p.user_id !== adminId);
+    const queue = (queueResult.data || []).filter(q => q.user_id !== adminId);
+    const userBooks = (userBooksResult.data || []).filter(b => b.user_id !== adminId);
+    const recommendations = (recommendationsResult.data || []).filter(r => r.user_id !== adminId);
     const sharedRecs = sharedRecsResult.data || [];
-    const referrals = referralsResult.data || [];
-    const waitlist = waitlistResult.data || [];
+    const referrals = (referralsResult.data || []).filter(r => r.inviter_id !== adminId);
+    const waitlist = (waitlistResult.data || []).filter(w => w.email !== adminEmail);
 
     // Helper to filter by date
     const filterByDate = (items, dateField = 'created_at') => {

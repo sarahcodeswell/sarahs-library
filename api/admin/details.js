@@ -82,19 +82,48 @@ export default async function handler(req) {
 
       case 'queue': {
         const { data: queue } = await supabase.from('reading_queue').select('*');
-        const result = (queue || []).map(q => {
+        // Group by user
+        const userQueues = new Map();
+        (queue || []).forEach(q => {
           const u = userMap.get(q.user_id);
-          return {
-            email: u?.email || 'Unknown',
-            bookTitle: q.book_title,
-            bookAuthor: q.book_author,
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userQueues.has(email)) {
+            userQueues.set(email, { email, userId: q.user_id, books: [] });
+          }
+          userQueues.get(email).books.push({
+            title: q.book_title,
+            author: q.book_author,
             owned: q.owned,
             priority: q.priority,
             addedAt: q.created_at
-          };
-        }).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+          });
+        });
+        const result = Array.from(userQueues.values())
+          .map(u => ({ ...u, bookCount: u.books.length }))
+          .sort((a, b) => b.bookCount - a.bookCount);
         
         return json({ type: 'queue', data: result });
+      }
+
+      case 'queue-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: queue } = await supabase.from('reading_queue').select('*').eq('user_id', userId);
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (queue || []).map(q => ({
+            title: q.book_title,
+            author: q.book_author,
+            owned: q.owned,
+            priority: q.priority,
+            addedAt: q.created_at
+          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+        };
+        
+        return json({ type: 'queue-user', data: result });
       }
 
       case 'read': {

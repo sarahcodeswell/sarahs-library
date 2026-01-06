@@ -1,12 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
 export const config = {
   runtime: 'edge',
 };
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-const FROM_EMAIL = 'hello@sarahsbooks.com';
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -263,33 +261,64 @@ export default async function handler(req) {
 </html>
     `;
 
-    // Send email via SES
-    const sesClient = new SESClient({
-      region: process.env.AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-
+    // Build subject line
     const subject = hasSpike 
       ? `⚡ Sarah's Books: Activity Spike Detected - ${newUsers24h.length} new users`
       : `Sarah's Books Daily Digest - ${newUsers24h.length} new users, ${newQueue24h.length} books queued`;
 
-    const sendCommand = new SendEmailCommand({
-      Source: FROM_EMAIL,
-      Destination: {
-        ToAddresses: [MASTER_ADMIN_EMAIL],
-      },
-      Message: {
-        Subject: { Data: subject },
-        Body: {
-          Html: { Data: emailHtml },
+    // Send email using Resend (simple email API)
+    // If RESEND_API_KEY is not set, return digest data for manual viewing
+    const resendApiKey = process.env.RESEND_API_KEY;
+    
+    if (resendApiKey) {
+      const emailResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
         },
-      },
-    });
+        body: JSON.stringify({
+          from: 'Sarah\'s Books <hello@sarahsbooks.com>',
+          to: [MASTER_ADMIN_EMAIL],
+          subject,
+          html: emailHtml
+        })
+      });
 
-    await sesClient.send(sendCommand);
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json();
+        console.error('Email send error:', errorData);
+        return json({ 
+          success: false, 
+          message: 'Failed to send email',
+          error: errorData,
+          stats: {
+            newUsers24h: newUsers24h.length,
+            newQueue24h: newQueue24h.length,
+            hasSpike
+          }
+        }, 500);
+      }
+    } else {
+      // No email service configured - return digest data
+      return json({ 
+        success: true, 
+        message: 'Digest generated (set RESEND_API_KEY to enable email)',
+        subject,
+        stats: {
+          newUsers24h: newUsers24h.length,
+          newQueue24h: newQueue24h.length,
+          newReads24h: newReads24h.length,
+          newRecs24h: newRecs24h.length,
+          hasSpike,
+          totals: {
+            users: users.length,
+            queue: queue.length,
+            waitlist: waitlist.length
+          }
+        }
+      });
+    }
 
     return json({ 
       success: true, 
