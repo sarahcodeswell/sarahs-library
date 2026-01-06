@@ -811,21 +811,21 @@ export default function AdminDashboard({ onNavigate }) {
           <StatCard
             title="Books Queued"
             value={stats?.queue?.queued || 0}
-            subtitle="Want to read"
+            subtitle={`${stats?.queue?.queuedUsers || 0} users`}
             icon={BookMarked}
             onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Books Queued', icon: BookMarked })}
           />
           <StatCard
             title="Books Read"
             value={stats?.queue?.finished || 0}
-            subtitle="Finished in app"
+            subtitle={`${stats?.queue?.finishedUsers || 0} users`}
             icon={BookOpen}
             onClick={() => setModal({ isOpen: true, type: 'finished', title: 'Books Read', icon: BookOpen })}
           />
           <StatCard
             title="In Collection"
             value={stats?.queue?.alreadyRead || 0}
-            subtitle="Imported / already read"
+            subtitle={`${stats?.queue?.alreadyReadUsers || 0} users`}
             icon={Library}
             color="bg-amber-500"
             onClick={() => setModal({ isOpen: true, type: 'collection', title: 'Books in Collection', icon: Library })}

@@ -119,8 +119,11 @@ export default async function handler(req) {
     const queueStats = {
       totalBooks: queue.length,
       queued: queuedBooks.length,
+      queuedUsers: new Set(queuedBooks.map(q => q.user_id)).size,
       finished: finishedBooks.length,
+      finishedUsers: new Set(finishedBooks.map(q => q.user_id)).size,
       alreadyRead: alreadyReadBooks.length,
+      alreadyReadUsers: new Set(alreadyReadBooks.map(q => q.user_id)).size,
       inPeriod: queueInPeriod.length,
       uniqueBooks: new Set(queue.map(q => q.book_title?.toLowerCase())).size,
       avgPerUser: profiles.length > 0 ? (queue.length / profiles.length).toFixed(1) : 0
