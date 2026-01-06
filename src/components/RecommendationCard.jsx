@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Library, Sparkles, ChevronDown, Heart, Share2, Star, BookCheck, BookMarked, X } from 'lucide-react';
+import { Library, Sparkles, Heart, Share2, Star, BookCheck, BookMarked, X } from 'lucide-react';
+import { BookCover, GenreBadges, ReputationBox, ExpandToggle, Badge } from './ui';
 import { track } from '@vercel/analytics';
 import { db } from '../lib/supabase';
 import { normalizeTitle } from '../lib/textUtils';
@@ -249,37 +250,15 @@ export default function RecommendationCard({
       {/* Book Info */}
       <div className="mb-4">
         <div className="flex gap-3">
-          {/* Cover Image */}
-          {coverUrl ? (
-            <div className="flex-shrink-0">
-              <img 
-                src={coverUrl} 
-                alt={`Cover of ${rec.title}`}
-                className="w-12 h-18 object-cover rounded shadow-sm"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          ) : isEnriching ? (
-            <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
-          ) : null}
+          <BookCover coverUrl={coverUrl} title={rec.title} isEnriching={isEnriching} />
           
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-[#4A5940] text-sm mb-1">{rec.title}</h4>
             {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
             
-            {/* Genres */}
-            {genres.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1 mb-1">
-                {genres.slice(0, 2).map((genre, idx) => (
-                  <span 
-                    key={idx}
-                    className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="mt-1 mb-1">
+              <GenreBadges genres={genres} maxDisplay={2} />
+            </div>
             
             {/* Why Sarah Recommends */}
             {displayWhy && (
@@ -289,9 +268,9 @@ export default function RecommendationCard({
               </div>
             )}
             
-            {/* Show more/less button */}
-            <button
-              onClick={() => {
+            <ExpandToggle 
+              expanded={expanded} 
+              onToggle={() => {
                 const newExpandedState = !expanded;
                 setExpanded(newExpandedState);
                 
@@ -305,11 +284,8 @@ export default function RecommendationCard({
                   });
                 }
               }}
-              className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-2"
-            >
-              <span>{expanded ? 'Show less' : 'Show more'}</span>
-              <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-            </button>
+              className="mt-2"
+            />
           </div>
         </div>
       </div>
@@ -357,12 +333,8 @@ export default function RecommendationCard({
           
           {/* Reputation/Accolades */}
           {rec.reputation && (
-            <div className="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
-                <Star className="w-3 h-3 text-amber-500" />
-                Reputation & Accolades:
-              </p>
-              <p className="text-xs text-[#5F7252] leading-relaxed">{rec.reputation}</p>
+            <div className="mb-3">
+              <ReputationBox reputation={rec.reputation} />
             </div>
           )}
           

@@ -4,6 +4,7 @@ import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { db } from '../lib/supabase';
 import { useBookEnrichment } from './BookCard';
+import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';

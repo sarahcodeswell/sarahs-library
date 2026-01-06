@@ -5,6 +5,7 @@ import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import RecommendationModal from './RecommendationModal';
 import { useBookEnrichment } from './BookCard';
+import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import StarRating from './StarRating';
 import booksData from '../books.json';
 import { db } from '../lib/supabase';
@@ -57,19 +58,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   return (
     <div className="px-5 py-4">
       <div className="flex items-start justify-between gap-4">
-        {/* Cover Image */}
-        {coverUrl ? (
-          <div className="flex-shrink-0">
-            <img 
-              src={coverUrl} 
-              alt={`Cover of ${book.book_title}`}
-              className="w-12 h-18 object-cover rounded shadow-sm"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-          </div>
-        ) : isEnriching ? (
-          <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
-        ) : null}
+        <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} />
         
         <div className="flex-1 min-w-0">
           {/* Title */}
@@ -85,27 +74,14 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
           )}
           
           {/* Genres */}
-          {genres?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {genres.slice(0, 3).map((genre, idx) => (
-                <span 
-                  key={idx}
-                  className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="mt-1.5">
+            <GenreBadges genres={genres} maxDisplay={3} />
+          </div>
           
           {/* Reputation & Accolades */}
           {book.reputation && (
-            <div className="mt-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
-                <Star className="w-3 h-3 text-amber-500" />
-                Reputation & Accolades:
-              </p>
-              <p className="text-xs text-[#5F7252] leading-relaxed">{book.reputation}</p>
+            <div className="mt-3">
+              <ReputationBox reputation={book.reputation} />
             </div>
           )}
           
@@ -124,13 +100,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
               
               {/* Only show expand/collapse if description is long */}
               {isLongDescription && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
-                >
-                  <span>{expanded ? 'Show less' : 'Show more'}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                </button>
+                <ExpandToggle expanded={expanded} onToggle={() => setExpanded(!expanded)} className="mt-1" />
               )}
             </div>
           ) : null}
