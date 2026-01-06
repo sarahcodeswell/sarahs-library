@@ -208,6 +208,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {b.status === 'reading' && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Reading</span>}
+                      {b.status === 'want_to_read' && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Want to Read</span>}
                       {b.owned && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Owned</span>}
                       {(b.noteSent || sentNotes.has(b.queueId || b.bookId)) ? (
                         <button

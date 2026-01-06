@@ -76,8 +76,7 @@ export default async function handler(req) {
             author: q.book_author,
             status: q.status,
             owned: q.owned,
-            priority: q.priority,
-            addedAt: q.created_at
+            addedAt: q.added_at
           });
         });
         const result = Array.from(userQueues.values())
