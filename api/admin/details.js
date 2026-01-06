@@ -226,6 +226,58 @@ export default async function handler(req) {
         return json({ type: 'waitlist', data: result });
       }
 
+      case 'sharing': {
+        // Get all shared recommendations with book data
+        const { data: shares } = await supabase
+          .from('shared_recommendations')
+          .select(`
+            id,
+            recommender_name,
+            view_count,
+            accepted_at,
+            created_at,
+            user_recommendations (
+              book_title,
+              book_author
+            )
+          `);
+        
+        // Group by recommender name (who shared)
+        const sharerMap = new Map();
+        (shares || []).forEach(s => {
+          const name = s.recommender_name || 'Anonymous';
+          if (!sharerMap.has(name)) {
+            sharerMap.set(name, { name, books: new Map(), totalShares: 0, accepted: 0 });
+          }
+          const sharer = sharerMap.get(name);
+          sharer.totalShares++;
+          if (s.accepted_at) sharer.accepted++;
+          
+          // Track book frequency
+          const bookTitle = s.user_recommendations?.book_title || 'Unknown';
+          const bookAuthor = s.user_recommendations?.book_author || '';
+          const bookKey = `${bookTitle}|${bookAuthor}`;
+          if (!sharer.books.has(bookKey)) {
+            sharer.books.set(bookKey, { title: bookTitle, author: bookAuthor, shareCount: 0, views: 0 });
+          }
+          const book = sharer.books.get(bookKey);
+          book.shareCount++;
+          book.views += s.view_count || 0;
+        });
+        
+        const result = Array.from(sharerMap.values())
+          .map(s => ({
+            name: s.name,
+            uniqueBooks: s.books.size,
+            totalShares: s.totalShares,
+            accepted: s.accepted,
+            books: Array.from(s.books.values()).sort((a, b) => b.shareCount - a.shareCount)
+          }))
+          .sort((a, b) => b.totalShares - a.totalShares);
+        
+        return json({ type: 'sharing', data: result });
+      }
+
       case 'recommendations': {
         const { data: recs } = await supabase.from('recommendations').select('*');
         // Group by user

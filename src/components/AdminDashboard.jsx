@@ -366,6 +366,51 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
           </div>
         );
 
+      case 'sharing':
+        // Show sharers with their recs made, accepted, and acceptance rate
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((s, i) => {
+              const acceptRate = s.totalShares > 0 ? Math.round((s.accepted / s.totalShares) * 100) : 0;
+              return (
+                <div key={i} className="py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-[#4A5940]">{s.name}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">
+                        {s.totalShares} recs
+                      </span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                        {s.accepted} accepted
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        acceptRate >= 75 ? 'bg-emerald-100 text-emerald-700' :
+                        acceptRate >= 50 ? 'bg-amber-100 text-amber-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {acceptRate}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="pl-2 space-y-1">
+                    {s.books.slice(0, 3).map((b, j) => (
+                      <div key={j} className="text-xs text-[#7A8F6C] flex items-center justify-between">
+                        <span className="truncate flex-1">{b.title} <span className="text-[#96A888]">by {b.author}</span></span>
+                        {b.shareCount > 1 && (
+                          <span className="text-[#96A888] ml-2">shared ×{b.shareCount}</span>
+                        )}
+                      </div>
+                    ))}
+                    {s.books.length > 3 && (
+                      <p className="text-xs text-[#96A888]">+{s.books.length - 3} more books</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+
       case 'recommendations':
         // If viewing a specific user's recommendations
         if (selectedUser && userBooks) {
@@ -823,30 +868,23 @@ export default function AdminDashboard({ onNavigate }) {
             onClick={() => setModal({ isOpen: true, type: 'finished', title: 'Books Read', icon: BookOpen })}
           />
           <StatCard
-            title="In Collection"
+            title="Books Added"
             value={stats?.queue?.alreadyRead || 0}
             subtitle={`${stats?.queue?.alreadyReadUsers || 0} users`}
             icon={Library}
             color="bg-amber-500"
-            onClick={() => setModal({ isOpen: true, type: 'collection', title: 'Books in Collection', icon: Library })}
+            onClick={() => setModal({ isOpen: true, type: 'collection', title: 'Books Added to Collection', icon: Library })}
           />
         </div>
 
         {/* Engagement Stats - 4 cards per row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <StatCard
-            title="Recs Saved"
-            value={stats?.recommendations?.total || 0}
-            subtitle={`${stats?.recommendations?.users || 0} users`}
-            icon={Heart}
-            onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations Saved', icon: Heart })}
-          />
-          <StatCard
-            title="Books Shared"
-            value={stats?.sharing?.uniqueBooks || 0}
-            subtitle={`${stats?.sharing?.totalShares || 0} total shares`}
+            title="Recs Made"
+            value={stats?.sharing?.totalShares || 0}
+            subtitle={`${stats?.sharing?.accepted || 0} accepted (${stats?.sharing?.totalShares > 0 ? Math.round((stats?.sharing?.accepted / stats?.sharing?.totalShares) * 100) : 0}%)`}
             icon={Share2}
-            color="bg-rose-500"
+            onClick={() => setModal({ isOpen: true, type: 'sharing', title: 'Recommendations Made', icon: Share2 })}
           />
           <StatCard
             title="Referrals"
