@@ -62,3 +62,19 @@ export const getUserMap = async (supabase) => {
   const users = usersData?.users || [];
   return new Map(users.map(u => [u.id, u]));
 };
+
+// Get user map with display names from taste_profiles
+export const getUserMapWithNames = async (supabase) => {
+  const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const users = usersData?.users || [];
+  
+  // Get display names from taste_profiles
+  const { data: profiles } = await supabase.from('taste_profiles').select('user_id, display_name');
+  const nameMap = new Map((profiles || []).map(p => [p.user_id, p.display_name]));
+  
+  // Combine user data with display names
+  return new Map(users.map(u => {
+    const displayName = nameMap.get(u.id) || u.user_metadata?.full_name || null;
+    return [u.id, { ...u, displayName }];
+  }));
+};

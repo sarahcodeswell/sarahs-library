@@ -1,4 +1,4 @@
-import { json, getSupabaseClient, verifyAdmin, getUserMap, MASTER_ADMIN_EMAIL } from './_shared.js';
+import { json, getSupabaseClient, verifyAdmin, getUserMapWithNames, MASTER_ADMIN_EMAIL } from './_shared.js';
 
 export const config = {
   runtime: 'edge',
@@ -23,8 +23,11 @@ export default async function handler(req) {
     const url = new URL(req.url);
     const type = url.searchParams.get('type');
 
-    const userMap = await getUserMap(supabase);
+    const userMap = await getUserMapWithNames(supabase);
     const users = Array.from(userMap.values());
+    
+    // Helper to get display name or email
+    const getDisplayName = (u) => u?.displayName || u?.email?.split('@')[0] || 'Unknown';
 
     switch (type) {
       case 'users': {
@@ -32,6 +35,7 @@ export default async function handler(req) {
         const profileUserIds = new Set((profiles || []).map(p => p.user_id));
         
         const result = users.filter(u => u.email !== MASTER_ADMIN_EMAIL).map(u => ({
+          name: getDisplayName(u),
           email: u.email,
           createdAt: u.created_at,
           hasProfile: profileUserIds.has(u.id)
@@ -69,7 +73,7 @@ export default async function handler(req) {
           const email = u?.email || 'Unknown';
           if (email === 'sarah@darkridge.com') return; // Exclude admin
           if (!userQueues.has(email)) {
-            userQueues.set(email, { email, userId: q.user_id, books: [] });
+            userQueues.set(email, { name: getDisplayName(u), email, userId: q.user_id, books: [] });
           }
           userQueues.get(email).books.push({
             title: q.book_title,
@@ -96,13 +100,13 @@ export default async function handler(req) {
           const email = u?.email || 'Unknown';
           if (email === 'sarah@darkridge.com') return; // Exclude admin
           if (!userFinished.has(email)) {
-            userFinished.set(email, { email, userId: q.user_id, books: [] });
+            userFinished.set(email, { name: getDisplayName(u), email, userId: q.user_id, books: [] });
           }
           userFinished.get(email).books.push({
             title: q.book_title,
             author: q.book_author,
             rating: q.rating,
-            addedAt: q.created_at
+            addedAt: q.added_at
           });
         });
         const result = Array.from(userFinished.values())
@@ -122,13 +126,13 @@ export default async function handler(req) {
           const email = u?.email || 'Unknown';
           if (email === 'sarah@darkridge.com') return; // Exclude admin
           if (!userCollection.has(email)) {
-            userCollection.set(email, { email, userId: q.user_id, books: [] });
+            userCollection.set(email, { name: getDisplayName(u), email, userId: q.user_id, books: [] });
           }
           userCollection.get(email).books.push({
             title: q.book_title,
             author: q.book_author,
             rating: q.rating,
-            addedAt: q.created_at
+            addedAt: q.added_at
           });
         });
         const result = Array.from(userCollection.values())

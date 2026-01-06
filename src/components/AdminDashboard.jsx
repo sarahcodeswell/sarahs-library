@@ -242,7 +242,10 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                 onClick={() => fetchUserDetails('queue-user', u.userId, u.email)}
                 className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
               >
-                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
+                  {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
+                </div>
                 <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
                   {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
                 </span>
@@ -289,7 +292,10 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                 onClick={() => fetchUserDetails('finished-user', u.userId, u.email)}
                 className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
               >
-                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
+                  {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
+                </div>
                 <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
                   {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
                 </span>
@@ -338,7 +344,10 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                 onClick={() => fetchUserDetails('collection-user', u.userId, u.email)}
                 className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
               >
-                <p className="text-sm text-[#4A5940]">{u.email}</p>
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
+                  {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
+                </div>
                 <div className="flex items-center gap-2">
                   {u.overlapPercent > 0 && (
                     <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
@@ -527,9 +536,65 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
               <h2 className="text-lg font-semibold text-[#4A5940]">{title}</h2>
               {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length} {data.length === 1 ? 'user' : 'users'}</span>}
             </div>
-            <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
-              <X className="w-5 h-5 text-[#96A888]" />
-            </button>
+            <div className="flex items-center gap-2">
+              {data && data.length > 0 && (
+                <button 
+                  onClick={() => {
+                    // Export data as CSV
+                    const escapeCSV = (val) => {
+                      if (val === null || val === undefined) return '';
+                      const str = String(val);
+                      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                      }
+                      return str;
+                    };
+                    
+                    let csv = '';
+                    if (type === 'queue' || type === 'finished' || type === 'collection') {
+                      csv = 'Name,Email,Book Count\n';
+                      data.forEach(u => {
+                        csv += `${escapeCSV(u.name || '')},${escapeCSV(u.email)},${u.bookCount}\n`;
+                      });
+                    } else if (type === 'sharing') {
+                      csv = 'Name,Recs Made,Accepted,Acceptance Rate\n';
+                      data.forEach(s => {
+                        const rate = s.totalShares > 0 ? Math.round((s.accepted / s.totalShares) * 100) : 0;
+                        csv += `${escapeCSV(s.name)},${s.totalShares},${s.accepted},${rate}%\n`;
+                      });
+                    } else if (type === 'users') {
+                      csv = 'Name,Email,Created At,Has Profile\n';
+                      data.forEach(u => {
+                        csv += `${escapeCSV(u.name || '')},${escapeCSV(u.email)},${u.createdAt?.split('T')[0] || ''},${u.hasProfile ? 'Yes' : 'No'}\n`;
+                      });
+                    } else if (type === 'referrals') {
+                      csv = 'Email,Sent,Accepted,K-Factor\n';
+                      data.forEach(u => {
+                        csv += `${escapeCSV(u.email)},${u.refCount || 0},${u.acceptedCount || 0},${u.kFactor || '0'}\n`;
+                      });
+                    } else {
+                      csv = 'Data\n';
+                      data.forEach(d => csv += `${JSON.stringify(d)}\n`);
+                    }
+                    
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sarahs-books-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="p-1.5 hover:bg-[#E8EBE4] rounded-lg transition-colors"
+                  title="Export as CSV"
+                >
+                  <Download className="w-4 h-4 text-[#5F7252]" />
+                </button>
+              )}
+              <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
+                <X className="w-5 h-5 text-[#96A888]" />
+              </button>
+            </div>
           </div>
           <div className="p-4">
             {renderContent()}
@@ -872,7 +937,6 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.queue?.alreadyRead || 0}
             subtitle={`${stats?.queue?.alreadyReadUsers || 0} users`}
             icon={Library}
-            color="bg-amber-500"
             onClick={() => setModal({ isOpen: true, type: 'collection', title: 'Books Added to Collection', icon: Library })}
           />
         </div>

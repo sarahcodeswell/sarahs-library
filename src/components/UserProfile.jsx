@@ -45,7 +45,9 @@ export default function UserProfile({ tasteProfile }) {
   const [stats, setStats] = useState({
     collectionCount: 0,
     queueCount: 0,
-    recommendationsCount: 0
+    recommendationsCount: 0,
+    recsMade: 0,
+    recsAccepted: 0
   });
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -369,10 +371,32 @@ export default function UserProfile({ tasteProfile }) {
       // Get recommendations count
       const { data: recommendations } = await db.getUserRecommendations(user.id);
       
+      // Get sharing stats - recs made by this user
+      let recsMade = 0;
+      let recsAccepted = 0;
+      if (supabase) {
+        // Get the user's display name from profile
+        const { data: profile } = await db.getTasteProfile(user.id);
+        const userName = profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
+        
+        // Query shared_recommendations by recommender_name
+        const { data: shares } = await supabase
+          .from('shared_recommendations')
+          .select('id, accepted_at, recommender_name')
+          .or(`recommender_name.ilike.%${userName}%`);
+        
+        if (shares) {
+          recsMade = shares.length;
+          recsAccepted = shares.filter(s => s.accepted_at).length;
+        }
+      }
+      
       const stats = {
         collectionCount: collectionCount,
         queueCount: queueBooks.length,
-        recommendationsCount: recommendations?.length || 0
+        recommendationsCount: recommendations?.length || 0,
+        recsMade,
+        recsAccepted
       };
       devLog('[Profile] Stats calculated:', stats);
       devLog('[Profile] User books:', userBooks?.length || 0, 'Finished:', finishedBooks.length);
@@ -754,7 +778,7 @@ export default function UserProfile({ tasteProfile }) {
         </div>
 
         {/* User Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="bg-[#F8F6EE] rounded-lg p-3 text-center">
             <div className="flex items-center justify-center mb-1">
               <BookOpen className="w-4 h-4 text-[#5F7252]" />
@@ -769,14 +793,38 @@ export default function UserProfile({ tasteProfile }) {
             <div className="text-lg font-semibold text-[#4A5940]">{stats.queueCount}</div>
             <div className="text-xs text-[#7A8F6C]">Reading Queue</div>
           </div>
-          <div className="bg-[#F8F6EE] rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Heart className="w-4 h-4 text-[#5F7252]" />
-            </div>
-            <div className="text-lg font-semibold text-[#4A5940]">{stats.recommendationsCount}</div>
-            <div className="text-xs text-[#7A8F6C]">Shared</div>
-          </div>
         </div>
+        
+        {/* Recs Made Stats */}
+        {stats.recsMade > 0 && (
+          <div className="bg-gradient-to-r from-rose-50 to-amber-50 rounded-lg p-3 mb-4 border border-rose-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-rose-500" />
+                <span className="text-sm font-medium text-[#4A5940]">Recs Made</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-[#4A5940]">{stats.recsMade}</div>
+                  <div className="text-[10px] text-[#7A8F6C]">shared</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-green-600">{stats.recsAccepted}</div>
+                  <div className="text-[10px] text-[#7A8F6C]">accepted</div>
+                </div>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  stats.recsMade > 0 && (stats.recsAccepted / stats.recsMade) >= 0.75 
+                    ? 'bg-emerald-100 text-emerald-700' 
+                    : stats.recsMade > 0 && (stats.recsAccepted / stats.recsMade) >= 0.5
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {stats.recsMade > 0 ? Math.round((stats.recsAccepted / stats.recsMade) * 100) : 0}%
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <button
           onClick={handleSignOut}
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] rounded-lg transition-colors text-sm font-medium"
