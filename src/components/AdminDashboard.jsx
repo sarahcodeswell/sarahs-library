@@ -40,7 +40,10 @@ function AdminManagement() {
   const fetchAdmins = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      if (!session?.access_token) {
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch('/api/admin/user-type', {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
@@ -49,6 +52,8 @@ function AdminManagement() {
       if (response.ok) {
         const result = await response.json();
         setAdmins(result.admins || []);
+      } else {
+        console.error('Failed to fetch admins:', response.status);
       }
     } catch (err) {
       console.error('Error fetching admins:', err);

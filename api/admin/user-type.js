@@ -24,7 +24,15 @@ export default async function handler(req) {
         .select('user_id, display_name, user_type')
         .eq('user_type', 'admin');
 
-      if (error) throw error;
+      // If user_type column doesn't exist yet, return empty array
+      if (error) {
+        console.error('Error fetching admins:', error);
+        // Return empty array if column doesn't exist
+        if (error.message?.includes('user_type') || error.code === '42703') {
+          return json({ admins: [] });
+        }
+        throw error;
+      }
 
       // Get user emails
       const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
