@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck, BarChart3 } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -41,6 +41,7 @@ const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'))
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -181,7 +182,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -973,6 +974,25 @@ Find similar books from beyond my library that match this taste profile.
                         <UserIcon className="w-4 h-4" />
                         Profile
                       </button>
+                      
+                      {/* Admin Dashboard - only for master admin */}
+                      {user?.email === 'sarah@darkridge.com' && (
+                        <>
+                          <div className="border-t border-[#E8EBE4] my-1"></div>
+                          <button
+                            onClick={() => {
+                              setCurrentPage('admin');
+                              setShowNavMenu(false);
+                              window.scrollTo(0, 0);
+                              window.history.pushState({}, '', '/admin');
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                          >
+                            <BarChart3 className="w-4 h-4" />
+                            Admin Dashboard
+                          </button>
+                        </>
+                      )}
                       </div>
                   )}
                 </div>
@@ -1069,6 +1089,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'our-practices' && (
         <Suspense fallback={<LoadingFallback message="Loading Our Practices..." />}>
           <OurPracticesPage onNavigate={setCurrentPage} />
+        </Suspense>
+      )}
+
+      {currentPage === 'admin' && user?.email === 'sarah@darkridge.com' && (
+        <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
+          <AdminDashboard onNavigate={setCurrentPage} />
         </Suspense>
       )}
 
