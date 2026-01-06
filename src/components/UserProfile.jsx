@@ -1,8 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2, MapPin, Store, ChevronDown } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 import { db, supabase, auth } from '../lib/supabase';
 import booksData from '../books.json';
+
+// Available genres for selection
+const AVAILABLE_GENRES = [
+  'Literary Fiction',
+  'Historical Fiction',
+  'Mystery & Thriller',
+  'Romance',
+  'Science Fiction',
+  'Fantasy',
+  'Horror',
+  'Memoir',
+  'Biography',
+  'Self-Help',
+  'History',
+  'Science',
+  'Philosophy',
+  'Poetry',
+  'Young Adult',
+  'Graphic Novels',
+  'True Crime',
+  'Essays',
+  'Travel',
+  'Spirituality'
+];
 
 const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
 const isDev = import.meta.env.DEV;
@@ -26,6 +50,20 @@ export default function UserProfile({ tasteProfile }) {
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // New profile fields
+  const [birthYear, setBirthYear] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [country, setCountry] = useState('');
+  const [favoriteGenres, setFavoriteGenres] = useState([]);
+  const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+  const [favoriteBookstore, setFavoriteBookstore] = useState(null);
+  const [bookstoreSearch, setBookstoreSearch] = useState('');
+  const [bookstoreResults, setBookstoreResults] = useState([]);
+  const [isSearchingBookstores, setIsSearchingBookstores] = useState(false);
+  const [ageError, setAgeError] = useState('');
+  const genreDropdownRef = useRef(null);
 
   // Load existing preferences and profile data on mount
   useEffect(() => {
@@ -44,9 +82,166 @@ export default function UserProfile({ tasteProfile }) {
       if (profile) {
         setFavoriteAuthors(profile.favorite_authors || []);
         setProfilePhotoUrl(profile.profile_photo_url);
+        setBirthYear(profile.birth_year || '');
+        setCity(profile.city || '');
+        setState(profile.state || '');
+        setCountry(profile.country || '');
+        setFavoriteGenres(profile.favorite_genres || []);
+        if (profile.favorite_bookstore_name) {
+          setFavoriteBookstore({
+            name: profile.favorite_bookstore_name,
+            place_id: profile.favorite_bookstore_place_id,
+            address: profile.favorite_bookstore_address
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+    }
+  };
+  
+  // Close genre dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target)) {
+        setShowGenreDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Calculate age from birth year
+  const calculateAge = (year) => {
+    if (!year) return null;
+    return new Date().getFullYear() - parseInt(year);
+  };
+
+  // Validate birth year for COPPA
+  const validateBirthYear = (year) => {
+    if (!year) return true;
+    const age = calculateAge(year);
+    if (age < 13) {
+      setAgeError('You must be 13 or older to use this service');
+      return false;
+    }
+    if (age > 120) {
+      setAgeError('Please enter a valid birth year');
+      return false;
+    }
+    setAgeError('');
+    return true;
+  };
+
+  // Search for bookstores using Google Places API
+  const searchBookstores = async (query) => {
+    if (!query.trim() || query.length < 3) {
+      setBookstoreResults([]);
+      return;
+    }
+    
+    setIsSearchingBookstores(true);
+    try {
+      // Use a simple approach - search via our API endpoint
+      const res = await fetch(`/api/bookstore-search?q=${encodeURIComponent(query + ' bookstore')}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookstoreResults(data.results || []);
+      }
+    } catch (error) {
+      console.error('Error searching bookstores:', error);
+    } finally {
+      setIsSearchingBookstores(false);
+    }
+  };
+
+  // Debounced bookstore search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (bookstoreSearch) {
+        searchBookstores(bookstoreSearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [bookstoreSearch]);
+
+  const handleToggleGenre = async (genre) => {
+    const updatedGenres = favoriteGenres.includes(genre)
+      ? favoriteGenres.filter(g => g !== genre)
+      : [...favoriteGenres, genre];
+    
+    setFavoriteGenres(updatedGenres);
+    
+    try {
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      await db.upsertTasteProfile(user.id, {
+        ...(currentProfile || {}),
+        favorite_genres: updatedGenres
+      });
+    } catch (error) {
+      console.error('Error saving genres:', error);
+    }
+  };
+
+  const handleSelectBookstore = async (bookstore) => {
+    setFavoriteBookstore(bookstore);
+    setBookstoreSearch('');
+    setBookstoreResults([]);
+    
+    try {
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      await db.upsertTasteProfile(user.id, {
+        ...(currentProfile || {}),
+        favorite_bookstore_name: bookstore.name,
+        favorite_bookstore_place_id: bookstore.place_id,
+        favorite_bookstore_address: bookstore.address
+      });
+      setSaveMessage('Bookstore saved!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Error saving bookstore:', error);
+    }
+  };
+
+  const handleRemoveBookstore = async () => {
+    setFavoriteBookstore(null);
+    
+    try {
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      await db.upsertTasteProfile(user.id, {
+        ...(currentProfile || {}),
+        favorite_bookstore_name: null,
+        favorite_bookstore_place_id: null,
+        favorite_bookstore_address: null
+      });
+    } catch (error) {
+      console.error('Error removing bookstore:', error);
+    }
+  };
+
+  const handleSaveBasicInfo = async () => {
+    if (birthYear && !validateBirthYear(birthYear)) {
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      await db.upsertTasteProfile(user.id, {
+        ...(currentProfile || {}),
+        birth_year: birthYear ? parseInt(birthYear) : null,
+        city: city || null,
+        state: state || null,
+        country: country || null
+      });
+      setSaveMessage('Profile updated!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Error saving basic info:', error);
+      setSaveMessage('Failed to save');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -501,6 +696,203 @@ export default function UserProfile({ tasteProfile }) {
           <LogOut className="w-4 h-4" />
           Sign Out
         </button>
+      </div>
+
+      {/* Basic Info Section */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2">About You</h4>
+        <p className="text-xs text-[#96A888] mb-3">
+          Help us personalize your experience.
+        </p>
+        
+        <div className="space-y-3">
+          {/* Birth Year */}
+          <div>
+            <label className="block text-xs text-[#7A8F6C] mb-1">Birth Year</label>
+            <input
+              type="number"
+              value={birthYear}
+              onChange={(e) => {
+                setBirthYear(e.target.value);
+                if (e.target.value) validateBirthYear(e.target.value);
+              }}
+              placeholder="e.g., 1990"
+              min="1900"
+              max={new Date().getFullYear()}
+              className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+            />
+            {ageError && (
+              <p className="text-xs text-red-500 mt-1">{ageError}</p>
+            )}
+            {birthYear && !ageError && (
+              <p className="text-xs text-[#96A888] mt-1">Age: {calculateAge(birthYear)}</p>
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs text-[#7A8F6C] mb-1">City</label>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="City"
+                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#7A8F6C] mb-1">State/Province</label>
+              <input
+                type="text"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                placeholder="State"
+                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-[#7A8F6C] mb-1">Country</label>
+            <input
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Country"
+              className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+            />
+          </div>
+
+          <button
+            onClick={handleSaveBasicInfo}
+            disabled={isSaving || !!ageError}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {isSaving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      {/* Favorite Genres */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2">Favorite Genres</h4>
+        <p className="text-xs text-[#96A888] mb-3">
+          Select genres you enjoy reading.
+        </p>
+        
+        <div className="relative" ref={genreDropdownRef}>
+          <button
+            onClick={() => setShowGenreDropdown(!showGenreDropdown)}
+            className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-left text-sm flex items-center justify-between hover:bg-[#F8F6EE] transition-colors"
+          >
+            <span className={favoriteGenres.length > 0 ? 'text-[#4A5940]' : 'text-[#96A888]'}>
+              {favoriteGenres.length > 0 ? `${favoriteGenres.length} genre${favoriteGenres.length > 1 ? 's' : ''} selected` : 'Select genres...'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-[#96A888] transition-transform ${showGenreDropdown ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {showGenreDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              {AVAILABLE_GENRES.map((genre) => (
+                <button
+                  key={genre}
+                  onClick={() => handleToggleGenre(genre)}
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-[#F8F6EE] transition-colors flex items-center justify-between ${
+                    favoriteGenres.includes(genre) ? 'bg-[#E8EBE4] text-[#4A5940]' : 'text-[#5F7252]'
+                  }`}
+                >
+                  {genre}
+                  {favoriteGenres.includes(genre) && (
+                    <span className="text-[#5F7252]">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {favoriteGenres.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {favoriteGenres.map((genre) => (
+              <span
+                key={genre}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#E8EBE4] text-[#5F7252] rounded-full"
+              >
+                {genre}
+                <button
+                  onClick={() => handleToggleGenre(genre)}
+                  className="hover:text-[#4A5940] transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Favorite Local Bookstore */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2 flex items-center gap-2">
+          <Store className="w-4 h-4" />
+          Favorite Local Bookstore
+        </h4>
+        <p className="text-xs text-[#96A888] mb-3">
+          Support your local bookstore! We'll include them in your book recommendations.
+        </p>
+
+        {favoriteBookstore ? (
+          <div className="bg-[#F8F6EE] rounded-lg p-3 flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#4A5940]">{favoriteBookstore.name}</p>
+              {favoriteBookstore.address && (
+                <p className="text-xs text-[#7A8F6C] mt-0.5 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {favoriteBookstore.address}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleRemoveBookstore}
+              className="p-1 hover:bg-[#E8EBE4] rounded transition-colors"
+            >
+              <X className="w-4 h-4 text-[#96A888]" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative">
+            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+            <input
+              type="text"
+              value={bookstoreSearch}
+              onChange={(e) => setBookstoreSearch(e.target.value)}
+              placeholder="Search for a bookstore..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+            />
+            
+            {isSearchingBookstores && (
+              <p className="text-xs text-[#96A888] mt-2">Searching...</p>
+            )}
+            
+            {bookstoreResults.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {bookstoreResults.map((store, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectBookstore(store)}
+                    className="w-full px-3 py-2 text-left hover:bg-[#F8F6EE] transition-colors border-b border-[#E8EBE4] last:border-0"
+                  >
+                    <p className="text-sm text-[#4A5940]">{store.name}</p>
+                    {store.address && (
+                      <p className="text-xs text-[#7A8F6C]">{store.address}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reading taste preferences */}
