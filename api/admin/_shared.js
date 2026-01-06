@@ -24,11 +24,16 @@ export const getSupabaseClient = () => {
 };
 
 export const verifyAdmin = async (supabase, authHeader) => {
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader) {
     return { error: 'Unauthorized', status: 401 };
   }
+  
+  // Handle both 'Bearer ' and 'bearer ' prefixes
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token || token === authHeader) {
+    return { error: 'Invalid authorization header', status: 401 };
+  }
 
-  const token = authHeader.replace('Bearer ', '');
   const { data: { user }, error } = await supabase.auth.getUser(token);
 
   if (error || !user || user.email !== MASTER_ADMIN_EMAIL) {
