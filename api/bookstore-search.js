@@ -24,28 +24,39 @@ export default async function handler(req) {
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     
     if (!apiKey) {
-      // Fallback: return empty results if no API key configured
-      // User can still manually enter bookstore name
       console.warn('Google Places API key not configured');
       return json({ results: [] });
     }
 
-    // Use Google Places Text Search API
-    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&type=book_store&key=${apiKey}`;
+    // Use new Google Places API (v1)
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
     
-    const response = await fetch(searchUrl);
+    const response = await fetch(searchUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.id'
+      },
+      body: JSON.stringify({
+        textQuery: query,
+        includedType: 'book_store',
+        maxResultCount: 10
+      })
+    });
+
     const data = await response.json();
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.error('Google Places API error:', data.status, data.error_message);
+    if (data.error) {
+      console.error('Google Places API error:', data.error);
       return json({ results: [] });
     }
 
     // Map results to our format
-    const results = (data.results || []).slice(0, 10).map(place => ({
-      name: place.name,
-      address: place.formatted_address,
-      place_id: place.place_id,
+    const results = (data.places || []).map(place => ({
+      name: place.displayName?.text || '',
+      address: place.formattedAddress || '',
+      place_id: place.id || '',
     }));
 
     return json({ results });
