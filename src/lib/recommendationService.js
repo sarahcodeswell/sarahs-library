@@ -3,10 +3,11 @@
 // Uses: Deterministic Router → Recommendation Paths → Response Templates
 
 import { db } from './supabase';
-import { routeQuery, fallbackRoute } from './deterministicRouter';
+import { routeQuery, fallbackRoute, preFilterRoute } from './deterministicRouter';
 import { executeRecommendationPath } from './recommendationPaths';
 import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
 import { getTasteAlignmentLabel } from './queryClassifier';
+import { quickCatalogProbe } from './vectorSearch';
 
 // Cache for reference embeddings (loaded once per session)
 let cachedReferenceEmbeddings = null;
@@ -219,25 +220,52 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
       }
     }
 
-    // 2. DETERMINISTIC ROUTING - Single source of truth
-    // Uses 3-stage process: keywords → embeddings → decision matrix
-    // Same query ALWAYS routes to same path (no LLM randomness)
-    
-    // Try to load reference embeddings for full routing
-    const referenceEmbeddings = await loadReferenceEmbeddings();
+    // 2. CATALOG-FIRST ROUTING
+    // Stage 1: Check for explicit keyword signals (temporal, catalog, world)
+    // Stage 2: Probe catalog to see if it can serve the query
+    // Stage 3: Route based on probe results (data-driven, not regex-based)
     
     let routingDecision;
-    if (referenceEmbeddings) {
-      // Full 3-stage routing with embeddings
-      routingDecision = await routeQuery(userMessage, {
-        themeFilters,
-        getEmbedding: generateQueryEmbedding,
-        referenceEmbeddings,
-        quickCatalogSearch: null // TODO: implement quick catalog search
-      });
+    let catalogProbeResult = null;
+    
+    // Stage 1: Fast keyword detection (temporal, explicit catalog/world requests)
+    const preFilter = preFilterRoute(userMessage, themeFilters);
+    
+    if (preFilter.confidence === 'high') {
+      // Explicit signal detected - use it directly
+      routingDecision = {
+        path: preFilter.path,
+        reason: preFilter.reason,
+        confidence: 'high',
+        matchedKeyword: preFilter.matchedKeyword,
+        themeFilters: preFilter.themeFilters || null,
+        source: 'keyword_prefilter'
+      };
+      console.log(`[Routing] Keyword match: ${preFilter.path} - ${preFilter.reason}`);
     } else {
-      // Fallback to keyword-only routing
-      routingDecision = fallbackRoute(userMessage, themeFilters);
+      // Stage 2: Probe catalog to determine if it can serve this query
+      catalogProbeResult = await quickCatalogProbe(userMessage);
+      
+      if (catalogProbeResult.success) {
+        // Stage 3: Route based on probe results (data-driven)
+        routingDecision = {
+          path: catalogProbeResult.recommendedPath,
+          reason: `catalog_probe_${catalogProbeResult.confidence}`,
+          confidence: catalogProbeResult.confidence,
+          probeMetrics: catalogProbeResult.metrics,
+          source: 'catalog_probe'
+        };
+        console.log(`[Routing] Catalog probe: ${catalogProbeResult.recommendedPath} (max: ${catalogProbeResult.metrics.maxSimilarity.toFixed(2)}, count: ${catalogProbeResult.metrics.matchCount})`);
+      } else {
+        // Probe failed - fall back to HYBRID as safe default
+        routingDecision = {
+          path: 'HYBRID',
+          reason: 'probe_failed_fallback',
+          confidence: 'low',
+          source: 'fallback'
+        };
+        console.log('[Routing] Probe failed, falling back to HYBRID');
+      }
     }
     
     // Map routing decision to path name (lowercase for executeRecommendationPath)
