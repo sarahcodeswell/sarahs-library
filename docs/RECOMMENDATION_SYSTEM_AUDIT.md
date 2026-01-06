@@ -38,11 +38,13 @@ These now route to WORLD with `confidence: 'high'` BEFORE embedding scoring runs
 
 ---
 
-## ARCHITECTURAL IMPROVEMENTS (Proposed)
+## CATALOG-FIRST ARCHITECTURE (Implemented January 6, 2026)
 
-### The Problem: Whack-a-Mole Routing
+**Status: ✅ DEPLOYED TO PRODUCTION**
 
-Current approach adds regex patterns for each edge case discovered. This doesn't scale:
+### The Problem We Solved: Whack-a-Mole Routing
+
+The old approach added regex patterns for each edge case discovered. This didn't scale:
 - Venezuela → add regex
 - Japan → add regex  
 - WWII → add regex
@@ -109,27 +111,44 @@ User Query
 
 4. **Fast**: Catalog probe is ~50ms. We're already doing this work, just not using it for routing.
 
-### Implementation Plan
+### Implementation Status
 
-**Phase 1: Catalog Probe (1-2 hours)**
-- Add `quickCatalogProbe(query)` function
-- Returns: `{ topMatch, avgSimilarity, matchCount, books }`
-- Wire into routing decision
+**Phase 1: Catalog Probe ✅ COMPLETE**
+- Added `quickCatalogProbe(query)` in `src/lib/vectorSearch.js`
+- Returns: `{ success, books, metrics: { maxSimilarity, avgSimilarity, matchCount, probeTimeMs }, confidence, recommendedPath }`
+- Probes catalog in ~50ms with low threshold (0.3) to see full range of matches
 
-**Phase 2: Confidence-Based Routing (1 hour)**
-- Replace embedding-based taste alignment with probe results
-- Keep keyword pre-filter for explicit signals
-- Remove geographic/historical regex patterns (no longer needed)
+**Phase 2: Confidence-Based Routing ✅ COMPLETE**
+- Replaced embedding-based taste alignment with probe results in `src/lib/recommendationService.js`
+- Keyword pre-filter still runs first for explicit signals (temporal, catalog, world keywords)
+- Geographic/historical regex patterns kept as backup but probe-based routing is primary
 
-**Phase 3: Strict LLM Constraints (1 hour)**
-- When LLM is used, constrain it to ONLY format provided books
-- Never let LLM add its own recommendations
-- LLM role: formatting and explanation, not book selection
+**Phase 3: Strict LLM Constraints ✅ COMPLETE**
+- Updated system prompt in `buildSystemPrompt()` with strict rules
+- Claude MUST ONLY use provided books, never add its own
+- Only exception: "USE YOUR KNOWLEDGE" instruction when no books found
+- Prevents LLM from "helping" by adding unrelated recommendations
 
-**Phase 4: Monitoring (ongoing)**
-- Log routing decisions with probe scores
-- Track: query → probe_score → path → user_action
-- Identify patterns where routing is wrong
+**Phase 4: Monitoring ✅ COMPLETE**
+- `[RoutingDecision]` JSON logs in console/Vercel
+- Logs: query, path, source, reason, confidence, probeMetrics, timestamp
+- `[CatalogProbe]` logs with similarity scores and timing
+
+### Key Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/lib/vectorSearch.js` | Added `quickCatalogProbe()` function |
+| `src/lib/recommendationService.js` | Catalog-first routing, strict LLM constraints, monitoring |
+| `src/lib/deterministicRouter.js` | `preFilterRoute()` for keyword detection |
+| `tests/routing.test.js` | Automated test suite |
+
+### Running Tests
+
+```bash
+npm test                    # Run routing tests
+npm test:verbose            # Run with detailed output
+```
 
 ### Fast Path Summary
 
