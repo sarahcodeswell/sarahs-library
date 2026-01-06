@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
-import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart, Link, Copy } from 'lucide-react';
+import { supabase, db } from '../lib/supabase';
+
+// Generate a short referral code from user ID
+const generateReferralCode = (userId) => {
+  if (!userId) return null;
+  // Take first 8 chars of user ID and make it URL-safe
+  return userId.replace(/-/g, '').substring(0, 8);
+};
 
 export default function AboutPage({ onNavigate, user }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -8,6 +15,49 @@ export default function AboutPage({ onNavigate, user }) {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteStatus, setInviteStatus] = useState(null); // 'success' | 'error' | null
   const [inviteMessage, setInviteMessage] = useState('');
+  const [referralCode, setReferralCode] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [inviteTab, setInviteTab] = useState('link'); // 'link' or 'email'
+
+  // Load or generate referral code for logged-in user
+  useEffect(() => {
+    const loadReferralCode = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await db.getTasteProfile(user.id);
+        
+        if (profile?.referral_code) {
+          setReferralCode(profile.referral_code);
+        } else {
+          // Generate and save a new referral code
+          const newCode = generateReferralCode(user.id);
+          setReferralCode(newCode);
+          
+          await db.upsertTasteProfile(user.id, {
+            ...(profile || {}),
+            referral_code: newCode
+          });
+        }
+      } catch (error) {
+        console.error('Error loading referral code:', error);
+      }
+    };
+    
+    loadReferralCode();
+  }, [user]);
+
+  const referralLink = referralCode ? `https://www.sarahsbooks.com/?ref=${referralCode}` : 'https://www.sarahsbooks.com';
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -262,54 +312,110 @@ export default function AboutPage({ onNavigate, user }) {
               </button>
             </div>
 
-            <p className="text-sm text-[#7A8F6C] mb-6">
-              Share the love of reading! Your friend will receive an email invitation to join Sarah's Books.
+            <p className="text-sm text-[#7A8F6C] mb-4">
+              Share the love of reading!
             </p>
 
-            <form onSubmit={handleInvite} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#5F7252] mb-2">
-                  Friend's Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-                    placeholder="friend@email.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              {inviteStatus === 'success' && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <p className="text-sm text-green-600">{inviteMessage}</p>
-                </div>
-              )}
-
-              {inviteStatus === 'error' && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{inviteMessage}</p>
-                </div>
-              )}
-
+            {/* Tabs */}
+            <div className="flex gap-2 mb-4">
               <button
-                type="submit"
-                disabled={inviteLoading}
-                className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setInviteTab('link')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  inviteTab === 'link' 
+                    ? 'bg-[#5F7252] text-white' 
+                    : 'bg-[#F8F6EE] text-[#5F7252] hover:bg-[#E8EBE4]'
+                }`}
               >
-                {inviteLoading ? 'Sending...' : 'Send Invitation'}
+                <Link className="w-4 h-4" />
+                Share Link
               </button>
-            </form>
+              <button
+                onClick={() => setInviteTab('email')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  inviteTab === 'email' 
+                    ? 'bg-[#5F7252] text-white' 
+                    : 'bg-[#F8F6EE] text-[#5F7252] hover:bg-[#E8EBE4]'
+                }`}
+              >
+                <Mail className="w-4 h-4" />
+                Send Email
+              </button>
+            </div>
 
-            {!user && (
-              <p className="mt-4 text-xs text-[#96A888] text-center">
-                Sign in to track your referrals
-              </p>
+            {/* Share Link Tab */}
+            {inviteTab === 'link' && (
+              <div className="space-y-4">
+                <p className="text-xs text-[#96A888]">
+                  Copy your personal referral link to share on social media or anywhere else.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={referralLink}
+                    readOnly
+                    className="flex-1 px-3 py-2.5 border border-[#E8EBE4] rounded-lg bg-[#F8F6EE] text-[#4A5940] text-sm"
+                  />
+                  <button
+                    onClick={handleCopyLink}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
+                      linkCopied 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-[#5F7252] text-white hover:bg-[#4A5940]'
+                    }`}
+                  >
+                    {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {linkCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                {!user && (
+                  <p className="text-xs text-[#96A888] text-center">
+                    Sign in to get your personal referral link and track who you've invited.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Send Email Tab */}
+            {inviteTab === 'email' && (
+              <form onSubmit={handleInvite} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#5F7252] mb-2">
+                    Friend's Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                      placeholder="friend@email.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {inviteStatus === 'success' && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-green-600">{inviteMessage}</p>
+                  </div>
+                )}
+
+                {inviteStatus === 'error' && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{inviteMessage}</p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={inviteLoading}
+                  className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {inviteLoading ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </form>
             )}
           </div>
         </div>

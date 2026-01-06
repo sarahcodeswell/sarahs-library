@@ -133,6 +133,7 @@ export const db = {
         favorite_bookstore_name: profile.favorite_bookstore_name || null,
         favorite_bookstore_place_id: profile.favorite_bookstore_place_id || null,
         favorite_bookstore_address: profile.favorite_bookstore_address || null,
+        referral_code: profile.referral_code || null,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id',
