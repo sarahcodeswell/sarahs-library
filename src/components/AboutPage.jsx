@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function AboutPage({ onNavigate, user }) {
@@ -127,6 +127,16 @@ export default function AboutPage({ onNavigate, user }) {
                 <Upload className="w-4 h-4" />
                 Add books you've read
               </button>
+              
+              {/* Rating Guide - Compact */}
+              <div className="mt-4 pt-4 border-t border-[#E8EBE4]">
+                <p className="text-xs text-[#7A8F6C] mb-2">Rate your books with hearts:</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#F5E8E8', color: '#F5E8E8' }} /> Not for me</span>
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#DBADAD', color: '#DBADAD' }} /> Solid read</span>
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#C97B7B', color: '#C97B7B' }} /> All-time fave</span>
+                </div>
+              </div>
             </div>
           </div>
 
