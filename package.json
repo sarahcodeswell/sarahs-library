@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/routing.test.js",
+    "test:verbose": "VERBOSE=true node tests/routing.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
