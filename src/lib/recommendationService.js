@@ -281,6 +281,18 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     };
     const path = pathMap[routingDecision.path] || 'hybrid';
     
+    // MONITORING: Log routing decision for analytics
+    const routingLog = {
+      query: userMessage.substring(0, 100),
+      path: path,
+      source: routingDecision.source,
+      reason: routingDecision.reason,
+      confidence: routingDecision.confidence,
+      probeMetrics: routingDecision.probeMetrics || null,
+      timestamp: new Date().toISOString()
+    };
+    console.log('[RoutingDecision]', JSON.stringify(routingLog));
+    
     // Build classification object from routing decision for downstream use
     const tasteScore = routingDecision.tasteAlignment ?? 
       (routingDecision.scores?.tasteAlignment) ?? 
