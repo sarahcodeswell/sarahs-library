@@ -312,7 +312,28 @@ export async function getRecommendations(userId, userMessage, readingQueue = [],
     
     // Context built
 
-    // FAST PATH: For curated list requests, bypass Claude and return catalog books directly
+    // FAST PATH 1: For temporal requests with a verified book, return it directly
+    // This prevents Claude from adding unrelated books to author-specific new release queries
+    if (path === 'temporal' && retrievedContext.verifiedBook) {
+      const book = retrievedContext.verifiedBook;
+      const responseText = `Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+Why This Fits: This is the latest release from ${book.author || 'this author'}.
+Description: ${book.description || 'A highly anticipated new release.'}`;
+      
+      return {
+        success: true,
+        text: `Here's the latest from ${book.author || 'this author'}:\n\n${responseText}`,
+        exclusionCount: exclusionList.length,
+        exclusionList: exclusionList,
+        classification: classification,
+        path: path,
+        fastPath: true,
+        verifiedBookData: book
+      };
+    }
+    
+    // FAST PATH 2: For curated list requests, bypass Claude and return catalog books directly
     // This guarantees 100% catalog-only results for theme browsing
     const isCuratedListRequest = themeFilters && themeFilters.length > 0;
     if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
