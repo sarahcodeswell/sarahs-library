@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/admin/digest",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/).*)",

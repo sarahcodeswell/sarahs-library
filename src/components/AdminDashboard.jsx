@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -251,6 +251,7 @@ export default function AdminDashboard({ onNavigate }) {
   const [period, setPeriod] = useState('lifetime');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [sendingDigest, setSendingDigest] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, type: null, title: '', icon: null });
 
   const fetchStats = async () => {
@@ -317,6 +318,31 @@ export default function AdminDashboard({ onNavigate }) {
       alert('Export failed: ' + err.message);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const sendDigest = async () => {
+    setSendingDigest(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/digest', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert('Digest email sent successfully!');
+      } else {
+        alert('Failed to send digest: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Digest error:', err);
+      alert('Failed to send digest: ' + err.message);
+    } finally {
+      setSendingDigest(false);
     }
   };
 
@@ -406,6 +432,14 @@ export default function AdminDashboard({ onNavigate }) {
                 title="Export CSV"
               >
                 <Download className={`w-4 h-4 text-[#5F7252] ${exporting ? 'animate-pulse' : ''}`} />
+              </button>
+              <button
+                onClick={sendDigest}
+                disabled={sendingDigest}
+                className="p-2 border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                title="Send Test Digest Email"
+              >
+                <Mail className={`w-4 h-4 text-[#5F7252] ${sendingDigest ? 'animate-pulse' : ''}`} />
               </button>
             </div>
           </div>
