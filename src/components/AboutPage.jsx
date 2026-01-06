@@ -128,13 +128,33 @@ export default function AboutPage({ onNavigate, user }) {
                 Add books you've read
               </button>
               
-              {/* Rating Guide - Compact */}
+              {/* Rating Guide - Full legend matching StarRating component */}
               <div className="mt-4 pt-4 border-t border-[#E8EBE4]">
-                <p className="text-xs text-[#7A8F6C] mb-2">Rate your books with hearts:</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#F5E8E8', color: '#F5E8E8' }} /> Not for me</span>
-                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#DBADAD', color: '#DBADAD' }} /> Solid read</span>
-                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" style={{ fill: '#C97B7B', color: '#C97B7B' }} /> All-time fave</span>
+                <p className="text-xs font-medium text-[#4A5940] mb-3">Rating Guide</p>
+                <div className="space-y-2">
+                  {[
+                    { hearts: 1, label: 'Not my cup of tea', colors: ['#F5E8E8'] },
+                    { hearts: 2, label: 'Had some good moments', colors: ['#F5E8E8', '#E8CBCB'] },
+                    { hearts: 3, label: 'Solid read, glad I read it', colors: ['#F5E8E8', '#E8CBCB', '#DBADAD'] },
+                    { hearts: 4, label: 'Really loved this one', colors: ['#F5E8E8', '#E8CBCB', '#DBADAD', '#CE9494'] },
+                    { hearts: 5, label: 'All-time favorite', colors: ['#F5E8E8', '#E8CBCB', '#DBADAD', '#CE9494', '#C97B7B'] },
+                  ].map(({ hearts, label, colors }) => (
+                    <div key={hearts} className="flex items-center gap-3">
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Heart
+                            key={i}
+                            className="w-3.5 h-3.5"
+                            style={{
+                              fill: i <= hearts ? colors[i - 1] : 'none',
+                              color: i <= hearts ? colors[i - 1] : '#D4DAD0',
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-[#5F7252] italic">{label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
