@@ -143,9 +143,9 @@ export default async function handler(req) {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
         
-        // Fetch queue and any sent notes for this user
+        // Fetch only want_to_read/reading books (matching the tile count)
         const [{ data: queue }, { data: sentNotes }] = await Promise.all([
-          supabase.from('reading_queue').select('*').eq('user_id', userId),
+          supabase.from('reading_queue').select('*').eq('user_id', userId).in('status', ['want_to_read', 'reading']),
           supabase.from('admin_notes').select('book_id, book_title, note_content, sent_at').eq('user_id', userId)
         ]);
         
@@ -166,9 +166,10 @@ export default async function handler(req) {
               queueId: q.id,
               title: q.book_title,
               author: q.book_author,
+              status: q.status,
               owned: q.owned,
               priority: q.priority,
-              addedAt: q.created_at,
+              addedAt: q.added_at,
               noteSent: !!note,
               noteContent: note?.note_content || null,
               noteSentAt: note?.sent_at || null
@@ -179,48 +180,42 @@ export default async function handler(req) {
         return json({ type: 'queue-user', data: result });
       }
 
-      case 'read': {
-        const { data: userBooks } = await supabase.from('user_books').select('*').eq('status', 'read');
-        // Group by user
-        const userReads = new Map();
-        (userBooks || []).forEach(b => {
-          const u = userMap.get(b.user_id);
-          const email = u?.email || 'Unknown';
-          if (email === 'sarah@darkridge.com') return; // Exclude admin
-          if (!userReads.has(email)) {
-            userReads.set(email, { email, userId: b.user_id, books: [] });
-          }
-          userReads.get(email).books.push({
-            title: b.title,
-            author: b.author,
-            rating: b.rating,
-            readAt: b.updated_at
-          });
-        });
-        const result = Array.from(userReads.values())
-          .map(u => ({ ...u, bookCount: u.books.length }))
-          .sort((a, b) => b.bookCount - a.bookCount);
-        
-        return json({ type: 'read', data: result });
-      }
-
-      case 'read-user': {
+      case 'finished-user': {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
         
-        const { data: userBooks } = await supabase.from('user_books').select('*').eq('user_id', userId).eq('status', 'read');
+        const { data: finished } = await supabase.from('reading_queue').select('*').eq('user_id', userId).eq('status', 'finished');
         const u = userMap.get(userId);
         const result = {
           email: u?.email || 'Unknown',
-          books: (userBooks || []).map(b => ({
-            title: b.title,
-            author: b.author,
-            rating: b.rating,
-            readAt: b.updated_at
-          })).sort((a, b) => new Date(b.readAt) - new Date(a.readAt))
+          books: (finished || []).map(q => ({
+            title: q.book_title,
+            author: q.book_author,
+            rating: q.rating,
+            addedAt: q.added_at
+          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
         };
         
-        return json({ type: 'read-user', data: result });
+        return json({ type: 'finished-user', data: result });
+      }
+
+      case 'collection-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: collection } = await supabase.from('reading_queue').select('*').eq('user_id', userId).eq('status', 'already_read');
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (collection || []).map(q => ({
+            title: q.book_title,
+            author: q.book_author,
+            rating: q.rating,
+            addedAt: q.added_at
+          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+        };
+        
+        return json({ type: 'collection-user', data: result });
       }
 
       case 'waitlist': {

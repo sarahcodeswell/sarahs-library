@@ -207,8 +207,8 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                       {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
-                      {b.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
+                      {b.status === 'reading' && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Reading</span>}
+                      {b.owned && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Owned</span>}
                       {(b.noteSent || sentNotes.has(b.queueId || b.bookId)) ? (
                         <button
                           onClick={() => setNoteModal({ isOpen: true, book: b, viewOnly: true })}
@@ -250,8 +250,8 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
           </div>
         );
 
-      case 'read':
-        // If viewing a specific user's books
+      case 'finished':
+        // If viewing a specific user's finished books
         if (selectedUser && userBooks) {
           return (
             <div>
@@ -268,6 +268,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     <div>
                       <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
                       <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                      {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
                     </div>
                     {b.rating && (
                       <span className="text-sm text-[#C97B7B]">{'♥'.repeat(b.rating)}</span>
@@ -284,7 +285,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
             {data.map((u, i) => (
               <button
                 key={i}
-                onClick={() => fetchUserDetails('read-user', u.userId, u.email)}
+                onClick={() => fetchUserDetails('finished-user', u.userId, u.email)}
                 className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
               >
                 <p className="text-sm text-[#4A5940]">{u.email}</p>
