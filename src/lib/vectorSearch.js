@@ -473,3 +473,99 @@ export async function getLovedAuthors(userId) {
     return [];
   }
 }
+
+/**
+ * Quick catalog probe for routing decisions
+ * Returns similarity metrics to determine if catalog can serve the query
+ * 
+ * @param {string} query - User's query text
+ * @param {number} limit - Maximum books to probe (default 5)
+ * @returns {Promise<Object>} Probe results with confidence metrics
+ */
+export async function quickCatalogProbe(query, limit = 5) {
+  const startTime = Date.now();
+  
+  const result = {
+    success: false,
+    books: [],
+    metrics: {
+      maxSimilarity: 0,
+      avgSimilarity: 0,
+      matchCount: 0,
+      probeTimeMs: 0
+    },
+    confidence: 'none', // none, low, medium, high
+    recommendedPath: 'WORLD' // CATALOG, HYBRID, WORLD
+  };
+  
+  try {
+    // Generate embedding for the query
+    const embeddingResponse = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: query }),
+    });
+
+    if (!embeddingResponse.ok) {
+      console.warn('[CatalogProbe] Failed to generate embedding');
+      result.probeTimeMs = Date.now() - startTime;
+      return result;
+    }
+
+    const { embedding } = await embeddingResponse.json();
+
+    // Search catalog with low threshold to see what's available
+    const { data, error } = await supabase
+      .rpc('find_similar_books', {
+        query_embedding: embedding,
+        limit_count: limit,
+        similarity_threshold: 0.3 // Low threshold to see range of matches
+      });
+
+    if (error) {
+      console.error('[CatalogProbe] Vector search error:', error);
+      result.metrics.probeTimeMs = Date.now() - startTime;
+      return result;
+    }
+
+    const books = data || [];
+    result.books = books;
+    result.success = true;
+    
+    // Compute metrics
+    if (books.length > 0) {
+      const similarities = books.map(b => b.similarity || 0);
+      result.metrics.maxSimilarity = Math.max(...similarities);
+      result.metrics.avgSimilarity = similarities.reduce((a, b) => a + b, 0) / similarities.length;
+      result.metrics.matchCount = books.filter(b => (b.similarity || 0) > 0.5).length;
+    }
+    
+    // Determine confidence and recommended path based on thresholds
+    const { maxSimilarity, matchCount } = result.metrics;
+    
+    if (maxSimilarity >= 0.75 && matchCount >= 3) {
+      result.confidence = 'high';
+      result.recommendedPath = 'CATALOG';
+    } else if (maxSimilarity >= 0.60 && matchCount >= 2) {
+      result.confidence = 'medium';
+      result.recommendedPath = 'HYBRID';
+    } else if (maxSimilarity >= 0.50 && matchCount >= 1) {
+      result.confidence = 'low';
+      result.recommendedPath = 'HYBRID';
+    } else {
+      result.confidence = 'none';
+      result.recommendedPath = 'WORLD';
+    }
+    
+    result.metrics.probeTimeMs = Date.now() - startTime;
+    
+    console.log(`[CatalogProbe] ${query.substring(0, 30)}... → ${result.recommendedPath} (max: ${result.metrics.maxSimilarity.toFixed(2)}, count: ${result.metrics.matchCount}, ${result.metrics.probeTimeMs}ms)`);
+    
+    return result;
+    
+  } catch (error) {
+    console.error('[CatalogProbe] Failed:', error);
+    result.metrics.probeTimeMs = Date.now() - startTime;
+    return result;
+  }
+}
