@@ -154,10 +154,17 @@ export default async function handler(req) {
       total: recommendations.length,
       users: new Set(recommendations.map(r => r.user_id)).size,
       inPeriod: recommendationsInPeriod.length,
-      shared: sharedRecs.length,
       // TODO: Track accepted recommendations when source column is added
       accepted: 0,
       acceptRate: 0
+    };
+
+    // Sharing stats
+    const shareStats = {
+      totalShares: sharedRecs.length,
+      uniqueBooks: new Set(sharedRecs.map(s => s.recommendation_id)).size,
+      usersWhoShared: new Set(sharedRecs.map(s => s.recommender_name).filter(Boolean)).size,
+      accepted: sharedRecs.filter(s => s.accepted_at).length
     };
 
     // Referral stats with K-factor
@@ -309,6 +316,7 @@ export default async function handler(req) {
       collection: collectionStats,
       read: readStats,
       recommendations: recStats,
+      sharing: shareStats,
       referrals: referralStats,
       curatorWaitlist: waitlistStats,
       demographics,

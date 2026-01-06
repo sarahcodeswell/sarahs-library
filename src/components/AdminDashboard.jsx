@@ -842,6 +842,13 @@ export default function AdminDashboard({ onNavigate }) {
             onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations Saved', icon: Heart })}
           />
           <StatCard
+            title="Books Shared"
+            value={stats?.sharing?.uniqueBooks || 0}
+            subtitle={`${stats?.sharing?.totalShares || 0} total shares`}
+            icon={Share2}
+            color="bg-rose-500"
+          />
+          <StatCard
             title="Referrals"
             value={`${stats?.referrals?.accepted || 0} / ${stats?.referrals?.sent || 0}`}
             subtitle={`${Math.round((stats?.referrals?.conversionRate || 0) * 100)}% conversion`}
