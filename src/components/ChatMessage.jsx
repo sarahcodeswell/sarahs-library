@@ -69,7 +69,7 @@ export default function ChatMessage({
           <div className="text-sm leading-relaxed">
             <p className="mb-3">Hi, I'm Sarah!</p>
             <p className="mb-3">I'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.</p>
-            <p>I'll help you find your next great read, whether it's <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> or <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span>.</p>
+            <p>Each recommendation is labeled: <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />From My Library</span> means it's from my personal collection, while <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> means I found it just for you.</p>
           </div>
         ) : (
           <div className="text-sm leading-relaxed">
