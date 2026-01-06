@@ -132,7 +132,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
               <div key={i} className="py-2.5 flex items-center justify-between">
                 <div>
                   <p className="text-sm text-[#4A5940]">{u.email}</p>
-                  <p className="text-xs text-[#96A888]">Joined {new Date(u.createdAt).toLocaleDateString()}</p>
+                  {u.createdAt && <p className="text-xs text-[#96A888]">Joined {new Date(u.createdAt).toLocaleDateString()}</p>}
                 </div>
                 {u.hasProfile ? (
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Profile</span>
@@ -179,7 +179,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     <div>
                       <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
                       <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
-                      <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>
+                      {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
                     </div>
                     <div className="flex gap-1">
                       {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
@@ -261,7 +261,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
             {data.map((w, i) => (
               <div key={i} className="py-2.5 flex items-center justify-between">
                 <p className="text-sm text-[#4A5940]">{w.email}</p>
-                <p className="text-xs text-[#96A888]">{new Date(w.signedUpAt).toLocaleDateString()}</p>
+                {w.signedUpAt && <p className="text-xs text-[#96A888]">{new Date(w.signedUpAt).toLocaleDateString()}</p>}
               </div>
             ))}
           </div>
@@ -284,7 +284,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                   <div key={i} className="py-2.5">
                     <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
                     <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
-                    <p className="text-xs text-[#96A888] mt-1">{new Date(b.createdAt).toLocaleDateString()}</p>
+                    {b.createdAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.createdAt).toLocaleDateString()}</p>}
                   </div>
                 ))}
               </div>
@@ -327,7 +327,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     <div>
                       <p className="text-sm text-[#4A5940]">{r.invitedEmail}</p>
                       <p className="text-xs text-[#96A888] mt-0.5">
-                        {r.type === 'link' ? '🔗 Link' : '📧 Email'} • {new Date(r.createdAt).toLocaleDateString()}
+                        {r.type === 'link' ? '🔗 Link' : '📧 Email'}{r.createdAt && ` • ${new Date(r.createdAt).toLocaleDateString()}`}
                       </p>
                     </div>
                     {r.status === 'accepted' ? (
@@ -821,7 +821,7 @@ export default function AdminDashboard({ onNavigate }) {
                 <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
                   <span className="text-[#4A5940]">{w.email}</span>
                   <span className="text-xs text-[#96A888]">
-                    {new Date(w.createdAt).toLocaleDateString()}
+                    {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
                   </span>
                 </div>
               ))}
