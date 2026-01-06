@@ -1026,7 +1026,7 @@ Find similar books from beyond my library that match this taste profile.
       {/* Page Routing */}
       {currentPage === 'about' && (
         <Suspense fallback={<LoadingFallback message="Loading How It Works..." />}>
-          <AboutPage onNavigate={setCurrentPage} />
+          <AboutPage onNavigate={setCurrentPage} user={user} />
         </Suspense>
       )}
 

@@ -1,7 +1,55 @@
-import React from 'react';
-import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
-export default function AboutPage({ onNavigate }) {
+export default function AboutPage({ onNavigate, user }) {
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState(null); // 'success' | 'error' | null
+  const [inviteMessage, setInviteMessage] = useState('');
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+
+    setInviteLoading(true);
+    setInviteStatus(null);
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      
+      // Add auth token if user is logged in
+      if (user && supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const res = await fetch('/api/invite', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setInviteStatus('success');
+        setInviteMessage('Invitation sent!');
+        setInviteEmail('');
+      } else {
+        setInviteStatus('error');
+        setInviteMessage(data.error || 'Failed to send invitation');
+      }
+    } catch (err) {
+      setInviteStatus('error');
+      setInviteMessage('Failed to send invitation');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
@@ -95,6 +143,19 @@ export default function AboutPage({ onNavigate }) {
                 </p>
               </div>
             </div>
+            <div className="mt-4 ml-[4.5rem]">
+              <button
+                onClick={() => {
+                  setShowInviteModal(true);
+                  setInviteStatus(null);
+                  setInviteMessage('');
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium hover:bg-[#5F7252]/20 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                Invite a Friend
+              </button>
+            </div>
           </div>
 
           {/* Step 4: CURATE */}
@@ -156,6 +217,73 @@ export default function AboutPage({ onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#E8EBE4]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-serif text-[#4A5940]">Invite a Friend</h2>
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-[#96A888]" />
+              </button>
+            </div>
+
+            <p className="text-sm text-[#7A8F6C] mb-6">
+              Share the love of reading! Your friend will receive an email invitation to join Sarah's Books.
+            </p>
+
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#5F7252] mb-2">
+                  Friend's Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                    placeholder="friend@email.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              {inviteStatus === 'success' && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600" />
+                  <p className="text-sm text-green-600">{inviteMessage}</p>
+                </div>
+              )}
+
+              {inviteStatus === 'error' && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{inviteMessage}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={inviteLoading}
+                className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {inviteLoading ? 'Sending...' : 'Send Invitation'}
+              </button>
+            </form>
+
+            {!user && (
+              <p className="mt-4 text-xs text-[#96A888] text-center">
+                Sign in to track your referrals
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
