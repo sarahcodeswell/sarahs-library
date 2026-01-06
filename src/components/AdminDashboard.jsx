@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -9,17 +9,223 @@ const PERIODS = [
   { value: 'lifetime', label: 'All time' }
 ];
 
-function StatCard({ title, value, subtitle, icon: Icon, color = 'bg-[#5F7252]' }) {
+function StatCard({ title, value, subtitle, icon: Icon, color = 'bg-[#5F7252]', onClick }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E8EBE4] p-4 sm:p-5">
+    <div 
+      className={`bg-white rounded-xl border border-[#E8EBE4] p-4 sm:p-5 ${onClick ? 'cursor-pointer hover:border-[#5F7252] hover:shadow-md transition-all' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className={`p-2.5 ${color}/10 rounded-lg`}>
           <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
         </div>
+        {onClick && <span className="text-xs text-[#96A888]">Click to view</span>}
       </div>
       <div className="text-2xl font-semibold text-[#4A5940] mb-1">{value}</div>
       <div className="text-sm font-medium text-[#5F7252]">{title}</div>
       {subtitle && <div className="text-xs text-[#96A888] mt-1">{subtitle}</div>}
+    </div>
+  );
+}
+
+function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const fetchDetails = async () => {
+      setLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
+
+        const response = await fetch(`/api/admin/details?type=${type}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setData(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetails();
+  }, [isOpen, type]);
+
+  if (!isOpen) return null;
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="w-6 h-6 text-[#5F7252] animate-spin" />
+        </div>
+      );
+    }
+
+    if (!data || data.length === 0) {
+      return <p className="text-center text-[#96A888] py-8">No data available</p>;
+    }
+
+    switch (type) {
+      case 'users':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((u, i) => (
+              <div key={i} className="py-2.5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-[#4A5940]">{u.email}</p>
+                  <p className="text-xs text-[#96A888]">Joined {new Date(u.createdAt).toLocaleDateString()}</p>
+                </div>
+                {u.hasProfile ? (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Profile</span>
+                ) : (
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">No profile</span>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'profiles':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((p, i) => (
+              <div key={i} className="py-2.5">
+                <p className="text-sm text-[#4A5940] font-medium">{p.email}</p>
+                <div className="text-xs text-[#7A8F6C] mt-1 space-y-0.5">
+                  {p.city && <p>📍 {[p.city, p.state, p.country].filter(Boolean).join(', ')}</p>}
+                  {p.birthYear && <p>🎂 Born {p.birthYear}</p>}
+                  {p.genres?.length > 0 && <p>📚 {p.genres.slice(0, 3).join(', ')}</p>}
+                  {p.bookstore && <p>🏪 {p.bookstore}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'queue':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((q, i) => (
+              <div key={i} className="py-2.5 flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{q.bookTitle}</p>
+                  <p className="text-xs text-[#7A8F6C]">by {q.bookAuthor}</p>
+                  <p className="text-xs text-[#96A888] mt-1">Added by {q.email}</p>
+                </div>
+                <div className="flex gap-1">
+                  {q.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
+                  {q.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'read':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((b, i) => (
+              <div key={i} className="py-2.5 flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{b.bookTitle}</p>
+                  <p className="text-xs text-[#7A8F6C]">by {b.bookAuthor}</p>
+                  <p className="text-xs text-[#96A888] mt-1">Read by {b.email}</p>
+                </div>
+                {b.rating && (
+                  <span className="text-sm text-[#C97B7B]">{'♥'.repeat(b.rating)}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'waitlist':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((w, i) => (
+              <div key={i} className="py-2.5 flex items-center justify-between">
+                <p className="text-sm text-[#4A5940]">{w.email}</p>
+                <p className="text-xs text-[#96A888]">{new Date(w.signedUpAt).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'recommendations':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((r, i) => (
+              <div key={i} className="py-2.5">
+                <p className="text-sm text-[#4A5940] font-medium">{r.bookTitle}</p>
+                <p className="text-xs text-[#7A8F6C]">by {r.bookAuthor}</p>
+                <p className="text-xs text-[#96A888] mt-1">
+                  Recommended to {r.email} • {new Date(r.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'referrals':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((r, i) => (
+              <div key={i} className="py-2.5 flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-[#4A5940]">
+                    <span className="font-medium">{r.inviterEmail}</span>
+                    <span className="text-[#96A888]"> → </span>
+                    {r.invitedEmail}
+                  </p>
+                  <p className="text-xs text-[#96A888] mt-0.5">
+                    {r.type === 'link' ? '🔗 Link' : '📧 Email'} • {new Date(r.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                {r.status === 'accepted' ? (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Joined
+                  </span>
+                ) : (
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Pending
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden border border-[#E8EBE4]">
+        <div className="flex items-center justify-between p-4 border-b border-[#E8EBE4]">
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="w-5 h-5 text-[#5F7252]" />}
+            <h2 className="text-lg font-semibold text-[#4A5940]">{title}</h2>
+            {data && <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full">{data.length}</span>}
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-[#E8EBE4] rounded-lg transition-colors">
+            <X className="w-5 h-5 text-[#96A888]" />
+          </button>
+        </div>
+        <div className="p-4">
+          {renderContent()}
+        </div>
+      </div>
     </div>
   );
 }
@@ -45,6 +251,7 @@ export default function AdminDashboard({ onNavigate }) {
   const [period, setPeriod] = useState('lifetime');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, type: null, title: '', icon: null });
 
   const fetchStats = async () => {
     setLoading(true);
@@ -211,18 +418,21 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.users?.total || 0}
             subtitle={period !== 'lifetime' ? `+${stats?.users?.inPeriod || 0} in period` : `${stats?.users?.withProfiles || 0} with profiles`}
             icon={Users}
+            onClick={() => setModal({ isOpen: true, type: 'users', title: 'All Users', icon: Users })}
           />
           <StatCard
             title="Books Queued"
             value={stats?.queue?.totalBooks || 0}
             subtitle={`Avg ${stats?.queue?.avgPerUser || 0} per user`}
             icon={BookMarked}
+            onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Reading Queues', icon: BookMarked })}
           />
           <StatCard
             title="Books Read"
             value={stats?.read?.totalFinished || 0}
             subtitle={`${stats?.read?.totalRated || 0} rated (avg ${stats?.read?.avgRating || 0}★)`}
             icon={BookOpen}
+            onClick={() => setModal({ isOpen: true, type: 'read', title: 'Books Read', icon: BookOpen })}
           />
           <StatCard
             title="Curator Waitlist"
@@ -230,6 +440,7 @@ export default function AdminDashboard({ onNavigate }) {
             subtitle="Pending curators"
             icon={UserPlus}
             color="bg-violet-500"
+            onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
           />
         </div>
 
@@ -239,12 +450,14 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.recommendations?.total || 0}
             subtitle={`${stats?.recommendations?.shared || 0} shared`}
             icon={Heart}
+            onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations', icon: Heart })}
           />
           <StatCard
             title="Referrals"
             value={`${stats?.referrals?.accepted || 0} / ${stats?.referrals?.sent || 0}`}
             subtitle={`${Math.round((stats?.referrals?.conversionRate || 0) * 100)}% conversion`}
             icon={Share2}
+            onClick={() => setModal({ isOpen: true, type: 'referrals', title: 'Referrals', icon: Share2 })}
           />
           <StatCard
             title="Platform K-Factor"
@@ -417,6 +630,15 @@ export default function AdminDashboard({ onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* Detail Modal */}
+        <DetailModal
+          isOpen={modal.isOpen}
+          onClose={() => setModal({ isOpen: false, type: null, title: '', icon: null })}
+          title={modal.title}
+          type={modal.type}
+          icon={modal.icon}
+        />
       </div>
     </div>
   );
