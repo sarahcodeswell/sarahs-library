@@ -42,7 +42,6 @@ const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsP
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
-const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
 const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
@@ -184,7 +183,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin', 'reset-password'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -1103,12 +1102,6 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'admin' && user?.email === 'sarah@darkridge.com' && (
         <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
           <AdminDashboard onNavigate={setCurrentPage} />
-        </Suspense>
-      )}
-
-      {currentPage === 'reset-password' && (
-        <Suspense fallback={<LoadingFallback message="Loading..." />}>
-          <ResetPasswordPage onNavigate={setCurrentPage} />
         </Suspense>
       )}
 
