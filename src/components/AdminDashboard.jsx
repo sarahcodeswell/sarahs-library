@@ -837,7 +837,7 @@ export default function AdminDashboard({ onNavigate }) {
           <StatCard
             title="Recommendations"
             value={stats?.recommendations?.total || 0}
-            subtitle={`${stats?.recommendations?.shared || 0} shared`}
+            subtitle={`${stats?.recommendations?.users || 0} users, ${stats?.recommendations?.shared || 0} shared`}
             icon={Heart}
             onClick={() => setModal({ isOpen: true, type: 'recommendations', title: 'Recommendations', icon: Heart })}
           />

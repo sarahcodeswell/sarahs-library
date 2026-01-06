@@ -152,6 +152,7 @@ export default async function handler(req) {
     // Recommendation stats
     const recStats = {
       total: recommendations.length,
+      users: new Set(recommendations.map(r => r.user_id)).size,
       inPeriod: recommendationsInPeriod.length,
       shared: sharedRecs.length,
       // TODO: Track accepted recommendations when source column is added
