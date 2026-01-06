@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2, MapPin, Store, ChevronDown } from 'lucide-react';
+import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2, MapPin, Store, ChevronDown, Copy, Check, Users, Link } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 import { db, supabase, auth } from '../lib/supabase';
 import booksData from '../books.json';
@@ -67,6 +67,9 @@ export default function UserProfile({ tasteProfile }) {
   const [locationResults, setLocationResults] = useState([]);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [referralCode, setReferralCode] = useState(null);
+  const [referralCount, setReferralCount] = useState(0);
+  const [linkCopied, setLinkCopied] = useState(false);
   const genreDropdownRef = useRef(null);
   const locationDropdownRef = useRef(null);
 
@@ -99,6 +102,29 @@ export default function UserProfile({ tasteProfile }) {
             address: profile.favorite_bookstore_address
           });
         }
+        
+        // Load or generate referral code
+        if (profile.referral_code) {
+          setReferralCode(profile.referral_code);
+        } else {
+          // Generate and save a new referral code
+          const newCode = user.id.replace(/-/g, '').substring(0, 8);
+          setReferralCode(newCode);
+          await db.upsertTasteProfile(user.id, {
+            ...profile,
+            referral_code: newCode
+          });
+        }
+      }
+      
+      // Load referral count
+      if (supabase) {
+        const { count } = await supabase
+          .from('referrals')
+          .select('*', { count: 'exact', head: true })
+          .eq('inviter_id', user.id)
+          .eq('status', 'accepted');
+        setReferralCount(count || 0);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -1078,6 +1104,60 @@ export default function UserProfile({ tasteProfile }) {
           </div>
         ) : (
           <p className="text-xs text-[#96A888] italic">No favorite authors added yet</p>
+        )}
+      </div>
+
+      {/* Invite Friends Section */}
+      <div className="pt-6 border-t border-[#E8EBE4]">
+        <h4 className="text-sm font-medium text-[#5F7252] mb-2 flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          Invite Friends
+        </h4>
+        <p className="text-xs text-[#96A888] mb-3">
+          Share your personal link to invite friends to Sarah's Books.
+        </p>
+        
+        {referralCode && (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] border border-[#D4DAD0] rounded-lg">
+                <Link className="w-4 h-4 text-[#96A888] flex-shrink-0" />
+                <span className="text-sm text-[#4A5940] truncate">
+                  sarahsbooks.com/?ref={referralCode}
+                </span>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(`https://www.sarahsbooks.com/?ref=${referralCode}`);
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2000);
+                  } catch (err) {
+                    console.error('Failed to copy:', err);
+                  }
+                }}
+                className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5 ${
+                  linkCopied 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-[#5F7252] text-white hover:bg-[#4A5940]'
+                }`}
+              >
+                {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {linkCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            
+            {referralCount > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="inline-flex items-center justify-center w-6 h-6 bg-[#5F7252] text-white rounded-full text-xs font-medium">
+                  {referralCount}
+                </span>
+                <span className="text-[#5F7252]">
+                  {referralCount === 1 ? 'friend has joined' : 'friends have joined'} via your link
+                </span>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
