@@ -209,13 +209,17 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {b.owned && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Owned</span>}
                       {b.priority && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Priority</span>}
-                      {sentNotes.has(b.queueId || b.bookId) ? (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
+                      {(b.noteSent || sentNotes.has(b.queueId || b.bookId)) ? (
+                        <button
+                          onClick={() => setNoteModal({ isOpen: true, book: b, viewOnly: true })}
+                          className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1 hover:bg-green-200 transition-colors"
+                          title="Click to view note"
+                        >
                           <Check className="w-3 h-3" /> Sent
-                        </span>
+                        </button>
                       ) : (
                         <button
-                          onClick={() => setNoteModal({ isOpen: true, book: b })}
+                          onClick={() => setNoteModal({ isOpen: true, book: b, viewOnly: false })}
                           className="text-xs bg-[#5F7252] text-white px-2 py-1 rounded hover:bg-[#4A5940] transition-colors flex items-center gap-1"
                         >
                           <MessageSquare className="w-3 h-3" /> Note
@@ -434,11 +438,11 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
       {noteModal.isOpen && noteModal.book && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-[#E8EBE4]">
-            <div className="bg-gradient-to-r from-[#5F7252] to-[#4A5940] p-4">
+            <div className={`p-4 ${noteModal.viewOnly ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-[#5F7252] to-[#4A5940]'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-white">
-                  <MessageSquare className="w-5 h-5" />
-                  <h3 className="font-semibold">Send Personal Note</h3>
+                  {noteModal.viewOnly ? <Check className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                  <h3 className="font-semibold">{noteModal.viewOnly ? 'Note Sent' : 'Send Personal Note'}</h3>
                 </div>
                 <button 
                   onClick={() => { setNoteModal({ isOpen: false, book: null }); setNoteContent(''); }}
@@ -451,63 +455,79 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
             
             <div className="p-4">
               {/* Book info */}
-              <div className="bg-[#F8F6EE] rounded-lg p-3 mb-4 border-l-4 border-[#5F7252]">
+              <div className={`rounded-lg p-3 mb-4 border-l-4 ${noteModal.viewOnly ? 'bg-green-50 border-green-500' : 'bg-[#F8F6EE] border-[#5F7252]'}`}>
                 <p className="text-sm font-medium text-[#4A5940]">{noteModal.book.title}</p>
                 <p className="text-xs text-[#7A8F6C]">by {noteModal.book.author}</p>
                 <p className="text-xs text-[#96A888] mt-1">To: {selectedUser?.email}</p>
-              </div>
-              
-              {/* Note input */}
-              <label className="block text-xs text-[#5F7252] font-medium mb-2">
-                Why I love this book...
-              </label>
-              <textarea
-                value={noteContent}
-                onChange={(e) => setNoteContent(e.target.value)}
-                placeholder="Share your personal thoughts about this book..."
-                className="w-full h-32 p-3 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
-              />
-              
-              {/* Quick starters */}
-              <div className="flex flex-wrap gap-1.5 mt-3 mb-4">
-                <button
-                  onClick={() => setNoteContent(prev => prev + "This is one of my all-time favorites because ")}
-                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
-                >
-                  All-time favorite...
-                </button>
-                <button
-                  onClick={() => setNoteContent(prev => prev + "I think you'll especially love ")}
-                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
-                >
-                  You'll love...
-                </button>
-                <button
-                  onClick={() => setNoteContent(prev => prev + "The writing style is ")}
-                  className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
-                >
-                  Writing style...
-                </button>
-              </div>
-              
-              {/* Send button */}
-              <button
-                onClick={sendNote}
-                disabled={!noteContent.trim() || sendingNote}
-                className="w-full bg-gradient-to-r from-[#5F7252] to-[#4A5940] text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {sendingNote ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Send Note to {selectedUser?.email?.split('@')[0]}
-                  </>
+                {noteModal.viewOnly && noteModal.book.noteSentAt && (
+                  <p className="text-xs text-green-600 mt-1">Sent: {new Date(noteModal.book.noteSentAt).toLocaleDateString()}</p>
                 )}
-              </button>
+              </div>
+              
+              {noteModal.viewOnly ? (
+                <>
+                  <label className="block text-xs text-green-600 font-medium mb-2">
+                    Your note:
+                  </label>
+                  <div className="w-full p-3 bg-gray-50 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] whitespace-pre-wrap">
+                    {noteModal.book.noteContent || 'Note content not available'}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Note input */}
+                  <label className="block text-xs text-[#5F7252] font-medium mb-2">
+                    Why I love this book...
+                  </label>
+                  <textarea
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    placeholder="Share your personal thoughts about this book..."
+                    className="w-full h-32 p-3 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
+                  />
+                  
+                  {/* Quick starters */}
+                  <div className="flex flex-wrap gap-1.5 mt-3 mb-4">
+                    <button
+                      onClick={() => setNoteContent(prev => prev + "This is one of my all-time favorites because ")}
+                      className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                    >
+                      All-time favorite...
+                    </button>
+                    <button
+                      onClick={() => setNoteContent(prev => prev + "I think you'll especially love ")}
+                      className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                    >
+                      You'll love...
+                    </button>
+                    <button
+                      onClick={() => setNoteContent(prev => prev + "The writing style is ")}
+                      className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-1 rounded hover:bg-[#D8DBD4] transition-colors"
+                    >
+                      Writing style...
+                    </button>
+                  </div>
+                  
+                  {/* Send button */}
+                  <button
+                    onClick={sendNote}
+                    disabled={!noteContent.trim() || sendingNote}
+                    className="w-full bg-gradient-to-r from-[#5F7252] to-[#4A5940] text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sendingNote ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Note to {selectedUser?.email?.split('@')[0]}
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

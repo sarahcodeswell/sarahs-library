@@ -89,19 +89,37 @@ export default async function handler(req) {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
         
-        const { data: queue } = await supabase.from('reading_queue').select('*').eq('user_id', userId);
+        // Fetch queue and any sent notes for this user
+        const [{ data: queue }, { data: sentNotes }] = await Promise.all([
+          supabase.from('reading_queue').select('*').eq('user_id', userId),
+          supabase.from('admin_notes').select('book_id, book_title, note_content, sent_at').eq('user_id', userId)
+        ]);
+        
+        // Build a map of sent notes by book_title (since book_id can be null)
+        const notesMap = new Map();
+        (sentNotes || []).forEach(n => {
+          if (n.book_id) notesMap.set(n.book_id, n);
+          if (n.book_title) notesMap.set(n.book_title.toLowerCase(), n);
+        });
+        
         const u = userMap.get(userId);
         const result = {
           email: u?.email || 'Unknown',
-          books: (queue || []).map(q => ({
-            bookId: q.book_id,
-            queueId: q.id,
-            title: q.book_title,
-            author: q.book_author,
-            owned: q.owned,
-            priority: q.priority,
-            addedAt: q.created_at
-          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+          books: (queue || []).map(q => {
+            const note = notesMap.get(q.book_id) || notesMap.get(q.book_title?.toLowerCase());
+            return {
+              bookId: q.book_id,
+              queueId: q.id,
+              title: q.book_title,
+              author: q.book_author,
+              owned: q.owned,
+              priority: q.priority,
+              addedAt: q.created_at,
+              noteSent: !!note,
+              noteContent: note?.note_content || null,
+              noteSentAt: note?.sent_at || null
+            };
+          }).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
         };
         
         return json({ type: 'queue-user', data: result });
