@@ -655,6 +655,26 @@ Find similar books from beyond my library that match this taste profile.
       return;
     }
 
+    // Smart theme clearing: If user typed a custom query (not the auto-generated theme text),
+    // clear the theme filter so routing works correctly
+    const themeTexts = Object.values({
+      women: "Show me options in women's untold stories.",
+      emotional: "Show me options in emotional truth.",
+      identity: "Show me options in identity & belonging.",
+      spiritual: "Show me options in spirituality & meaning.",
+      justice: "Show me options in justice & systems."
+    });
+    const isThemeQuery = themeTexts.some(t => userMessage.toLowerCase() === t.toLowerCase());
+    
+    // Determine effective themes for this request
+    const effectiveThemes = isThemeQuery ? selectedThemes : [];
+    
+    // Clear theme selection if user typed a different query
+    if (!isThemeQuery && selectedThemes.length > 0) {
+      setSelectedThemes([]);
+      console.log('[App] Cleared theme filter - user typed custom query');
+    }
+
     setInputValue('');
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
@@ -668,7 +688,7 @@ Find similar books from beyond my library that match this taste profile.
 
     try {
       // Update progress - skip world step for curated lists (fast path)
-      const isCuratedList = selectedThemes && selectedThemes.length > 0;
+      const isCuratedList = effectiveThemes && effectiveThemes.length > 0;
       if (isCuratedList) {
         // Fast path: library → matching → preparing
         setTimeout(() => setLoadingProgress({ step: 'matching', progress: 50 }), 300);
@@ -679,7 +699,7 @@ Find similar books from beyond my library that match this taste profile.
       }
 
       // NEW CLEAN RECOMMENDATION SERVICE
-      const result = await getRecommendations(user?.id, userMessage, readingQueue, selectedThemes, shownBooksInSession);
+      const result = await getRecommendations(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
       
       if (!result.success) {
         setMessages(prev => [...prev, {
@@ -763,8 +783,15 @@ Find similar books from beyond my library that match this taste profile.
         if (validRecs.length === 0) {
           cleanedText = "I'm having trouble finding books that aren't already in your collection. Try asking for something more specific or from a different genre!";
         } else {
+          // Dynamic header based on count
+          const header = validRecs.length === 1 
+            ? 'My Top Pick for You' 
+            : validRecs.length === 2 
+              ? 'My Top 2 Picks for You'
+              : 'My Top 3 Picks for You';
+          
           // Rebuild with valid recommendations only
-          const parts = ['My Top 3 Picks for You\n'];
+          const parts = [header + '\n'];
           validRecs.forEach((rec, i) => {
             parts.push(`\n[RECOMMENDATION ${i + 1}]`);
             parts.push(`Title: ${rec.title}`);
@@ -777,11 +804,22 @@ Find similar books from beyond my library that match this taste profile.
         }
       }
       
-      // Strip verbose intro text, keep only "My Top 3 Picks for You" and recommendations
+      // Strip verbose intro text, keep only header and recommendations
+      // Also make header dynamic based on actual recommendation count
       const lines = cleanedText.split('\n');
-      const startIndex = lines.findIndex(line => line.includes('My Top 3 Picks for You'));
+      const startIndex = lines.findIndex(line => 
+        line.includes('My Top') && line.includes('Pick')
+      );
       if (startIndex > 0) {
         cleanedText = lines.slice(startIndex).join('\n');
+      }
+      
+      // Final pass: ensure header matches actual count
+      const finalRecs = parseRecommendations(cleanedText);
+      if (finalRecs.length === 1 && cleanedText.includes('My Top 3 Picks')) {
+        cleanedText = cleanedText.replace('My Top 3 Picks for You', 'My Top Pick for You');
+      } else if (finalRecs.length === 2 && cleanedText.includes('My Top 3 Picks')) {
+        cleanedText = cleanedText.replace('My Top 3 Picks for You', 'My Top 2 Picks for You');
       }
       
       setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
