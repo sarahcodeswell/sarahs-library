@@ -210,19 +210,7 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpda
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
             <div className="flex gap-3 flex-1 min-w-0">
-              {/* Cover Image */}
-              {coverUrl ? (
-                <div className="flex-shrink-0">
-                  <img 
-                    src={coverUrl} 
-                    alt={`Cover of ${book.book_title}`}
-                    className="w-10 h-15 object-cover rounded shadow-sm"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                </div>
-              ) : isEnriching ? (
-                <div className="flex-shrink-0 w-10 h-15 bg-[#E8EBE4] rounded animate-pulse" />
-              ) : null}
+              <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} />
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2 mb-1">
@@ -239,28 +227,13 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpda
                 )}
                 
                 {/* Genres */}
-                {genres?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {genres.slice(0, 2).map((genre, idx) => (
-                      <span 
-                        key={idx}
-                        className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-1">
+                  <GenreBadges genres={genres} maxDisplay={2} />
+                </div>
                 
                 {/* Show more/less toggle for book details */}
                 {bookDetails && (
-                  <button
-                    onClick={() => setExpanded(!expanded)}
-                    className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-2"
-                  >
-                    <span>{expanded ? 'Show less' : 'Show more'}</span>
-                    <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                  </button>
+                  <ExpandToggle expanded={expanded} onToggle={() => setExpanded(!expanded)} className="mt-2" />
                 )}
               </div>
             </div>

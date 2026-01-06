@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil, ChevronDown, Star } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, Trash2, Eye, Clock, Library, Pencil, Star } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useRecommendations } from '../contexts/RecommendationContext';
 import { useBookEnrichment } from './BookCard';
+import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import { fetchBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import ShareModal from './ShareModal';
@@ -43,19 +44,7 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
   return (
     <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-5 hover:shadow-md transition-shadow">
       <div className="flex gap-3 mb-3">
-        {/* Cover Image */}
-        {coverUrl ? (
-          <div className="flex-shrink-0">
-            <img 
-              src={coverUrl} 
-              alt={`Cover of ${recommendation.book_title}`}
-              className="w-12 h-18 object-cover rounded shadow-sm"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-          </div>
-        ) : isEnriching ? (
-          <div className="flex-shrink-0 w-12 h-18 bg-[#E8EBE4] rounded animate-pulse" />
-        ) : null}
+        <BookCover coverUrl={coverUrl} title={recommendation.book_title} isEnriching={isEnriching} />
         
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-[#4A5940] mb-0.5">
@@ -68,18 +57,9 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
           )}
           
           {/* Genres */}
-          {genres?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {genres.slice(0, 3).map((genre, idx) => (
-                <span 
-                  key={idx}
-                  className="px-1.5 py-0.5 text-[10px] bg-[#E8EBE4] text-[#5F7252] rounded"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="mt-1.5">
+            <GenreBadges genres={genres} maxDisplay={3} />
+          </div>
           
           {/* Description with Show more/less */}
           {description && (
@@ -88,22 +68,12 @@ function RecommendationBookCard({ recommendation, onShare, onDelete, onStartEdit
               <p className={`text-xs text-[#5F7252] leading-relaxed ${!expanded ? 'line-clamp-4' : ''}`}>
                 {stripAccoladesFromDescription(description)}
               </p>
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors mt-1"
-              >
-                <span>{expanded ? 'Show less' : 'Show more'}</span>
-                <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-              </button>
+              <ExpandToggle expanded={expanded} onToggle={() => setExpanded(!expanded)} className="mt-1" />
               
               {/* Reputation & Accolades - show below description when expanded */}
               {expanded && reputation ? (
-                <div className="mt-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                  <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
-                    <Star className="w-3 h-3 text-amber-500" />
-                    Reputation & Accolades:
-                  </p>
-                  <p className="text-xs text-[#5F7252] leading-relaxed">{reputation}</p>
+                <div className="mt-3">
+                  <ReputationBox reputation={reputation} />
                 </div>
               ) : expanded && isEnrichingReputation ? (
                 <div className="mt-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
