@@ -21,7 +21,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       if (mode === 'forgot') {
         result = await auth.resetPassword(email);
         if (result.error) {
-          setError(result.error.message);
+          // Provide more helpful error messages
+          const errorMsg = result.error.message || 'Unable to send reset email';
+          if (errorMsg.includes('rate limit') || result.error.status === 429) {
+            setError('Too many requests. Please wait a few minutes and try again.');
+          } else if (result.error.status === 500) {
+            setError('Email service temporarily unavailable. Please try again later.');
+          } else {
+            setError(errorMsg);
+          }
+          console.error('Password reset error:', result.error);
         } else {
           setSuccessMessage('Check your email for a password reset link!');
         }
