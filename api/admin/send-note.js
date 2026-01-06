@@ -1,16 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { json, getSupabaseClient, verifyAdmin } from './_shared.js';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
+export const config = {
+  runtime: 'edge',
+};
 
 export default async function handler(request) {
   if (request.method !== 'POST') {
@@ -18,19 +10,14 @@ export default async function handler(request) {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify admin auth
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return json({ error: 'Unauthorized' }, 401);
+    const { client: supabase, error: configError } = getSupabaseClient();
+    if (configError) {
+      return json({ error: configError }, 500);
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user || user.email !== MASTER_ADMIN_EMAIL) {
-      return json({ error: 'Unauthorized' }, 403);
+    const authResult = await verifyAdmin(supabase, request.headers.get('Authorization'));
+    if (authResult.error) {
+      return json({ error: authResult.error }, authResult.status);
     }
 
     // Parse request body

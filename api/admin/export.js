@@ -1,48 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+import { json, getSupabaseClient, verifyAdmin } from './_shared.js';
 
 export const config = {
   runtime: 'edge',
 };
 
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-
 export default async function handler(req) {
   if (req.method !== 'GET') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return json({ error: 'Method not allowed' }, 405);
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const { client: supabase, error: configError } = getSupabaseClient();
+    if (configError) {
+      return json({ error: configError }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify admin access
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user || user.email !== MASTER_ADMIN_EMAIL) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const authResult = await verifyAdmin(supabase, req.headers.get('authorization'));
+    if (authResult.error) {
+      return json({ error: authResult.error }, authResult.status);
     }
 
     // Fetch all data
@@ -171,9 +146,6 @@ export default async function handler(req) {
 
   } catch (error) {
     console.error('Export error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return json({ error: 'Internal server error' }, 500);
   }
 }

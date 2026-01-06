@@ -1,16 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { json, getSupabaseClient, verifyAdmin, getUserMap, MASTER_ADMIN_EMAIL } from './_shared.js';
 
 export const config = {
   runtime: 'edge',
 };
-
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-
-const json = (obj, status = 200) =>
-  new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
 
 export default async function handler(req) {
   if (req.method !== 'GET') {
@@ -18,41 +10,28 @@ export default async function handler(req) {
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return json({ error: 'Server configuration error' }, 500);
+    const { client: supabase, error: configError } = getSupabaseClient();
+    if (configError) {
+      return json({ error: configError }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify admin access
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return json({ error: 'Unauthorized' }, 403);
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user || user.email !== MASTER_ADMIN_EMAIL) {
-      return json({ error: 'Unauthorized' }, 403);
+    const authResult = await verifyAdmin(supabase, req.headers.get('authorization'));
+    if (authResult.error) {
+      return json({ error: authResult.error }, authResult.status);
     }
 
     const url = new URL(req.url);
     const type = url.searchParams.get('type');
 
-    // Get all users for email lookup
-    const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const users = usersData?.users || [];
-    const userMap = new Map(users.map(u => [u.id, u]));
+    const userMap = await getUserMap(supabase);
+    const users = Array.from(userMap.values());
 
     switch (type) {
       case 'users': {
         const { data: profiles } = await supabase.from('taste_profiles').select('user_id');
         const profileUserIds = new Set((profiles || []).map(p => p.user_id));
         
-        const result = users.map(u => ({
+        const result = users.filter(u => u.email !== MASTER_ADMIN_EMAIL).map(u => ({
           email: u.email,
           createdAt: u.created_at,
           hasProfile: profileUserIds.has(u.id)

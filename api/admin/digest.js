@@ -1,28 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { json, getSupabaseClient, verifyAdmin, getDateRange, MASTER_ADMIN_EMAIL } from './_shared.js';
 
 export const config = {
   runtime: 'edge',
-};
-
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-
-const json = (obj, status = 200) =>
-  new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-// Calculate date ranges
-const getYesterday = () => {
-  const now = new Date();
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  return yesterday.toISOString();
-};
-
-const get7DaysAgo = () => {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  return weekAgo.toISOString();
 };
 
 export default async function handler(req) {
@@ -32,34 +11,25 @@ export default async function handler(req) {
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return json({ error: 'Server configuration error' }, 500);
+    const { client: supabase, error: configError } = getSupabaseClient();
+    if (configError) {
+      return json({ error: configError }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // For manual triggers, verify admin access
+    // For manual triggers, verify admin access; for cron, check secret
     const authHeader = req.headers.get('authorization');
     const cronSecret = req.headers.get('x-cron-secret');
-    
-    // Allow if cron secret matches OR if authenticated as admin
     const isCron = cronSecret === process.env.CRON_SECRET;
     
-    if (!isCron && authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !user || user.email !== MASTER_ADMIN_EMAIL) {
-        return json({ error: 'Unauthorized' }, 403);
+    if (!isCron) {
+      const authResult = await verifyAdmin(supabase, authHeader);
+      if (authResult.error) {
+        return json({ error: authResult.error }, authResult.status);
       }
-    } else if (!isCron) {
-      return json({ error: 'Unauthorized' }, 403);
     }
 
-    const yesterday = getYesterday();
-    const weekAgo = get7DaysAgo();
+    const yesterday = getDateRange('1d');
+    const weekAgo = getDateRange('7d');
 
     // Fetch all stats
     const [usersResult, profilesResult, queueResult, userBooksResult, recommendationsResult, referralsResult, waitlistResult] = await Promise.all([

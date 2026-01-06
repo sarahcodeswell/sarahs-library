@@ -69,28 +69,6 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
     fetchDetails();
   }, [isOpen, type]);
 
-  const fetchUserBooks = async (userId, email) => {
-    setSelectedUser({ userId, email });
-    setLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-
-      const response = await fetch(`/api/admin/details?type=queue-user&userId=${userId}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setUserBooks(result.data);
-      }
-    } catch (err) {
-      console.error('Error fetching user books:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchUserDetails = async (detailType, userId, email) => {
     setSelectedUser({ userId, email });
     setLoading(true);
@@ -255,7 +233,7 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
             {data.map((u, i) => (
               <button
                 key={i}
-                onClick={() => fetchUserBooks(u.userId, u.email)}
+                onClick={() => fetchUserDetails('queue-user', u.userId, u.email)}
                 className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
               >
                 <p className="text-sm text-[#4A5940]">{u.email}</p>

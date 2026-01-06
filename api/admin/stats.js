@@ -1,30 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { json, getSupabaseClient, verifyAdmin, getDateRange, MASTER_ADMIN_EMAIL } from './_shared.js';
 
 export const config = {
   runtime: 'edge',
-};
-
-const MASTER_ADMIN_EMAIL = 'sarah@darkridge.com';
-
-const json = (obj, status = 200) =>
-  new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-// Calculate date ranges
-const getDateRange = (period) => {
-  const now = new Date();
-  switch (period) {
-    case '1d':
-      return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-    case '7d':
-      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    case '30d':
-      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    default:
-      return null; // lifetime
-  }
 };
 
 export default async function handler(req) {
@@ -33,25 +10,14 @@ export default async function handler(req) {
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return json({ error: 'Server configuration error' }, 500);
+    const { client: supabase, error: configError } = getSupabaseClient();
+    if (configError) {
+      return json({ error: configError }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify admin access via auth header
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user || user.email !== MASTER_ADMIN_EMAIL) {
-        return json({ error: 'Unauthorized' }, 403);
-      }
-    } else {
-      return json({ error: 'Unauthorized' }, 403);
+    const authResult = await verifyAdmin(supabase, req.headers.get('authorization'));
+    if (authResult.error) {
+      return json({ error: authResult.error }, authResult.status);
     }
 
     // Parse query params for date filtering
