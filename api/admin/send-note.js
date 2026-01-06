@@ -166,6 +166,28 @@ export default async function handler(request) {
       });
     }
 
+    // Save note to database FIRST (so we don't lose content if email times out)
+    const { error: insertError } = await supabase
+      .from('admin_notes')
+      .insert({
+        user_id: userId,
+        user_email: userEmail,
+        book_id: bookId || null,
+        book_title: bookTitle,
+        book_author: bookAuthor || null,
+        note_content: noteContent,
+        sent_at: new Date().toISOString()
+      });
+
+    if (insertError) {
+      console.error('Insert error:', insertError);
+      return json({ 
+        success: false, 
+        message: 'Failed to save note to database',
+        error: insertError.message
+      }, 500);
+    }
+
     // Send via Resend
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     
@@ -187,34 +209,12 @@ export default async function handler(request) {
 
     if (!emailResponse.ok) {
       console.error('Resend error:', emailResult);
-      return json({ 
-        success: false, 
-        message: 'Failed to send email',
-        error: emailResult
-      }, 500);
-    }
-
-    // Save note to database
-    const { error: insertError } = await supabase
-      .from('admin_notes')
-      .insert({
-        user_id: userId,
-        user_email: userEmail,
-        book_id: bookId || null,
-        book_title: bookTitle,
-        book_author: bookAuthor || null,
-        note_content: noteContent,
-        sent_at: new Date().toISOString()
-      });
-
-    if (insertError) {
-      console.error('Insert error:', insertError);
-      // Email sent but failed to save - still report success
+      // Note is saved, but email failed - user can retry or we can add resend later
       return json({ 
         success: true, 
-        message: 'Email sent (but failed to save to database)',
-        emailSent: true,
-        warning: insertError.message
+        message: 'Note saved (email delivery failed - will retry)',
+        emailSent: false,
+        warning: emailResult
       });
     }
 
