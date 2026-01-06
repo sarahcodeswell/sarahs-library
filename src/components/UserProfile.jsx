@@ -63,7 +63,12 @@ export default function UserProfile({ tasteProfile }) {
   const [bookstoreResults, setBookstoreResults] = useState([]);
   const [isSearchingBookstores, setIsSearchingBookstores] = useState(false);
   const [ageError, setAgeError] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
   const genreDropdownRef = useRef(null);
+  const locationDropdownRef = useRef(null);
 
   // Load existing preferences and profile data on mount
   useEffect(() => {
@@ -100,16 +105,70 @@ export default function UserProfile({ tasteProfile }) {
     }
   };
   
-  // Close genre dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target)) {
         setShowGenreDropdown(false);
       }
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target)) {
+        setShowLocationSearch(false);
+        setLocationResults([]);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Search for locations using Google Places API
+  const searchLocations = async (query) => {
+    if (!query.trim() || query.length < 2) {
+      setLocationResults([]);
+      return;
+    }
+    
+    setIsSearchingLocation(true);
+    try {
+      const res = await fetch(`/api/location-search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLocationResults(data.results || []);
+      }
+    } catch (error) {
+      console.error('Error searching locations:', error);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  // Debounced location search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (locationSearch && showLocationSearch) {
+        searchLocations(locationSearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [locationSearch, showLocationSearch]);
+
+  const handleSelectLocation = (location) => {
+    // Parse the location - main_text is usually city, secondary_text has state/country
+    const mainText = location.main_text || location.description.split(',')[0] || '';
+    const secondaryParts = (location.secondary_text || location.description.split(',').slice(1).join(',') || '').split(',').map(s => s.trim());
+    
+    setCity(mainText);
+    if (secondaryParts.length >= 2) {
+      setState(secondaryParts[0]);
+      setCountry(secondaryParts[secondaryParts.length - 1]);
+    } else if (secondaryParts.length === 1) {
+      // Could be state or country
+      setCountry(secondaryParts[0]);
+    }
+    
+    setLocationSearch('');
+    setLocationResults([]);
+    setShowLocationSearch(false);
+  };
 
   // Calculate age from birth year
   const calculateAge = (year) => {
@@ -732,38 +791,65 @@ export default function UserProfile({ tasteProfile }) {
             )}
           </div>
 
-          {/* Location */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs text-[#7A8F6C] mb-1">City</label>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
-                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[#7A8F6C] mb-1">State/Province</label>
-              <input
-                type="text"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                placeholder="State"
-                className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-              />
-            </div>
-          </div>
+          {/* Location with autocomplete */}
           <div>
-            <label className="block text-xs text-[#7A8F6C] mb-1">Country</label>
-            <input
-              type="text"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="Country"
-              className="w-full px-3 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-            />
+            <label className="block text-xs text-[#7A8F6C] mb-1">Location</label>
+            <div className="relative" ref={locationDropdownRef}>
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+              <input
+                type="text"
+                value={locationSearch}
+                onChange={(e) => {
+                  setLocationSearch(e.target.value);
+                  setShowLocationSearch(true);
+                }}
+                onFocus={() => setShowLocationSearch(true)}
+                placeholder={city ? `${city}${state ? `, ${state}` : ''}${country ? `, ${country}` : ''}` : 'Search for a city...'}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+              />
+              
+              {isSearchingLocation && (
+                <p className="text-xs text-[#96A888] mt-1">Searching...</p>
+              )}
+              
+              {locationResults.length > 0 && showLocationSearch && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-[#D4DAD0] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {locationResults.map((loc, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectLocation(loc)}
+                      className="w-full px-3 py-2 text-left hover:bg-[#F8F6EE] transition-colors border-b border-[#E8EBE4] last:border-0"
+                    >
+                      <p className="text-sm text-[#4A5940]">{loc.main_text || loc.description}</p>
+                      {loc.secondary_text && (
+                        <p className="text-xs text-[#7A8F6C]">{loc.secondary_text}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Show current location if set */}
+            {(city || state || country) && (
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-xs text-[#5F7252]">
+                  {[city, state, country].filter(Boolean).join(', ')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCity('');
+                    setState('');
+                    setCountry('');
+                  }}
+                  className="text-xs text-[#96A888] hover:text-[#7A8F6C]"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
 
           <button

@@ -181,8 +181,9 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'meet-sarah', 'shop', 'our-practices'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes'];
       if (path === 'add-books') return { page: 'my-books', token: null };
+      if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
     };
 
