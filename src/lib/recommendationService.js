@@ -77,17 +77,21 @@ function buildSystemPrompt() {
 
 Your taste centers on: women's stories, emotional truth, identity, spirituality, and justice.
 
-RECOMMENDATION STRATEGY:
-- When WORLD BOOK RECOMMENDATIONS are provided in the user message, you MUST use those books
-- When books from SARAH'S COLLECTION are provided, prioritize those with your personal insights
-- If no specific books are provided, use your knowledge to recommend quality books
-- Always prioritize BEST FIT - the user wants the perfect book for their specific request
-- Never say you "can't find books" or are "having trouble" - always provide 3 recommendations
+🚨 STRICT BOOK SELECTION RULES (NEVER VIOLATE):
+1. When books are PROVIDED in the user message, you MUST ONLY recommend from those books
+2. Do NOT add your own book suggestions unless explicitly told "use your knowledge"
+3. Your job is to FORMAT and EXPLAIN the provided books, not to find new ones
+4. If fewer than 3 books are provided, recommend only what's provided (1 or 2 is acceptable)
+
+RECOMMENDATION PRIORITY:
+- WORLD BOOK RECOMMENDATIONS section → Use ONLY these books
+- SARAH'S COLLECTION section → Use ONLY these books  
+- "Use your knowledge" instruction → Then and ONLY then use your own suggestions
+- Never mix: if books are provided, use ONLY those books
 
 CRITICAL EXCLUSION RULE:
 You will receive a list of books the user has already read, saved, or dismissed.
 NEVER recommend ANY book from that exclusion list under ANY circumstances.
-If a user asks about a book on the exclusion list, acknowledge they know it but do NOT include it in your 3 recommendations.
 
 IMPORTANT:
 When the user mentions authors they've already read (e.g., "I enjoy Jack Carr but have read all his books"), recommend books by DIFFERENT authors with similar styles.`,
@@ -523,20 +527,20 @@ ${retrievedContext.worldBooks.slice(0, 5).map((b, i) =>
     }
     
     // WORLD PATH: Let Claude use its knowledge for requests outside catalog
-    // This is intentional - we trust Claude's book knowledge for open discovery
+    // This is the ONLY case where Claude can add its own suggestions
     if (retrievedContext.catalogBooks.length === 0 && 
         retrievedContext.worldBooks.length === 0 && 
         !retrievedContext.verifiedBook) {
-      contextText += `\n\n📚 OUTSIDE MY CURATED COLLECTION:
-This request doesn't match books in my personal catalog. Use your broad book knowledge to recommend excellent books.
+      contextText += `\n\n📚 USE YOUR KNOWLEDGE - OUTSIDE MY CURATED COLLECTION:
+This request doesn't match books in my personal catalog and no specific books were found.
+
+YOU MAY use your broad book knowledge to recommend excellent books for this request.
 
 IMPORTANT FRAMING:
 - Start with: "This is outside my curated collection, but I know some great options..."
 - Recommend well-known, critically acclaimed books that truly match the request
 - Be specific about WHY each book fits their criteria
-- Focus on quality: Goodreads 4.0+, award winners, critical acclaim
-
-This is honest and helpful - we're building features to expand my catalog over time.`;
+- Focus on quality: Goodreads 4.0+, award winners, critical acclaim`;
     }
 
     // Add taste divergence guidance if needed
