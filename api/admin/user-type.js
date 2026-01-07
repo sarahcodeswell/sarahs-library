@@ -206,6 +206,8 @@ export default async function handler(req) {
         return json({ error: 'Cannot delete your own account' }, 400);
       }
 
+      const errors = [];
+
       // Delete user data from all tables with user_id column
       const userIdTables = [
         'reading_queue',
@@ -221,25 +223,27 @@ export default async function handler(req) {
       ];
 
       for (const table of userIdTables) {
-        try {
-          await supabase.from(table).delete().eq('user_id', userId);
-        } catch (e) {
-          // Table might not exist, continue
+        const { error } = await supabase.from(table).delete().eq('user_id', userId);
+        if (error && !error.message?.includes('does not exist')) {
+          errors.push(`${table}: ${error.message}`);
         }
       }
 
       // Delete referrals where user is the inviter
-      try {
-        await supabase.from('referrals').delete().eq('inviter_id', userId);
-      } catch (e) {
-        // Continue if fails
+      const { error: refError } = await supabase.from('referrals').delete().eq('inviter_id', userId);
+      if (refError && !refError.message?.includes('does not exist')) {
+        errors.push(`referrals: ${refError.message}`);
       }
 
       // Delete shared_recommendations where user is the sharer
-      try {
-        await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
-      } catch (e) {
-        // Continue if fails
+      const { error: shareError } = await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
+      if (shareError && !shareError.message?.includes('does not exist')) {
+        errors.push(`shared_recommendations: ${shareError.message}`);
+      }
+
+      // Log any table deletion errors but continue
+      if (errors.length > 0) {
+        console.error('Table deletion errors:', errors);
       }
 
       // Delete the auth user
@@ -247,7 +251,7 @@ export default async function handler(req) {
 
       if (deleteError) {
         console.error('Error deleting auth user:', deleteError);
-        return json({ error: 'Database error deleting user' }, 500);
+        return json({ error: `Failed to delete auth user: ${deleteError.message}` }, 500);
       }
 
       return json({ success: true, message: 'User deleted successfully' });
