@@ -1260,18 +1260,18 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
-              {/* OPTION B: Soft Background Cards */}
+              {/* OPTION B: Soft Background Cards with Dusty Rose */}
               {QUICK_ACCESS_STYLE === 'option-b' && (
                 <div className="mb-6 flex items-center justify-center gap-3">
                   {queueCount > 0 && (
                     <button 
-                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      onClick={() => navigateTo('reading-queue', '/reading-queue')}
                       className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
                     >
-                      <Bookmark className="w-4 h-4 text-[#5F7252]" />
+                      <Bookmark className="w-4 h-4 text-[#c96b6b]" />
                       <div className="text-left">
-                        <div className="text-[10px] uppercase tracking-wide text-[#7A8F6C] font-medium">Queue</div>
-                        <div className="text-base font-semibold text-[#4A5940]">{queueCount}</div>
+                        <div className="text-[10px] uppercase tracking-wide text-[#8B6F6F] font-medium">Queue</div>
+                        <div className="text-base font-semibold text-[#6B4F4F]">{queueCount}</div>
                       </div>
                     </button>
                   )}
@@ -1279,10 +1279,10 @@ Find similar books from beyond my library that match this taste profile.
                     onClick={() => navigateTo('collection', '/collection')}
                     className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
                   >
-                    <Library className="w-4 h-4 text-[#5F7252]" />
+                    <Library className="w-4 h-4 text-[#c96b6b]" />
                     <div className="text-left">
-                      <div className="text-[10px] uppercase tracking-wide text-[#7A8F6C] font-medium">Collection</div>
-                      <div className="text-base font-semibold text-[#4A5940]">{collectionCount}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-[#8B6F6F] font-medium">Collection</div>
+                      <div className="text-base font-semibold text-[#6B4F4F]">{collectionCount}</div>
                     </div>
                   </button>
                 </div>
