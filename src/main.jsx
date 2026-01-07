@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { UserProvider, ReadingQueueProvider, UserBooksProvider, RecommendationProvider } from './contexts'
-import { ReceivedRecommendationsProvider } from './contexts/ReceivedRecommendationsContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import { initSentry } from './lib/sentry'
 
@@ -29,9 +28,7 @@ createRoot(document.getElementById('root')).render(
         <ReadingQueueProvider>
           <UserBooksProvider>
             <RecommendationProvider>
-              <ReceivedRecommendationsProvider>
-                <App />
-              </ReceivedRecommendationsProvider>
+              <App />
             </RecommendationProvider>
           </UserBooksProvider>
         </ReadingQueueProvider>

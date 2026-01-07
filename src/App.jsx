@@ -27,7 +27,6 @@ import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
-import { ReceivedRecommendationsProvider } from './contexts/ReceivedRecommendationsContext';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
@@ -43,7 +42,6 @@ const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsP
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const OurMissionPage = lazy(() => import('./components/OurMissionPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
-const BooksSharedWithMePage = lazy(() => import('./components/BooksSharedWithMePage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
@@ -118,7 +116,6 @@ export default function App() {
   const { user, authLoading, showAuthModal, setShowAuthModal, signOut, isAdmin } = useUser();
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
   const { recommendations } = useRecommendations();
-  const { getCounts } = useReceivedRecommendations();
   
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
@@ -212,7 +209,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'books-shared-with-me', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'become-curator', 'curator-themes', 'admin'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -1015,15 +1012,6 @@ Find similar books from beyond my library that match this taste profile.
                               </span>
                             )}
                           </button>
-                          <button onClick={() => navigateTo('books-shared-with-me', '/books-shared-with-me')} className={MENU_BUTTON_CLASS}>
-                            <Sparkles className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">Books Shared with Me</span>
-                            {getCounts().pending > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#c96b6b] text-white rounded-full flex items-center justify-center">
-                                {getCounts().pending}
-                              </span>
-                            )}
-                          </button>
                           
                           {/* Profile & Sign Out */}
                           <div className="border-t border-[#E8EBE4] my-1"></div>
@@ -1214,17 +1202,6 @@ Find similar books from beyond my library that match this taste profile.
               onNavigate={setCurrentPage}
               user={user}
               onShowAuthModal={() => setShowAuthModal(true)}
-            />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {currentPage === 'books-shared-with-me' && (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback message="Loading Books Shared with Me..." />}>
-            <BooksSharedWithMePage 
-              onNavigate={setCurrentPage}
-              user={user}
             />
           </Suspense>
         </ErrorBoundary>

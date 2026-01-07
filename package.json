@@ -9,10 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node tests/routing.test.js",
-    "test:verbose": "VERBOSE=true node tests/routing.test.js",
-    "test:shared": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.integration.test.js",
-    "test:shared:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.integration.test.js --coverage",
-    "test:shared:full": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.test.js"
+    "test:verbose": "VERBOSE=true node tests/routing.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
@@ -36,7 +33,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@jest/globals": "^30.2.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -45,7 +41,6 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "jest": "^30.2.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "vite": "^7.2.4"
