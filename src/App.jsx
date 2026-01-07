@@ -171,7 +171,7 @@ export default function App() {
   const MENU_BUTTON_CLASS = "w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3";
   
   // Quick Access design options (change QUICK_ACCESS_STYLE to test different treatments)
-  const QUICK_ACCESS_STYLE = 'option-c'; // 'option-a', 'option-b', 'option-c', 'option-d'
+  const QUICK_ACCESS_STYLE = 'option-c'; // 'option-a', 'option-b', 'option-c', 'option-d', 'option-e'
   const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
@@ -1288,13 +1288,13 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
-              {/* OPTION C: Text Links with Badges */}
+              {/* OPTION C: Text Links with Badges - Improved Clickability */}
               {QUICK_ACCESS_STYLE === 'option-c' && (
                 <div className="mb-6 flex items-center justify-center gap-6 text-sm">
                   {queueCount > 0 && (
                     <button 
-                      onClick={() => navigateTo('queue', '/reading-queue')}
-                      className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-colors"
+                      onClick={() => navigateTo('reading-queue', '/reading-queue')}
+                      className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                     >
                       <Bookmark className="w-4 h-4" />
                       <span>My Queue</span>
@@ -1303,7 +1303,7 @@ Find similar books from beyond my library that match this taste profile.
                   )}
                   <button 
                     onClick={() => navigateTo('collection', '/collection')}
-                    className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-colors"
+                    className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                   >
                     <Library className="w-4 h-4" />
                     <span>My Collection</span>
@@ -1317,7 +1317,7 @@ Find similar books from beyond my library that match this taste profile.
                 <div className="mb-6 flex items-center justify-center gap-3">
                   {queueCount > 0 && (
                     <button 
-                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      onClick={() => navigateTo('reading-queue', '/reading-queue')}
                       className="flex flex-col items-center gap-1.5 px-4 py-3 bg-white hover:bg-[#F8F6EE] border border-[#E8EBE4] hover:border-[#5F7252] rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
                     >
                       <Bookmark className="w-4 h-4 text-[#5F7252]" />
@@ -1332,6 +1332,30 @@ Find similar books from beyond my library that match this taste profile.
                     <Library className="w-4 h-4 text-[#5F7252]" />
                     <div className="text-[10px] text-[#7A8F6C] font-medium">My Collection</div>
                     <div className="text-lg font-bold text-[#4A5940]">{collectionCount}</div>
+                  </button>
+                </div>
+              )}
+
+              {/* OPTION E: Dusty Rose Accent - Text Links */}
+              {QUICK_ACCESS_STYLE === 'option-e' && (
+                <div className="mb-6 flex items-center justify-center gap-6 text-sm">
+                  {queueCount > 0 && (
+                    <button 
+                      onClick={() => navigateTo('reading-queue', '/reading-queue')}
+                      className="inline-flex items-center gap-2 text-[#8B6F6F] hover:text-[#6B4F4F] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      <span>My Queue</span>
+                      <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#c96b6b] text-white rounded-full text-xs font-semibold flex items-center justify-center">{queueCount}</span>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="inline-flex items-center gap-2 text-[#8B6F6F] hover:text-[#6B4F4F] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
+                  >
+                    <Library className="w-4 h-4" />
+                    <span>My Collection</span>
+                    <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#c96b6b] text-white rounded-full text-xs font-semibold flex items-center justify-center">{collectionCount}</span>
                   </button>
                 </div>
               )}
