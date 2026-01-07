@@ -1252,7 +1252,7 @@ Find similar books from beyond my library that match this taste profile.
                     onClick={() => {
                       setCurrentPage('queue');
                       window.scrollTo(0, 0);
-                      window.history.pushState({}, '', '/queue');
+                      window.history.pushState({}, '', '/reading-queue');
                     }}
                     className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
                   >
