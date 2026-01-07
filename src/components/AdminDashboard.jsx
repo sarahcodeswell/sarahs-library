@@ -73,11 +73,15 @@ function UserManagement() {
         setMessage({ type: 'success', text: `${email} has been deleted` });
         setExpandedUser(null);
         fetchUsers();
+        // Auto-dismiss success message after 3 seconds
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to delete user' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to delete user' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
     } finally {
       setDeleting(null);
     }
