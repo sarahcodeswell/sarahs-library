@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, MessageCircle } from 'lucide-react';
+import { ArrowLeft, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, MessageCircle, Sun } from 'lucide-react';
 
 export default function CuratorThemesPage({ onNavigate }) {
   return (
@@ -35,6 +35,17 @@ export default function CuratorThemesPage({ onNavigate }) {
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
               This collection is dominated by female authors and female protagonists—not just in quantity, but in type. Books that excavate women's hidden contributions, women's survival under impossible conditions, and women navigating systems that weren't built for them. Authors like Kristin Hannah, Paula McLain, and Marie Benedict who specialize in giving voice to women history overlooked.
+            </p>
+          </div>
+
+          {/* Beach Read */}
+          <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
+            <h3 className="font-serif text-lg text-[#4A5940] mb-3 flex items-center gap-2">
+              <Sun className="w-5 h-5 text-[#5F7252]" />
+              Beach Read: Lighthearted Escapes
+            </h3>
+            <p className="text-sm text-[#5F7252] leading-relaxed">
+              Not everything has to be heavy. This collection includes lighthearted, entertaining reads that are pure enjoyment—books that make you smile, laugh, and feel good without demanding intellectual heavy lifting. Perfect for when you need a break from the weightier themes.
             </p>
           </div>
 
