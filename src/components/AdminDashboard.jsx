@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -13,8 +13,6 @@ const PERIODS = [
 function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(null);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [exporting, setExporting] = useState(false);
   const [expandedUser, setExpandedUser] = useState(null);
@@ -45,37 +43,6 @@ function UserManagement() {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const handleSetUserType = async (userId, email, newType) => {
-    setUpdating(userId);
-    setMessage({ type: '', text: '' });
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-
-      const response = await fetch('/api/admin/user-type', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId, userType: newType })
-      });
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: `${email} is now a ${newType}` });
-        fetchUsers();
-      } else {
-        const result = await response.json();
-        setMessage({ type: 'error', text: result.error || 'Failed to update user type' });
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update user type' });
-    } finally {
-      setUpdating(null);
-    }
-  };
 
   const handleExportUsers = () => {
     setExporting(true);
@@ -167,17 +134,6 @@ function UserManagement() {
         placeholder="Search by email or name..."
         className="w-full px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252] mb-4"
       />
-
-      {/* Messages */}
-      {message.text && (
-        <div className={`mb-3 p-2 rounded-lg text-sm ${
-          message.type === 'error' 
-            ? 'bg-red-50 border border-red-200 text-red-700' 
-            : 'bg-green-50 border border-green-200 text-green-700'
-        }`}>
-          {message.text}
-        </div>
-      )}
 
       {/* User List */}
       {loading ? (
@@ -1576,7 +1532,9 @@ export default function AdminDashboard({ onNavigate }) {
         )}
 
         {/* User Management */}
-        <UserManagement />
+        <div className="mb-6">
+          <UserManagement />
+        </div>
 
         {/* Admin Access */}
         <AdminManagement />
