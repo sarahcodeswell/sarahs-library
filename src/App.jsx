@@ -1235,8 +1235,8 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* My Books Section - logged in users only */}
           {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
-            <div className="mb-6 bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-4">
-              <h2 className="text-xs font-semibold text-[#4A5940] mb-3 text-center uppercase tracking-wide">My Books</h2>
+            <>
+              <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">My Books</h2>
               {/* OPTION A: Compact Inline Pills */}
               {QUICK_ACCESS_STYLE === 'option-a' && (
                 <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
@@ -1263,20 +1263,20 @@ Find similar books from beyond my library that match this taste profile.
 
               {/* OPTION B: Compact Pills with Clickable Selected State */}
               {QUICK_ACCESS_STYLE === 'option-b' && (
-                <div className="flex items-center justify-center gap-3 flex-wrap">
+                <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
                   {queueCount > 0 && (
                     <button 
                       onClick={() => navigateTo('reading-queue', '/reading-queue')}
                       className={`inline-flex items-center gap-2 px-4 py-2 border-2 rounded-full text-sm font-medium transition-all ${
                         currentPage === 'reading-queue'
-                          ? 'bg-[#b08080] border-[#8B6F6F] text-white shadow-lg'
-                          : 'bg-[#F8F6EE]/50 border-[#E8EBE4] text-[#4A5940] hover:border-[#b08080] hover:shadow-md'
+                          ? 'bg-[#5F7252] border-[#4A5940] text-white shadow-lg'
+                          : 'bg-[#F8F6EE]/50 border-[#E8EBE4] text-[#4A5940] hover:border-[#5F7252] hover:shadow-md'
                       }`}
                     >
-                      <Bookmark className={`w-4 h-4 ${currentPage === 'reading-queue' ? 'text-white' : 'text-[#b08080]'}`} />
+                      <Bookmark className={`w-4 h-4 ${currentPage === 'reading-queue' ? 'text-white' : 'text-[#5F7252]'}`} />
                       <span>Queue</span>
                       <span className={`ml-1 min-w-[20px] h-5 px-2 rounded-full text-xs font-semibold flex items-center justify-center ${
-                        currentPage === 'reading-queue' ? 'bg-white/20 text-white' : 'bg-[#b08080] text-white'
+                        currentPage === 'reading-queue' ? 'bg-white/20 text-white' : 'bg-[#5F7252] text-white'
                       }`}>{queueCount}</span>
                     </button>
                   )}
@@ -1284,14 +1284,14 @@ Find similar books from beyond my library that match this taste profile.
                     onClick={() => navigateTo('collection', '/collection')}
                     className={`inline-flex items-center gap-2 px-4 py-2 border-2 rounded-full text-sm font-medium transition-all ${
                       currentPage === 'collection'
-                        ? 'bg-[#b08080] border-[#8B6F6F] text-white shadow-lg'
-                        : 'bg-[#F8F6EE]/50 border-[#E8EBE4] text-[#4A5940] hover:border-[#b08080] hover:shadow-md'
+                        ? 'bg-[#5F7252] border-[#4A5940] text-white shadow-lg'
+                        : 'bg-[#F8F6EE]/50 border-[#E8EBE4] text-[#4A5940] hover:border-[#5F7252] hover:shadow-md'
                     }`}
                   >
-                    <Library className={`w-4 h-4 ${currentPage === 'collection' ? 'text-white' : 'text-[#b08080]'}`} />
+                    <Library className={`w-4 h-4 ${currentPage === 'collection' ? 'text-white' : 'text-[#5F7252]'}`} />
                     <span>Collection</span>
                     <span className={`ml-1 min-w-[20px] h-5 px-2 rounded-full text-xs font-semibold flex items-center justify-center ${
-                      currentPage === 'collection' ? 'bg-white/20 text-white' : 'bg-[#b08080] text-white'
+                      currentPage === 'collection' ? 'bg-white/20 text-white' : 'bg-[#5F7252] text-white'
                     }`}>{collectionCount}</span>
                   </button>
                 </div>
@@ -1368,7 +1368,7 @@ Find similar books from beyond my library that match this taste profile.
                   </button>
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {/* Curator Theme Cards - Grid Layout */}
