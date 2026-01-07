@@ -21,7 +21,7 @@ export default function OurMissionPage({ onNavigate }) {
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-3">Our Mission</h1>
           <p className="text-base text-[#7A8F6C] leading-relaxed max-w-2xl mx-auto">
-            How we handle your data, use AI responsibly, and support the reading community
+            To encourage a love of reading and support the local ecosystems that make it possible.
           </p>
         </div>
 
