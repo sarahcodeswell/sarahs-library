@@ -171,7 +171,7 @@ export default function App() {
   const MENU_BUTTON_CLASS = "w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3";
   
   // Quick Access design options (change QUICK_ACCESS_STYLE to test different treatments)
-  const QUICK_ACCESS_STYLE = 'option-b'; // 'option-a', 'option-b', 'option-c', 'option-d'
+  const QUICK_ACCESS_STYLE = 'option-a'; // 'option-a', 'option-b', 'option-c', 'option-d'
   const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
