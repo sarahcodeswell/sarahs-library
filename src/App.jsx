@@ -40,6 +40,7 @@ const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
+const OurMissionPage = lazy(() => import('./components/OurMissionPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
@@ -1125,9 +1126,19 @@ Find similar books from beyond my library that match this taste profile.
       )}
 
       {currentPage === 'our-practices' && (
-        <Suspense fallback={<LoadingFallback message="Loading Our Practices..." />}>
-          <OurPracticesPage onNavigate={setCurrentPage} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading..." />}>
+            <OurPracticesPage onNavigate={setCurrentPage} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentPage === 'our-mission' && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading..." />}>
+            <OurMissionPage onNavigate={setCurrentPage} />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {currentPage === 'admin' && (isAdmin || user?.email === 'sarah@darkridge.com') && (
