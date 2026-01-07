@@ -251,11 +251,20 @@ export default async function handler(req) {
         console.error('Table deletion errors:', errors);
       }
 
-      // Delete the auth user
+      // Try to delete the auth user
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
 
       if (deleteError) {
         console.error('Error deleting auth user:', deleteError);
+        // If we can't delete the auth user due to DB constraints, 
+        // at least we've deleted all their data. Return partial success.
+        if (deleteError.message?.includes('Database error')) {
+          return json({ 
+            success: true, 
+            partial: true,
+            message: 'User data deleted. Auth record may remain due to database constraints - delete manually in Supabase dashboard if needed.' 
+          });
+        }
         return json({ error: `Failed to delete auth user: ${deleteError.message}` }, 500);
       }
 
