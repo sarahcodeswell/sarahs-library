@@ -1214,26 +1214,24 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'home' && (
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
-          {/* Hero Image - only show when no conversation yet */}
+          {/* Minimal Note Card Header - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src="/books.jpg"
-                alt="Cozy reading atmosphere"
-                loading="lazy"
-                className="block w-full h-[clamp(100px,14vh,180px)] object-cover object-center"
-              />
+            <div className="mb-6 bg-[#F8F6EE] rounded-lg border-2 border-dashed border-[#D4DAD0] p-8 sm:p-12 text-center">
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">Sarah's Books</h1>
+              <p className="text-sm text-[#7A8F6C]">
+                For the <span className="text-red-500">❤️</span> of reading
+              </p>
             </div>
           )}
 
-          {/* Header - only show when no conversation yet */}
-          {messages.length <= 1 && (
+          {/* Welcome Message - only show when no conversation yet */}
+          {messages.length <= 1 && user && (
             <div className="mb-6 text-center">
-              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
-                {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'What should I read next?'}
-              </h1>
+              <h2 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
+                Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!
+              </h2>
               <p className="text-sm text-[#7A8F6C]">
-                {user ? 'Ready to find your next great read?' : 'Curated by a real reader, intelligently matched to you'}
+                Ready to find your next great read?
               </p>
             </div>
           )}
@@ -1296,39 +1294,50 @@ Find similar books from beyond my library that match this taste profile.
                     const isSelected = selectedThemes.includes(key);
                     const isExpanded = expandedTheme === key;
                     return (
-                      <div key={key} className="relative">
-                        <button
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedThemes([]);
-                              setInputValue('');
-                              track('theme_filter_removed', { theme: key, theme_label: info.label });
-                            } else {
-                              setSelectedThemes([key]);
-                              const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                              setInputValue(themeText);
-                              track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                            }
-                          }}
-                          onMouseEnter={() => setExpandedTheme(key)}
-                          onMouseLeave={() => setExpandedTheme(null)}
-                          className={`w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                            isSelected 
-                              ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
-                              : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
-                          }`}
-                          aria-label={`${info.label} collection`}
-                          aria-pressed={isSelected}
-                        >
-                          {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
-                          <span className={`text-xs font-medium text-center leading-tight ${
-                            isSelected ? 'text-white' : 'text-[#4A5940]'
-                          }`}>
-                            {info.label}
-                          </span>
-                        </button>
+                      <div key={key} className="flex flex-col">
+                        <div className="relative">
+                          <button
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedThemes([]);
+                                setInputValue('');
+                                track('theme_filter_removed', { theme: key, theme_label: info.label });
+                              } else {
+                                setSelectedThemes([key]);
+                                const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                                setInputValue(themeText);
+                                track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                              }
+                            }}
+                            className={`w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                              isSelected 
+                                ? 'bg-[#5F7252] border-[#4A5940] shadow-lg' 
+                                : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
+                            }`}
+                            aria-label={`${info.label} collection`}
+                            aria-pressed={isSelected}
+                          >
+                            {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
+                            <span className={`text-xs font-medium text-center leading-tight ${
+                              isSelected ? 'text-white' : 'text-[#4A5940]'
+                            }`}>
+                              {info.label}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedTheme(isExpanded ? null : key);
+                              track('theme_info_toggled', { theme: key, expanded: !isExpanded });
+                            }}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-[#5F7252] text-white rounded-full flex items-center justify-center text-xs hover:bg-[#4A5940] transition-colors shadow-md"
+                            aria-label={`Learn more about ${info.label}`}
+                          >
+                            ⓘ
+                          </button>
+                        </div>
                         {isExpanded && (
-                          <div className="absolute z-10 mt-2 p-3 bg-white rounded-lg shadow-lg border border-[#E8EBE4] text-xs text-[#4A5940] w-48 left-1/2 transform -translate-x-1/2">
+                          <div className="mt-2 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4] text-xs text-[#5F7252] leading-relaxed">
                             {themeDescriptions[key]}
                           </div>
                         )}
