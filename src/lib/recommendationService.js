@@ -420,7 +420,7 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
         
         return {
           success: true,
-          text: `You've explored all the books in my ${themeName} collection! Here are my favorites from this theme:\n\n${responseText}`,
+          text: `You've seen all books in ${themeName}. Here are my favorites:\n\n${responseText}`,
           exclusionCount: exclusionList.length,
           exclusionList: exclusionList,
           classification: classification,
@@ -443,7 +443,7 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
       
       return {
         success: true,
-        text: `Here are my top picks from the ${themeName} collection:\n\n${responseText}`,
+        text: `My top picks from ${themeName}:\n\n${responseText}`,
         exclusionCount: exclusionList.length,
         exclusionList: exclusionList,
         classification: classification,

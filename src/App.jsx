@@ -130,7 +130,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's from my curator's picks or from the world's catalog.", isUser: false }
+    { text: "Browse my curated collections below or ask me anything.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -361,7 +361,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's from my curator's picks or from the world's catalog.",
+      text: "Browse my curated collections below or ask me anything.",
       isUser: false
     }];
   };
