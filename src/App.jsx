@@ -1059,8 +1059,8 @@ Find similar books from beyond my library that match this taste profile.
               </button>
             </div>
             
-            {/* Center: How It Works link */}
-            <div className="flex-1 flex justify-center">
+            {/* Right: How It Works + Profile/Sign In */}
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => {
                   setCurrentPage('about');
@@ -1071,10 +1071,6 @@ Find similar books from beyond my library that match this taste profile.
               >
                 How It Works
               </button>
-            </div>
-            
-            {/* Right: Profile/Sign In */}
-            <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -1242,75 +1238,93 @@ Find similar books from beyond my library that match this taste profile.
           )}
 
           {/* Personalized Quick Access - logged in users only */}
-          {messages.length <= 1 && user && (readingQueue.length > 0 || recommendations.length > 0) && (
+          {messages.length <= 1 && user && (() => {
+            const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
+            const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
+            return queueCount > 0 || collectionCount > 0;
+          })() && (
             <div className="mb-6 bg-[#F8F6EE] rounded-xl p-4 border border-[#E8EBE4]">
               <h2 className="text-sm font-semibold text-[#4A5940] mb-3">Quick Access</h2>
               <div className="flex flex-col gap-2">
-                {readingQueue.length > 0 && (
-                  <button
-                    onClick={() => setCurrentPage('queue')}
-                    className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Bookmark className="w-4 h-4 text-[#5F7252]" />
-                      <span className="text-sm text-[#4A5940]">My Queue</span>
-                    </div>
-                    <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
-                      {readingQueue.length}
-                    </span>
-                  </button>
-                )}
-                <button
-                  onClick={() => setCurrentPage('collection')}
-                  className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-2">
-                    <Library className="w-4 h-4 text-[#5F7252]" />
-                    <span className="text-sm text-[#4A5940]">My Collection</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-[#7A8F6C]" />
-                </button>
+                {(() => {
+                  const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
+                  return queueCount > 0 && (
+                    <button
+                      onClick={() => setCurrentPage('queue')}
+                      className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bookmark className="w-4 h-4 text-[#5F7252]" />
+                        <span className="text-sm text-[#4A5940]">My Queue</span>
+                      </div>
+                      <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
+                        {queueCount}
+                      </span>
+                    </button>
+                  );
+                })()}
+                {(() => {
+                  const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
+                  return (
+                    <button
+                      onClick={() => setCurrentPage('collection')}
+                      className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Library className="w-4 h-4 text-[#5F7252]" />
+                        <span className="text-sm text-[#4A5940]">My Collection</span>
+                      </div>
+                      <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
+                        {collectionCount}
+                      </span>
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           )}
 
-          {/* Stacked Books */}
+          {/* Curator Theme Cards - Grid Layout */}
           {messages.length <= 1 && (
             <>
-              <div className="flex flex-col items-center gap-1.5 mb-6">
-                {Object.entries(themeInfo).map(([key, info]) => {
-                  const isSelected = selectedThemes.includes(key);
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedThemes([]);
-                          setInputValue('');
-                          track('theme_filter_removed', { theme: key, theme_label: info.label });
-                        } else {
-                          setSelectedThemes([key]);
-                          const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                          setInputValue(themeText);
-                          track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                        }
-                      }}
-                      className={`w-full max-w-sm flex items-center gap-3 px-4 py-2.5 rounded-lg border-l-4 transition-all ${
-                        isSelected 
-                          ? 'bg-[#5F7252] border-l-[#4A5940] shadow-lg scale-[1.02] z-10' 
-                          : 'bg-[#F8F6EE] border-l-[#5F7252] hover:scale-[1.01] hover:shadow-md'
-                      }`}
-                      style={{ boxShadow: isSelected ? undefined : '0 1px 3px rgba(0,0,0,0.08)' }}
-                      aria-label={`${info.label} collection`}
-                      aria-pressed={isSelected}
-                    >
-                      {info.icon && <info.icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
-                      <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-[#4A5940]'}`}>
-                        {info.label}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Browse by Theme</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {Object.entries(themeInfo).map(([key, info]) => {
+                    const isSelected = selectedThemes.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedThemes([]);
+                            setInputValue('');
+                            track('theme_filter_removed', { theme: key, theme_label: info.label });
+                          } else {
+                            setSelectedThemes([key]);
+                            const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                            setInputValue(themeText);
+                            track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                          }
+                        }}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                          isSelected 
+                            ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
+                            : 'bg-white border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
+                        }`}
+                        aria-label={`${info.label} collection`}
+                        aria-pressed={isSelected}
+                      >
+                        {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
+                        <span className={`text-xs font-medium text-center leading-tight ${
+                          isSelected ? 'text-white' : 'text-[#4A5940]'
+                        }`}>
+                          {info.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Divider */}

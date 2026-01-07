@@ -406,7 +406,7 @@ export async function findCatalogBooksByAuthor(authorName, limit = 20) {
 
 /**
  * Find books by curator theme from Sarah's curated catalog (books table)
- * Curator themes: women, emotional, identity, justice, spiritual
+ * Curator themes: women, beach, emotional, identity, justice, spiritual
  * @param {string[]} themes - Array of theme names
  * @param {number} limit - Maximum results
  * @returns {Promise<Array>} Books matching these themes from the catalog

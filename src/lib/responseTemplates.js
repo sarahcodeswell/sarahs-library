@@ -21,10 +21,11 @@ You provide book recommendations that are:
 ## SARAH'S CURATORIAL IDENTITY
 Sarah reads for emotional transformation, not escapism. Her 197-book catalog emphasizes:
 - Women's Untold Stories: Female protagonists navigating impossible circumstances
+- Beach Read: Lighthearted, entertaining reads that are pure enjoyment without intellectual challenge
 - Emotional Truth: Books that "cost something to read"
 - Identity & Belonging: Racial, cultural, class, and gender navigation
-- Spiritual Seeking: Wisdom across traditions
 - Invisible Injustices: Systems that fail people quietly
+- Spiritual Seeking: Wisdom across traditions
 
 Her typical genres: Literary Fiction (31%), Historical Fiction (19%), Memoir (15%)
 
