@@ -254,12 +254,8 @@ export default async function handler(req) {
       await supabase.from('referrals').delete().eq('inviter_id', userId);
       await supabase.from('referrals').delete().eq('invited_user_id', userId);
 
-      // Delete shared_recommendations where user is the sharer OR recipient
-      await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
-      await supabase.from('shared_recommendations').delete().eq('recipient_id', userId);
-
-      // Delete recommendations where user is involved
-      await supabase.from('recommendations').delete().eq('user_id', userId);
+      // Delete user_recommendations (shared_recommendations cascade via FK)
+      await supabase.from('user_recommendations').delete().eq('user_id', userId);
 
       // Delete taste_profiles entirely (required for auth deletion due to FK constraint)
       await supabase.from('taste_profiles').delete().eq('user_id', userId);
