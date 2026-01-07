@@ -171,7 +171,7 @@ export default function AboutPage({ onNavigate, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 ml-[4.5rem]">
+            <div className="mt-4 sm:ml-[4.5rem]">
               <button
                 onClick={() => {
                   onNavigate('curator-themes');
@@ -197,7 +197,7 @@ export default function AboutPage({ onNavigate, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 ml-[4.5rem]">
+            <div className="mt-4 sm:ml-[4.5rem]">
               <button
                 onClick={() => {
                   onNavigate('my-books');
@@ -254,7 +254,7 @@ export default function AboutPage({ onNavigate, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 ml-[4.5rem] space-y-3">
+            <div className="mt-4 sm:ml-[4.5rem] space-y-3">
               <button
                 onClick={() => {
                   setShowInviteModal(true);
