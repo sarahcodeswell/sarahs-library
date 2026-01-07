@@ -54,7 +54,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
 
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6B8E9C]/10 text-[#6B8E9C] text-sm font-medium mb-4">
             <Sparkles className="w-4 h-4" />
             Coming Soon
           </div>
@@ -70,7 +70,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
           
           <div className="bg-[#F8F6EE] rounded-xl p-5 border border-[#D4DAD0]">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 text-[#5F7252] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#6B8E9C]/10 text-[#6B8E9C] flex items-center justify-center flex-shrink-0">
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
@@ -84,7 +84,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
 
           <div className="bg-[#F8F6EE] rounded-xl p-5 border border-[#D4DAD0]">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 text-[#5F7252] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#6B8E9C]/10 text-[#6B8E9C] flex items-center justify-center flex-shrink-0">
                 <Palette className="w-5 h-5" />
               </div>
               <div>
@@ -98,7 +98,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
 
           <div className="bg-[#F8F6EE] rounded-xl p-5 border border-[#D4DAD0]">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 text-[#5F7252] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#6B8E9C]/10 text-[#6B8E9C] flex items-center justify-center flex-shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
@@ -112,10 +112,10 @@ export default function BecomeCuratorPage({ onNavigate }) {
         </div>
 
         {/* Waitlist Signup */}
-        <div className="bg-[#5F7252]/10 rounded-2xl p-6 sm:p-8 border border-[#5F7252]/20">
+        <div className="bg-[#6B8E9C]/10 rounded-2xl p-6 sm:p-8 border border-[#6B8E9C]/20">
           {submitted ? (
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-[#5F7252] text-white flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-[#6B8E9C] text-white flex items-center justify-center mx-auto mb-4">
                 <Check className="w-6 h-6" />
               </div>
               <h3 className="font-serif text-xl text-[#4A5940] mb-2">You're on the list!</h3>
@@ -140,14 +140,14 @@ export default function BecomeCuratorPage({ onNavigate }) {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#6B8E9C]/30"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-3 rounded-lg bg-[#5F7252] text-white font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50"
+                    className="px-6 py-3 rounded-lg bg-[#6B8E9C] text-white font-medium hover:bg-[#5a7a87] transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Joining...' : 'Join Waitlist'}
                   </button>
@@ -168,7 +168,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
               onNavigate('home');
               window.scrollTo(0, 0);
             }}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-[#5F7252] text-[#5F7252] text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-[#6B8E9C] text-[#6B8E9C] text-sm font-medium hover:bg-[#6B8E9C]/5 transition-colors"
           >
             Ask Sarah for a Recommendation
           </button>
