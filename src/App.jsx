@@ -169,7 +169,9 @@ export default function App() {
 
   // Shared className constants
   const MENU_BUTTON_CLASS = "w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3";
-  const GRADIENT_CARD_CLASS = "flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm";
+  
+  // Quick Access design options (change QUICK_ACCESS_STYLE to test different treatments)
+  const QUICK_ACCESS_STYLE = 'option-b'; // 'option-a', 'option-b', 'option-c', 'option-d'
   const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
@@ -1233,24 +1235,107 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* Personalized Quick Access - logged in users only */}
           {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
-            <div className="mb-6 grid grid-cols-2 gap-3">
-              {queueCount > 0 && (
-                <button onClick={() => navigateTo('queue', '/reading-queue')} className={GRADIENT_CARD_CLASS}>
-                  <Bookmark className="w-5 h-5" />
-                  <div className="text-center">
-                    <div className="text-xs font-medium">My Queue</div>
-                    <div className="text-xl font-bold">{queueCount}</div>
-                  </div>
-                </button>
-              )}
-              <button onClick={() => navigateTo('collection', '/collection')} className={GRADIENT_CARD_CLASS}>
-                <Library className="w-5 h-5" />
-                <div className="text-center">
-                  <div className="text-xs font-medium">My Collection</div>
-                  <div className="text-xl font-bold">{collectionCount}</div>
+            <>
+              {/* OPTION A: Compact Inline Pills */}
+              {QUICK_ACCESS_STYLE === 'option-a' && (
+                <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
+                  {queueCount > 0 && (
+                    <button 
+                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-full text-xs font-medium text-[#4A5940] transition-colors"
+                    >
+                      <Bookmark className="w-3.5 h-3.5" />
+                      <span>My Queue</span>
+                      <span className="ml-0.5 px-1.5 py-0.5 bg-[#5F7252] text-white rounded-full text-[10px] font-semibold">{queueCount}</span>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-full text-xs font-medium text-[#4A5940] transition-colors"
+                  >
+                    <Library className="w-3.5 h-3.5" />
+                    <span>My Collection</span>
+                    <span className="ml-0.5 px-1.5 py-0.5 bg-[#5F7252] text-white rounded-full text-[10px] font-semibold">{collectionCount}</span>
+                  </button>
                 </div>
-              </button>
-            </div>
+              )}
+
+              {/* OPTION B: Soft Background Cards */}
+              {QUICK_ACCESS_STYLE === 'option-b' && (
+                <div className="mb-6 flex items-center justify-center gap-3">
+                  {queueCount > 0 && (
+                    <button 
+                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
+                    >
+                      <Bookmark className="w-4 h-4 text-[#5F7252]" />
+                      <div className="text-left">
+                        <div className="text-[10px] uppercase tracking-wide text-[#7A8F6C] font-medium">Queue</div>
+                        <div className="text-base font-semibold text-[#4A5940]">{queueCount}</div>
+                      </div>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
+                  >
+                    <Library className="w-4 h-4 text-[#5F7252]" />
+                    <div className="text-left">
+                      <div className="text-[10px] uppercase tracking-wide text-[#7A8F6C] font-medium">Collection</div>
+                      <div className="text-base font-semibold text-[#4A5940]">{collectionCount}</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* OPTION C: Text Links with Badges */}
+              {QUICK_ACCESS_STYLE === 'option-c' && (
+                <div className="mb-6 flex items-center justify-center gap-6 text-sm">
+                  {queueCount > 0 && (
+                    <button 
+                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-colors"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      <span>My Queue</span>
+                      <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#5F7252] text-white rounded-full text-xs font-semibold flex items-center justify-center">{queueCount}</span>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-colors"
+                  >
+                    <Library className="w-4 h-4" />
+                    <span>My Collection</span>
+                    <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#5F7252] text-white rounded-full text-xs font-semibold flex items-center justify-center">{collectionCount}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* OPTION D: Single Row Compact Cards */}
+              {QUICK_ACCESS_STYLE === 'option-d' && (
+                <div className="mb-6 flex items-center justify-center gap-3">
+                  {queueCount > 0 && (
+                    <button 
+                      onClick={() => navigateTo('queue', '/reading-queue')}
+                      className="flex flex-col items-center gap-1.5 px-4 py-3 bg-white hover:bg-[#F8F6EE] border border-[#E8EBE4] hover:border-[#5F7252] rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
+                    >
+                      <Bookmark className="w-4 h-4 text-[#5F7252]" />
+                      <div className="text-[10px] text-[#7A8F6C] font-medium">My Queue</div>
+                      <div className="text-lg font-bold text-[#4A5940]">{queueCount}</div>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="flex flex-col items-center gap-1.5 px-4 py-3 bg-white hover:bg-[#F8F6EE] border border-[#E8EBE4] hover:border-[#5F7252] rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
+                  >
+                    <Library className="w-4 h-4 text-[#5F7252]" />
+                    <div className="text-[10px] text-[#7A8F6C] font-medium">My Collection</div>
+                    <div className="text-lg font-bold text-[#4A5940]">{collectionCount}</div>
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Curator Theme Cards - Grid Layout */}
