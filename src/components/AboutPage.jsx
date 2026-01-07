@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart, Link, Copy } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart, Link, Copy, Users } from 'lucide-react';
 import { supabase, db } from '../lib/supabase';
 
 // Generate a book-themed referral code from user ID
@@ -245,16 +245,43 @@ export default function AboutPage({ onNavigate, user }) {
             </div>
           </div>
 
-          {/* Step 4: CURATE */}
-          <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
+          {/* Step 4: READ WITH FRIENDS */}
+          <div className="bg-[#c96b6b]/10 rounded-xl p-6 border border-[#c96b6b]/20">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[#c96b6b] text-white flex items-center justify-center flex-shrink-0">
+                <Users className="w-7 h-7" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-serif text-xl text-[#4A5940]">Read with Friends</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#c96b6b]/20 text-[#c96b6b]">Coming Soon</span>
+                </div>
+                <p className="text-sm text-[#7A8F6C] mb-3">
+                  Share book recommendations directly with friends on Sarah's Books. A thoughtful way to connect over great books—not social media.
+                </p>
+                <button
+                  onClick={() => {
+                    onNavigate('read-with-friends');
+                    window.scrollTo(0, 0);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#c96b6b] text-white text-sm font-medium hover:bg-[#b85a5a] transition-colors"
+                >
+                  Join the Beta
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 5: CURATE */}
+          <div className="bg-[#6B8E9C]/10 rounded-xl p-6 border border-[#6B8E9C]/20">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#6B8E9C] text-white flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-serif text-xl text-[#4A5940]">Curate</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252]">Coming Soon</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#6B8E9C]/20 text-[#6B8E9C]">Coming Soon</span>
                 </div>
                 <p className="text-sm text-[#7A8F6C] mb-3">
                   Become a curator yourself. Create your own themes, build your library, and help others find their next great read.
@@ -264,7 +291,7 @@ export default function AboutPage({ onNavigate, user }) {
                     onNavigate('become-curator');
                     window.scrollTo(0, 0);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#6B8E9C] text-white text-sm font-medium hover:bg-[#5a7a87] transition-colors"
                 >
                   Join the Waitlist
                 </button>
