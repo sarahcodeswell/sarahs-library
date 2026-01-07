@@ -20,28 +20,28 @@ export default function Footer({ onNavigate, currentPage }) {
             Our Mission
           </button>
           <button
-            onClick={() => handleNavigation('our-practices', '/our-practices')}
-            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'our-practices' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
-          >
-            Our Practices
-          </button>
-          <button
             onClick={() => handleNavigation('shop', '/shop')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'shop' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >
             Shop
           </button>
           <button
+            onClick={() => handleNavigation('our-practices', '/our-practices')}
+            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'our-practices' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
+          >
+            Our Practices
+          </button>
+          <button
             onClick={() => handleNavigation('privacy-policy', '/privacy-policy')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'privacy-policy' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >
-            Privacy Notice
+            Privacy
           </button>
           <button
             onClick={() => handleNavigation('terms-of-use', '/terms-of-use')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'terms-of-use' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >
-            Terms of Use
+            Terms
           </button>
           <a
             href="mailto:hello@sarahsbooks.com"
