@@ -1060,19 +1060,19 @@ Find similar books from beyond my library that match this taste profile.
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm max-w-[140px] sm:max-w-none"
                   title="View profile"
                 >
                   {tasteProfile.profile_photo_url ? (
                     <img 
                       src={tasteProfile.profile_photo_url} 
                       alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border border-white/30"
+                      className="w-6 h-6 rounded-full object-cover border border-white/30 flex-shrink-0"
                     />
                   ) : (
-                    <UserIcon className="w-4 h-4" />
+                    <UserIcon className="w-4 h-4 flex-shrink-0" />
                   )}
-                  <span className="text-sm font-medium">
+                  <span className="text-xs sm:text-sm font-medium truncate">
                     {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Profile'}
                   </span>
                 </button>
@@ -1235,8 +1235,8 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* My Books Section - logged in users only */}
           {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
-            <>
-              <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">My Books</h2>
+            <div className="mb-6 bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-4">
+              <h2 className="text-xs font-semibold text-[#4A5940] mb-3 text-center uppercase tracking-wide">My Books</h2>
               {/* OPTION A: Compact Inline Pills */}
               {QUICK_ACCESS_STYLE === 'option-a' && (
                 <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
@@ -1263,7 +1263,7 @@ Find similar books from beyond my library that match this taste profile.
 
               {/* OPTION B: Compact Pills with Clickable Selected State */}
               {QUICK_ACCESS_STYLE === 'option-b' && (
-                <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
+                <div className="flex items-center justify-center gap-3 flex-wrap">
                   {queueCount > 0 && (
                     <button 
                       onClick={() => navigateTo('reading-queue', '/reading-queue')}
@@ -1368,7 +1368,7 @@ Find similar books from beyond my library that match this taste profile.
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* Curator Theme Cards - Grid Layout */}
