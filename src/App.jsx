@@ -1054,21 +1054,21 @@ Find similar books from beyond my library that match this taste profile.
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
                 <div>
-                  <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
-                  <p className="text-xs text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
+                  <h1 className="font-serif text-lg sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
+                  <p className="hidden sm:flex text-xs text-[#7A8F6C] font-light tracking-wide items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
                 </div>
               </button>
             </div>
             
             {/* Right: How It Works + Profile/Sign In */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => {
                   setCurrentPage('about');
                   window.scrollTo(0, 0);
                   window.history.pushState({}, '', '/how-it-works');
                 }}
-                className="text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+                className="text-xs sm:text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors whitespace-nowrap"
               >
                 How It Works
               </button>
