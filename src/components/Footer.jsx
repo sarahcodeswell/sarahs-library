@@ -14,12 +14,6 @@ export default function Footer({ onNavigate, currentPage }) {
         {/* Navigation Links - More prominent */}
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3 mb-4">
           <button
-            onClick={() => handleNavigation('about', '/how-it-works')}
-            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'about' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
-          >
-            How It Works
-          </button>
-          <button
             onClick={() => handleNavigation('meet-sarah', '/meet-sarah')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'meet-sarah' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >

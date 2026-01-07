@@ -146,6 +146,7 @@ export default function App() {
   const [thanksCount, setThanksCount] = useState(null);
   const thanksCooldownRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
+  const [expandedTheme, setExpandedTheme] = useState(null);
   const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
@@ -1292,36 +1293,45 @@ Find similar books from beyond my library that match this taste profile.
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(themeInfo).map(([key, info]) => {
                     const isSelected = selectedThemes.includes(key);
+                    const isExpanded = expandedTheme === key;
                     return (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedThemes([]);
-                            setInputValue('');
-                            track('theme_filter_removed', { theme: key, theme_label: info.label });
-                          } else {
-                            setSelectedThemes([key]);
-                            const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                            setInputValue(themeText);
-                            track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                          }
-                        }}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                          isSelected 
-                            ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
-                            : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
-                        }`}
-                        aria-label={`${info.label} collection`}
-                        aria-pressed={isSelected}
-                      >
-                        {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
-                        <span className={`text-xs font-medium text-center leading-tight ${
-                          isSelected ? 'text-white' : 'text-[#4A5940]'
-                        }`}>
-                          {info.label}
-                        </span>
-                      </button>
+                      <div key={key} className="relative">
+                        <button
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedThemes([]);
+                              setInputValue('');
+                              track('theme_filter_removed', { theme: key, theme_label: info.label });
+                            } else {
+                              setSelectedThemes([key]);
+                              const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                              setInputValue(themeText);
+                              track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                            }
+                          }}
+                          onMouseEnter={() => setExpandedTheme(key)}
+                          onMouseLeave={() => setExpandedTheme(null)}
+                          className={`w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                            isSelected 
+                              ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
+                              : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
+                          }`}
+                          aria-label={`${info.label} collection`}
+                          aria-pressed={isSelected}
+                        >
+                          {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
+                          <span className={`text-xs font-medium text-center leading-tight ${
+                            isSelected ? 'text-white' : 'text-[#4A5940]'
+                          }`}>
+                            {info.label}
+                          </span>
+                        </button>
+                        {isExpanded && (
+                          <div className="absolute z-10 mt-2 p-3 bg-white rounded-lg shadow-lg border border-[#E8EBE4] text-xs text-[#4A5940] w-48 left-1/2 transform -translate-x-1/2">
+                            {themeDescriptions[key]}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -1329,7 +1339,7 @@ Find similar books from beyond my library that match this taste profile.
 
               {/* Genre Search Section */}
               <div className="mb-6">
-                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Or Search by Genre</h2>
+                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Search by Genre</h2>
                 <div className="flex flex-wrap justify-center gap-2">
                   {['Literary Fiction', 'Historical Fiction', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
                     <button
@@ -1584,7 +1594,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="What are you in the mood for?"
+                placeholder="I'm looking for..."
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
