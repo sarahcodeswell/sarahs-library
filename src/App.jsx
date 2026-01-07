@@ -147,6 +147,28 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
   const [expandedTheme, setExpandedTheme] = useState(null);
+
+  // Navigation helper to reduce duplication
+  const navigateTo = useCallback((page, path) => {
+    setCurrentPage(page);
+    setShowNavMenu(false);
+    window.scrollTo(0, 0);
+    window.history.pushState({}, '', path);
+  }, []);
+
+  // Memoized queue counts for performance
+  const queueCount = useMemo(() => 
+    readingQueue.filter(item => item.status === 'want_to_read').length, 
+    [readingQueue]
+  );
+  const collectionCount = useMemo(() => 
+    readingQueue.filter(item => item.status === 'already_read').length, 
+    [readingQueue]
+  );
+
+  // Shared className constants
+  const MENU_BUTTON_CLASS = "w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3";
+  const GRADIENT_CARD_CLASS = "flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm";
   const [shownBooksInSession, setShownBooksInSession] = useState([]); // Track books shown to avoid repeats
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showSignInNudge, setShowSignInNudge] = useState(false);
@@ -905,8 +927,8 @@ Find similar books from beyond my library that match this taste profile.
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Hamburger Menu - only for logged-in users */}
-              {user && (
+              {/* Hamburger Menu - for all users */}
+              {
                 <div className="relative" ref={navMenuRef}>
                   <button
                     onClick={() => setShowNavMenu(!showNavMenu)}
@@ -920,158 +942,118 @@ Find similar books from beyond my library that match this taste profile.
                   {showNavMenu && (
                     <div className="absolute top-full left-0 mt-2 bg-white rounded-lg border border-[#E8EBE4] shadow-lg py-1 min-w-[220px] z-50">
                       {/* Home */}
-                      <button
-                        onClick={() => {
-                          setCurrentPage('home');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
+                      <button onClick={() => navigateTo('home', '/')} className={MENU_BUTTON_CLASS}>
                         <Home className="w-4 h-4" />
                         Home
                       </button>
                       
-                      {/* MY BOOKS Section */}
-                      <div className="border-t border-[#E8EBE4] my-1"></div>
-                      <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                        My Books
-                      </div>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('reading-queue');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/reading-queue');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <BookMarked className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">My Queue</span>
-                        {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
-                          <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
-                            {readingQueue.filter(b => b.status === 'want_to_read').length}
-                          </span>
-                        )}
+                      {/* How It Works */}
+                      <button onClick={() => navigateTo('about', '/how-it-works')} className={MENU_BUTTON_CLASS}>
+                        <BookOpen className="w-4 h-4" />
+                        How It Works
                       </button>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('collection');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/collection');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <Library className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">My Collection</span>
-                        {readingQueue.filter(b => b.status === 'finished').length > 0 && (
-                          <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
-                            {readingQueue.filter(b => b.status === 'finished').length}
-                          </span>
-                        )}
+                      
+                      {/* Meet Sarah */}
+                      <button onClick={() => navigateTo('meet-sarah', '/meet-sarah')} className={MENU_BUTTON_CLASS}>
+                        <Heart className="w-4 h-4" />
+                        Meet Sarah
                       </button>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('my-books');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/add-books');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
+                      
+                      {user && (
+                        <>
+                          {/* MY BOOKS Section */}
+                          <div className="border-t border-[#E8EBE4] my-1"></div>
+                          <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                            My Books
+                          </div>
+                          <button onClick={() => navigateTo('reading-queue', '/reading-queue')} className={MENU_BUTTON_CLASS}>
+                            <BookMarked className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">My Queue</span>
+                            {queueCount > 0 && (
+                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
+                                {queueCount}
+                              </span>
+                            )}
+                          </button>
+                          <button onClick={() => navigateTo('collection', '/collection')} className={MENU_BUTTON_CLASS}>
+                            <Library className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">My Collection</span>
+                            {collectionCount > 0 && (
+                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
+                                {collectionCount}
+                              </span>
+                            )}
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* Add Books - available to all */}
+                      <button onClick={() => navigateTo('my-books', '/add-books')} className={MENU_BUTTON_CLASS}>
                         <Upload className="w-4 h-4" />
                         Add Books
                       </button>
                       
-                      {/* MY RECOMMENDATIONS Section */}
-                      <div className="border-t border-[#E8EBE4] my-1"></div>
-                      <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                        My Recommendations
-                      </div>
-                      <button
-                        onClick={() => {
-                          setCurrentPage('recommendations');
-                          setShowNavMenu(false);
-                          window.scrollTo(0, 0);
-                          window.history.pushState({}, '', '/recommendations');
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <Share2 className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Books I've Shared</span>
-                        {recommendations.length > 0 && (
-                          <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
-                            {recommendations.length}
-                          </span>
-                        )}
-                      </button>
-                      
-                      {/* Profile & Sign Out */}
-                      <div className="border-t border-[#E8EBE4] my-1"></div>
-                      <button
-                        onClick={() => {
-                          setShowAuthModal(true);
-                          setShowNavMenu(false);
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
-                      >
-                        <UserIcon className="w-4 h-4" />
-                        Profile
-                      </button>
-                      
-                      {/* Admin Dashboard - only for master admin */}
-                      {(isAdmin || user?.email === 'sarah@darkridge.com') && (
+                      {user && (
                         <>
+                          {/* MY RECOMMENDATIONS Section */}
+                          <div className="border-t border-[#E8EBE4] my-1"></div>
+                          <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
+                            My Recommendations
+                          </div>
+                          <button onClick={() => navigateTo('recommendations', '/recommendations')} className={MENU_BUTTON_CLASS}>
+                            <Share2 className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Books I've Shared</span>
+                            {recommendations.length > 0 && (
+                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
+                                {recommendations.length}
+                              </span>
+                            )}
+                          </button>
+                          
+                          {/* Profile & Sign Out */}
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <button
                             onClick={() => {
-                              setCurrentPage('admin');
+                              setShowAuthModal(true);
                               setShowNavMenu(false);
-                              window.scrollTo(0, 0);
-                              window.history.pushState({}, '', '/admin');
                             }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
+                            className={MENU_BUTTON_CLASS}
                           >
-                            <BarChart3 className="w-4 h-4" />
-                            Admin Dashboard
+                            <UserIcon className="w-4 h-4" />
+                            Profile
                           </button>
+                          
+                          {/* Admin Dashboard - only for master admin */}
+                          {(isAdmin || user?.email === 'sarah@darkridge.com') && (
+                            <>
+                              <div className="border-t border-[#E8EBE4] my-1"></div>
+                              <button onClick={() => navigateTo('admin', '/admin')} className={MENU_BUTTON_CLASS}>
+                                <BarChart3 className="w-4 h-4" />
+                                Admin Dashboard
+                              </button>
+                            </>
+                          )}
                         </>
                       )}
                       </div>
                   )}
                 </div>
-              )}
+              }
               
               {/* Logo + Title */}
               <button 
-                onClick={() => {
-                  setCurrentPage('home');
-                  window.scrollTo(0, 0);
-                  window.history.pushState({}, '', '/');
-                }}
+                onClick={() => navigateTo('home', '/')}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
                 <div>
                   <h1 className="font-serif text-lg sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
-                  <p className="hidden sm:flex text-xs text-[#7A8F6C] font-light tracking-wide items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
+                  <p className="text-xs text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
                 </div>
               </button>
             </div>
             
-            {/* Right: How It Works + Profile/Sign In */}
+            {/* Right: Profile/Sign In */}
             <div className="flex items-center gap-2 sm:gap-4">
-              <button
-                onClick={() => {
-                  setCurrentPage('about');
-                  window.scrollTo(0, 0);
-                  window.history.pushState({}, '', '/how-it-works');
-                }}
-                className="text-xs sm:text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors whitespace-nowrap"
-              >
-                How It Works
-              </button>
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -1239,50 +1221,24 @@ Find similar books from beyond my library that match this taste profile.
           )}
 
           {/* Personalized Quick Access - logged in users only */}
-          {messages.length <= 1 && user && (() => {
-            const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
-            const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
-            return queueCount > 0 || collectionCount > 0;
-          })() && (
+          {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
             <div className="mb-6 grid grid-cols-2 gap-3">
-              {(() => {
-                const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
-                return queueCount > 0 && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage('queue');
-                      window.scrollTo(0, 0);
-                      window.history.pushState({}, '', '/reading-queue');
-                    }}
-                    className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
-                  >
-                    <Bookmark className="w-5 h-5" />
-                    <div className="text-center">
-                      <div className="text-xs font-medium">My Queue</div>
-                      <div className="text-xl font-bold">{queueCount}</div>
-                    </div>
-                  </button>
-                );
-              })()}
-              {(() => {
-                const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
-                return (
-                  <button
-                    onClick={() => {
-                      setCurrentPage('collection');
-                      window.scrollTo(0, 0);
-                      window.history.pushState({}, '', '/collection');
-                    }}
-                    className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
-                  >
-                    <Library className="w-5 h-5" />
-                    <div className="text-center">
-                      <div className="text-xs font-medium">My Collection</div>
-                      <div className="text-xl font-bold">{collectionCount}</div>
-                    </div>
-                  </button>
-                );
-              })()}
+              {queueCount > 0 && (
+                <button onClick={() => navigateTo('queue', '/reading-queue')} className={GRADIENT_CARD_CLASS}>
+                  <Bookmark className="w-5 h-5" />
+                  <div className="text-center">
+                    <div className="text-xs font-medium">My Queue</div>
+                    <div className="text-xl font-bold">{queueCount}</div>
+                  </div>
+                </button>
+              )}
+              <button onClick={() => navigateTo('collection', '/collection')} className={GRADIENT_CARD_CLASS}>
+                <Library className="w-5 h-5" />
+                <div className="text-center">
+                  <div className="text-xs font-medium">My Collection</div>
+                  <div className="text-xl font-bold">{collectionCount}</div>
+                </div>
+              </button>
             </div>
           )}
 
