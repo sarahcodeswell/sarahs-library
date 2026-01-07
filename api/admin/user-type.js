@@ -288,9 +288,22 @@ export default async function handler(req) {
         }, 500);
       }
 
+      // Hard delete from Supabase Auth
+      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (authDeleteError) {
+        console.error('Error deleting user from auth:', authDeleteError);
+        // User data is already cleared, just warn about auth deletion failure
+        return json({ 
+          success: true, 
+          message: 'User data deleted, but auth record removal failed. You may need to delete from Supabase dashboard.',
+          warning: authDeleteError.message
+        });
+      }
+
       return json({ 
         success: true, 
-        message: 'User soft-deleted. Delete auth record in Supabase dashboard when ready.' 
+        message: 'User permanently deleted.' 
       });
     } catch (error) {
       console.error('Error deleting user:', error);
