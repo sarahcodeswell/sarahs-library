@@ -1,36 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '../lib/supabase';
+import { auth } from '../lib/supabase';
 import { setUserContext, clearUserContext } from '../lib/sentry';
 
 const UserContext = createContext(null);
 
-// User types: reader (default), curator (future), admin
-const USER_TYPES = {
-  READER: 'reader',
-  CURATOR: 'curator',
-  ADMIN: 'admin'
-};
-
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [userType, setUserType] = useState(USER_TYPES.READER);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  // Fetch user type from taste_profiles
-  const fetchUserType = async (userId) => {
-    if (!userId) {
-      setUserType(USER_TYPES.READER);
-      return;
-    }
-    try {
-      const { data: profile } = await db.getTasteProfile(userId);
-      setUserType(profile?.user_type || USER_TYPES.READER);
-    } catch (error) {
-      console.error('Error fetching user type:', error);
-      setUserType(USER_TYPES.READER);
-    }
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -42,7 +19,6 @@ export function UserProvider({ children }) {
           setUser(currentUser);
           if (currentUser) {
             setUserContext(currentUser);
-            await fetchUserType(currentUser.id);
           }
           setAuthLoading(false);
         }
@@ -62,7 +38,6 @@ export function UserProvider({ children }) {
         setUser(newUser);
         if (newUser) {
           setUserContext(newUser);
-          await fetchUserType(newUser.id);
           
           // Check for referral code and record it for new signups
           if (_event === 'SIGNED_IN' || _event === 'SIGNED_UP') {
@@ -87,7 +62,6 @@ export function UserProvider({ children }) {
           }
         } else {
           clearUserContext();
-          setUserType(USER_TYPES.READER);
         }
       }
     });
@@ -101,7 +75,6 @@ export function UserProvider({ children }) {
   const signOut = async () => {
     await auth.signOut();
     setUser(null);
-    setUserType(USER_TYPES.READER);
     clearUserContext();
   };
 
@@ -117,23 +90,13 @@ export function UserProvider({ children }) {
     }
   };
 
-  // Helper functions for user type checks
-  const isAdmin = userType === USER_TYPES.ADMIN;
-  const isCurator = userType === USER_TYPES.CURATOR;
-  const isReader = userType === USER_TYPES.READER;
-
   const value = {
     user,
-    userType,
-    isAdmin,
-    isCurator,
-    isReader,
     authLoading,
     showAuthModal,
     setShowAuthModal,
     signOut,
     updateUserMetadata,
-    refreshUserType: () => fetchUserType(user?.id),
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
