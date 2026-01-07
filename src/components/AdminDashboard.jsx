@@ -86,7 +86,8 @@ function UserManagement() {
         'Email', 'Name', 'User Type', 'Created', 'Last Sign In',
         'Birth Year', 'City', 'State', 'Country',
         'Favorite Genres', 'Favorite Bookstore', 'Favorite Authors',
-        'Referral Code', 'Queue Count', 'Collection Count', 'Recs Received', 'User ID'
+        'Referral Code', 'Books Queued', 'Books Read', 'Books Added', 
+        'Recs Made', 'Recs Accepted', 'Accept Rate', 'User ID'
       ];
 
       const rows = users.map(u => [
@@ -103,9 +104,12 @@ function UserManagement() {
         u.favoriteBookstore || '',
         Array.isArray(u.favoriteAuthors) ? u.favoriteAuthors.join('; ') : '',
         u.referralCode || '',
-        u.queueCount || 0,
-        u.collectionCount || 0,
-        u.recsReceived || 0,
+        u.booksQueued || 0,
+        u.booksRead || 0,
+        u.booksAdded || 0,
+        u.recsMade || 0,
+        u.recsAccepted || 0,
+        u.recsMade > 0 ? `${Math.round((u.recsAccepted / u.recsMade) * 100)}%` : '0%',
         u.userId || ''
       ]);
 
@@ -201,6 +205,37 @@ function UserManagement() {
                 {/* Expanded Profile */}
                 {isExpanded && (
                   <div className="px-4 py-3 bg-[#F8F6EE]/50 border-t border-[#E8EBE4]">
+                    {/* Activity Stats Row */}
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3 pb-3 border-b border-[#E8EBE4]">
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.booksQueued || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Queued</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.booksRead || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Read</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.booksAdded || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Added</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.recsMade || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Recs Made</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.recsAccepted || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Accepted</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
+                        <p className="text-lg font-semibold text-[#4A5940]">
+                          {user.recsMade > 0 ? Math.round((user.recsAccepted / user.recsMade) * 100) : 0}%
+                        </p>
+                        <p className="text-[10px] text-[#96A888]">Accept Rate</p>
+                      </div>
+                    </div>
+
+                    {/* Profile Details */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                       <div>
                         <span className="text-[#96A888]">Joined:</span>
@@ -221,20 +256,8 @@ function UserManagement() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#96A888]">Queue:</span>
-                        <span className="ml-1 text-[#4A5940]">{user.queueCount}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#96A888]">Collection:</span>
-                        <span className="ml-1 text-[#4A5940]">{user.collectionCount}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#96A888]">Recs Received:</span>
-                        <span className="ml-1 text-[#4A5940]">{user.recsReceived}</span>
-                      </div>
-                      <div>
                         <span className="text-[#96A888]">Referral Code:</span>
-                        <span className="ml-1 text-[#4A5940]">{user.referralCode || 'N/A'}</span>
+                        <span className="ml-1 text-[#4A5940] font-mono">{user.referralCode || 'N/A'}</span>
                       </div>
                       <div>
                         <span className="text-[#96A888]">Favorite Bookstore:</span>

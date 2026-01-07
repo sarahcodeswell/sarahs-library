@@ -48,16 +48,21 @@ export default async function handler(req) {
         .select('*');
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
-      // Get queue counts
+      // Get queue data with status breakdown
       const { data: queueData } = await supabase
         .from('reading_queue')
-        .select('user_id');
-      const queueCounts = new Map();
+        .select('user_id, status');
+      const queueCounts = new Map(); // Books queued (want_to_read, reading)
+      const readCounts = new Map();  // Books read (finished)
       (queueData || []).forEach(q => {
-        queueCounts.set(q.user_id, (queueCounts.get(q.user_id) || 0) + 1);
+        if (q.status === 'finished') {
+          readCounts.set(q.user_id, (readCounts.get(q.user_id) || 0) + 1);
+        } else {
+          queueCounts.set(q.user_id, (queueCounts.get(q.user_id) || 0) + 1);
+        }
       });
 
-      // Get user_books counts
+      // Get user_books counts (books added to collection)
       const { data: booksData } = await supabase
         .from('user_books')
         .select('user_id');
@@ -66,13 +71,28 @@ export default async function handler(req) {
         bookCounts.set(b.user_id, (bookCounts.get(b.user_id) || 0) + 1);
       });
 
-      // Get recommendations counts
-      const { data: recsData } = await supabase
+      // Get recommendations received
+      const { data: recsReceivedData } = await supabase
         .from('recommendations')
         .select('user_id');
-      const recCounts = new Map();
-      (recsData || []).forEach(r => {
-        recCounts.set(r.user_id, (recCounts.get(r.user_id) || 0) + 1);
+      const recsReceivedCounts = new Map();
+      (recsReceivedData || []).forEach(r => {
+        recsReceivedCounts.set(r.user_id, (recsReceivedCounts.get(r.user_id) || 0) + 1);
+      });
+
+      // Get recommendations made (as sharer) with acceptance status
+      const { data: recsMadeData } = await supabase
+        .from('recommendations')
+        .select('sharer_id, accepted_at');
+      const recsMadeCounts = new Map();
+      const recsAcceptedCounts = new Map();
+      (recsMadeData || []).forEach(r => {
+        if (r.sharer_id) {
+          recsMadeCounts.set(r.sharer_id, (recsMadeCounts.get(r.sharer_id) || 0) + 1);
+          if (r.accepted_at) {
+            recsAcceptedCounts.set(r.sharer_id, (recsAcceptedCounts.get(r.sharer_id) || 0) + 1);
+          }
+        }
       });
 
       // Combine all data
@@ -95,9 +115,12 @@ export default async function handler(req) {
           favoriteAuthors: profile.favorite_authors,
           referralCode: profile.referral_code,
           // Activity counts
-          queueCount: queueCounts.get(u.id) || 0,
-          collectionCount: bookCounts.get(u.id) || 0,
-          recsReceived: recCounts.get(u.id) || 0
+          booksQueued: queueCounts.get(u.id) || 0,
+          booksRead: readCounts.get(u.id) || 0,
+          booksAdded: bookCounts.get(u.id) || 0,
+          recsReceived: recsReceivedCounts.get(u.id) || 0,
+          recsMade: recsMadeCounts.get(u.id) || 0,
+          recsAccepted: recsAcceptedCounts.get(u.id) || 0
         };
       });
 
