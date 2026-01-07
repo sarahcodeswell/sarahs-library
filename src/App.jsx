@@ -966,14 +966,14 @@ Find similar books from beyond my library that match this taste profile.
                       
                       {user && (
                         <>
-                          {/* MY BOOKS Section */}
+                          {/* YOUR BOOKS Section */}
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                            My Books
+                            Your Books
                           </div>
                           <button onClick={() => navigateTo('reading-queue', '/reading-queue')} className={MENU_BUTTON_CLASS}>
                             <BookMarked className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">My Queue</span>
+                            <span className="flex-1">Your Queue</span>
                             {queueCount > 0 && (
                               <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                                 {queueCount}
@@ -982,7 +982,7 @@ Find similar books from beyond my library that match this taste profile.
                           </button>
                           <button onClick={() => navigateTo('collection', '/collection')} className={MENU_BUTTON_CLASS}>
                             <Library className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">My Collection</span>
+                            <span className="flex-1">Your Collection</span>
                             {collectionCount > 0 && (
                               <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                                 {collectionCount}
@@ -1178,7 +1178,7 @@ Find similar books from beyond my library that match this taste profile.
       
       {currentPage === 'collection' && (
         <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback message="Loading My Collection..." />}>
+          <Suspense fallback={<LoadingFallback message="Loading Your Collection..." />}>
             <MyCollectionPage 
               onNavigate={setCurrentPage}
               user={user}
@@ -1253,7 +1253,7 @@ Find similar books from beyond my library that match this taste profile.
           {/* My Books Section - logged in users only */}
           {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
             <>
-              <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">My Books</h2>
+              <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Your Books</h2>
               {/* OPTION A: Compact Inline Pills */}
               {QUICK_ACCESS_STYLE === 'option-a' && (
                 <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
@@ -1263,7 +1263,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-full text-xs font-medium text-[#4A5940] transition-colors"
                     >
                       <Bookmark className="w-3.5 h-3.5" />
-                      <span>My Queue</span>
+                      <span>Your Queue</span>
                       <span className="ml-0.5 px-1.5 py-0.5 bg-[#5F7252] text-white rounded-full text-[10px] font-semibold">{queueCount}</span>
                     </button>
                   )}
@@ -1272,7 +1272,7 @@ Find similar books from beyond my library that match this taste profile.
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-full text-xs font-medium text-[#4A5940] transition-colors"
                   >
                     <Library className="w-3.5 h-3.5" />
-                    <span>My Collection</span>
+                    <span>Your Collection</span>
                     <span className="ml-0.5 px-1.5 py-0.5 bg-[#5F7252] text-white rounded-full text-[10px] font-semibold">{collectionCount}</span>
                   </button>
                 </div>
@@ -1323,7 +1323,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                     >
                       <Bookmark className="w-4 h-4" />
-                      <span>My Queue</span>
+                      <span>Your Queue</span>
                       <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#5F7252] text-white rounded-full text-xs font-semibold flex items-center justify-center">{queueCount}</span>
                     </button>
                   )}
@@ -1332,7 +1332,7 @@ Find similar books from beyond my library that match this taste profile.
                     className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                   >
                     <Library className="w-4 h-4" />
-                    <span>My Collection</span>
+                    <span>Your Collection</span>
                     <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#5F7252] text-white rounded-full text-xs font-semibold flex items-center justify-center">{collectionCount}</span>
                   </button>
                 </div>
@@ -1347,7 +1347,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="flex flex-col items-center gap-1.5 px-4 py-3 bg-white hover:bg-[#F8F6EE] border border-[#E8EBE4] hover:border-[#5F7252] rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
                     >
                       <Bookmark className="w-4 h-4 text-[#5F7252]" />
-                      <div className="text-[10px] text-[#7A8F6C] font-medium">My Queue</div>
+                      <div className="text-[10px] text-[#7A8F6C] font-medium">Your Queue</div>
                       <div className="text-lg font-bold text-[#4A5940]">{queueCount}</div>
                     </button>
                   )}
@@ -1356,7 +1356,7 @@ Find similar books from beyond my library that match this taste profile.
                     className="flex flex-col items-center gap-1.5 px-4 py-3 bg-white hover:bg-[#F8F6EE] border border-[#E8EBE4] hover:border-[#5F7252] rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
                   >
                     <Library className="w-4 h-4 text-[#5F7252]" />
-                    <div className="text-[10px] text-[#7A8F6C] font-medium">My Collection</div>
+                    <div className="text-[10px] text-[#7A8F6C] font-medium">Your Collection</div>
                     <div className="text-lg font-bold text-[#4A5940]">{collectionCount}</div>
                   </button>
                 </div>
@@ -1371,7 +1371,7 @@ Find similar books from beyond my library that match this taste profile.
                       className="inline-flex items-center gap-2 text-[#8B6F6F] hover:text-[#6B4F4F] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                     >
                       <Bookmark className="w-4 h-4" />
-                      <span>My Queue</span>
+                      <span>Your Queue</span>
                       <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#c96b6b] text-white rounded-full text-xs font-semibold flex items-center justify-center">{queueCount}</span>
                     </button>
                   )}
@@ -1380,7 +1380,7 @@ Find similar books from beyond my library that match this taste profile.
                     className="inline-flex items-center gap-2 text-[#8B6F6F] hover:text-[#6B4F4F] font-medium transition-all hover:underline underline-offset-4 decoration-2 cursor-pointer"
                   >
                     <Library className="w-4 h-4" />
-                    <span>My Collection</span>
+                    <span>Your Collection</span>
                     <span className="ml-1 min-w-[20px] h-5 px-1.5 bg-[#c96b6b] text-white rounded-full text-xs font-semibold flex items-center justify-center">{collectionCount}</span>
                   </button>
                 </div>

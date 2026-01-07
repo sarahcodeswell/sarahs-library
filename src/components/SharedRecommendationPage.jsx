@@ -335,7 +335,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                 className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
               >
                 <BookMarked className="w-5 h-5" />
-                Add to My Reading Queue
+                Add to Your Reading Queue
               </button>
               <button
                 onClick={() => handleAcceptRecommendation('already_read')}
@@ -493,7 +493,7 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
                   className="w-full px-6 py-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors font-medium text-lg flex items-center justify-center gap-3"
                 >
                   <BookMarked className="w-5 h-5" />
-                  Add to My Reading Queue
+                  Add to Your Reading Queue
                 </button>
                 <button
                   onClick={handleAlreadyRead}

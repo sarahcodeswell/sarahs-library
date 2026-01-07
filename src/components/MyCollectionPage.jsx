@@ -658,7 +658,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         </button>
 
         <div className="mb-6">
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">My Collection</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">Your Collection</h1>
           <p className="text-[#7A8F6C] text-sm font-light">
             {readBooks.length} book{readBooks.length !== 1 ? 's' : ''} you've read
           </p>

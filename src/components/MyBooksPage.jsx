@@ -387,7 +387,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
           </button>
           
           <div className="text-center py-12">
-            <h1 className="font-serif text-3xl text-[#4A5940] mb-4">My Books</h1>
+            <h1 className="font-serif text-3xl text-[#4A5940] mb-4">Your Books</h1>
             <p className="text-[#7A8F6C] mb-6">Sign in to build your personal book collection</p>
             <button
               onClick={onShowAuthModal}

@@ -513,7 +513,7 @@ export default function UserProfile({ tasteProfile }) {
       lines.push('');
       
       // Reading Queue section
-      lines.push('MY READING QUEUE');
+      lines.push('YOUR READING QUEUE');
       lines.push('Title,Author,Status,Rating,Date Added');
       (queue || []).forEach(item => {
         lines.push([
@@ -527,7 +527,7 @@ export default function UserProfile({ tasteProfile }) {
       lines.push('');
       
       // User Books section
-      lines.push('MY BOOKS (ADDED MANUALLY)');
+      lines.push('YOUR BOOKS (ADDED MANUALLY)');
       lines.push('Title,Author,Date Added');
       (userBooks || []).forEach(item => {
         lines.push([
