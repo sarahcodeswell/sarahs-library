@@ -105,6 +105,7 @@ export default async function handler(req) {
           userType: profile.user_type || 'reader',
           createdAt: u.created_at,
           lastSignIn: u.last_sign_in_at,
+          deletedAt: profile.deleted_at || null,
           // Profile data
           birthYear: profile.birth_year,
           city: profile.city,
@@ -124,8 +125,12 @@ export default async function handler(req) {
         };
       });
 
-      // Sort by created date (newest first)
-      users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // Sort: deleted users last, then by created date (newest first)
+      users.sort((a, b) => {
+        if (a.deletedAt && !b.deletedAt) return 1;
+        if (!a.deletedAt && b.deletedAt) return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
 
       return json({ users });
     } catch (error) {
@@ -192,7 +197,7 @@ export default async function handler(req) {
   }
 
   if (req.method === 'DELETE') {
-    // Delete user and all their data
+    // Soft delete user - mark as deleted and clear their data
     try {
       let userId;
       try {
@@ -211,14 +216,15 @@ export default async function handler(req) {
         return json({ error: 'Cannot delete your own account' }, 400);
       }
 
-      const errors = [];
+      // Get user email for the deleted record
+      const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      const targetUser = (usersData?.users || []).find(u => u.id === userId);
+      const userEmail = targetUser?.email || 'unknown';
 
-      // Delete user data from all tables with user_id column
+      // Delete user data from activity tables (keep taste_profiles for soft delete tracking)
       const userIdTables = [
         'reading_queue',
         'user_books', 
-        'recommendations',
-        'taste_profiles',
         'admin_notes',
         'book_interactions',
         'theme_interactions',
@@ -228,47 +234,44 @@ export default async function handler(req) {
       ];
 
       for (const table of userIdTables) {
-        const { error } = await supabase.from(table).delete().eq('user_id', userId);
-        if (error && !error.message?.includes('does not exist')) {
-          errors.push(`${table}: ${error.message}`);
-        }
+        await supabase.from(table).delete().eq('user_id', userId);
       }
 
       // Delete referrals where user is the inviter
-      const { error: refError } = await supabase.from('referrals').delete().eq('inviter_id', userId);
-      if (refError && !refError.message?.includes('does not exist')) {
-        errors.push(`referrals: ${refError.message}`);
-      }
+      await supabase.from('referrals').delete().eq('inviter_id', userId);
 
       // Delete shared_recommendations where user is the sharer
-      const { error: shareError } = await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
-      if (shareError && !shareError.message?.includes('does not exist')) {
-        errors.push(`shared_recommendations: ${shareError.message}`);
-      }
+      await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
 
-      // Log any table deletion errors but continue
-      if (errors.length > 0) {
-        console.error('Table deletion errors:', errors);
-      }
+      // Mark user as soft-deleted in taste_profiles (or create record if doesn't exist)
+      const { data: existingProfile } = await supabase
+        .from('taste_profiles')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
 
-      // Try to delete the auth user
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (deleteError) {
-        console.error('Error deleting auth user:', deleteError);
-        // If we can't delete the auth user due to DB constraints, 
-        // at least we've deleted all their data. Return partial success.
-        if (deleteError.message?.includes('Database error')) {
-          return json({ 
-            success: true, 
-            partial: true,
-            message: 'User data deleted. Auth record may remain due to database constraints - delete manually in Supabase dashboard if needed.' 
+      if (existingProfile) {
+        await supabase
+          .from('taste_profiles')
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            display_name: `[DELETED] ${userEmail}`
+          })
+          .eq('user_id', userId);
+      } else {
+        await supabase
+          .from('taste_profiles')
+          .insert({ 
+            user_id: userId, 
+            deleted_at: new Date().toISOString(),
+            display_name: `[DELETED] ${userEmail}`
           });
-        }
-        return json({ error: `Failed to delete auth user: ${deleteError.message}` }, 500);
       }
 
-      return json({ success: true, message: 'User deleted successfully' });
+      return json({ 
+        success: true, 
+        message: 'User soft-deleted. Delete auth record in Supabase dashboard when ready.' 
+      });
     } catch (error) {
       console.error('Error deleting user:', error);
       return json({ error: 'Failed to delete user: ' + (error?.message || String(error)) }, 500);
