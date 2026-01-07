@@ -481,14 +481,6 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   const handleRatingChange = async (book, newRating) => {
-    console.log('[Rating] handleRatingChange called:', { 
-      bookId: book.id, 
-      bookTitle: book.book_title, 
-      isCurated: book.isCurated, 
-      newRating,
-      source: book.source 
-    });
-    
     // For curated books, check if already in reading_queue first
     if (book.isCurated) {
       // Check if this book already exists in reading_queue
@@ -527,9 +519,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       return;
     }
 
-    console.log('[Rating] Calling updateQueueItem for regular book:', book.id);
     const result = await updateQueueItem(book.id, { rating: newRating });
-    console.log('[Rating] updateQueueItem result:', result);
     
     if (result.success) {
       track('book_rated_in_collection', {
@@ -541,8 +531,6 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       if (newRating >= 4) {
         setRecommendPromptBook(book);
       }
-    } else {
-      console.error('[Rating] Failed to update rating:', result.error);
     }
   };
 

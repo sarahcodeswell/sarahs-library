@@ -163,21 +163,16 @@ export function ReadingQueueProvider({ children }) {
   }, [readingQueue]);
 
   const updateQueueItem = useCallback(async (bookId, updates) => {
-    console.log('[Context] updateQueueItem called:', { bookId, updates });
-    
     // Optimistically update UI first
     setReadingQueue(prev => {
       const bookToUpdate = prev.find(b => b.id === bookId);
-      console.log('[Context] Book found in queue:', !!bookToUpdate, bookToUpdate?.book_title);
       if (!bookToUpdate) return prev;
       
       return prev.map(b => b.id === bookId ? { ...b, ...updates } : b);
     });
 
     try {
-      console.log('[Context] Calling db.updateReadingQueueItem...');
       const { data, error } = await db.updateReadingQueueItem(bookId, updates);
-      console.log('[Context] db.updateReadingQueueItem response:', { data, error });
       
       if (error) {
         console.error('[Context] updateQueueItem: Database error', error);
@@ -188,7 +183,6 @@ export function ReadingQueueProvider({ children }) {
 
       // Update with actual data from database to ensure consistency
       if (data && data[0]) {
-        console.log('[Context] Updating queue with DB data:', data[0]);
         setReadingQueue(prev => 
           prev.map(b => b.id === bookId ? data[0] : b)
         );

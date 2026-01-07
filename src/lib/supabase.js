@@ -311,11 +311,7 @@ export const db = {
   },
 
   updateReadingQueueItem: async (id, updates) => {
-    console.log('[DB] updateReadingQueueItem called:', { id, updates });
-    if (!supabase) {
-      console.error('[DB] Supabase client not initialized');
-      return { data: null, error: null };
-    }
+    if (!supabase) return { data: null, error: null };
     
     try {
       const updateData = {};
@@ -324,18 +320,15 @@ export const db = {
       if (updates.description !== undefined) updateData.description = stripAccoladesFromDescription(updates.description);
       if (updates.reputation !== undefined) updateData.reputation = updates.reputation;
       
-      console.log('[DB] Update data being sent:', updateData);
-      
       const { data, error } = await supabase
         .from('reading_queue')
         .update(updateData)
         .eq('id', id)
         .select();
       
-      console.log('[DB] Update response:', { data, error, dataLength: data?.length });
       return { data, error };
     } catch (err) {
-      console.error('[DB] updateReadingQueueItem: Exception', err);
+      console.error('updateReadingQueueItem: Exception', err);
       return { data: null, error: { message: err.message || 'Update failed' } };
     }
   },
