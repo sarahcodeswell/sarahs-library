@@ -44,6 +44,7 @@ const ReadWithFriendsPage = lazy(() => import('./components/ReadWithFriendsPage'
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const OurMissionPage = lazy(() => import('./components/OurMissionPage'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
+const TermsOfUsePage = lazy(() => import('./components/TermsOfUsePage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const BooksSharedWithMePage = lazy(() => import('./components/BooksSharedWithMePage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
@@ -1159,6 +1160,14 @@ Find similar books from beyond my library that match this taste profile.
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback message="Loading Privacy Policy..." />}>
             <PrivacyPolicyPage onNavigate={setCurrentPage} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentPage === 'terms-of-use' && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Terms of Use..." />}>
+            <TermsOfUsePage onNavigate={setCurrentPage} />
           </Suspense>
         </ErrorBoundary>
       )}
