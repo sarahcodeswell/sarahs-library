@@ -138,16 +138,16 @@ function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    !searchTerm || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter out deleted users entirely, then apply search
+  const filteredUsers = users
+    .filter(u => !u.deletedAt)
+    .filter(u => 
+      !searchTerm || 
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-  const getUserTypeBadge = (type, isDeleted) => {
-    if (isDeleted) {
-      return <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">Deleted</span>;
-    }
+  const getUserTypeBadge = (type) => {
     switch (type) {
       case 'admin':
         return <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Admin</span>;
@@ -159,7 +159,6 @@ function UserManagement() {
   };
 
   const activeUsers = users.filter(u => !u.deletedAt);
-  const deletedUsers = users.filter(u => u.deletedAt);
 
   return (
     <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
@@ -167,9 +166,7 @@ function UserManagement() {
         <h3 className="text-sm font-semibold text-[#4A5940] flex items-center gap-2">
           <Users className="w-4 h-4" />
           User Management
-          <span className="text-xs font-normal text-[#96A888]">
-            ({activeUsers.length} active{deletedUsers.length > 0 && `, ${deletedUsers.length} deleted`})
-          </span>
+          <span className="text-xs font-normal text-[#96A888]">({activeUsers.length} users)</span>
         </h3>
         <button
           onClick={handleExportUsers}
@@ -199,27 +196,21 @@ function UserManagement() {
         <div className="space-y-2 max-h-[500px] overflow-y-auto">
           {filteredUsers.map((user) => {
             const isExpanded = expandedUser === user.userId;
-            const isDeleted = !!user.deletedAt;
             return (
-              <div key={user.userId} className={`border rounded-lg overflow-hidden ${isDeleted ? 'border-red-200 bg-red-50/30' : 'border-[#E8EBE4]'}`}>
+              <div key={user.userId} className="border border-[#E8EBE4] rounded-lg overflow-hidden">
                 {/* User Row - Clickable */}
                 <div 
-                  className={`flex items-center justify-between py-3 px-3 cursor-pointer ${isDeleted ? 'hover:bg-red-50' : 'hover:bg-[#F8F6EE]/50'}`}
+                  className="flex items-center justify-between py-3 px-3 cursor-pointer hover:bg-[#F8F6EE]/50"
                   onClick={() => setExpandedUser(isExpanded ? null : user.userId)}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className={`text-sm font-medium truncate ${isDeleted ? 'text-red-700' : 'text-[#4A5940]'}`}>
+                      <p className="text-sm font-medium truncate text-[#4A5940]">
                         {user.name || user.email}
                       </p>
-                      {getUserTypeBadge(user.userType, isDeleted)}
+                      {getUserTypeBadge(user.userType)}
                     </div>
                     {user.name && <p className="text-xs text-[#96A888] truncate">{user.email}</p>}
-                    {isDeleted && (
-                      <p className="text-xs text-red-500 mt-0.5">
-                        Deleted {new Date(user.deletedAt).toLocaleDateString()} — needs manual removal in Supabase
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 ml-3">
                     <span className="text-[#96A888] text-sm">{isExpanded ? '▲' : '▼'}</span>
@@ -302,16 +293,14 @@ function UserManagement() {
                     )}
                     <div className="mt-3 pt-2 border-t border-[#E8EBE4] flex items-center justify-between">
                       <p className="text-[10px] text-[#96A888]">User ID: {user.userId}</p>
-                      {!isDeleted && (
-                        <button
-                          onClick={() => handleDeleteUser(user.userId, user.email)}
-                          disabled={deleting === user.userId}
-                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          {deleting === user.userId ? 'Deleting...' : 'Delete User'}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeleteUser(user.userId, user.email)}
+                        disabled={deleting === user.userId}
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {deleting === user.userId ? 'Deleting...' : 'Delete User'}
+                      </button>
                     </div>
                   </div>
                 )}
