@@ -131,80 +131,44 @@ export default function AboutPage({ onNavigate, user }) {
           </p>
         </div>
 
-        {/* Reading Journey Visual */}
-        <div className="bg-white rounded-2xl p-6 sm:p-10 border border-[#D4DAD0] mb-8 shadow-sm">
-          <div className="max-w-xl mx-auto">
-            {/* Circular Flow */}
-            <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-6">
-              {/* Top Row - Ask */}
-              <div className="col-start-2 flex flex-col items-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
-                  <MessageCircle className="w-7 h-7 sm:w-9 sm:h-9" />
-                </div>
-                <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Ask</p>
-              </div>
-
-              {/* Middle Row - Build and Share */}
-              <div className="col-span-3 grid grid-cols-3 gap-4 sm:gap-6">
+        {/* Reading Journey Visual - Clean horizontal flow */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] mb-8 shadow-sm">
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mb-6">
+            {[
+              { icon: MessageCircle, label: 'Discover' },
+              { icon: Library, label: 'Collect' },
+              { icon: Share2, label: 'Share' },
+              { icon: Sparkles, label: 'Curate' },
+            ].map((step, index) => (
+              <React.Fragment key={step.label}>
                 <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
-                    <Sparkles className="w-7 h-7 sm:w-9 sm:h-9" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                    <step.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Curate</p>
+                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">{step.label}</p>
                 </div>
-
-                {/* Center - Heart */}
-                <div className="flex items-center justify-center">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#F8F6EE] border-2 border-[#5F7252] flex items-center justify-center">
-                    <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-[#5F7252] fill-[#5F7252]" />
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
-                    <Library className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Build</p>
-                </div>
-              </div>
-
-              {/* Bottom Row - Share and Read with Friends */}
-              <div className="col-span-3 grid grid-cols-3 gap-4 sm:gap-6">
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
-                    <Users className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Read with<br/>Friends</p>
-                </div>
-
-                <div></div>
-
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
-                    <Share2 className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Share</p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-center text-sm text-[#5F7252] italic">
-              A virtuous cycle of discovery, community, and connection through books
-            </p>
+                {index < 3 && (
+                  <div className="text-[#D4DAD0] text-xl sm:text-2xl mb-6">→</div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
+          <p className="text-center text-sm text-[#5F7252] italic">
+            A virtuous cycle of discovery, community, and connection through books
+          </p>
         </div>
 
-        {/* Progressive Journey - Visual Flow */}
+        {/* Journey Steps */}
         <div className="space-y-4 mb-8">
           
-          {/* Step 1: ASK */}
+          {/* Step 1: DISCOVER */}
           <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
                 <MessageCircle className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className="font-serif text-xl text-[#4A5940] mb-1">Ask</h3>
+                <h3 className="font-serif text-xl text-[#4A5940] mb-1">Discover</h3>
                 <p className="text-sm text-[#7A8F6C]">
                   Tell me what you're looking for, or browse curator theme collections. I'll help you find your next great read—whether it's from curator's picks or from the world's catalog.
                 </p>
@@ -223,14 +187,14 @@ export default function AboutPage({ onNavigate, user }) {
             </div>
           </div>
 
-          {/* Step 2: BUILD */}
+          {/* Step 2: COLLECT */}
           <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
                 <Library className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className="font-serif text-xl text-[#4A5940] mb-1">Build</h3>
+                <h3 className="font-serif text-xl text-[#4A5940] mb-1">Collect</h3>
                 <p className="text-sm text-[#7A8F6C]">
                   Tell me what you've read. I'll meet you where you are—recommending from your taste while helping you discover what's next.
                 </p>
@@ -248,7 +212,7 @@ export default function AboutPage({ onNavigate, user }) {
                 Add books you've read
               </button>
               
-              {/* Rating Guide - Full legend matching StarRating component */}
+              {/* Rating Guide */}
               <div className="mt-4 pt-4 border-t border-[#E8EBE4]">
                 <p className="text-xs font-medium text-[#4A5940] mb-3">Rating Guide</p>
                 <div className="space-y-2">
@@ -293,7 +257,7 @@ export default function AboutPage({ onNavigate, user }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 ml-[4.5rem]">
+            <div className="mt-4 ml-[4.5rem] space-y-3">
               <button
                 onClick={() => {
                   setShowInviteModal(true);
@@ -305,37 +269,31 @@ export default function AboutPage({ onNavigate, user }) {
                 <Mail className="w-4 h-4" />
                 Invite a Friend
               </button>
-            </div>
-          </div>
-
-          {/* Step 4: READ WITH FRIENDS */}
-          <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
-                <Users className="w-7 h-7" />
-              </div>
-              <div className="flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                  <h3 className="font-serif text-xl text-[#4A5940]">Read with Friends</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252] self-start">Coming Soon</span>
+              
+              {/* Read with Friends Promotion */}
+              <div className="p-4 bg-[#5F7252]/10 rounded-lg border border-[#5F7252]/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-4 h-4 text-[#5F7252]" />
+                  <span className="text-sm font-medium text-[#4A5940]">Read with Friends</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252]">Coming Soon</span>
                 </div>
-                <p className="text-sm text-[#7A8F6C] mb-3">
-                  Share book recommendations directly with friends on Sarah's Books. A thoughtful way to connect over great books—not social media.
+                <p className="text-xs text-[#7A8F6C] mb-3">
+                  Share recommendations directly with friends on Sarah's Books—a thoughtful way to connect over great books.
                 </p>
                 <button
                   onClick={() => {
                     onNavigate('read-with-friends');
                     window.scrollTo(0, 0);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#5F7252] text-white text-xs font-medium hover:bg-[#4A5940] transition-colors"
                 >
-                  Join the Beta
+                  Sign up for the Beta
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Step 5: CURATE */}
+          {/* Step 4: CURATE */}
           <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
