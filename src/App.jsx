@@ -130,7 +130,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's in my library or from the world's.", isUser: false }
+    { text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's from my curator's picks or from the world's catalog.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -361,7 +361,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's in my library or from the world's.",
+      text: "Hi, I'm Sarah!\n\nI'm a voracious reader who knows what makes a great story. Browse my curated collections below—or ask me anything.\n\nI'll help you find your next great read, whether it's from my curator's picks or from the world's catalog.",
       isUser: false
     }];
   };
@@ -932,10 +932,10 @@ Find similar books from beyond my library that match this taste profile.
                         Home
                       </button>
                       
-                      {/* MY LIBRARY Section */}
+                      {/* MY BOOKS Section */}
                       <div className="border-t border-[#E8EBE4] my-1"></div>
                       <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                        My Library
+                        My Books
                       </div>
                       <button
                         onClick={() => {
@@ -947,7 +947,7 @@ Find similar books from beyond my library that match this taste profile.
                         className="w-full px-4 py-2.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE] transition-colors flex items-center gap-3"
                       >
                         <BookMarked className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">Reading Queue</span>
+                        <span className="flex-1">My Queue</span>
                         {readingQueue.filter(b => b.status === 'want_to_read').length > 0 && (
                           <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
                             {readingQueue.filter(b => b.status === 'want_to_read').length}
@@ -1394,7 +1394,7 @@ Find similar books from beyond my library that match this taste profile.
                             </div>
                           )}
                           <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                            Checking my library
+                            Checking curator's picks
                           </span>
                         </div>
 
@@ -1521,9 +1521,9 @@ Find similar books from beyond my library that match this taste profile.
               <button
                 onClick={() => setChatMode('library')}
                 className="text-xs font-medium text-[#96A888] hover:text-[#5F7252] transition-colors"
-                aria-label="Back to my library"
+                aria-label="Back to curator's picks"
               >
-                ← Back to My Library
+                ← Back to Curator's Picks
               </button>
             </div>
           )}
@@ -1622,7 +1622,7 @@ Find similar books from beyond my library that match this taste profile.
                 <div className="flex items-start gap-3">
                   <Library className="w-6 h-6 text-[#5F7252]" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-[#4A5940] mb-1">More from My Library</p>
+                    <p className="text-sm font-medium text-[#4A5940] mb-1">More from Curator's Picks</p>
                     <p className="text-xs text-[#7A8F6C]">Stay in my curated collection of ~200 books</p>
                   </div>
                 </div>

@@ -234,7 +234,7 @@ export default function RecommendationCard({
             title="From my personal collection—a book I've read and love!"
           >
             <Library className="w-3 h-3" />
-            From My Library
+            Curator's Pick
           </span>
         ) : (
           <span 

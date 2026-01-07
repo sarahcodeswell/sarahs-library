@@ -143,7 +143,7 @@ export default function AboutPage({ onNavigate, user }) {
               <div className="flex-1">
                 <h3 className="font-serif text-xl text-[#4A5940] mb-1">Ask</h3>
                 <p className="text-sm text-[#7A8F6C]">
-                  Tell me what you're looking for, or browse my curated theme collections. I'll help you find your next great read—whether it's in my library or from the world's.
+                  Tell me what you're looking for, or browse my curated theme collections. I'll help you find your next great read—whether it's from my curator's picks or from the world's catalog.
                 </p>
               </div>
             </div>
