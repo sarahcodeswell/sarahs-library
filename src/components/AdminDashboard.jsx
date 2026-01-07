@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -16,6 +16,8 @@ function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [exporting, setExporting] = useState(false);
   const [expandedUser, setExpandedUser] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const fetchUsers = async () => {
     try {
@@ -43,6 +45,39 @@ function UserManagement() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleDeleteUser = async (userId, email) => {
+    if (!confirm(`Are you sure you want to permanently delete ${email}?\n\nThis will remove:\n- Their account\n- All their books and queue\n- All their recommendations\n- All their referrals\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(userId);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`/api/admin/user-type?userId=${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: `${email} has been deleted` });
+        setExpandedUser(null);
+        fetchUsers();
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to delete user' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to delete user' });
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const handleExportUsers = () => {
     setExporting(true);
@@ -218,12 +253,33 @@ function UserManagement() {
                         <span className="ml-1 text-[#4A5940]">{user.favoriteAuthors.join(', ')}</span>
                       </div>
                     )}
-                    <p className="mt-3 pt-2 border-t border-[#E8EBE4] text-[10px] text-[#96A888]">User ID: {user.userId}</p>
+                    <div className="mt-3 pt-2 border-t border-[#E8EBE4] flex items-center justify-between">
+                      <p className="text-[10px] text-[#96A888]">User ID: {user.userId}</p>
+                      <button
+                        onClick={() => handleDeleteUser(user.userId, user.email)}
+                        disabled={deleting === user.userId}
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {deleting === user.userId ? 'Deleting...' : 'Delete User'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Messages */}
+      {message.text && (
+        <div className={`mt-3 p-2 rounded-lg text-sm ${
+          message.type === 'error' 
+            ? 'bg-red-50 border border-red-200 text-red-700' 
+            : 'bg-green-50 border border-green-200 text-green-700'
+        }`}>
+          {message.text}
         </div>
       )}
 

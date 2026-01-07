@@ -168,5 +168,55 @@ export default async function handler(req) {
     }
   }
 
+  if (req.method === 'DELETE') {
+    // Delete user and all their data
+    try {
+      const url = new URL(req.url);
+      const userId = url.searchParams.get('userId');
+
+      if (!userId) {
+        return json({ error: 'userId required' }, 400);
+      }
+
+      // Prevent deleting yourself
+      if (userId === user.id) {
+        return json({ error: 'Cannot delete your own account' }, 400);
+      }
+
+      // Delete user data from all tables (order matters for foreign keys)
+      const tables = [
+        'reading_queue',
+        'user_books', 
+        'recommendations',
+        'referrals',
+        'taste_profiles'
+      ];
+
+      for (const table of tables) {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('user_id', userId);
+        
+        if (error) {
+          console.error(`Error deleting from ${table}:`, error);
+        }
+      }
+
+      // Delete the auth user
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+
+      if (deleteError) {
+        console.error('Error deleting auth user:', deleteError);
+        return json({ error: 'Failed to delete user: ' + deleteError.message }, 500);
+      }
+
+      return json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return json({ error: 'Failed to delete user' }, 500);
+    }
+  }
+
   return json({ error: 'Method not allowed' }, 405);
 }
