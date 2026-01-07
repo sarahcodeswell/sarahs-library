@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -8,6 +8,173 @@ const PERIODS = [
   { value: '30d', label: 'Last 30 days' },
   { value: 'lifetime', label: 'All time' }
 ];
+
+// Admin Management Component
+function AdminManagement() {
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const fetchAdmins = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/user-type', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setAdmins(result.admins || []);
+      }
+    } catch (err) {
+      console.error('Error fetching admins:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+
+    setAdding(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/user-type', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: newAdminEmail.trim(), userType: 'admin' })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSuccess(`${newAdminEmail} is now an admin`);
+        setNewAdminEmail('');
+        fetchAdmins();
+      } else {
+        setError(result.error || 'Failed to add admin');
+      }
+    } catch (err) {
+      setError('Failed to add admin');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRemoveAdmin = async (userId, email) => {
+    if (!confirm(`Remove admin access for ${email}?`)) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/user-type', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, userType: 'reader' })
+      });
+
+      if (response.ok) {
+        setSuccess(`${email} is no longer an admin`);
+        fetchAdmins();
+      }
+    } catch (err) {
+      setError('Failed to remove admin');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+      <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+        <Shield className="w-4 h-4" />
+        Admin Management
+      </h3>
+
+      {/* Add Admin Form */}
+      <form onSubmit={handleAddAdmin} className="flex gap-2 mb-4">
+        <input
+          type="email"
+          value={newAdminEmail}
+          onChange={(e) => setNewAdminEmail(e.target.value)}
+          placeholder="Enter email to make admin..."
+          className="flex-1 px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252]"
+        />
+        <button
+          type="submit"
+          disabled={adding || !newAdminEmail.trim()}
+          className="px-4 py-2 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {adding ? 'Adding...' : 'Add Admin'}
+        </button>
+      </form>
+
+      {/* Messages */}
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* Admin List */}
+      {loading ? (
+        <p className="text-sm text-[#96A888]">Loading admins...</p>
+      ) : admins.length === 0 ? (
+        <p className="text-sm text-[#96A888]">No admins found. Add one above.</p>
+      ) : (
+        <div className="space-y-2">
+          {admins.map((admin) => (
+            <div key={admin.userId} className="flex items-center justify-between py-2 border-b border-[#E8EBE4] last:border-0">
+              <div>
+                <p className="text-sm font-medium text-[#4A5940]">{admin.name || admin.email}</p>
+                {admin.name && <p className="text-xs text-[#96A888]">{admin.email}</p>}
+              </div>
+              <button
+                onClick={() => handleRemoveAdmin(admin.userId, admin.email)}
+                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Remove admin access"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-4 text-xs text-[#96A888]">
+        User types: <strong>Reader</strong> (default), <strong>Admin</strong> (dashboard access), <strong>Curator</strong> (coming soon)
+      </p>
+    </div>
+  );
+}
 
 function StatCard({ title, value, subtitle, icon: Icon, color = 'bg-[#5F7252]', onClick }) {
   return (
@@ -1124,7 +1291,7 @@ export default function AdminDashboard({ onNavigate }) {
 
         {/* Curator Waitlist */}
         {stats?.curatorWaitlist?.recent?.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+          <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
             <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
               <UserPlus className="w-4 h-4" />
               Recent Curator Waitlist Signups
@@ -1141,6 +1308,9 @@ export default function AdminDashboard({ onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* Admin Management */}
+        <AdminManagement />
 
         {/* Detail Modal */}
         <DetailModal
