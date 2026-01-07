@@ -985,10 +985,10 @@ Find similar books from beyond my library that match this taste profile.
                         Add Books
                       </button>
                       
-                      {/* SHARING Section */}
+                      {/* MY RECOMMENDATIONS Section */}
                       <div className="border-t border-[#E8EBE4] my-1"></div>
                       <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                        Sharing
+                        My Recommendations
                       </div>
                       <button
                         onClick={() => {
@@ -1244,44 +1244,45 @@ Find similar books from beyond my library that match this taste profile.
             const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
             return queueCount > 0 || collectionCount > 0;
           })() && (
-            <div className="mb-6 bg-[#F8F6EE] rounded-xl p-4 border border-[#E8EBE4]">
-              <h2 className="text-sm font-semibold text-[#4A5940] mb-3">Quick Access</h2>
-              <div className="flex flex-col gap-2">
-                {(() => {
-                  const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
-                  return queueCount > 0 && (
-                    <button
-                      onClick={() => setCurrentPage('queue')}
-                      className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Bookmark className="w-4 h-4 text-[#5F7252]" />
-                        <span className="text-sm text-[#4A5940]">My Queue</span>
-                      </div>
-                      <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
-                        {queueCount}
-                      </span>
-                    </button>
-                  );
-                })()}
-                {(() => {
-                  const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
-                  return (
-                    <button
-                      onClick={() => setCurrentPage('collection')}
-                      className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Library className="w-4 h-4 text-[#5F7252]" />
-                        <span className="text-sm text-[#4A5940]">My Collection</span>
-                      </div>
-                      <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
-                        {collectionCount}
-                      </span>
-                    </button>
-                  );
-                })()}
-              </div>
+            <div className="mb-6 grid grid-cols-2 gap-3">
+              {(() => {
+                const queueCount = readingQueue.filter(item => item.status === 'want_to_read').length;
+                return queueCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage('queue');
+                      window.scrollTo(0, 0);
+                      window.history.pushState({}, '', '/queue');
+                    }}
+                    className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
+                  >
+                    <Bookmark className="w-5 h-5" />
+                    <div className="text-center">
+                      <div className="text-xs font-medium">My Queue</div>
+                      <div className="text-xl font-bold">{queueCount}</div>
+                    </div>
+                  </button>
+                );
+              })()}
+              {(() => {
+                const collectionCount = readingQueue.filter(item => item.status === 'already_read').length;
+                return (
+                  <button
+                    onClick={() => {
+                      setCurrentPage('collection');
+                      window.scrollTo(0, 0);
+                      window.history.pushState({}, '', '/collection');
+                    }}
+                    className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white rounded-xl hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
+                  >
+                    <Library className="w-5 h-5" />
+                    <div className="text-center">
+                      <div className="text-xs font-medium">My Collection</div>
+                      <div className="text-xl font-bold">{collectionCount}</div>
+                    </div>
+                  </button>
+                );
+              })()}
             </div>
           )}
 
