@@ -36,37 +36,78 @@ export default async function handler(req) {
   }
 
   if (req.method === 'GET') {
-    // List all admins
+    // List all users with full data
     try {
-      const { data: admins, error } = await supabase
-        .from('taste_profiles')
-        .select('user_id, display_name, user_type')
-        .eq('user_type', 'admin');
-
-      // If error (e.g., column doesn't exist), return empty array
-      if (error) {
-        console.error('Error fetching admins:', error);
-        return json({ admins: [] });
-      }
-
-      // Get user emails
+      // Get all auth users
       const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-      const userMap = new Map((usersData?.users || []).map(u => [u.id, u]));
+      const authUsers = usersData?.users || [];
 
-      const result = (admins || []).map(a => {
-        const u = userMap.get(a.user_id);
+      // Get all taste profiles
+      const { data: profiles } = await supabase
+        .from('taste_profiles')
+        .select('*');
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+      // Get queue counts
+      const { data: queueData } = await supabase
+        .from('reading_queue')
+        .select('user_id');
+      const queueCounts = new Map();
+      (queueData || []).forEach(q => {
+        queueCounts.set(q.user_id, (queueCounts.get(q.user_id) || 0) + 1);
+      });
+
+      // Get user_books counts
+      const { data: booksData } = await supabase
+        .from('user_books')
+        .select('user_id');
+      const bookCounts = new Map();
+      (booksData || []).forEach(b => {
+        bookCounts.set(b.user_id, (bookCounts.get(b.user_id) || 0) + 1);
+      });
+
+      // Get recommendations counts
+      const { data: recsData } = await supabase
+        .from('recommendations')
+        .select('user_id');
+      const recCounts = new Map();
+      (recsData || []).forEach(r => {
+        recCounts.set(r.user_id, (recCounts.get(r.user_id) || 0) + 1);
+      });
+
+      // Combine all data
+      const users = authUsers.map(u => {
+        const profile = profileMap.get(u.id) || {};
         return {
-          userId: a.user_id,
-          email: u?.email || 'Unknown',
-          name: a.display_name || u?.user_metadata?.full_name || null,
-          userType: a.user_type
+          userId: u.id,
+          email: u.email,
+          name: profile.display_name || u.user_metadata?.full_name || null,
+          userType: profile.user_type || 'reader',
+          createdAt: u.created_at,
+          lastSignIn: u.last_sign_in_at,
+          // Profile data
+          birthYear: profile.birth_year,
+          city: profile.city,
+          state: profile.state,
+          country: profile.country,
+          favoriteGenres: profile.favorite_genres,
+          favoriteBookstore: profile.favorite_bookstore,
+          favoriteAuthors: profile.favorite_authors,
+          referralCode: profile.referral_code,
+          // Activity counts
+          queueCount: queueCounts.get(u.id) || 0,
+          collectionCount: bookCounts.get(u.id) || 0,
+          recsReceived: recCounts.get(u.id) || 0
         };
       });
 
-      return json({ admins: result });
+      // Sort by created date (newest first)
+      users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      return json({ users });
     } catch (error) {
-      console.error('Error listing admins:', error);
-      return json({ admins: [] });
+      console.error('Error listing users:', error);
+      return json({ users: [], error: error.message });
     }
   }
 

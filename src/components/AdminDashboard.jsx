@@ -9,16 +9,16 @@ const PERIODS = [
   { value: 'lifetime', label: 'All time' }
 ];
 
-// Admin Management Component
-function AdminManagement() {
-  const [admins, setAdmins] = useState([]);
+// User Management Component
+function UserManagement() {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newAdminEmail, setNewAdminEmail] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [updating, setUpdating] = useState(null);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [exporting, setExporting] = useState(false);
 
-  const fetchAdmins = async () => {
+  const fetchUsers = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -32,26 +32,22 @@ function AdminManagement() {
 
       if (response.ok) {
         const result = await response.json();
-        setAdmins(result.admins || []);
+        setUsers(result.users || []);
       }
     } catch (err) {
-      console.error('Error fetching admins:', err);
+      console.error('Error fetching users:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAdmins();
+    fetchUsers();
   }, []);
 
-  const handleAddAdmin = async (e) => {
-    e.preventDefault();
-    if (!newAdminEmail.trim()) return;
-
-    setAdding(true);
-    setError('');
-    setSuccess('');
+  const handleSetUserType = async (userId, email, newType) => {
+    setUpdating(userId);
+    setMessage({ type: '', text: '' });
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -63,114 +59,183 @@ function AdminManagement() {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email: newAdminEmail.trim(), userType: 'admin' })
+        body: JSON.stringify({ userId, userType: newType })
       });
 
-      const result = await response.json();
-
       if (response.ok) {
-        setSuccess(`${newAdminEmail} is now an admin`);
-        setNewAdminEmail('');
-        fetchAdmins();
+        setMessage({ type: 'success', text: `${email} is now a ${newType}` });
+        fetchUsers();
       } else {
-        setError(result.error || 'Failed to add admin');
+        const result = await response.json();
+        setMessage({ type: 'error', text: result.error || 'Failed to update user type' });
       }
     } catch (err) {
-      setError('Failed to add admin');
+      setMessage({ type: 'error', text: 'Failed to update user type' });
     } finally {
-      setAdding(false);
+      setUpdating(null);
     }
   };
 
-  const handleRemoveAdmin = async (userId, email) => {
-    if (!confirm(`Remove admin access for ${email}?`)) return;
-
+  const handleExportUsers = () => {
+    setExporting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
+      const headers = [
+        'Email', 'Name', 'User Type', 'Created', 'Last Sign In',
+        'Birth Year', 'City', 'State', 'Country',
+        'Favorite Genres', 'Favorite Bookstore', 'Favorite Authors',
+        'Referral Code', 'Queue Count', 'Collection Count', 'Recs Received', 'User ID'
+      ];
 
-      const response = await fetch('/api/admin/user-type', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId, userType: 'reader' })
-      });
+      const rows = users.map(u => [
+        u.email || '',
+        u.name || '',
+        u.userType || 'reader',
+        u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
+        u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString() : '',
+        u.birthYear || '',
+        u.city || '',
+        u.state || '',
+        u.country || '',
+        Array.isArray(u.favoriteGenres) ? u.favoriteGenres.join('; ') : '',
+        u.favoriteBookstore || '',
+        Array.isArray(u.favoriteAuthors) ? u.favoriteAuthors.join('; ') : '',
+        u.referralCode || '',
+        u.queueCount || 0,
+        u.collectionCount || 0,
+        u.recsReceived || 0,
+        u.userId || ''
+      ]);
 
-      if (response.ok) {
-        setSuccess(`${email} is no longer an admin`);
-        fetchAdmins();
-      }
-    } catch (err) {
-      setError('Failed to remove admin');
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `sarahs-books-users-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const filteredUsers = users.filter(u => 
+    !searchTerm || 
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getUserTypeBadge = (type) => {
+    switch (type) {
+      case 'admin':
+        return <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Admin</span>;
+      case 'curator':
+        return <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">Curator</span>;
+      default:
+        return <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Reader</span>;
     }
   };
 
   return (
     <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
-      <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-        <Shield className="w-4 h-4" />
-        Admin Management
-      </h3>
-
-      {/* Add Admin Form */}
-      <form onSubmit={handleAddAdmin} className="flex gap-2 mb-4">
-        <input
-          type="email"
-          value={newAdminEmail}
-          onChange={(e) => setNewAdminEmail(e.target.value)}
-          placeholder="Enter email to make admin..."
-          className="flex-1 px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252]"
-        />
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-[#4A5940] flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          User Management
+          <span className="text-xs font-normal text-[#96A888]">({users.length} users)</span>
+        </h3>
         <button
-          type="submit"
-          disabled={adding || !newAdminEmail.trim()}
-          className="px-4 py-2 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          onClick={handleExportUsers}
+          disabled={exporting || users.length === 0}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F7252] bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg transition-colors disabled:opacity-50"
         >
-          {adding ? 'Adding...' : 'Add Admin'}
+          <Download className="w-3.5 h-3.5" />
+          {exporting ? 'Exporting...' : 'Export All Users'}
         </button>
-      </form>
+      </div>
+
+      {/* Search */}
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search by email or name..."
+        className="w-full px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252] mb-4"
+      />
 
       {/* Messages */}
-      {error && (
-        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-          {success}
+      {message.text && (
+        <div className={`mb-3 p-2 rounded-lg text-sm ${
+          message.type === 'error' 
+            ? 'bg-red-50 border border-red-200 text-red-700' 
+            : 'bg-green-50 border border-green-200 text-green-700'
+        }`}>
+          {message.text}
         </div>
       )}
 
-      {/* Admin List */}
+      {/* User List */}
       {loading ? (
-        <p className="text-sm text-[#96A888]">Loading admins...</p>
-      ) : admins.length === 0 ? (
-        <p className="text-sm text-[#96A888]">No admins found. Add one above.</p>
+        <p className="text-sm text-[#96A888]">Loading users...</p>
+      ) : filteredUsers.length === 0 ? (
+        <p className="text-sm text-[#96A888]">No users found.</p>
       ) : (
-        <div className="space-y-2">
-          {admins.map((admin) => (
-            <div key={admin.userId} className="flex items-center justify-between py-2 border-b border-[#E8EBE4] last:border-0">
-              <div>
-                <p className="text-sm font-medium text-[#4A5940]">{admin.name || admin.email}</p>
-                {admin.name && <p className="text-xs text-[#96A888]">{admin.email}</p>}
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {filteredUsers.map((user) => (
+            <div key={user.userId} className="flex items-center justify-between py-3 px-3 border border-[#E8EBE4] rounded-lg hover:bg-[#F8F6EE]/50">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-[#4A5940] truncate">{user.name || user.email}</p>
+                  {getUserTypeBadge(user.userType)}
+                </div>
+                {user.name && <p className="text-xs text-[#96A888] truncate">{user.email}</p>}
+                <div className="flex items-center gap-3 mt-1 text-xs text-[#96A888]">
+                  <span>Queue: {user.queueCount}</span>
+                  <span>Collection: {user.collectionCount}</span>
+                  <span>Recs: {user.recsReceived}</span>
+                  {user.city && <span>📍 {user.city}</span>}
+                </div>
               </div>
-              <button
-                onClick={() => handleRemoveAdmin(admin.userId, admin.email)}
-                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                title="Remove admin access"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1.5 ml-3">
+                {user.userType !== 'admin' && (
+                  <button
+                    onClick={() => handleSetUserType(user.userId, user.email, 'admin')}
+                    disabled={updating === user.userId}
+                    className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {updating === user.userId ? '...' : 'Make Admin'}
+                  </button>
+                )}
+                {user.userType !== 'curator' && (
+                  <button
+                    onClick={() => handleSetUserType(user.userId, user.email, 'curator')}
+                    disabled={updating === user.userId}
+                    className="px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {updating === user.userId ? '...' : 'Make Curator'}
+                  </button>
+                )}
+                {user.userType !== 'reader' && (
+                  <button
+                    onClick={() => handleSetUserType(user.userId, user.email, 'reader')}
+                    disabled={updating === user.userId}
+                    className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {updating === user.userId ? '...' : 'Make Reader'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
       )}
 
       <p className="mt-4 text-xs text-[#96A888]">
-        User types: <strong>Reader</strong> (default), <strong>Admin</strong> (dashboard access), <strong>Curator</strong> (coming soon)
+        <strong>Reader:</strong> Standard access • <strong>Admin:</strong> Dashboard access • <strong>Curator:</strong> Coming soon
       </p>
     </div>
   );
@@ -1309,8 +1374,8 @@ export default function AdminDashboard({ onNavigate }) {
           </div>
         )}
 
-        {/* Admin Management */}
-        <AdminManagement />
+        {/* User Management */}
+        <UserManagement />
 
         {/* Detail Modal */}
         <DetailModal
