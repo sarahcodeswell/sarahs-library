@@ -95,6 +95,19 @@ export default async function handler(req) {
         }
       });
 
+      // Generate book-themed referral code from userId
+      const generateBookCode = (id) => {
+        const bookWords = [
+          'CHAPTER', 'NOVEL', 'STORY', 'READER', 'PAGES', 'PROSE', 
+          'SHELF', 'SPINE', 'COVER', 'WORDS', 'TALES', 'BOOKS',
+          'PLOT', 'QUEST', 'SAGA', 'EPIC', 'VERSE', 'INK'
+        ];
+        const hash = parseInt(id.replace(/-/g, '').substring(0, 4), 16);
+        const word = bookWords[hash % bookWords.length];
+        const digits = id.replace(/-/g, '').substring(4, 7).toUpperCase();
+        return `${word}${digits}`;
+      };
+
       // Combine all data
       const users = authUsers.map(u => {
         const profile = profileMap.get(u.id) || {};
@@ -114,7 +127,7 @@ export default async function handler(req) {
           favoriteGenres: profile.favorite_genres,
           favoriteBookstore: profile.favorite_bookstore,
           favoriteAuthors: profile.favorite_authors,
-          referralCode: profile.referral_code,
+          referralCode: profile.referral_code || generateBookCode(u.id),
           // Activity counts
           booksQueued: queueCounts.get(u.id) || 0,
           booksRead: readCounts.get(u.id) || 0,
