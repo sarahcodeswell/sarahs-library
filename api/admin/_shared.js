@@ -68,9 +68,16 @@ export const getUserMapWithNames = async (supabase) => {
   const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   const users = usersData?.users || [];
   
-  // Get display names from taste_profiles
-  const { data: profiles } = await supabase.from('taste_profiles').select('user_id, display_name');
-  const nameMap = new Map((profiles || []).map(p => [p.user_id, p.display_name]));
+  // Get display names from taste_profiles (handle if column doesn't exist)
+  let nameMap = new Map();
+  try {
+    const { data: profiles, error } = await supabase.from('taste_profiles').select('user_id, display_name');
+    if (!error && profiles) {
+      nameMap = new Map(profiles.map(p => [p.user_id, p.display_name]));
+    }
+  } catch (e) {
+    console.error('Error fetching display names:', e);
+  }
   
   // Combine user data with display names
   return new Map(users.map(u => {
