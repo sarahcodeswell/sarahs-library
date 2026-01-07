@@ -1260,29 +1260,29 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
-              {/* OPTION B: Soft Background Cards with Dusty Rose */}
+              {/* OPTION B: Soft Background Cards with Dusty Rose Gradient */}
               {QUICK_ACCESS_STYLE === 'option-b' && (
                 <div className="mb-6 flex items-center justify-center gap-3">
                   {queueCount > 0 && (
                     <button 
                       onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#b08080] to-[#8B6F6F] hover:from-[#9a6b6b] hover:to-[#7a5f5f] text-white rounded-lg text-sm transition-all shadow-sm"
                     >
-                      <Bookmark className="w-4 h-4 text-[#c96b6b]" />
+                      <Bookmark className="w-4 h-4" />
                       <div className="text-left">
-                        <div className="text-[10px] uppercase tracking-wide text-[#8B6F6F] font-medium">Queue</div>
-                        <div className="text-base font-semibold text-[#6B4F4F]">{queueCount}</div>
+                        <div className="text-[10px] uppercase tracking-wide font-medium opacity-90">Queue</div>
+                        <div className="text-base font-semibold">{queueCount}</div>
                       </div>
                     </button>
                   )}
                   <button 
                     onClick={() => navigateTo('collection', '/collection')}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#F8F6EE] hover:bg-[#E8EBE4] border border-[#D4DAD0] rounded-lg text-sm transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#b08080] to-[#8B6F6F] hover:from-[#9a6b6b] hover:to-[#7a5f5f] text-white rounded-lg text-sm transition-all shadow-sm"
                   >
-                    <Library className="w-4 h-4 text-[#c96b6b]" />
+                    <Library className="w-4 h-4" />
                     <div className="text-left">
-                      <div className="text-[10px] uppercase tracking-wide text-[#8B6F6F] font-medium">Collection</div>
-                      <div className="text-base font-semibold text-[#6B4F4F]">{collectionCount}</div>
+                      <div className="text-[10px] uppercase tracking-wide font-medium opacity-90">Collection</div>
+                      <div className="text-base font-semibold">{collectionCount}</div>
                     </div>
                   </button>
                 </div>
