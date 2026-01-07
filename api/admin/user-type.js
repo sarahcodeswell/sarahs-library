@@ -250,43 +250,19 @@ export default async function handler(req) {
         await supabase.from(table).delete().eq('user_id', userId);
       }
 
-      // Delete referrals where user is the inviter
+      // Delete referrals where user is the inviter OR the invited user
       await supabase.from('referrals').delete().eq('inviter_id', userId);
+      await supabase.from('referrals').delete().eq('invited_user_id', userId);
 
-      // Delete shared_recommendations where user is the sharer
+      // Delete shared_recommendations where user is the sharer OR recipient
       await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
+      await supabase.from('shared_recommendations').delete().eq('recipient_id', userId);
 
-      // Mark user as soft-deleted in taste_profiles (or create record if doesn't exist)
-      const { data: existingProfile } = await supabase
-        .from('taste_profiles')
-        .select('user_id')
-        .eq('user_id', userId)
-        .single();
+      // Delete recommendations where user is involved
+      await supabase.from('recommendations').delete().eq('user_id', userId);
 
-      let updateError;
-      if (existingProfile) {
-        const { error } = await supabase
-          .from('taste_profiles')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('user_id', userId);
-        updateError = error;
-      } else {
-        const { error } = await supabase
-          .from('taste_profiles')
-          .insert({ 
-            user_id: userId, 
-            deleted_at: new Date().toISOString()
-          });
-        updateError = error;
-      }
-
-      if (updateError) {
-        console.error('Error marking user as deleted:', updateError);
-        return json({ 
-          success: false, 
-          error: `Failed to mark user as deleted: ${updateError.message}. You may need to run: ALTER TABLE taste_profiles ADD COLUMN deleted_at TIMESTAMPTZ;`
-        }, 500);
-      }
+      // Delete taste_profiles entirely (required for auth deletion due to FK constraint)
+      await supabase.from('taste_profiles').delete().eq('user_id', userId);
 
       // Hard delete from Supabase Auth
       const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
