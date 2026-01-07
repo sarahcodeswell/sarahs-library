@@ -1233,9 +1233,10 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Personalized Quick Access - logged in users only */}
+          {/* My Books Section - logged in users only */}
           {messages.length <= 1 && user && (queueCount > 0 || collectionCount > 0) && (
             <>
+              <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">My Books</h2>
               {/* OPTION A: Compact Inline Pills */}
               {QUICK_ACCESS_STYLE === 'option-a' && (
                 <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
@@ -1260,30 +1261,26 @@ Find similar books from beyond my library that match this taste profile.
                 </div>
               )}
 
-              {/* OPTION B: Soft Background Cards with Dusty Rose Gradient */}
+              {/* OPTION B: Compact Pills with Counts */}
               {QUICK_ACCESS_STYLE === 'option-b' && (
-                <div className="mb-6 flex items-center justify-center gap-3">
+                <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
                   {queueCount > 0 && (
                     <button 
                       onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#b08080] to-[#8B6F6F] hover:from-[#9a6b6b] hover:to-[#7a5f5f] text-white rounded-lg text-sm transition-all shadow-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#F8F6EE] border-2 border-[#E8EBE4] hover:border-[#b08080] rounded-full text-sm font-medium text-[#4A5940] transition-all shadow-sm"
                     >
-                      <Bookmark className="w-4 h-4" />
-                      <div className="text-left">
-                        <div className="text-[10px] uppercase tracking-wide font-medium opacity-90">Queue</div>
-                        <div className="text-base font-semibold">{queueCount}</div>
-                      </div>
+                      <Bookmark className="w-4 h-4 text-[#b08080]" />
+                      <span>Queue</span>
+                      <span className="ml-1 min-w-[20px] h-5 px-2 bg-[#b08080] text-white rounded-full text-xs font-semibold flex items-center justify-center">{queueCount}</span>
                     </button>
                   )}
                   <button 
                     onClick={() => navigateTo('collection', '/collection')}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#b08080] to-[#8B6F6F] hover:from-[#9a6b6b] hover:to-[#7a5f5f] text-white rounded-lg text-sm transition-all shadow-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#F8F6EE] border-2 border-[#E8EBE4] hover:border-[#b08080] rounded-full text-sm font-medium text-[#4A5940] transition-all shadow-sm"
                   >
-                    <Library className="w-4 h-4" />
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase tracking-wide font-medium opacity-90">Collection</div>
-                      <div className="text-base font-semibold">{collectionCount}</div>
-                    </div>
+                    <Library className="w-4 h-4 text-[#b08080]" />
+                    <span>Collection</span>
+                    <span className="ml-1 min-w-[20px] h-5 px-2 bg-[#b08080] text-white rounded-full text-xs font-semibold flex items-center justify-center">{collectionCount}</span>
                   </button>
                 </div>
               )}
