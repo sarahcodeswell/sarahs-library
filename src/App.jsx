@@ -27,7 +27,7 @@ import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
-import { ReceivedRecommendationsProvider } from './contexts/ReceivedRecommendationsContext';
+import { ReceivedRecommendationsProvider, useReceivedRecommendations } from './contexts/ReceivedRecommendationsContext';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
