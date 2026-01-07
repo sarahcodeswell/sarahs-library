@@ -72,18 +72,50 @@ export default function OurPracticesPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Age Requirements & Community Standards */}
+        {/* Community Engagement Guidelines */}
         <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0] mb-6">
-          <h2 className="font-serif text-xl text-[#4A5940] mb-4">Age Requirements & Community Standards</h2>
+          <h2 className="font-serif text-xl text-[#4A5940] mb-4">Community Engagement Guidelines</h2>
+          <div className="space-y-4 text-sm text-[#5F7252] leading-relaxed">
+            <p>
+              Sarah's Books is a community built on a shared love of reading. We're here to help each other discover great books, share recommendations thoughtfully, and connect over stories that move us.
+            </p>
+            
+            <div>
+              <h3 className="font-medium text-[#4A5940] mb-2">Core Principles</h3>
+              <ul className="space-y-2 ml-4">
+                <li><strong>Be Neighborly</strong> — Treat others with kindness and respect</li>
+                <li><strong>Stay Book-Focused</strong> — Keep conversations centered on books and reading</li>
+                <li><strong>Respect Diverse Perspectives</strong> — Books mean different things to different people</li>
+                <li><strong>Share Thoughtfully</strong> — Provide honest, helpful recommendations</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-[#4A5940] mb-2">What We Don't Allow</h3>
+              <p className="mb-2">We maintain a welcoming space by not allowing:</p>
+              <ul className="space-y-1 ml-4 text-xs">
+                <li>• Harassment, abuse, or hate speech</li>
+                <li>• Spam or unsolicited self-promotion</li>
+                <li>• Misinformation or inappropriate content</li>
+                <li>• Platform manipulation or fake accounts</li>
+              </ul>
+            </div>
+
+            <p className="text-xs italic">
+              By creating an account, you agree to follow our Community Engagement Guidelines and Terms of Use.
+            </p>
+          </div>
+        </div>
+
+        {/* Age Requirements */}
+        <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0] mb-6">
+          <h2 className="font-serif text-xl text-[#4A5940] mb-4">Age Requirements</h2>
           <div className="space-y-3 text-sm text-[#5F7252] leading-relaxed">
             <p>
               Sarah's Books is designed for readers aged <strong>13 and older</strong>. We do not knowingly collect information from children under 13.
             </p>
             <p>
               Our <strong>Read with Friends</strong> feature (coming soon) will only be available to users aged <strong>18 and older</strong> to ensure a safe and appropriate community experience.
-            </p>
-            <p>
-              We are thoughtfully designed and moderated to promote neighborly behavior and genuine book discovery—not social media engagement.
             </p>
           </div>
         </div>

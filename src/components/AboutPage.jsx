@@ -131,11 +131,67 @@ export default function AboutPage({ onNavigate, user }) {
           </p>
         </div>
 
-        {/* Simple Overview */}
-        <div className="bg-[#F8F6EE] rounded-xl p-6 sm:p-8 border border-[#D4DAD0] mb-8">
-          <p className="text-center text-base text-[#5F7252] leading-relaxed">
-            A simple journey: <strong className="text-[#4A5940]">Ask</strong> for recommendations, <strong className="text-[#4A5940]">Build</strong> your reading list, and <strong className="text-[#4A5940]">Share</strong> your favorites with others.
-          </p>
+        {/* Reading Journey Visual */}
+        <div className="bg-white rounded-2xl p-6 sm:p-10 border border-[#D4DAD0] mb-8 shadow-sm">
+          <div className="max-w-xl mx-auto">
+            {/* Circular Flow */}
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-6">
+              {/* Top Row - Ask */}
+              <div className="col-start-2 flex flex-col items-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                  <MessageCircle className="w-7 h-7 sm:w-9 sm:h-9" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Ask</p>
+              </div>
+
+              {/* Middle Row - Build and Share */}
+              <div className="col-span-3 grid grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                    <Sparkles className="w-7 h-7 sm:w-9 sm:h-9" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Curate</p>
+                </div>
+
+                {/* Center - Heart */}
+                <div className="flex items-center justify-center">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#F8F6EE] border-2 border-[#5F7252] flex items-center justify-center">
+                    <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-[#5F7252] fill-[#5F7252]" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                    <Library className="w-7 h-7 sm:w-9 sm:h-9" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Build</p>
+                </div>
+              </div>
+
+              {/* Bottom Row - Share and Read with Friends */}
+              <div className="col-span-3 grid grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                    <Users className="w-7 h-7 sm:w-9 sm:h-9" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Read with<br/>Friends</p>
+                </div>
+
+                <div></div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#5F7252] text-white flex items-center justify-center shadow-md mb-2">
+                    <Share2 className="w-7 h-7 sm:w-9 sm:h-9" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Share</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-center text-sm text-[#5F7252] italic">
+              A virtuous cycle of discovery, community, and connection through books
+            </p>
+          </div>
         </div>
 
         {/* Progressive Journey - Visual Flow */}
@@ -253,17 +309,17 @@ export default function AboutPage({ onNavigate, user }) {
           </div>
 
           {/* Step 4: READ WITH FRIENDS */}
-          <div className="bg-[#c96b6b]/10 rounded-xl p-6 border border-[#c96b6b]/20">
+          <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#c96b6b] text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
                 <Users className="w-7 h-7" />
               </div>
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                   <h3 className="font-serif text-xl text-[#4A5940]">Read with Friends</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#c96b6b]/20 text-[#c96b6b] self-start">Coming Soon</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252] self-start">Coming Soon</span>
                 </div>
-                <p className="text-sm text-[#c96b6b] mb-3">
+                <p className="text-sm text-[#7A8F6C] mb-3">
                   Share book recommendations directly with friends on Sarah's Books. A thoughtful way to connect over great books—not social media.
                 </p>
                 <button
@@ -271,7 +327,7 @@ export default function AboutPage({ onNavigate, user }) {
                     onNavigate('read-with-friends');
                     window.scrollTo(0, 0);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#c96b6b] text-white text-sm font-medium hover:bg-[#b85a5a] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
                 >
                   Join the Beta
                 </button>
@@ -280,17 +336,17 @@ export default function AboutPage({ onNavigate, user }) {
           </div>
 
           {/* Step 5: CURATE */}
-          <div className="bg-[#6B8E9C]/10 rounded-xl p-6 border border-[#6B8E9C]/20">
+          <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#6B8E9C] text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[#5F7252] text-white flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                   <h3 className="font-serif text-xl text-[#4A5940]">Curate</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#6B8E9C]/20 text-[#6B8E9C] self-start">Coming Soon</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#5F7252]/20 text-[#5F7252] self-start">Coming Soon</span>
                 </div>
-                <p className="text-sm text-[#6B8E9C] mb-3">
+                <p className="text-sm text-[#7A8F6C] mb-3">
                   Become a curator yourself. Create your own themes, build your library, and help others find their next great read.
                 </p>
                 <button
@@ -298,7 +354,7 @@ export default function AboutPage({ onNavigate, user }) {
                     onNavigate('become-curator');
                     window.scrollTo(0, 0);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#6B8E9C] text-white text-sm font-medium hover:bg-[#5a7a87] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors"
                 >
                   Join the Waitlist
                 </button>
