@@ -57,11 +57,24 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
       }
 
       setRecommendation(data);
+      
+      // If user is logged in, create inbox entry (if it doesn't already exist)
+      if (user) {
+        const { data: existingEntry } = await db.checkReceivedRecommendationExists(user.id, data.id);
+        
+        if (!existingEntry) {
+          await db.createReceivedRecommendation(user.id, data);
+          console.log('[SharedRecommendationPage] Created inbox entry for user');
+        } else {
+          console.log('[SharedRecommendationPage] Inbox entry already exists');
+        }
+      }
+      
       setIsLoading(false);
     };
 
     loadRecommendation();
-  }, [shareToken]);
+  }, [shareToken, user]);
 
   // Auto-enrich reputation when recommendation loads
   useEffect(() => {
