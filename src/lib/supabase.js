@@ -116,6 +116,23 @@ export const db = {
 
   upsertTasteProfile: async (userId, profile) => {
     if (!supabase) return { data: null, error: null };
+    
+    // Auto-generate book-themed referral code if not provided
+    const generateBookCode = (id) => {
+      const bookWords = [
+        'CHAPTER', 'NOVEL', 'STORY', 'READER', 'PAGES', 'PROSE', 
+        'SHELF', 'SPINE', 'COVER', 'WORDS', 'TALES', 'BOOKS',
+        'PLOT', 'QUEST', 'SAGA', 'EPIC', 'VERSE', 'INK'
+      ];
+      // Use first 4 chars of userId to pick a word deterministically
+      const hash = parseInt(id.replace(/-/g, '').substring(0, 4), 16);
+      const word = bookWords[hash % bookWords.length];
+      // Add 3 random-ish digits from userId
+      const digits = id.replace(/-/g, '').substring(4, 7).toUpperCase();
+      return `${word}${digits}`;
+    };
+    const referralCode = profile.referral_code || generateBookCode(userId);
+    
     const { data, error } = await supabase
       .from('taste_profiles')
       .upsert({
@@ -133,7 +150,7 @@ export const db = {
         favorite_bookstore_name: profile.favorite_bookstore_name || null,
         favorite_bookstore_place_id: profile.favorite_bookstore_place_id || null,
         favorite_bookstore_address: profile.favorite_bookstore_address || null,
-        referral_code: profile.referral_code || null,
+        referral_code: referralCode,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id',

@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageCircle, Library, Upload, Share2, Sparkles, User, Mail, X, Check, Heart, Link, Copy } from 'lucide-react';
 import { supabase, db } from '../lib/supabase';
 
-// Generate a short referral code from user ID
+// Generate a book-themed referral code from user ID
 const generateReferralCode = (userId) => {
   if (!userId) return null;
-  // Take first 8 chars of user ID and make it URL-safe
-  return userId.replace(/-/g, '').substring(0, 8);
+  const bookWords = [
+    'CHAPTER', 'NOVEL', 'STORY', 'READER', 'PAGES', 'PROSE', 
+    'SHELF', 'SPINE', 'COVER', 'WORDS', 'TALES', 'BOOKS',
+    'PLOT', 'QUEST', 'SAGA', 'EPIC', 'VERSE', 'INK'
+  ];
+  const hash = parseInt(userId.replace(/-/g, '').substring(0, 4), 16);
+  const word = bookWords[hash % bookWords.length];
+  const digits = userId.replace(/-/g, '').substring(4, 7).toUpperCase();
+  return `${word}${digits}`;
 };
 
 export default function AboutPage({ onNavigate, user }) {
