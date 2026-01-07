@@ -194,8 +194,13 @@ export default async function handler(req) {
   if (req.method === 'DELETE') {
     // Delete user and all their data
     try {
-      const url = new URL(req.url);
-      const userId = url.searchParams.get('userId');
+      let userId;
+      try {
+        const url = new URL(req.url);
+        userId = url.searchParams.get('userId');
+      } catch (urlError) {
+        return json({ error: 'Invalid URL: ' + urlError.message }, 400);
+      }
 
       if (!userId) {
         return json({ error: 'userId required' }, 400);
@@ -257,7 +262,7 @@ export default async function handler(req) {
       return json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
       console.error('Error deleting user:', error);
-      return json({ error: 'Failed to delete user' }, 500);
+      return json({ error: 'Failed to delete user: ' + (error?.message || String(error)) }, 500);
     }
   }
 
