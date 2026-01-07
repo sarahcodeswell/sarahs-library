@@ -132,8 +132,8 @@ export default function AboutPage({ onNavigate, user }) {
         </div>
 
         {/* Reading Journey Visual - Clean horizontal flow */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] mb-8 shadow-sm">
-          <div className="flex items-center justify-center gap-3 sm:gap-6 mb-6">
+        <div className="py-6 sm:py-8 mb-6">
+          <div className="flex items-center justify-center gap-3 sm:gap-6">
             {[
               { icon: MessageCircle, label: 'Discover' },
               { icon: Library, label: 'Collect' },
@@ -153,9 +153,6 @@ export default function AboutPage({ onNavigate, user }) {
               </React.Fragment>
             ))}
           </div>
-          <p className="text-center text-sm text-[#5F7252] italic">
-            A virtuous cycle of discovery, community, and connection through books
-          </p>
         </div>
 
         {/* Journey Steps */}
