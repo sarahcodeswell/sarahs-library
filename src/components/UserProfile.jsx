@@ -70,6 +70,10 @@ export default function UserProfile({ tasteProfile }) {
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [showLocationSearch, setShowLocationSearch] = useState(false);
   const [referralCode, setReferralCode] = useState(null);
+  const [editingReferralCode, setEditingReferralCode] = useState(false);
+  const [newReferralCode, setNewReferralCode] = useState('');
+  const [referralCodeError, setReferralCodeError] = useState('');
+  const [savingReferralCode, setSavingReferralCode] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
   const genreDropdownRef = useRef(null);
@@ -109,8 +113,16 @@ export default function UserProfile({ tasteProfile }) {
         if (profile.referral_code) {
           setReferralCode(profile.referral_code);
         } else {
-          // Generate and save a new referral code
-          const newCode = user.id.replace(/-/g, '').substring(0, 8);
+          // Generate book-themed referral code
+          const bookWords = [
+            'CHAPTER', 'NOVEL', 'STORY', 'READER', 'PAGES', 'PROSE', 
+            'SHELF', 'SPINE', 'COVER', 'WORDS', 'TALES', 'BOOKS',
+            'PLOT', 'QUEST', 'SAGA', 'EPIC', 'VERSE', 'INK'
+          ];
+          const hash = parseInt(user.id.replace(/-/g, '').substring(0, 4), 16);
+          const word = bookWords[hash % bookWords.length];
+          const digits = user.id.replace(/-/g, '').substring(4, 7).toUpperCase();
+          const newCode = `${word}${digits}`;
           setReferralCode(newCode);
           await db.upsertTasteProfile(user.id, {
             ...profile,
@@ -332,6 +344,64 @@ export default function UserProfile({ tasteProfile }) {
       setTimeout(() => setSaveMessage(''), 3000);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveReferralCode = async () => {
+    const code = newReferralCode.trim().toUpperCase();
+    
+    // Validation
+    if (!code) {
+      setReferralCodeError('Please enter a code');
+      return;
+    }
+    if (code.length < 4 || code.length > 20) {
+      setReferralCodeError('Code must be 4-20 characters');
+      return;
+    }
+    if (!/^[A-Z0-9]+$/.test(code)) {
+      setReferralCodeError('Only letters and numbers allowed');
+      return;
+    }
+    if (code === referralCode) {
+      setEditingReferralCode(false);
+      return;
+    }
+
+    setSavingReferralCode(true);
+    setReferralCodeError('');
+
+    try {
+      // Check if code is already taken
+      const { data: existing } = await supabase
+        .from('taste_profiles')
+        .select('user_id')
+        .eq('referral_code', code)
+        .neq('user_id', user.id)
+        .single();
+
+      if (existing) {
+        setReferralCodeError('This code is already taken');
+        setSavingReferralCode(false);
+        return;
+      }
+
+      // Save the new code
+      const { data: currentProfile } = await db.getTasteProfile(user.id);
+      await db.upsertTasteProfile(user.id, {
+        ...(currentProfile || {}),
+        referral_code: code
+      });
+
+      setReferralCode(code);
+      setEditingReferralCode(false);
+      setSaveMessage('Referral code updated!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Error saving referral code:', error);
+      setReferralCodeError('Failed to save. Try again.');
+    } finally {
+      setSavingReferralCode(false);
     }
   };
 
@@ -841,11 +911,12 @@ export default function UserProfile({ tasteProfile }) {
           Invite Friends
         </h4>
         <p className="text-xs text-[#96A888] mb-3">
-          Share your personal link to invite friends to Sarah's Books.
+          Share your personal referral link with friends. When they sign up, you'll both be connected and can share book recommendations with each other!
         </p>
         
         {referralCode && (
           <div className="space-y-3">
+            {/* Referral Link Display */}
             <div className="flex gap-2">
               <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] border border-[#D4DAD0] rounded-lg">
                 <Link className="w-4 h-4 text-[#96A888] flex-shrink-0" />
@@ -873,9 +944,64 @@ export default function UserProfile({ tasteProfile }) {
                 {linkCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
+
+            {/* Customize Referral Code */}
+            <div className="pt-2">
+              {editingReferralCode ? (
+                <div className="space-y-2">
+                  <label className="text-xs text-[#96A888]">Customize your code:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newReferralCode}
+                      onChange={(e) => {
+                        setNewReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                        setReferralCodeError('');
+                      }}
+                      placeholder="e.g., BOOKWORM123"
+                      maxLength={20}
+                      className="flex-1 px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252] uppercase"
+                    />
+                    <button
+                      onClick={handleSaveReferralCode}
+                      disabled={savingReferralCode}
+                      className="px-3 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] disabled:opacity-50"
+                    >
+                      {savingReferralCode ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingReferralCode(false);
+                        setNewReferralCode('');
+                        setReferralCodeError('');
+                      }}
+                      className="px-3 py-2 border border-[#D4DAD0] rounded-lg text-sm text-[#96A888] hover:bg-[#F8F6EE]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {referralCodeError && (
+                    <p className="text-xs text-red-500">{referralCodeError}</p>
+                  )}
+                  <p className="text-[10px] text-[#96A888]">
+                    4-20 characters, letters and numbers only
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setNewReferralCode(referralCode);
+                    setEditingReferralCode(true);
+                  }}
+                  className="text-xs text-[#5F7252] hover:underline"
+                >
+                  Customize your referral code
+                </button>
+              )}
+            </div>
             
             {referralCount > 0 && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm pt-1">
                 <span className="inline-flex items-center justify-center w-6 h-6 bg-[#5F7252] text-white rounded-full text-xs font-medium">
                   {referralCount}
                 </span>
