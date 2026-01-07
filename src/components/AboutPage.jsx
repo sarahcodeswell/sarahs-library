@@ -131,86 +131,11 @@ export default function AboutPage({ onNavigate, user }) {
           </p>
         </div>
 
-        {/* Flywheel Visual */}
-        <div className="bg-white rounded-2xl p-8 sm:p-12 border border-[#D4DAD0] mb-8 shadow-sm">
-          <div className="max-w-2xl mx-auto">
-            {/* Circular Flow Diagram */}
-            <div className="relative">
-              {/* Center Circle */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-[#F8F6EE] border-2 border-[#D4DAD0] flex items-center justify-center z-10">
-                <div className="text-center">
-                  <Heart className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-[#c96b6b] fill-[#c96b6b]" />
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940]">Your Reading<br/>Journey</p>
-                </div>
-              </div>
-
-              {/* Outer Circle with Steps */}
-              <div className="relative w-full aspect-square max-w-md mx-auto">
-                {/* Step 1: Ask - Top */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="bg-[#5F7252] text-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
-                    <MessageCircle className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940] text-center mt-2 whitespace-nowrap">Ask</p>
-                </div>
-
-                {/* Step 2: Build - Right */}
-                <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2">
-                  <div className="bg-[#5F7252] text-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
-                    <Library className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940] text-center mt-2 whitespace-nowrap">Build</p>
-                </div>
-
-                {/* Step 3: Share - Bottom Right */}
-                <div className="absolute bottom-0 right-1/4 translate-x-1/2 translate-y-1/2">
-                  <div className="bg-[#5F7252] text-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
-                    <Share2 className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#4A5940] text-center mt-2 whitespace-nowrap">Share</p>
-                </div>
-
-                {/* Step 4: Read with Friends - Bottom Left */}
-                <div className="absolute bottom-0 left-1/4 -translate-x-1/2 translate-y-1/2">
-                  <div className="bg-[#c96b6b] text-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
-                    <Users className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#c96b6b] text-center mt-2 whitespace-nowrap">Read with<br/>Friends</p>
-                </div>
-
-                {/* Step 5: Curate - Left */}
-                <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2">
-                  <div className="bg-[#6B8E9C] text-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-md">
-                    <Sparkles className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#6B8E9C] text-center mt-2 whitespace-nowrap">Curate</p>
-                </div>
-
-                {/* Circular Arrow Path (SVG) */}
-                <svg className="absolute inset-0 w-full h-full -z-10" viewBox="0 0 200 200">
-                  <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                      <polygon points="0 0, 10 3, 0 6" fill="#D4DAD0" />
-                    </marker>
-                  </defs>
-                  <circle 
-                    cx="100" 
-                    cy="100" 
-                    r="85" 
-                    fill="none" 
-                    stroke="#D4DAD0" 
-                    strokeWidth="2" 
-                    strokeDasharray="5,5"
-                    markerEnd="url(#arrowhead)"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <p className="text-center text-sm text-[#7A8F6C] mt-8 italic">
-              A continuous cycle of discovery, sharing, and connection through books
-            </p>
-          </div>
+        {/* Simple Overview */}
+        <div className="bg-[#F8F6EE] rounded-xl p-6 sm:p-8 border border-[#D4DAD0] mb-8">
+          <p className="text-center text-base text-[#5F7252] leading-relaxed">
+            A simple journey: <strong className="text-[#4A5940]">Ask</strong> for recommendations, <strong className="text-[#4A5940]">Build</strong> your reading list, and <strong className="text-[#4A5940]">Share</strong> your favorites with others.
+          </p>
         </div>
 
         {/* Progressive Journey - Visual Flow */}
@@ -334,9 +259,9 @@ export default function AboutPage({ onNavigate, user }) {
                 <Users className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                   <h3 className="font-serif text-xl text-[#4A5940]">Read with Friends</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#c96b6b]/20 text-[#c96b6b]">Coming Soon</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#c96b6b]/20 text-[#c96b6b] self-start">Coming Soon</span>
                 </div>
                 <p className="text-sm text-[#c96b6b] mb-3">
                   Share book recommendations directly with friends on Sarah's Books. A thoughtful way to connect over great books—not social media.
@@ -361,9 +286,9 @@ export default function AboutPage({ onNavigate, user }) {
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                   <h3 className="font-serif text-xl text-[#4A5940]">Curate</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#6B8E9C]/20 text-[#6B8E9C]">Coming Soon</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#6B8E9C]/20 text-[#6B8E9C] self-start">Coming Soon</span>
                 </div>
                 <p className="text-sm text-[#6B8E9C] mb-3">
                   Become a curator yourself. Create your own themes, build your library, and help others find their next great read.
