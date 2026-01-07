@@ -21,6 +21,7 @@
     "@sentry/vite-plugin": "^4.6.1",
     "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@upstash/redis": "^1.36.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/kv": "^3.0.0",
     "dotenv": "^17.2.3",

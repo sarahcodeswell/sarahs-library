@@ -1,6 +1,5 @@
-import { rateLimit, getRateLimitHeaders } from './utils/rateLimit.js';
+import { distributedRateLimit, checkDailyLimit, getRateLimitHeaders } from './utils/distributedRateLimit.js';
 import { getClientIdentifier } from './utils/auth.js';
-import { checkDailyLimit } from './utils/userLimits.js';
 import { validateMessages, sanitizeUserInput } from './utils/inputSanitization.js';
 import { trackCost } from './utils/costMonitoring.js';
 import { getCorsHeaders, handlePreflight } from './utils/cors.js';
@@ -27,9 +26,9 @@ export default async function handler(req) {
   }
 
   try {
-    // Rate limiting
+    // Rate limiting - per minute
     const clientId = getClientIdentifier(req);
-    const rateLimitResult = rateLimit(clientId, {
+    const rateLimitResult = await distributedRateLimit(clientId, {
       maxRequests: 30, // 30 requests per minute
       windowMs: 60 * 1000,
     });
@@ -58,28 +57,28 @@ export default async function handler(req) {
     const adminEnvKey = globalThis?.process?.env?.ADMIN_BACKFILL_KEY;
     const isAdmin = adminEnvKey && adminKey === adminEnvKey;
 
-    // Check daily limit (50 recommendations per day per user) - skip for admin
-    const dailyLimit = isAdmin ? { allowed: true } : checkDailyLimit(clientId, 'recommendation');
-    
-    if (!dailyLimit.allowed) {
-      const resetDate = new Date(dailyLimit.resetTime);
-      return new Response(
-        JSON.stringify({ 
-          error: `Daily limit reached. You've used all ${dailyLimit.limit} recommendations for today. Resets at midnight.`,
-          resetTime: resetDate.toISOString(),
-          remaining: 0
-        }),
-        {
-          status: 429,
-          headers: { 
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-            'X-Daily-Limit': dailyLimit.limit.toString(),
-            'X-Daily-Remaining': '0',
-            'X-Daily-Reset': resetDate.toISOString(),
-          },
-        }
-      );
+    // Check daily limit (100 API calls per day per user) - skip for admin
+    if (!isAdmin) {
+      const dailyLimitResult = await checkDailyLimit(clientId, 100);
+      
+      if (!dailyLimitResult.isAllowed) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Daily limit reached. You've used all ${dailyLimitResult.limit} API calls for today. Resets at midnight.`,
+            remaining: 0,
+            limit: dailyLimitResult.limit
+          }),
+          {
+            status: 429,
+            headers: { 
+              'Content-Type': 'application/json',
+              ...corsHeaders,
+              'X-Daily-Limit': dailyLimitResult.limit.toString(),
+              'X-Daily-Remaining': '0',
+            },
+          }
+        );
+      }
     }
 
     // Parse and validate request body

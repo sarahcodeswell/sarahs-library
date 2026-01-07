@@ -1,19 +1,13 @@
 // API endpoint to generate text embeddings using OpenAI
 // This is used by the vector search functionality
 
-import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { distributedRateLimit, getRateLimitHeaders } from './utils/distributedRateLimit.js';
 
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-// Initialize Supabase for rate limiting
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -37,17 +31,29 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    // Rate limiting check (optional - skip if table doesn't exist)
-    const userId = req.headers['x-user-id'];
-    if (userId) {
+    // Rate limiting - 60 requests per minute for embeddings
+    const userId = req.headers['x-user-id'] || req.headers['x-forwarded-for'] || 'anonymous';
+    const rateLimitResult = await distributedRateLimit(userId, {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+    });
+
+    const rateLimitHeaders = getRateLimitHeaders(rateLimitResult);
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+
+    if (!rateLimitResult.isAllowed) {
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        resetIn: rateLimitResult.resetIn
+      });
+    }
+
+    // Remove old rate limiting code
+    if (false) {
       try {
-        const { data: rateLimit, error: rateLimitError } = await supabase
-          .from('api_usage')
-          .select('count')
-          .eq('user_id', userId)
-          .eq('endpoint', 'embeddings')
-          .gte('created_at', new Date(Date.now() - 60000).toISOString())
-          .single();
+        const { data: rateLimit, error: rateLimitError } = null;
 
         // Only enforce rate limit if table exists and has data
         if (!rateLimitError && rateLimit && rateLimit.count > 10) {
