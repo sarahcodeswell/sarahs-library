@@ -127,7 +127,7 @@ export default function AboutPage({ onNavigate, user }) {
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
-            I've spent years building this collection—books I couldn't stop thinking about long after I finished them. Browse by my curated themes, or tell me what you're looking for. I love helping people find their next great read.
+            I've spent years building this collection—books I couldn't stop thinking about long after I finished them. Browse by curator themes, or tell me what you're looking for. I love helping people find their next great read.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function AboutPage({ onNavigate, user }) {
               <div className="flex-1">
                 <h3 className="font-serif text-xl text-[#4A5940] mb-1">Ask</h3>
                 <p className="text-sm text-[#7A8F6C]">
-                  Tell me what you're looking for, or browse my curated theme collections. I'll help you find your next great read—whether it's from my curator's picks or from the world's catalog.
+                  Tell me what you're looking for, or browse curator theme collections. I'll help you find your next great read—whether it's from curator's picks or from the world's catalog.
                 </p>
               </div>
             </div>
@@ -278,7 +278,7 @@ export default function AboutPage({ onNavigate, user }) {
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm text-center">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-3">Ready to find your next great read?</h2>
           <p className="text-sm text-[#7A8F6C] mb-6">
-            Whether from my curated collection or discoveries from the world's library.
+            Whether from curator's picks or discoveries from the world's catalog.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button

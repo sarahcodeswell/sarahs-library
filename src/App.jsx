@@ -130,7 +130,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Browse my curated collections below or ask me anything.", isUser: false }
+    { text: "Browse curator collections below or ask me anything.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -361,7 +361,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Browse my curated collections below or ask me anything.",
+      text: "Browse curator collections below or ask me anything.",
       isUser: false
     }];
   };
@@ -1220,7 +1220,7 @@ Find similar books from beyond my library that match this taste profile.
             <div className="mb-6 text-center">
               <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
               <p className="text-sm text-[#7A8F6C]">
-                Browse my curated themes or ask me anything
+                Browse curator themes or ask me anything
               </p>
             </div>
           )}
@@ -1623,7 +1623,7 @@ Find similar books from beyond my library that match this taste profile.
                   <Library className="w-6 h-6 text-[#5F7252]" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-[#4A5940] mb-1">More from Curator's Picks</p>
-                    <p className="text-xs text-[#7A8F6C]">Stay in my curated collection of ~200 books</p>
+                    <p className="text-xs text-[#7A8F6C]">Stay in curator's collection of ~200 books</p>
                   </div>
                 </div>
               </button>
