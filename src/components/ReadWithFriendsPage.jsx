@@ -58,104 +58,50 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFBF4] via-[#FBF9F0] to-[#F5EFDC]">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <button
           onClick={() => onNavigate('home')}
-          className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] mb-6 transition-colors"
+          className="mb-6 flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Back to Home</span>
+          Back to Home
         </button>
 
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#5F7252]/10 mb-4">
-            <Users className="w-8 h-8 text-[#5F7252]" />
-          </div>
-          <h1 className="text-4xl font-serif text-[#4A5940] mb-3">Read with Friends</h1>
-          <p className="text-lg text-[#7A8F6C] max-w-2xl mx-auto">
-            Share book recommendations directly with friends on Sarah's Books. Coming soon!
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Read with Friends</h1>
+          <p className="text-[#7A8F6C]">
+            Share book recommendations directly with friends. Coming soon!
           </p>
         </div>
 
         {/* What's Coming Section */}
-        <div className="bg-white rounded-xl border border-[#E8EBE4] p-8 mb-8">
-          <h2 className="text-2xl font-serif text-[#4A5940] mb-6 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-[#5F7252]" />
-            What's Coming
-          </h2>
+        <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-6 mb-6">
+          <h2 className="text-xl font-serif text-[#4A5940] mb-4">What's Coming</h2>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Feature 1 */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#5F7252]/10 flex items-center justify-center">
-                <Search className="w-5 h-5 text-[#5F7252]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-[#4A5940] mb-1">Find Friends</h3>
-                <p className="text-sm text-[#7A8F6C]">
-                  Search for friends on the platform and connect over shared book interests
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#5F7252]/10 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-[#5F7252]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-[#4A5940] mb-1">Share Directly</h3>
-                <p className="text-sm text-[#7A8F6C]">
-                  Share book recommendations directly within the app—no more copy/pasting links
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#5F7252]/10 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-[#5F7252]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-[#4A5940] mb-1">Invite Friends</h3>
-                <p className="text-sm text-[#7A8F6C]">
-                  Invite friends who aren't on the platform yet via email
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#5F7252]/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-[#5F7252]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-[#4A5940] mb-1">Privacy First</h3>
-                <p className="text-sm text-[#7A8F6C]">
-                  Control who can find you, with privacy settings that put you in control
-                </p>
-              </div>
-            </div>
+          <div className="space-y-3 text-sm text-[#5F7252]">
+            <p>• Search for friends on the platform and connect over shared book interests</p>
+            <p>• Share book recommendations directly within the app</p>
+            <p>• Invite friends who aren't on the platform yet via email</p>
+            <p>• Privacy-first design with settings that put you in control</p>
           </div>
         </div>
 
         {/* Important Note */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-          <h3 className="font-medium text-blue-900 mb-2">This is a Book Discovery Tool</h3>
-          <p className="text-sm text-blue-700">
-            Read with Friends is designed for sharing book recommendations only. This is not a social network 
-            or messaging platform—just a thoughtful way to share great books with people you care about.
+        <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-6 mb-6">
+          <p className="text-sm text-[#5F7252] leading-relaxed">
+            <strong className="text-[#4A5940]">A Note on Our Approach:</strong> Read with Friends is designed for sharing book recommendations only. 
+            This is not a social network or messaging platform—just a thoughtful way to share great books with people you care about.
           </p>
         </div>
 
         {/* Beta Signup Form */}
         {!submitted ? (
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-8">
-            <h2 className="text-2xl font-serif text-[#4A5940] mb-2">Join the Beta</h2>
-            <p className="text-[#7A8F6C] mb-6">
+          <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-6">
+            <h2 className="text-xl font-serif text-[#4A5940] mb-2">Join the Beta</h2>
+            <p className="text-sm text-[#7A8F6C] mb-6">
               Be among the first to try Read with Friends. We'll notify you when it's ready!
             </p>
 
@@ -246,17 +192,15 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
           </div>
         ) : (
           /* Success Message */
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-serif text-[#4A5940] mb-2">You're on the list!</h2>
-            <p className="text-[#7A8F6C] mb-6">
+          <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-6 text-center">
+            <CheckCircle className="w-12 h-12 text-[#5F7252] mx-auto mb-3" />
+            <h2 className="text-xl font-serif text-[#4A5940] mb-2">You're on the list!</h2>
+            <p className="text-sm text-[#7A8F6C] mb-4">
               We'll email you at <strong>{email}</strong> when Read with Friends is ready to test.
             </p>
             <button
               onClick={() => onNavigate('home')}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors"
+              className="px-6 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
             >
               Back to Home
             </button>
@@ -264,41 +208,43 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
         )}
 
         {/* FAQ Section */}
-        <div className="mt-12 space-y-6">
-          <h2 className="text-2xl font-serif text-[#4A5940]">Frequently Asked Questions</h2>
-          
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <h3 className="font-medium text-[#4A5940] mb-2">When will this be available?</h3>
-            <p className="text-sm text-[#7A8F6C]">
-              We're building thoughtfully to ensure the feature is safe, private, and delightful to use. 
-              Beta testers will get early access, followed by a gradual rollout to all users.
-            </p>
-          </div>
+        {!submitted && (
+          <div className="mt-8 space-y-4">
+            <h2 className="text-xl font-serif text-[#4A5940] mb-4">Frequently Asked Questions</h2>
+            
+            <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-4">
+              <h3 className="font-medium text-[#4A5940] mb-1 text-sm">When will this be available?</h3>
+              <p className="text-sm text-[#7A8F6C]">
+                We're building thoughtfully to ensure the feature is safe, private, and delightful to use. 
+                Beta testers will get early access, followed by a gradual rollout to all users.
+              </p>
+            </div>
 
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <h3 className="font-medium text-[#4A5940] mb-2">Will my email be shared with other users?</h3>
-            <p className="text-sm text-[#7A8F6C]">
-              No. Your email address will never be visible to other users. Friends can search for you by 
-              name only, and only if you've chosen to make your profile searchable.
-            </p>
-          </div>
+            <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-4">
+              <h3 className="font-medium text-[#4A5940] mb-1 text-sm">Will my email be shared with other users?</h3>
+              <p className="text-sm text-[#7A8F6C]">
+                No. Your email address will never be visible to other users. Friends can search for you by 
+                name only, and only if you've chosen to make your profile searchable.
+              </p>
+            </div>
 
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <h3 className="font-medium text-[#4A5940] mb-2">Is this a social network?</h3>
-            <p className="text-sm text-[#7A8F6C]">
-              No. Sarah's Books is a book discovery platform, not social media. Read with Friends is 
-              specifically for sharing book recommendations—there are no feeds, likes, or messaging features.
-            </p>
-          </div>
+            <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-4">
+              <h3 className="font-medium text-[#4A5940] mb-1 text-sm">Is this a social network?</h3>
+              <p className="text-sm text-[#7A8F6C]">
+                No. Sarah's Books is a book discovery platform, not social media. Read with Friends is 
+                specifically for sharing book recommendations—there are no feeds, likes, or messaging features.
+              </p>
+            </div>
 
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-6">
-            <h3 className="font-medium text-[#4A5940] mb-2">What about privacy and safety?</h3>
-            <p className="text-sm text-[#7A8F6C]">
-              Privacy and safety are our top priorities. The feature includes age verification (18+), 
-              privacy controls, rate limiting, blocking, and reporting. Your profile is private by default.
-            </p>
+            <div className="bg-[#F8F6EE] rounded-xl border border-[#D4DAD0] p-4">
+              <h3 className="font-medium text-[#4A5940] mb-1 text-sm">What about privacy and safety?</h3>
+              <p className="text-sm text-[#7A8F6C]">
+                Privacy and safety are our top priorities. The feature includes age verification (18+), 
+                privacy controls, rate limiting, blocking, and reporting. Your profile is private by default.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
