@@ -1310,7 +1310,7 @@ Find similar books from beyond my library that match this taste profile.
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                           isSelected 
                             ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
-                            : 'bg-white border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
+                            : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
                         }`}
                         aria-label={`${info.label} collection`}
                         aria-pressed={isSelected}
@@ -1324,6 +1324,26 @@ Find similar books from beyond my library that match this taste profile.
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Genre Search Section */}
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Or Search by Genre</h2>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {['Literary Fiction', 'Historical Fiction', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
+                    <button
+                      key={genre}
+                      onClick={() => {
+                        const genreText = `Show me ${genre.toLowerCase()} books.`;
+                        setInputValue(genreText);
+                        track('genre_search', { genre });
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium bg-[#F8F6EE]/50 text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
+                    >
+                      {genre}
+                    </button>
+                  ))}
                 </div>
               </div>
 
