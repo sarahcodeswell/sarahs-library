@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Users, Search, Mail, Shield, Heart, CheckCircle, Sparkles } from 'lucide-react';
 import { track } from '@vercel/analytics';
-import db from '../lib/supabase';
+import { db } from '../lib/supabase';
 
 export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal }) {
   const [email, setEmail] = useState(user?.email || '');
