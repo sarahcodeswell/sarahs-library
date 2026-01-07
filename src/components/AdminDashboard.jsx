@@ -17,6 +17,7 @@ function UserManagement() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [expandedUser, setExpandedUser] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -184,53 +185,147 @@ function UserManagement() {
       ) : filteredUsers.length === 0 ? (
         <p className="text-sm text-[#96A888]">No users found.</p>
       ) : (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {filteredUsers.map((user) => (
-            <div key={user.userId} className="flex items-center justify-between py-3 px-3 border border-[#E8EBE4] rounded-lg hover:bg-[#F8F6EE]/50">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-[#4A5940] truncate">{user.name || user.email}</p>
-                  {getUserTypeBadge(user.userType)}
+        <div className="space-y-2 max-h-[500px] overflow-y-auto">
+          {filteredUsers.map((user) => {
+            const isExpanded = expandedUser === user.userId;
+            return (
+              <div key={user.userId} className="border border-[#E8EBE4] rounded-lg overflow-hidden">
+                {/* User Row - Clickable */}
+                <div 
+                  className="flex items-center justify-between py-3 px-3 hover:bg-[#F8F6EE]/50 cursor-pointer"
+                  onClick={() => setExpandedUser(isExpanded ? null : user.userId)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-[#4A5940] truncate">{user.name || user.email}</p>
+                      {getUserTypeBadge(user.userType)}
+                    </div>
+                    {user.name && <p className="text-xs text-[#96A888] truncate">{user.email}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 ml-3">
+                    {/* Role action button - only show if not already that role */}
+                    {user.userType === 'reader' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'admin'); }}
+                        disabled={updating === user.userId}
+                        className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {updating === user.userId ? '...' : 'Make Admin'}
+                      </button>
+                    )}
+                    {user.userType === 'admin' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'reader'); }}
+                        disabled={updating === user.userId}
+                        className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {updating === user.userId ? '...' : 'Remove Admin'}
+                      </button>
+                    )}
+                    {user.userType === 'curator' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'reader'); }}
+                        disabled={updating === user.userId}
+                        className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {updating === user.userId ? '...' : 'Remove Curator'}
+                      </button>
+                    )}
+                    <span className="text-[#96A888] text-sm">{isExpanded ? '▲' : '▼'}</span>
+                  </div>
                 </div>
-                {user.name && <p className="text-xs text-[#96A888] truncate">{user.email}</p>}
-                <div className="flex items-center gap-3 mt-1 text-xs text-[#96A888]">
-                  <span>Queue: {user.queueCount}</span>
-                  <span>Collection: {user.collectionCount}</span>
-                  <span>Recs: {user.recsReceived}</span>
-                  {user.city && <span>📍 {user.city}</span>}
-                </div>
+
+                {/* Expanded Profile */}
+                {isExpanded && (
+                  <div className="px-4 py-3 bg-[#F8F6EE]/50 border-t border-[#E8EBE4]">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <span className="text-[#96A888]">Joined:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Last Sign In:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.lastSignIn ? new Date(user.lastSignIn).toLocaleDateString() : 'Never'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Birth Year:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.birthYear || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Location:</span>
+                        <span className="ml-1 text-[#4A5940]">
+                          {[user.city, user.state, user.country].filter(Boolean).join(', ') || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Queue:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.queueCount}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Collection:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.collectionCount}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Recs Received:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.recsReceived}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Referral Code:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.referralCode || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#96A888]">Favorite Bookstore:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.favoriteBookstore || 'N/A'}</span>
+                      </div>
+                    </div>
+                    {user.favoriteGenres?.length > 0 && (
+                      <div className="mt-2 text-xs">
+                        <span className="text-[#96A888]">Favorite Genres:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.favoriteGenres.join(', ')}</span>
+                      </div>
+                    )}
+                    {user.favoriteAuthors?.length > 0 && (
+                      <div className="mt-1 text-xs">
+                        <span className="text-[#96A888]">Favorite Authors:</span>
+                        <span className="ml-1 text-[#4A5940]">{user.favoriteAuthors.join(', ')}</span>
+                      </div>
+                    )}
+                    {/* Role actions in expanded view */}
+                    <div className="mt-3 pt-2 border-t border-[#E8EBE4] flex gap-2">
+                      {user.userType !== 'admin' && (
+                        <button
+                          onClick={() => handleSetUserType(user.userId, user.email, 'admin')}
+                          disabled={updating === user.userId}
+                          className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          Make Admin
+                        </button>
+                      )}
+                      {user.userType !== 'curator' && (
+                        <button
+                          onClick={() => handleSetUserType(user.userId, user.email, 'curator')}
+                          disabled={updating === user.userId}
+                          className="px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          Make Curator
+                        </button>
+                      )}
+                      {user.userType !== 'reader' && (
+                        <button
+                          onClick={() => handleSetUserType(user.userId, user.email, 'reader')}
+                          disabled={updating === user.userId}
+                          className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          Make Reader
+                        </button>
+                      )}
+                    </div>
+                    <p className="mt-2 text-[10px] text-[#96A888]">User ID: {user.userId}</p>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 ml-3">
-                {user.userType !== 'admin' && (
-                  <button
-                    onClick={() => handleSetUserType(user.userId, user.email, 'admin')}
-                    disabled={updating === user.userId}
-                    className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {updating === user.userId ? '...' : 'Make Admin'}
-                  </button>
-                )}
-                {user.userType !== 'curator' && (
-                  <button
-                    onClick={() => handleSetUserType(user.userId, user.email, 'curator')}
-                    disabled={updating === user.userId}
-                    className="px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {updating === user.userId ? '...' : 'Make Curator'}
-                  </button>
-                )}
-                {user.userType !== 'reader' && (
-                  <button
-                    onClick={() => handleSetUserType(user.userId, user.email, 'reader')}
-                    disabled={updating === user.userId}
-                    className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {updating === user.userId ? '...' : 'Make Reader'}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
