@@ -203,34 +203,6 @@ function UserManagement() {
                     {user.name && <p className="text-xs text-[#96A888] truncate">{user.email}</p>}
                   </div>
                   <div className="flex items-center gap-2 ml-3">
-                    {/* Role action button - only show if not already that role */}
-                    {user.userType === 'reader' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'admin'); }}
-                        disabled={updating === user.userId}
-                        className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {updating === user.userId ? '...' : 'Make Admin'}
-                      </button>
-                    )}
-                    {user.userType === 'admin' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'reader'); }}
-                        disabled={updating === user.userId}
-                        className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {updating === user.userId ? '...' : 'Remove Admin'}
-                      </button>
-                    )}
-                    {user.userType === 'curator' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleSetUserType(user.userId, user.email, 'reader'); }}
-                        disabled={updating === user.userId}
-                        className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {updating === user.userId ? '...' : 'Remove Curator'}
-                      </button>
-                    )}
                     <span className="text-[#96A888] text-sm">{isExpanded ? '▲' : '▼'}</span>
                   </div>
                 </div>
@@ -290,37 +262,7 @@ function UserManagement() {
                         <span className="ml-1 text-[#4A5940]">{user.favoriteAuthors.join(', ')}</span>
                       </div>
                     )}
-                    {/* Role actions in expanded view */}
-                    <div className="mt-3 pt-2 border-t border-[#E8EBE4] flex gap-2">
-                      {user.userType !== 'admin' && (
-                        <button
-                          onClick={() => handleSetUserType(user.userId, user.email, 'admin')}
-                          disabled={updating === user.userId}
-                          className="px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          Make Admin
-                        </button>
-                      )}
-                      {user.userType !== 'curator' && (
-                        <button
-                          onClick={() => handleSetUserType(user.userId, user.email, 'curator')}
-                          disabled={updating === user.userId}
-                          className="px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          Make Curator
-                        </button>
-                      )}
-                      {user.userType !== 'reader' && (
-                        <button
-                          onClick={() => handleSetUserType(user.userId, user.email, 'reader')}
-                          disabled={updating === user.userId}
-                          className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          Make Reader
-                        </button>
-                      )}
-                    </div>
-                    <p className="mt-2 text-[10px] text-[#96A888]">User ID: {user.userId}</p>
+                    <p className="mt-3 pt-2 border-t border-[#E8EBE4] text-[10px] text-[#96A888]">User ID: {user.userId}</p>
                   </div>
                 )}
               </div>
@@ -329,9 +271,173 @@ function UserManagement() {
         </div>
       )}
 
-      <p className="mt-4 text-xs text-[#96A888]">
-        <strong>Reader:</strong> Standard access • <strong>Admin:</strong> Dashboard access • <strong>Curator:</strong> Coming soon
-      </p>
+    </div>
+  );
+}
+
+// Admin Management Component - Separate section for managing admin access
+function AdminManagement() {
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState(null);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const fetchAdmins = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/user-type', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Filter to only admins
+        setAdmins((result.users || []).filter(u => u.userType === 'admin'));
+      }
+    } catch (err) {
+      console.error('Error fetching admins:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+
+    setAdding(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/user-type', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: newAdminEmail.trim(), userType: 'admin' })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: `${newAdminEmail} is now an admin` });
+        setNewAdminEmail('');
+        fetchAdmins();
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to add admin' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to add admin' });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRemoveAdmin = async (userId, email) => {
+    if (!confirm(`Remove admin access for ${email}?`)) return;
+
+    setRemoving(userId);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/admin/user-type', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, userType: 'reader' })
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: `${email} is no longer an admin` });
+        fetchAdmins();
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to remove admin' });
+    } finally {
+      setRemoving(null);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+      <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+        <Shield className="w-4 h-4" />
+        Admin Access
+      </h3>
+
+      {/* Add Admin Form */}
+      <form onSubmit={handleAddAdmin} className="flex gap-2 mb-4">
+        <input
+          type="email"
+          value={newAdminEmail}
+          onChange={(e) => setNewAdminEmail(e.target.value)}
+          placeholder="Enter email to grant admin access..."
+          className="flex-1 px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252]"
+        />
+        <button
+          type="submit"
+          disabled={adding || !newAdminEmail.trim()}
+          className="px-4 py-2 bg-[#5F7252] text-white text-sm font-medium rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {adding ? 'Adding...' : 'Add Admin'}
+        </button>
+      </form>
+
+      {/* Messages */}
+      {message.text && (
+        <div className={`mb-3 p-2 rounded-lg text-sm ${
+          message.type === 'error' 
+            ? 'bg-red-50 border border-red-200 text-red-700' 
+            : 'bg-green-50 border border-green-200 text-green-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Admin List */}
+      {loading ? (
+        <p className="text-sm text-[#96A888]">Loading admins...</p>
+      ) : admins.length === 0 ? (
+        <p className="text-sm text-[#96A888]">No admins found.</p>
+      ) : (
+        <div className="space-y-2">
+          {admins.map((admin) => (
+            <div key={admin.userId} className="flex items-center justify-between py-2 px-3 border border-[#E8EBE4] rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-[#4A5940]">{admin.name || admin.email}</p>
+                {admin.name && <p className="text-xs text-[#96A888]">{admin.email}</p>}
+              </div>
+              <button
+                onClick={() => handleRemoveAdmin(admin.userId, admin.email)}
+                disabled={removing === admin.userId}
+                className="px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {removing === admin.userId ? '...' : 'Remove'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1471,6 +1577,9 @@ export default function AdminDashboard({ onNavigate }) {
 
         {/* User Management */}
         <UserManagement />
+
+        {/* Admin Access */}
+        <AdminManagement />
 
         {/* Detail Modal */}
         <DetailModal
