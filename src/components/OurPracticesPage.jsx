@@ -28,10 +28,31 @@ export default function OurPracticesPage({ onNavigate }) {
         {/* Your Data, Your Control */}
         <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0] mb-6">
           <h2 className="font-serif text-xl text-[#4A5940] mb-4">Your Data, Your Control</h2>
-          <div className="space-y-3 text-sm text-[#5F7252] leading-relaxed">
-            <p>• <strong>We never sell your data.</strong> Your reading preferences, book lists, and personal information are never shared with third parties for advertising or any other purpose.</p>
-            <p>• <strong>Used only for recommendations.</strong> We use your reading history and preferences solely to provide you with better, more personalized book recommendations.</p>
-            <p>• <strong>You own your data.</strong> You can export or delete your data at any time from your profile settings.</p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-[#5F7252] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Shield className="w-3.5 h-3.5 text-white" />
+              </div>
+              <p className="text-sm text-[#5F7252] leading-relaxed flex-1">
+                <strong className="text-[#4A5940]">We never sell your data.</strong> Your reading preferences, book lists, and personal information are never shared with third parties for advertising or any other purpose.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-[#5F7252] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <BookOpen className="w-3.5 h-3.5 text-white" />
+              </div>
+              <p className="text-sm text-[#5F7252] leading-relaxed flex-1">
+                <strong className="text-[#4A5940]">Used only for recommendations.</strong> We use your reading history and preferences solely to provide you with better, more personalized book recommendations.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-[#5F7252] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Lock className="w-3.5 h-3.5 text-white" />
+              </div>
+              <p className="text-sm text-[#5F7252] leading-relaxed flex-1">
+                <strong className="text-[#4A5940]">You own your data.</strong> You can export or delete your data at any time from your profile settings.
+              </p>
+            </div>
           </div>
         </div>
 
