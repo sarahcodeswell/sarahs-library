@@ -67,7 +67,7 @@ export default function ChatMessage({
           />
         ) : isWelcomeMessage ? (
           <div className="text-sm leading-relaxed">
-            <p className="mb-3">Browse curator collections below or ask me anything.</p>
+            <p className="mb-3">Browse collections below or tell me what you're looking for.</p>
             <p><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-semibold"><Library className="w-3 h-3" />Curator's Pick</span> = from my personal collection  |  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-semibold"><Sparkles className="w-3 h-3" />World Discovery</span> = found just for you</p>
           </div>
         ) : (

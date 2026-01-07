@@ -130,7 +130,7 @@ export default function App() {
   const [importedLibrary, setImportedLibrary] = useState(null);
   const [importError, setImportError] = useState('');
   const [messages, setMessages] = useState([
-    { text: "Browse curator collections below or ask me anything.", isUser: false }
+    { text: "Browse collections below or tell me what you're looking for.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -361,7 +361,7 @@ export default function App() {
 
   const getInitialMessages = () => {
     return [{
-      text: "Browse curator collections below or ask me anything.",
+      text: "Browse collections below or tell me what you're looking for.",
       isUser: false
     }];
   };
@@ -1059,12 +1059,26 @@ Find similar books from beyond my library that match this taste profile.
               </button>
             </div>
             
+            {/* Center: How It Works link */}
+            <div className="flex-1 flex justify-center">
+              <button
+                onClick={() => {
+                  setCurrentPage('about');
+                  window.scrollTo(0, 0);
+                  window.history.pushState({}, '', '/how-it-works');
+                }}
+                className="text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+              >
+                How It Works
+              </button>
+            </div>
+            
             {/* Right: Profile/Sign In */}
             <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm"
                   title="View profile"
                 >
                   {tasteProfile.profile_photo_url ? (
@@ -1076,8 +1090,8 @@ Find similar books from beyond my library that match this taste profile.
                   ) : (
                     <UserIcon className="w-4 h-4" />
                   )}
-                  <span className="hidden sm:inline text-sm font-medium">
-                    {user.email?.split('@')[0]}
+                  <span className="text-sm font-medium">
+                    {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Profile'}
                   </span>
                 </button>
               ) : authLoading ? (
@@ -1218,10 +1232,45 @@ Find similar books from beyond my library that match this taste profile.
           {/* Header - only show when no conversation yet */}
           {messages.length <= 1 && (
             <div className="mb-6 text-center">
-              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">Find Your Next Great Read</h1>
+              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+                {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'What should I read next?'}
+              </h1>
               <p className="text-sm text-[#7A8F6C]">
-                Browse curator themes or ask me anything
+                {user ? 'Ready to find your next great read?' : 'Curated by a real reader, intelligently matched to you'}
               </p>
+            </div>
+          )}
+
+          {/* Personalized Quick Access - logged in users only */}
+          {messages.length <= 1 && user && (readingQueue.length > 0 || recommendations.length > 0) && (
+            <div className="mb-6 bg-[#F8F6EE] rounded-xl p-4 border border-[#E8EBE4]">
+              <h2 className="text-sm font-semibold text-[#4A5940] mb-3">Quick Access</h2>
+              <div className="flex flex-col gap-2">
+                {readingQueue.length > 0 && (
+                  <button
+                    onClick={() => setCurrentPage('queue')}
+                    className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bookmark className="w-4 h-4 text-[#5F7252]" />
+                      <span className="text-sm text-[#4A5940]">My Queue</span>
+                    </div>
+                    <span className="text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] px-2 py-0.5 rounded-full">
+                      {readingQueue.length}
+                    </span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setCurrentPage('collection')}
+                  className="flex items-center justify-between px-3 py-2 bg-white rounded-lg hover:bg-[#5F7252]/5 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Library className="w-4 h-4 text-[#5F7252]" />
+                    <span className="text-sm text-[#4A5940]">My Collection</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#7A8F6C]" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -1267,7 +1316,7 @@ Find similar books from beyond my library that match this taste profile.
               {/* Divider */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-[#E8EBE4]"></div>
-                <span className="text-xs text-[#96A888]">or ask me anything</span>
+                <span className="text-xs text-[#96A888]">or tell me what you're looking for</span>
                 <div className="flex-1 h-px bg-[#E8EBE4]"></div>
               </div>
             </>
