@@ -187,6 +187,17 @@ function UserManagement() {
         className="w-full px-3 py-2 text-sm border border-[#D4DAD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252]/20 focus:border-[#5F7252] mb-4"
       />
 
+      {/* Messages - show at top */}
+      {message.text && (
+        <div className={`mb-4 p-2 rounded-lg text-sm ${
+          message.type === 'error' 
+            ? 'bg-red-50 border border-red-200 text-red-700' 
+            : 'bg-green-50 border border-green-200 text-green-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       {/* User List */}
       {loading ? (
         <p className="text-sm text-[#96A888]">Loading users...</p>
@@ -307,17 +318,6 @@ function UserManagement() {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Messages */}
-      {message.text && (
-        <div className={`mt-3 p-2 rounded-lg text-sm ${
-          message.type === 'error' 
-            ? 'bg-red-50 border border-red-200 text-red-700' 
-            : 'bg-green-50 border border-green-200 text-green-700'
-        }`}>
-          {message.text}
         </div>
       )}
 
