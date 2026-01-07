@@ -250,22 +250,33 @@ export default async function handler(req) {
         .eq('user_id', userId)
         .single();
 
+      let updateError;
       if (existingProfile) {
-        await supabase
+        const { error } = await supabase
           .from('taste_profiles')
           .update({ 
             deleted_at: new Date().toISOString(),
             display_name: `[DELETED] ${userEmail}`
           })
           .eq('user_id', userId);
+        updateError = error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('taste_profiles')
           .insert({ 
             user_id: userId, 
             deleted_at: new Date().toISOString(),
             display_name: `[DELETED] ${userEmail}`
           });
+        updateError = error;
+      }
+
+      if (updateError) {
+        console.error('Error marking user as deleted:', updateError);
+        return json({ 
+          success: false, 
+          error: `Failed to mark user as deleted: ${updateError.message}. You may need to run: ALTER TABLE taste_profiles ADD COLUMN deleted_at TIMESTAMPTZ;`
+        }, 500);
       }
 
       return json({ 

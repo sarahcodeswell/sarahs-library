@@ -28,11 +28,15 @@ function UserManagement() {
       }
 
       const response = await fetch('/api/admin/user-type', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Cache-Control': 'no-cache'
+        }
       });
 
       if (response.ok) {
         const result = await response.json();
+        console.log('Fetched users:', result.users?.length, 'deleted:', result.users?.filter(u => u.deletedAt).length);
         setUsers(result.users || []);
       }
     } catch (err) {
