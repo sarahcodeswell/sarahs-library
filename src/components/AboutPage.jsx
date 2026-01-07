@@ -153,7 +153,7 @@ export default function AboutPage({ onNavigate, user }) {
                   onNavigate('curator-themes');
                   window.scrollTo(0, 0);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium hover:bg-[#5F7252]/20 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E8EBE4] text-[#4A5940] text-sm font-medium hover:bg-[#D4DAD0] transition-colors"
               >
                 Browse Curator Themes
               </button>
@@ -179,7 +179,7 @@ export default function AboutPage({ onNavigate, user }) {
                   onNavigate('my-books');
                   window.scrollTo(0, 0);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium hover:bg-[#5F7252]/20 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E8EBE4] text-[#4A5940] text-sm font-medium hover:bg-[#D4DAD0] transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 Add books you've read
@@ -237,7 +237,7 @@ export default function AboutPage({ onNavigate, user }) {
                   setInviteStatus(null);
                   setInviteMessage('');
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252]/10 text-[#5F7252] text-sm font-medium hover:bg-[#5F7252]/20 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E8EBE4] text-[#4A5940] text-sm font-medium hover:bg-[#D4DAD0] transition-colors"
               >
                 <Mail className="w-4 h-4" />
                 Invite a Friend
