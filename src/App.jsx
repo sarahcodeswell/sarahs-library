@@ -1060,17 +1060,17 @@ Find similar books from beyond my library that match this taste profile.
               {user ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] text-white hover:from-[#4A5940] hover:to-[#5F7252] transition-all shadow-sm max-w-[140px] sm:max-w-none"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-full bg-white/50 backdrop-blur-sm border-2 border-[#E8EBE4] hover:border-[#5F7252] text-[#4A5940] transition-all shadow-sm max-w-[140px] sm:max-w-none"
                   title="View profile"
                 >
                   {tasteProfile.profile_photo_url ? (
                     <img 
                       src={tasteProfile.profile_photo_url} 
                       alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border border-white/30 flex-shrink-0"
+                      className="w-6 h-6 rounded-full object-cover border-2 border-[#E8EBE4] flex-shrink-0"
                     />
                   ) : (
-                    <UserIcon className="w-4 h-4 flex-shrink-0" />
+                    <UserIcon className="w-4 h-4 flex-shrink-0 text-[#5F7252]" />
                   )}
                   <span className="text-xs sm:text-sm font-medium truncate">
                     {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Profile'}
