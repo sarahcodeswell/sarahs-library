@@ -234,7 +234,7 @@ export default async function handler(req) {
       const targetUser = (usersData?.users || []).find(u => u.id === userId);
       const userEmail = targetUser?.email || 'unknown';
 
-      // Delete user data from activity tables (keep taste_profiles for soft delete tracking)
+      // Delete user data from activity tables
       const userIdTables = [
         'reading_queue',
         'user_books', 
@@ -243,7 +243,10 @@ export default async function handler(req) {
         'theme_interactions',
         'search_queries',
         'user_sessions',
-        'user_events'
+        'user_events',
+        'chat_history',
+        'dismissed_recommendations',
+        'recommendation_outcomes'
       ];
 
       for (const table of userIdTables) {
