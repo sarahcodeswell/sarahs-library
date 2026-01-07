@@ -897,4 +897,33 @@ export const db = {
       return { error: { message: err.message || 'Delete failed' } };
     }
   },
+
+  // Beta Testers operations
+  createBetaTester: async ({ user_id, email, name, interested_features, feedback }) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('beta_testers')
+        .insert({
+          user_id,
+          email,
+          name,
+          interested_features,
+          feedback
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('createBetaTester: Error', error);
+        return { data: null, error };
+      }
+      
+      return { data, error: null };
+    } catch (err) {
+      console.error('createBetaTester: Exception', err);
+      return { data: null, error: { message: err.message || 'Insert failed' } };
+    }
+  },
 };

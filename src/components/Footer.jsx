@@ -37,6 +37,12 @@ export default function Footer({ onNavigate, currentPage }) {
           >
             Become a Curator
           </button>
+          <button
+            onClick={() => handleNavigation('privacy-policy', '/privacy-policy')}
+            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'privacy-policy' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
+          >
+            Privacy Notice
+          </button>
           <a
             href="mailto:hello@sarahsbooks.com"
             className="text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors flex items-center gap-1.5"

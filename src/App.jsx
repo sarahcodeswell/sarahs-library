@@ -40,8 +40,10 @@ const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
 const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
+const ReadWithFriendsPage = lazy(() => import('./components/ReadWithFriendsPage'));
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const OurMissionPage = lazy(() => import('./components/OurMissionPage'));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const BooksSharedWithMePage = lazy(() => import('./components/BooksSharedWithMePage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
@@ -1001,19 +1003,17 @@ Find similar books from beyond my library that match this taste profile.
                       
                       {user && (
                         <>
-                          {/* MY RECOMMENDATIONS Section */}
+                          {/* SHARING Section */}
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                            My Recommendations
+                            Sharing
                           </div>
-                          <button onClick={() => navigateTo('recommendations', '/recommendations')} className={MENU_BUTTON_CLASS}>
-                            <Share2 className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">Books I've Shared</span>
-                            {recommendations.length > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#5F7252] text-white rounded-full flex items-center justify-center">
-                                {recommendations.length}
-                              </span>
-                            )}
+                          <button onClick={() => navigateTo('read-with-friends', '/read-with-friends')} className={MENU_BUTTON_CLASS}>
+                            <Users className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Read with Friends</span>
+                            <span className="flex-shrink-0 text-[10px] font-medium text-[#96A888] italic">
+                              Coming Soon
+                            </span>
                           </button>
                           <button onClick={() => navigateTo('books-shared-with-me', '/books-shared-with-me')} className={MENU_BUTTON_CLASS}>
                             <Sparkles className="w-4 h-4 flex-shrink-0" />
@@ -1155,6 +1155,14 @@ Find similar books from beyond my library that match this taste profile.
         </ErrorBoundary>
       )}
 
+      {currentPage === 'privacy-policy' && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Privacy Policy..." />}>
+            <PrivacyPolicyPage onNavigate={setCurrentPage} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
       {currentPage === 'admin' && (isAdmin || user?.email === 'sarah@darkridge.com') && (
         <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
           <AdminDashboard onNavigate={setCurrentPage} />
@@ -1211,6 +1219,18 @@ Find similar books from beyond my library that match this taste profile.
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback message="Loading My Recommendations..." />}>
             <MyRecommendationsPage 
+              onNavigate={setCurrentPage}
+              user={user}
+              onShowAuthModal={() => setShowAuthModal(true)}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentPage === 'read-with-friends' && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback message="Loading Read with Friends..." />}>
+            <ReadWithFriendsPage 
               onNavigate={setCurrentPage}
               user={user}
               onShowAuthModal={() => setShowAuthModal(true)}
