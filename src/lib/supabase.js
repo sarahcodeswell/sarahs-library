@@ -644,6 +644,120 @@ export const db = {
     }
   },
 
+  // Received Recommendations (Books Shared with Me)
+  
+  // Create a received recommendation entry when user views a shared link
+  createReceivedRecommendation: async (userId, sharedRecommendationData) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('received_recommendations')
+        .insert({
+          recipient_user_id: userId,
+          shared_recommendation_id: sharedRecommendationData.id,
+          recommender_name: sharedRecommendationData.recommender_name || 'A friend',
+          book_title: sharedRecommendationData.user_recommendations.book_title,
+          book_author: sharedRecommendationData.user_recommendations.book_author,
+          book_isbn: sharedRecommendationData.user_recommendations.book_isbn,
+          book_description: sharedRecommendationData.user_recommendations.book_description,
+          recommendation_note: sharedRecommendationData.user_recommendations.recommendation_note,
+          status: 'pending'
+        })
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('createReceivedRecommendation: Exception', err);
+      return { data: null, error: { message: err.message || 'Create failed' } };
+    }
+  },
+
+  // Get all received recommendations for a user
+  getReceivedRecommendations: async (userId) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('received_recommendations')
+        .select('*')
+        .eq('recipient_user_id', userId)
+        .order('received_at', { ascending: false });
+      
+      return { data, error };
+    } catch (err) {
+      console.error('getReceivedRecommendations: Exception', err);
+      return { data: null, error: { message: err.message || 'Fetch failed' } };
+    }
+  },
+
+  // Update received recommendation status
+  updateReceivedRecommendationStatus: async (receivedRecId, status, additionalData = {}) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const updateData = { status, ...additionalData };
+      
+      // Set appropriate timestamp based on status
+      if (status === 'accepted' && !updateData.added_to_queue_at) {
+        updateData.added_to_queue_at = new Date().toISOString();
+      } else if (status === 'declined' && !updateData.declined_at) {
+        updateData.declined_at = new Date().toISOString();
+      } else if (status === 'archived' && !updateData.archived_at) {
+        updateData.archived_at = new Date().toISOString();
+      }
+      
+      const { data, error } = await supabase
+        .from('received_recommendations')
+        .update(updateData)
+        .eq('id', receivedRecId)
+        .select()
+        .single();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('updateReceivedRecommendationStatus: Exception', err);
+      return { data: null, error: { message: err.message || 'Update failed' } };
+    }
+  },
+
+  // Check if user already has this shared recommendation in their inbox
+  checkReceivedRecommendationExists: async (userId, sharedRecommendationId) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
+    
+    try {
+      const { data, error } = await supabase
+        .from('received_recommendations')
+        .select('id, status')
+        .eq('recipient_user_id', userId)
+        .eq('shared_recommendation_id', sharedRecommendationId)
+        .maybeSingle();
+      
+      return { data, error };
+    } catch (err) {
+      console.error('checkReceivedRecommendationExists: Exception', err);
+      return { data: null, error: { message: err.message || 'Check failed' } };
+    }
+  },
+
+  // Delete a received recommendation
+  deleteReceivedRecommendation: async (receivedRecId) => {
+    if (!supabase) return { error: null };
+    
+    try {
+      const { error } = await supabase
+        .from('received_recommendations')
+        .delete()
+        .eq('id', receivedRecId);
+      
+      return { error };
+    } catch (err) {
+      console.error('deleteReceivedRecommendation: Exception', err);
+      return { error: { message: err.message || 'Delete failed' } };
+    }
+  },
+
   // Chat History operations
   getChatHistory: async (userId, sessionId = null) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
