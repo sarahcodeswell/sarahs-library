@@ -206,24 +206,40 @@ export default async function handler(req) {
         return json({ error: 'Cannot delete your own account' }, 400);
       }
 
-      // Delete user data from all tables (order matters for foreign keys)
-      const tables = [
+      // Delete user data from all tables with user_id column
+      const userIdTables = [
         'reading_queue',
         'user_books', 
         'recommendations',
-        'referrals',
-        'taste_profiles'
+        'taste_profiles',
+        'admin_notes',
+        'book_interactions',
+        'theme_interactions',
+        'search_queries',
+        'user_sessions',
+        'user_events'
       ];
 
-      for (const table of tables) {
-        const { error } = await supabase
-          .from(table)
-          .delete()
-          .eq('user_id', userId);
-        
-        if (error) {
-          console.error(`Error deleting from ${table}:`, error);
+      for (const table of userIdTables) {
+        try {
+          await supabase.from(table).delete().eq('user_id', userId);
+        } catch (e) {
+          // Table might not exist, continue
         }
+      }
+
+      // Delete referrals where user is the inviter
+      try {
+        await supabase.from('referrals').delete().eq('inviter_id', userId);
+      } catch (e) {
+        // Continue if fails
+      }
+
+      // Delete shared_recommendations where user is the sharer
+      try {
+        await supabase.from('shared_recommendations').delete().eq('sharer_id', userId);
+      } catch (e) {
+        // Continue if fails
       }
 
       // Delete the auth user
@@ -231,7 +247,7 @@ export default async function handler(req) {
 
       if (deleteError) {
         console.error('Error deleting auth user:', deleteError);
-        return json({ error: 'Failed to delete user: ' + deleteError.message }, 500);
+        return json({ error: 'Database error deleting user' }, 500);
       }
 
       return json({ success: true, message: 'User deleted successfully' });
