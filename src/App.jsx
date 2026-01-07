@@ -112,7 +112,7 @@ function AboutSection({ onShare }) {
 }
 
 export default function App() {
-  const { user, authLoading, showAuthModal, setShowAuthModal, signOut } = useUser();
+  const { user, authLoading, showAuthModal, setShowAuthModal, signOut, isAdmin } = useUser();
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
   const { recommendations } = useRecommendations();
   
@@ -1021,7 +1021,7 @@ Find similar books from beyond my library that match this taste profile.
                       </button>
                       
                       {/* Admin Dashboard - only for master admin */}
-                      {user?.email === 'sarah@darkridge.com' && (
+                      {(isAdmin || user?.email === 'sarah@darkridge.com') && (
                         <>
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <button
@@ -1137,7 +1137,7 @@ Find similar books from beyond my library that match this taste profile.
         </Suspense>
       )}
 
-      {currentPage === 'admin' && user?.email === 'sarah@darkridge.com' && (
+      {currentPage === 'admin' && (isAdmin || user?.email === 'sarah@darkridge.com') && (
         <Suspense fallback={<LoadingFallback message="Loading Admin Dashboard..." />}>
           <AdminDashboard onNavigate={setCurrentPage} />
         </Suspense>
