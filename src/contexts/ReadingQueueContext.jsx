@@ -163,34 +163,39 @@ export function ReadingQueueProvider({ children }) {
   }, [readingQueue]);
 
   const updateQueueItem = useCallback(async (bookId, updates) => {
-    const bookToUpdate = readingQueue.find(b => b.id === bookId);
-    if (!bookToUpdate) return { success: false };
-
-    const previousBook = { ...bookToUpdate };
-    setReadingQueue(prev => 
-      prev.map(b => b.id === bookId ? { ...b, ...updates } : b)
-    );
+    // Optimistically update UI first
+    setReadingQueue(prev => {
+      const bookToUpdate = prev.find(b => b.id === bookId);
+      if (!bookToUpdate) return prev;
+      
+      return prev.map(b => b.id === bookId ? { ...b, ...updates } : b);
+    });
 
     try {
       const { data, error } = await db.updateReadingQueueItem(bookId, updates);
       
       if (error) {
         console.error('updateQueueItem: Database error', error);
-        setReadingQueue(prev => 
-          prev.map(b => b.id === bookId ? previousBook : b)
-        );
+        // Revert on error by reloading from database
+        await loadReadingQueue();
         return { success: false, error: error.message };
       }
 
-      return { success: true, data: data[0] };
+      // Update with actual data from database to ensure consistency
+      if (data && data[0]) {
+        setReadingQueue(prev => 
+          prev.map(b => b.id === bookId ? data[0] : b)
+        );
+      }
+
+      return { success: true, data: data?.[0] };
     } catch (err) {
       console.error('updateQueueItem: Exception', err);
-      setReadingQueue(prev => 
-        prev.map(b => b.id === bookId ? previousBook : b)
-      );
+      // Revert on error by reloading from database
+      await loadReadingQueue();
       return { success: false, error: err.message };
     }
-  }, [readingQueue]);
+  }, [loadReadingQueue]);
 
   const value = {
     readingQueue,

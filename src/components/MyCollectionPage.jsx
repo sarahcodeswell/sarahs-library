@@ -550,6 +550,15 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       track('recommendation_created', {
         book_title: book.book_title,
       });
+      
+      // Generate shareable link
+      const recommendationId = result.data?.id;
+      if (recommendationId) {
+        const shareLink = `${window.location.origin}/shared/${recommendationId}`;
+        return { success: true, shareLink };
+      }
+      
+      return { success: true };
     } else {
       throw new Error(result.error || 'Failed to create recommendation');
     }
