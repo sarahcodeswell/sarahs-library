@@ -27,7 +27,6 @@ import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
-import { ReceivedRecommendationsProvider, useReceivedRecommendations } from './contexts/ReceivedRecommendationsContext';
 
 // Lazy load heavy components
 const UserProfile = lazy(() => import('./components/UserProfile'));
@@ -39,14 +38,12 @@ const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
 const MyReadingQueuePage = lazy(() => import('./components/MyReadingQueuePage'));
-const MyRecommendationsPage = lazy(() => import('./components/MyRecommendationsPage'));
 const ReadWithFriendsPage = lazy(() => import('./components/ReadWithFriendsPage'));
 const OurPracticesPage = lazy(() => import('./components/OurPracticesPage'));
 const OurMissionPage = lazy(() => import('./components/OurMissionPage'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 const TermsOfUsePage = lazy(() => import('./components/TermsOfUsePage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
-const BooksSharedWithMePage = lazy(() => import('./components/BooksSharedWithMePage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 const BOOKSHOP_AFFILIATE_ID = '119544';
@@ -121,7 +118,6 @@ export default function App() {
   const { user, authLoading, showAuthModal, setShowAuthModal, signOut, isAdmin } = useUser();
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, refreshQueue } = useReadingQueue();
   const { recommendations } = useRecommendations();
-  const { getCounts } = useReceivedRecommendations();
   
   const [selectedBook, setSelectedBook] = useState(null);
   const [chatMode, setChatMode] = useState('library');
@@ -215,7 +211,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'recommendations', 'books-shared-with-me', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'read-with-friends', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -1004,26 +1000,18 @@ Find similar books from beyond my library that match this taste profile.
                       
                       {user && (
                         <>
-                          {/* SHARING Section */}
+                          {/* COMING SOON Section */}
                           <div className="border-t border-[#E8EBE4] my-1"></div>
                           <div className="px-4 py-2 text-xs font-medium text-[#96A888] uppercase tracking-wide">
-                            Sharing
+                            Coming Soon
                           </div>
                           <button onClick={() => navigateTo('read-with-friends', '/read-with-friends')} className={MENU_BUTTON_CLASS}>
                             <Users className="w-4 h-4 flex-shrink-0" />
                             <span className="flex-1">Read with Friends</span>
-                            <span className="flex-shrink-0 text-[10px] font-medium text-[#96A888] italic">
-                              Coming Soon
-                            </span>
                           </button>
-                          <button onClick={() => navigateTo('books-shared-with-me', '/books-shared-with-me')} className={MENU_BUTTON_CLASS}>
-                            <Sparkles className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">Books Shared with Me</span>
-                            {getCounts().pending > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 text-[10px] font-medium bg-[#c96b6b] text-white rounded-full flex items-center justify-center">
-                                {getCounts().pending}
-                              </span>
-                            )}
+                          <button onClick={() => navigateTo('become-curator', '/become-curator')} className={MENU_BUTTON_CLASS}>
+                            <BookMarked className="w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">Become a Curator</span>
                           </button>
                           
                           {/* Profile & Sign Out */}
@@ -1224,18 +1212,6 @@ Find similar books from beyond my library that match this taste profile.
         </ErrorBoundary>
       )}
 
-      {currentPage === 'recommendations' && (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback message="Loading My Recommendations..." />}>
-            <MyRecommendationsPage 
-              onNavigate={setCurrentPage}
-              user={user}
-              onShowAuthModal={() => setShowAuthModal(true)}
-            />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
       {currentPage === 'read-with-friends' && (
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback message="Loading Read with Friends..." />}>
@@ -1243,17 +1219,6 @@ Find similar books from beyond my library that match this taste profile.
               onNavigate={setCurrentPage}
               user={user}
               onShowAuthModal={() => setShowAuthModal(true)}
-            />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {currentPage === 'books-shared-with-me' && (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback message="Loading Books Shared with Me..." />}>
-            <BooksSharedWithMePage 
-              onNavigate={setCurrentPage}
-              user={user}
             />
           </Suspense>
         </ErrorBoundary>

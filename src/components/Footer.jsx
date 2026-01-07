@@ -32,12 +32,6 @@ export default function Footer({ onNavigate, currentPage }) {
             Shop
           </button>
           <button
-            onClick={() => handleNavigation('become-curator', '/become-curator')}
-            className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'become-curator' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
-          >
-            Become a Curator
-          </button>
-          <button
             onClick={() => handleNavigation('privacy-policy', '/privacy-policy')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'privacy-policy' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
           >
