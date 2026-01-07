@@ -254,10 +254,7 @@ export default async function handler(req) {
       if (existingProfile) {
         const { error } = await supabase
           .from('taste_profiles')
-          .update({ 
-            deleted_at: new Date().toISOString(),
-            display_name: `[DELETED] ${userEmail}`
-          })
+          .update({ deleted_at: new Date().toISOString() })
           .eq('user_id', userId);
         updateError = error;
       } else {
@@ -265,8 +262,7 @@ export default async function handler(req) {
           .from('taste_profiles')
           .insert({ 
             user_id: userId, 
-            deleted_at: new Date().toISOString(),
-            display_name: `[DELETED] ${userEmail}`
+            deleted_at: new Date().toISOString()
           });
         updateError = error;
       }
