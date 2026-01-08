@@ -123,8 +123,13 @@ export default function AboutPage({ onNavigate, user }) {
           Back to Home
         </button>
 
-        {/* Header */}
+        {/* Header with Logo */}
         <div className="mb-8 text-center">
+          <img 
+            src="/linkedin-logo.png" 
+            alt="Sarah's Books" 
+            className="w-24 h-24 mx-auto mb-4"
+          />
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
             I've spent years building this collection—books I couldn't stop thinking about long after I finished them. Browse by curator themes, or tell me what you're looking for. I love helping people find their next great read.

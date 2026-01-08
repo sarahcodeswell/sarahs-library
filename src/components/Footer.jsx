@@ -11,8 +11,10 @@ export default function Footer({ onNavigate, currentPage }) {
   return (
     <footer className="bg-[#F8F6EE] border-t border-[#D4DAD0] mt-auto">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
-        {/* Navigation Links - More prominent */}
-        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3 mb-4">
+        {/* Logo and Navigation Container */}
+        <div className="flex items-start justify-between mb-4">
+          {/* Navigation Links - More prominent */}
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-3 flex-1">
           <button
             onClick={() => handleNavigation('our-mission', '/our-mission')}
             className={`text-sm font-medium hover:text-[#4A5940] transition-colors ${currentPage === 'our-mission' ? 'text-[#4A5940]' : 'text-[#5F7252]'}`}
@@ -51,6 +53,14 @@ export default function Footer({ onNavigate, currentPage }) {
             Contact
           </a>
         </nav>
+        
+        {/* Logo - Right Justified */}
+        <img 
+          src="/linkedin-logo.png" 
+          alt="Sarah's Books" 
+          className="w-12 h-12 flex-shrink-0 ml-4 hidden sm:block"
+        />
+        </div>
 
         {/* Tagline */}
         <p className="text-xs text-[#7A8F6C] text-center mb-3 font-light">
