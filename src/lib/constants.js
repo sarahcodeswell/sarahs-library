@@ -27,7 +27,7 @@ export const themeColors = {
 export const themeDescriptions = {
   women: 'Women-led lives, resilience, sisterhood.',
   beach: 'Lighthearted, entertaining, pure enjoyment.',
-  emotional: 'Heartbreak, healing, and catharsis.',
+  emotional: 'The depths of human experience—grief, joy, love, loss.',
   identity: 'Belonging, reinvention, selfhood.',
   justice: "Systems, power, and what's unseen.",
   spiritual: 'Meaning, faith, inner work.'

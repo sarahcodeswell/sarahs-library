@@ -42,10 +42,11 @@ USER CONTEXT: ${userContext ? JSON.stringify(userContext) : 'Anonymous user, no 
 
 SARAH'S CATALOG THEMES:
 - Women's Untold Stories: Female protagonists, women's history, feminist perspectives
-- Emotional Truth: Psychologically deep, emotionally impactful, "costs something to read"
+- Emotional Truth: The depths of human experience—grief, joy, love, loss
 - Identity & Belonging: Racial identity, cultural diaspora, class, gender, passing
 - Spiritual Seeking: Mindfulness, meaning-making, wisdom traditions
 - Invisible Injustices: Systemic failures, criminal justice, historical erasure
+- Beach Read: Lighthearted, entertaining reads that are pure enjoyment
 
 SARAH'S TYPICAL GENRES: Literary Fiction (31%), Historical Fiction (19%), Memoir (15%), Self-Help & Spirituality (13%), Thriller & Mystery (9%), Romance & Contemporary (8%), Nonfiction (10%)
 
@@ -61,7 +62,7 @@ Classify this query:
    - 1.0: Perfectly matches Sarah's themes (e.g., "devastating literary fiction about women's hidden history")
    - 0.5: Partial alignment (e.g., "historical fiction" without the emotional depth emphasis)
    - 0.0: Neutral/unclear
-   - -0.5: Somewhat divergent (e.g., "light beach read", "cozy mystery")
+   - -0.5: Somewhat divergent (e.g., "cozy mystery", "hard sci-fi")
    - -1.0: Opposite of Sarah's taste (e.g., "fast-paced action thriller with no emotional depth")
 
 3. SPECIFICITY:
