@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingMethod, setLoadingMethod] = useState(null); // 'google', 'apple', or 'email'
   const [error, setError] = useState('');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -17,7 +17,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
     
     setError('');
-    setLoading(true);
+    setLoadingMethod('email');
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -43,7 +43,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
-      setLoading(false);
+      setLoadingMethod(null);
     }
   };
 
@@ -54,7 +54,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
     
     setError('');
-    setLoading(true);
+    setLoadingMethod(provider);
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -68,12 +68,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       if (error) {
         console.error('OAuth error:', error);
         setError(error.message);
-        setLoading(false);
+        setLoadingMethod(null);
       }
     } catch (err) {
       console.error('OAuth exception:', err);
       setError('An unexpected error occurred');
-      setLoading(false);
+      setLoadingMethod(null);
     }
   };
 
@@ -81,7 +81,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setEmail('');
     setError('');
     setMagicLinkSent(false);
-    setLoading(false);
+    setLoadingMethod(null);
     setShowEmailForm(false);
     onClose();
   };
@@ -115,9 +115,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <p className="text-sm text-[#7A8F6C] mb-2">
               Click the link in your email to sign in. You can close this window.
             </p>
-            <p className="text-xs text-[#96A888] mb-6">
+            <div className="inline-block px-4 py-2 bg-[#5F7252] text-[#F8F6EE] text-sm rounded-full mb-6">
               Don't see it? Check your spam or junk folder.
-            </p>
+            </div>
             <button
               onClick={() => {
                 setMagicLinkSent(false);
@@ -163,10 +163,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               <button
                 onClick={() => handleOAuthSignIn('google')}
                 type="button"
-                disabled={loading}
+                disabled={loadingMethod !== null}
                 className="w-full py-2.5 px-4 border-2 border-[#E8EBE4] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center justify-center gap-3 font-medium text-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {loadingMethod === 'google' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-[#E8EBE4] border-t-[#5F7252] rounded-full animate-spin" />
                     Connecting...
@@ -187,10 +187,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               <button
                 onClick={() => handleOAuthSignIn('apple')}
                 type="button"
-                disabled={loading}
+                disabled={loadingMethod !== null}
                 className="w-full py-2.5 px-4 border-2 border-[#1D1D1F] bg-[#1D1D1F] rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-3 font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {loadingMethod === 'apple' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Connecting...
@@ -240,10 +240,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
                   <button
                     type="submit"
-                    disabled={loading || !email.trim()}
+                    disabled={loadingMethod !== null || !email.trim()}
                     className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                   >
-                    {loading ? (
+                    {loadingMethod === 'email' ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Sending...
