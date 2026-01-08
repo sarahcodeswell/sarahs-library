@@ -1336,9 +1336,6 @@ export default function UserProfile({ tasteProfile }) {
             {ageError && (
               <p className={`text-xs mt-1 ${ageError.startsWith('Note:') ? 'text-amber-600' : 'text-red-500'}`}>{ageError}</p>
             )}
-            {birthYear && !ageError && (
-              <p className="text-xs text-[#96A888] mt-1">Age: {calculateAge(birthYear)}</p>
-            )}
           </div>
 
           {/* Location with autocomplete */}
