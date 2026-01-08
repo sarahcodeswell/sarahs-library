@@ -43,7 +43,8 @@ export default async function handler(req) {
       recommendationsResult,
       sharedRecsResult,
       referralsResult,
-      waitlistResult
+      waitlistResult,
+      betaTestersResult
     ] = await Promise.all([
       // Total users (from auth.users via admin API)
       supabase.auth.admin.listUsers({ perPage: 1000 }),
@@ -67,7 +68,10 @@ export default async function handler(req) {
       supabase.from('referrals').select('*'),
       
       // Curator waitlist
-      supabase.from('curator_waitlist').select('*')
+      supabase.from('curator_waitlist').select('*'),
+      
+      // Beta testers
+      supabase.from('beta_testers').select('*')
     ]);
 
     // Exclude admin from stats
@@ -84,6 +88,7 @@ export default async function handler(req) {
     const sharedRecs = sharedRecsResult.data || [];
     const referrals = (referralsResult.data || []).filter(r => r.inviter_id !== adminId);
     const waitlist = (waitlistResult.data || []).filter(w => w.email !== adminEmail);
+    const betaTesters = (betaTestersResult.data || []).filter(b => b.email !== adminEmail);
 
     // Helper to filter by date
     const filterByDate = (items, dateField = 'created_at') => {
@@ -219,6 +224,19 @@ export default async function handler(req) {
         .map(w => ({ email: w.email, createdAt: w.created_at }))
     };
 
+    // Beta testers stats
+    const betaTestersStats = {
+      total: betaTesters.length,
+      recent: betaTesters
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5)
+        .map(b => ({ 
+          email: b.email, 
+          createdAt: b.created_at,
+          interestedFeatures: b.interested_features || []
+        }))
+    };
+
     // Demographics
     const currentYear = new Date().getFullYear();
     const profilesWithAge = profiles.filter(p => p.birth_year);
@@ -319,6 +337,7 @@ export default async function handler(req) {
       sharing: shareStats,
       referrals: referralStats,
       curatorWaitlist: waitlistStats,
+      betaTesters: betaTestersStats,
       demographics,
       dataQuality
     });

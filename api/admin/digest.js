@@ -32,14 +32,15 @@ export default async function handler(req) {
     const weekAgo = getDateRange('7d');
 
     // Fetch all stats
-    const [usersResult, profilesResult, queueResult, userBooksResult, recommendationsResult, referralsResult, waitlistResult] = await Promise.all([
+    const [usersResult, profilesResult, queueResult, userBooksResult, recommendationsResult, referralsResult, waitlistResult, betaTestersResult] = await Promise.all([
       supabase.auth.admin.listUsers({ perPage: 1000 }),
       supabase.from('taste_profiles').select('*'),
       supabase.from('reading_queue').select('*'),
       supabase.from('user_books').select('*'),
       supabase.from('recommendations').select('*'),
       supabase.from('referrals').select('*'),
-      supabase.from('curator_waitlist').select('*')
+      supabase.from('curator_waitlist').select('*'),
+      supabase.from('beta_testers').select('*')
     ]);
 
     const users = usersResult.data?.users || [];
@@ -49,6 +50,7 @@ export default async function handler(req) {
     const recommendations = recommendationsResult.data || [];
     const referrals = referralsResult.data || [];
     const waitlist = waitlistResult.data || [];
+    const betaTesters = betaTestersResult.data || [];
 
     // Filter for last 24 hours
     const filterByDate = (items, dateField = 'created_at', since = yesterday) => {
@@ -61,6 +63,7 @@ export default async function handler(req) {
     const newRecs24h = filterByDate(recommendations);
     const newReferrals24h = filterByDate(referrals);
     const newWaitlist24h = filterByDate(waitlist);
+    const newBetaTesters24h = filterByDate(betaTesters);
 
     // 7-day stats for comparison
     const newUsers7d = filterByDate(users, 'created_at', weekAgo);
@@ -163,11 +166,19 @@ export default async function handler(req) {
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0;">
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E8EBE4;">
                     <span style="color: #5F7252; font-size: 14px;">Curator Signups</span>
                   </td>
-                  <td style="padding: 8px 0; text-align: right;">
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E8EBE4; text-align: right;">
                     <span style="color: #4A5940; font-size: 16px; font-weight: 500;">${newWaitlist24h.length}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <span style="color: #5F7252; font-size: 14px;">Beta Signups</span>
+                  </td>
+                  <td style="padding: 8px 0; text-align: right;">
+                    <span style="color: #4A5940; font-size: 16px; font-weight: 500;">${newBetaTesters24h.length}</span>
                   </td>
                 </tr>
               </table>
@@ -192,6 +203,10 @@ export default async function handler(req) {
                 <tr>
                   <td style="padding: 6px 0;"><span style="color: #7A8F6C; font-size: 14px;">Curator Waitlist</span></td>
                   <td style="padding: 6px 0; text-align: right;"><span style="color: #4A5940; font-size: 14px;">${waitlist.length}</span></td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0;"><span style="color: #7A8F6C; font-size: 14px;">Beta Testers</span></td>
+                  <td style="padding: 6px 0; text-align: right;"><span style="color: #4A5940; font-size: 14px;">${betaTesters.length}</span></td>
                 </tr>
               </table>
               

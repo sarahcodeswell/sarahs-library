@@ -858,6 +858,23 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
           </div>
         );
 
+      case 'betaTesters':
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((b, i) => (
+              <div key={i} className="py-2.5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-[#4A5940]">{b.email}</p>
+                  {b.interestedFeatures?.length > 0 && (
+                    <p className="text-xs text-[#96A888]">{b.interestedFeatures.join(', ')}</p>
+                  )}
+                </div>
+                {b.createdAt && <p className="text-xs text-[#96A888]">{new Date(b.createdAt).toLocaleDateString()}</p>}
+              </div>
+            ))}
+          </div>
+        );
+
       case 'sharing':
         // Show sharers with their recs made, accepted, and acceptance rate
         return (
@@ -1455,6 +1472,14 @@ export default function AdminDashboard({ onNavigate }) {
             color="bg-violet-500"
             onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
           />
+          <StatCard
+            title="Beta Testers"
+            value={stats?.betaTesters?.total || 0}
+            subtitle="Read with Friends"
+            icon={Users}
+            color="bg-rose-500"
+            onClick={() => setModal({ isOpen: true, type: 'betaTesters', title: 'Beta Testers', icon: Users })}
+          />
         </div>
 
         {/* Demographics Section */}
@@ -1605,25 +1630,51 @@ export default function AdminDashboard({ onNavigate }) {
           </div>
         </div>
 
-        {/* Curator Waitlist */}
-        {stats?.curatorWaitlist?.recent?.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-            <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              Recent Curator Waitlist Signups
-            </h3>
-            <div className="space-y-2">
-              {stats.curatorWaitlist.recent.map((w, i) => (
-                <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
-                  <span className="text-[#4A5940]">{w.email}</span>
-                  <span className="text-xs text-[#96A888]">
-                    {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
-                  </span>
-                </div>
-              ))}
+        {/* Curator Waitlist & Beta Testers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {stats?.curatorWaitlist?.recent?.length > 0 && (
+            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
+                Recent Curator Waitlist Signups
+              </h3>
+              <div className="space-y-2">
+                {stats.curatorWaitlist.recent.map((w, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
+                    <span className="text-[#4A5940]">{w.email}</span>
+                    <span className="text-xs text-[#96A888]">
+                      {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {stats?.betaTesters?.recent?.length > 0 && (
+            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Recent Beta Signups
+              </h3>
+              <div className="space-y-2">
+                {stats.betaTesters.recent.map((b, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
+                    <div>
+                      <span className="text-[#4A5940]">{b.email}</span>
+                      {b.interestedFeatures?.length > 0 && (
+                        <span className="text-xs text-[#96A888] ml-2">({b.interestedFeatures.join(', ')})</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-[#96A888]">
+                      {b.createdAt ? new Date(b.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Management */}
         <div className="mb-6">

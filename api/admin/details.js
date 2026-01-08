@@ -230,6 +230,18 @@ export default async function handler(req) {
         return json({ type: 'waitlist', data: result });
       }
 
+      case 'betaTesters': {
+        const { data: betaTesters } = await supabase.from('beta_testers').select('*');
+        const result = (betaTesters || []).map(b => ({
+          email: b.email,
+          createdAt: b.created_at,
+          interestedFeatures: b.interested_features || [],
+          feedback: b.feedback
+        })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        return json({ type: 'betaTesters', data: result });
+      }
+
       case 'sharing': {
         // Get all shared recommendations with book data
         const { data: shares } = await supabase
