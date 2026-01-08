@@ -1049,7 +1049,7 @@ Find similar books from beyond my library that match this taste profile.
                 onClick={() => navigateTo('home', '/')}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <div>
+                <div className="text-left">
                   <h1 className="font-serif text-lg sm:text-2xl text-[#4A5940]">Sarah's Books</h1>
                   <p className="text-xs text-[#7A8F6C] font-light tracking-wide flex items-center gap-1">For the <Heart className="w-3 h-3 fill-[#c96b6b] text-[#c96b6b] inline" /> of reading</p>
                 </div>
