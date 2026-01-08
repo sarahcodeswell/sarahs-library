@@ -85,16 +85,17 @@ export default async function handler(req) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; background-color: #FDFBF4; font-family: Georgia, 'Times New Roman', serif;">
+<body style="margin: 0; padding: 0; background-color: #FDFBF4; font-family: 'Poppins', Georgia, 'Times New Roman', serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FDFBF4; padding: 40px 20px;">
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; border: 1px solid #E8EBE4; overflow: hidden;">
-          <!-- Header -->
+          <!-- Header with Logo -->
           <tr>
-            <td style="background-color: #5F7252; padding: 24px 32px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); padding: 24px 32px; text-align: center;">
+              <img src="https://www.sarahsbooks.com/linkedin-logo.png" alt="Sarah's Books" width="120" style="display: block; margin: 0 auto 16px auto; max-width: 120px; height: auto;" />
               <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: normal;">
-                Sarah's Books Daily Digest
+                Daily Digest
               </h1>
             </td>
           </tr>

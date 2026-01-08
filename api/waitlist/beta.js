@@ -83,8 +83,13 @@ export default async function handler(request) {
       return json({ error: 'Failed to sign up for beta' }, 500);
     }
 
-    // Send confirmation email
-    const emailResult = await sendBetaTesterEmail(email);
+    // Get beta list position (count of entries)
+    const { count: position } = await supabase
+      .from('beta_testers')
+      .select('*', { count: 'exact', head: true });
+
+    // Send confirmation email with position
+    const emailResult = await sendBetaTesterEmail(email, position);
     
     if (!emailResult.success) {
       console.warn('Beta email failed:', emailResult.error);

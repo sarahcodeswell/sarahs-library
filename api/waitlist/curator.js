@@ -81,8 +81,13 @@ export default async function handler(request) {
       return json({ error: 'Failed to join waitlist' }, 500);
     }
 
-    // Send confirmation email (don't fail if email fails)
-    const emailResult = await sendCuratorWaitlistEmail(email);
+    // Get waitlist position (count of entries)
+    const { count: position } = await supabase
+      .from('curator_waitlist')
+      .select('*', { count: 'exact', head: true });
+
+    // Send confirmation email with position (don't fail if email fails)
+    const emailResult = await sendCuratorWaitlistEmail(email, position);
     
     if (!emailResult.success) {
       console.warn('Waitlist email failed:', emailResult.error);

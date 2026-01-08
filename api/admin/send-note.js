@@ -22,7 +22,7 @@ export default async function handler(request) {
 
     // Parse request body
     const body = await request.json();
-    const { userId, userEmail, bookId, bookTitle, bookAuthor, noteContent } = body;
+    const { userId, userEmail, bookId, bookTitle, bookAuthor, bookCoverUrl, bookDescription, noteContent, curatorName = 'Sarah' } = body;
 
     if (!userId || !userEmail || !bookTitle || !noteContent) {
       return json({ error: 'Missing required fields: userId, userEmail, bookTitle, noteContent' }, 400);
@@ -42,6 +42,19 @@ export default async function handler(request) {
       }
     }
 
+    // Build book info section with optional cover and description
+    const bookCoverHtml = bookCoverUrl ? `
+      <td style="width: 80px; vertical-align: top; padding-right: 16px;">
+        <img src="${bookCoverUrl}" alt="${bookTitle}" width="80" style="border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+      </td>
+    ` : '';
+    
+    const bookDescriptionHtml = bookDescription ? `
+      <p style="margin: 12px 0 0 0; font-size: 13px; color: #7A8F6C; line-height: 1.5;">
+        <strong style="color: #5F7252;">About this book:</strong> ${bookDescription.length > 200 ? bookDescription.substring(0, 200) + '...' : bookDescription}
+      </p>
+    ` : '';
+
     // Build email HTML
     const emailHtml = `
 <!DOCTYPE html>
@@ -50,37 +63,55 @@ export default async function handler(request) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; background-color: #FAF8F3; font-family: Georgia, 'Times New Roman', serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF8F3; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; background-color: #FDFBF4; font-family: 'Poppins', Georgia, 'Times New Roman', serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FDFBF4; padding: 40px 20px;">
     <tr>
       <td align="center">
         <table width="100%" style="max-width: 560px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          <!-- Header -->
+          <!-- Header with Logo -->
           <tr>
-            <td style="background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); padding: 32px; text-align: center;">
-              <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: normal; letter-spacing: 0.5px;">
-                📚 A Note from Sarah
+            <td style="background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); padding: 24px 32px; text-align: center;">
+              <img src="https://www.sarahsbooks.com/linkedin-logo.png" alt="Sarah's Books" width="120" style="display: block; margin: 0 auto 16px auto; max-width: 120px; height: auto;" />
+              <h1 style="margin: 0; color: #FFFFFF; font-size: 22px; font-weight: normal; letter-spacing: 0.5px;">
+                📚 A Note from ${curatorName}, Your Curator
               </h1>
             </td>
           </tr>
           
-          <!-- Book Info -->
+          <!-- Intro -->
           <tr>
             <td style="padding: 32px 32px 16px 32px;">
+              <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #4A5940;">
+                I see you've added <strong>"${bookTitle}"</strong> to your reading queue. Here's why I love this book:
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Book Info with Cover -->
+          <tr>
+            <td style="padding: 0 32px 24px 32px;">
               <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; border-left: 4px solid #5F7252;">
-                <p style="margin: 0 0 4px 0; font-size: 18px; color: #4A5940; font-weight: 600;">
-                  ${bookTitle}
-                </p>
-                ${bookAuthor ? `<p style="margin: 0; font-size: 14px; color: #7A8F6C;">by ${bookAuthor}</p>` : ''}
+                <table cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    ${bookCoverHtml}
+                    <td style="vertical-align: top;">
+                      <p style="margin: 0 0 4px 0; font-size: 18px; color: #4A5940; font-weight: 600;">
+                        ${bookTitle}
+                      </p>
+                      ${bookAuthor ? `<p style="margin: 0; font-size: 14px; color: #7A8F6C;">by ${bookAuthor}</p>` : ''}
+                      ${bookDescriptionHtml}
+                    </td>
+                  </tr>
+                </table>
               </div>
             </td>
           </tr>
           
           <!-- Personal Note -->
           <tr>
-            <td style="padding: 16px 32px 32px 32px;">
-              <p style="margin: 0 0 16px 0; font-size: 14px; color: #96A888; text-transform: uppercase; letter-spacing: 1px;">
-                Why I love this book...
+            <td style="padding: 0 32px 32px 32px;">
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #5F7252; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                Why I Love This Book
               </p>
               <div style="font-size: 16px; line-height: 1.7; color: #4A5940;">
                 ${noteContent.replace(/\n/g, '<br>')}
@@ -94,12 +125,12 @@ export default async function handler(request) {
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding-right: 16px;">
-                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #C97B7B 0%, #B56A6A 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                      <span style="color: white; font-size: 20px; line-height: 48px; text-align: center; display: block; width: 100%;">♥</span>
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #C97B7B 0%, #B56A6A 100%); border-radius: 50%; text-align: center; line-height: 48px;">
+                      <span style="color: white; font-size: 20px;">♥</span>
                     </div>
                   </td>
                   <td>
-                    <p style="margin: 0; font-size: 16px; color: #4A5940; font-weight: 600;">Sarah</p>
+                    <p style="margin: 0; font-size: 16px; color: #4A5940; font-weight: 600;">${curatorName}</p>
                     <p style="margin: 4px 0 0 0; font-size: 14px; color: #7A8F6C;">Your curator at Sarah's Books</p>
                   </td>
                 </tr>
