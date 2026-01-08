@@ -3,6 +3,7 @@ import { X, Loader2, Copy, Check, Mail, MessageCircle, Twitter, Facebook } from 
 
 export default function RecommendationModal({ isOpen, onClose, book, onSubmit }) {
   const [note, setNote] = useState('');
+  const [sharedWith, setSharedWith] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [shareLink, setShareLink] = useState(null);
@@ -20,7 +21,7 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
     setError('');
 
     try {
-      const result = await onSubmit(book, note.trim());
+      const result = await onSubmit(book, note.trim(), sharedWith.trim() || null);
       if (result && result.shareLink) {
         setShareLink(result.shareLink);
       }
@@ -44,6 +45,7 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
 
   const handleClose = () => {
     setNote('');
+    setSharedWith('');
     setError('');
     setShareLink(null);
     setLinkCopied(false);
@@ -198,7 +200,7 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
               )}
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-[#5F7252] mb-2">
                 Why do you recommend this book?
               </label>
@@ -207,12 +209,26 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Share what you loved about this book and why others should read it..."
                 className="w-full px-4 py-3 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent resize-none"
-                rows={5}
+                rows={4}
                 disabled={isSubmitting}
                 required
               />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#5F7252] mb-2">
+                Who are you sharing with? <span className="font-normal text-[#96A888]">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={sharedWith}
+                onChange={(e) => setSharedWith(e.target.value)}
+                placeholder="e.g., Mom, Book Club, Sarah..."
+                className="w-full px-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                disabled={isSubmitting}
+              />
               <p className="text-xs text-[#96A888] mt-2">
-                This note will be shared with anyone you send this recommendation to.
+                This helps you remember who you shared this with.
               </p>
             </div>
 

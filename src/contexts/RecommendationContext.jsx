@@ -37,10 +37,10 @@ export function RecommendationProvider({ children }) {
   }, [fetchRecommendations]);
 
   // Create a new recommendation
-  const createRecommendation = useCallback(async (book, note) => {
+  const createRecommendation = useCallback(async (book, note, sharedWith = null) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    const { data, error } = await db.createRecommendation(user.id, book, note);
+    const { data, error } = await db.createRecommendation(user.id, book, note, sharedWith);
     
     if (error) {
       return { success: false, error: error.message };

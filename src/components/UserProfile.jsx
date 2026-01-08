@@ -501,6 +501,7 @@ export default function UserProfile({ tasteProfile }) {
           bookAuthor: rec.book_author,
           note: rec.recommendation_note,
           dateShared: rec.created_at,
+          sharedWith: rec.shared_with || null,
           shareToken: rec.shared_recommendations?.[0]?.share_token,
           viewCount: rec.shared_recommendations?.[0]?.view_count || 0,
           accepted: !!rec.shared_recommendations?.[0]?.accepted_at,
@@ -590,6 +591,35 @@ export default function UserProfile({ tasteProfile }) {
       setTimeout(() => setSaveMessage(''), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  // Delete a recommendation
+  const handleDeleteRecommendation = async (recId) => {
+    if (!user || !recId) return;
+    
+    if (!window.confirm('Delete this recommendation? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const { error } = await db.deleteRecommendation(recId);
+      if (error) {
+        console.error('Failed to delete recommendation:', error);
+        setSaveMessage('Failed to delete');
+      } else {
+        // Remove from local state
+        setRecsHistory(prev => prev.filter(r => r.id !== recId));
+        // Update stats
+        setStats(prev => ({
+          ...prev,
+          recsMade: Math.max(0, prev.recsMade - 1)
+        }));
+        setSaveMessage('Deleted');
+      }
+      setTimeout(() => setSaveMessage(''), 2000);
+    } catch (err) {
+      console.error('Error deleting recommendation:', err);
     }
   };
 
@@ -978,10 +1008,10 @@ export default function UserProfile({ tasteProfile }) {
         
         {/* Recs Made Stats - Collapsible */}
         {stats.recsMade > 0 && (
-          <div className="bg-gradient-to-r from-rose-50 to-amber-50 rounded-lg p-3 mb-4 border border-rose-100">
+          <div className="bg-gradient-to-r from-[#F0F4ED] to-[#F8F6EE] rounded-lg p-3 mb-4 border border-[#D4DAD0]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-rose-500" />
+                <Heart className="w-4 h-4 text-[#5F7252]" />
                 <span className="text-sm font-medium text-[#4A5940]">Recs Made</span>
               </div>
               <div className="flex items-center gap-3">
@@ -990,26 +1020,20 @@ export default function UserProfile({ tasteProfile }) {
                   <div className="text-[10px] text-[#7A8F6C]">shared</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-green-600">{stats.recsAccepted}</div>
+                  <div className="text-lg font-semibold text-[#5F7252]">{stats.recsAccepted}</div>
                   <div className="text-[10px] text-[#7A8F6C]">accepted</div>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  stats.recsMade > 0 && (stats.recsAccepted / stats.recsMade) >= 0.75 
-                    ? 'bg-emerald-100 text-emerald-700' 
-                    : stats.recsMade > 0 && (stats.recsAccepted / stats.recsMade) >= 0.5
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
+                <div className="px-2 py-1 rounded-full text-xs font-medium bg-[#E8EBE4] text-[#5F7252]">
                   {stats.recsMade > 0 ? Math.round((stats.recsAccepted / stats.recsMade) * 100) : 0}%
                 </div>
               </div>
             </div>
             
             {/* Toggle and Export buttons */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-rose-200/50">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#D4DAD0]/50">
               <button
                 onClick={handleToggleRecsHistory}
-                className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
               >
                 <ChevronDown className={`w-3 h-3 transition-transform ${showRecsHistory ? 'rotate-180' : ''}`} />
                 {showRecsHistory ? 'Hide History' : 'View History'}
@@ -1018,7 +1042,7 @@ export default function UserProfile({ tasteProfile }) {
                 <button
                   onClick={handleExportRecsHistory}
                   disabled={isExportingRecs}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                  className="text-xs text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
                 >
                   <Download className="w-3 h-3" />
                   {isExportingRecs ? 'Exporting...' : 'Export'}
@@ -1035,13 +1059,26 @@ export default function UserProfile({ tasteProfile }) {
                   <div className="text-xs text-[#7A8F6C] text-center py-2">No recommendations yet</div>
                 ) : (
                   recsHistory.map((rec) => (
-                    <div key={rec.id} className="bg-white/60 rounded-lg p-2 border border-rose-100">
+                    <div key={rec.id} className="bg-white/60 rounded-lg p-2.5 border border-[#E8EBE4]">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-[#4A5940] truncate">{rec.bookTitle}</p>
                           {rec.bookAuthor && (
                             <p className="text-[10px] text-[#7A8F6C] truncate">{rec.bookAuthor}</p>
                           )}
+                          {/* Date and shared with info */}
+                          <div className="flex items-center gap-2 mt-1">
+                            {rec.dateShared && (
+                              <span className="text-[10px] text-[#96A888]">
+                                {new Date(rec.dateShared).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                            {rec.sharedWith && (
+                              <span className="text-[10px] text-[#96A888]">
+                                → {rec.sharedWith}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="text-[10px] text-[#7A8F6C] flex items-center gap-0.5" title="Views">
@@ -1051,16 +1088,23 @@ export default function UserProfile({ tasteProfile }) {
                           <span 
                             className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               rec.accepted 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-amber-50 text-amber-600'
+                                ? 'bg-[#E8EBE4] text-[#5F7252]' 
+                                : 'bg-[#F8F6EE] text-[#96A888]'
                             }`}
                             title={rec.accepted ? 'Accepted' : 'Pending'}
                           >
                             {rec.accepted ? '✓ Accepted' : 'Pending'}
                           </span>
+                          <button
+                            onClick={() => handleDeleteRecommendation(rec.id)}
+                            className="p-1 text-[#96A888] hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="Delete recommendation"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
-                      {rec.shareToken ? (
+                      {rec.shareToken && (
                         <button
                           onClick={() => handleCopyShareLink(rec)}
                           className="mt-1.5 text-[10px] text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
@@ -1068,8 +1112,6 @@ export default function UserProfile({ tasteProfile }) {
                           <Heart className="w-2.5 h-2.5" />
                           Re-share
                         </button>
-                      ) : (
-                        <span className="mt-1.5 text-[10px] text-[#96A888] italic">No share link</span>
                       )}
                     </div>
                   ))

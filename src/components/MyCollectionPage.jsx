@@ -543,8 +543,8 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     });
   };
 
-  const handleCreateRecommendation = async (book, note) => {
-    const result = await createRecommendation(book, note);
+  const handleCreateRecommendation = async (book, note, sharedWith = null) => {
+    const result = await createRecommendation(book, note, sharedWith);
     
     if (result.success) {
       track('recommendation_created', {

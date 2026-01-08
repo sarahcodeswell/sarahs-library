@@ -470,21 +470,27 @@ export const db = {
     }
   },
 
-  createRecommendation: async (userId, book, note) => {
+  createRecommendation: async (userId, book, note, sharedWith = null) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
+      const insertData = {
+        user_id: userId,
+        book_title: book.book_title || book.title,
+        book_author: book.book_author || book.author,
+        book_isbn: book.isbn || null,
+        book_description: stripAccoladesFromDescription(book.description || book.why_recommended) || null,
+        recommendation_note: note,
+        is_from_collection: true
+      };
+      
+      if (sharedWith) {
+        insertData.shared_with = sharedWith;
+      }
+      
       const { data, error } = await supabase
         .from('user_recommendations')
-        .insert({
-          user_id: userId,
-          book_title: book.book_title || book.title,
-          book_author: book.book_author || book.author,
-          book_isbn: book.isbn || null,
-          book_description: stripAccoladesFromDescription(book.description || book.why_recommended) || null,
-          recommendation_note: note,
-          is_from_collection: true
-        })
+        .insert(insertData)
         .select()
         .single();
       
