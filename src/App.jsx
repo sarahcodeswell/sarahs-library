@@ -1569,13 +1569,6 @@ Find similar books from beyond my library that match this taste profile.
           {messages.length <= 1 && (
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
               <button
-                onClick={() => navigateTo('curator-themes', '/curator-themes')}
-                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-              >
-                Curator Themes
-              </button>
-              <span className="text-[#D4DAD0]">·</span>
-              <button
                 onClick={() => navigateTo('my-books', '/my-books')}
                 className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
               >
@@ -1583,17 +1576,24 @@ Find similar books from beyond my library that match this taste profile.
               </button>
               <span className="text-[#D4DAD0]">·</span>
               <button
-                onClick={() => navigateTo('our-mission', '/our-mission')}
+                onClick={() => navigateTo('reading-queue', '/reading-queue')}
                 className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
               >
-                Our Mission
+                Reading Queue
               </button>
               <span className="text-[#D4DAD0]">·</span>
               <button
-                onClick={() => navigateTo('about', '/how-it-works')}
+                onClick={() => navigateTo('collection', '/collection')}
                 className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
               >
-                How It Works
+                My Collection
+              </button>
+              <span className="text-[#D4DAD0]">·</span>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+              >
+                Update Profile
               </button>
             </div>
           )}
