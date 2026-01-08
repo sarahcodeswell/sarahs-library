@@ -57,6 +57,12 @@ See: `TESTING_MONITORING_STRATEGY.md`
 - [ ] Include screenshot capability
 - [ ] Route to you (email? dashboard?)
 
+### 10. Research Margin App
+- [ ] Margin - book tracker app (9.5k reviews, 4.9 rating on App Store)
+- [ ] Study their "search by vibes" feature
+- [ ] Compare to our curator themes approach
+- [ ] Note: Otis (Goodreads founder) compared our themes to their vibes
+
 ---
 
 ## Completed (Jan 7)
