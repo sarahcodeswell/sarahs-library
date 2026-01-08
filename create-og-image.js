@@ -10,8 +10,9 @@ const __dirname = path.dirname(__filename);
 const outputPath = path.join(__dirname, 'public', 'og-image.png');
 
 // Create SVG with just the book stack icon centered on cream background
+// Optimized for LinkedIn: 1200 × 627 pixels
 const ogSvg = `
-<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200" height="627" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#5F7252"/>
@@ -20,10 +21,10 @@ const ogSvg = `
   </defs>
   
   <!-- Cream background -->
-  <rect width="1200" height="630" fill="#FDFBF4"/>
+  <rect width="1200" height="627" fill="#FDFBF4"/>
   
   <!-- Book stack icon (scaled up much larger and centered) -->
-  <g transform="translate(600, 315) scale(8)">
+  <g transform="translate(600, 313.5) scale(8)">
     <g transform="translate(-32, -32)">
       <!-- bottom book -->
       <rect x="10" y="36" width="44" height="16" rx="4" fill="url(#cover)"/>
@@ -56,7 +57,7 @@ sharp(Buffer.from(ogSvg))
   .then(() => {
     console.log('✓ Successfully created og-image.png');
     console.log(`  Output: ${outputPath}`);
-    console.log('  Dimensions: 1200 × 630 pixels');
+    console.log('  Dimensions: 1200 × 627 pixels (LinkedIn optimized)');
     console.log('  Background: #FDFBF4 (cream)');
     console.log('  Features: Book stack icon only (no tagline)');
   })
