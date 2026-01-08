@@ -1252,62 +1252,63 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* Smart Action Bar - logged in users only */}
           {messages.length <= 1 && user && (
-            <>
-              {/* Option E: Inline Text Links (Minimal) */}
-              <div className="flex flex-wrap items-center justify-center gap-2 text-sm mb-6">
-                {/* Reading Queue */}
-                {queueCount > 0 && (
-                  <>
-                    <button 
-                      onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                      className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                    >
-                      Reading Queue ({queueCount})
-                    </button>
-                    <span className="text-[#D4DAD0]">·</span>
-                  </>
-                )}
-                
-                {/* Collection */}
-                {collectionCount > 0 && (
-                  <>
-                    <button 
-                      onClick={() => navigateTo('collection', '/collection')}
-                      className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                    >
-                      Collection ({collectionCount})
-                    </button>
-                    <span className="text-[#D4DAD0]">·</span>
-                  </>
-                )}
-                
-                {/* Recommendations */}
-                <button 
-                  onClick={() => navigateTo('recommendations', '/recommendations')}
-                  className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                >
-                  Recommendations
-                </button>
-                <span className="text-[#D4DAD0]">·</span>
-                
-                {/* Add Books */}
-                <button 
-                  onClick={() => navigateTo('my-books', '/my-books')}
-                  className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                >
-                  Add Books
-                </button>
-                <span className="text-[#D4DAD0]">·</span>
-                
-                {/* Profile */}
-                <button 
-                  onClick={() => setShowAuthModal(true)}
-                  className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                >
-                  Profile
-                </button>
+            <div className="mb-6 mx-auto max-w-2xl">
+              <div className="bg-white border border-[#E8EBE4] rounded-xl shadow-sm px-4 py-3">
+                <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+                  {/* Reading Queue */}
+                  {queueCount > 0 && (
+                    <>
+                      <button 
+                        onClick={() => navigateTo('reading-queue', '/reading-queue')}
+                        className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                      >
+                        Reading Queue ({queueCount})
+                      </button>
+                      <span className="text-[#D4DAD0]">·</span>
+                    </>
+                  )}
+                  
+                  {/* Collection */}
+                  {collectionCount > 0 && (
+                    <>
+                      <button 
+                        onClick={() => navigateTo('collection', '/collection')}
+                        className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                      >
+                        Collection ({collectionCount})
+                      </button>
+                      <span className="text-[#D4DAD0]">·</span>
+                    </>
+                  )}
+                  
+                  {/* Recommendations */}
+                  <button 
+                    onClick={() => navigateTo('recommendations', '/recommendations')}
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                  >
+                    Recommendations
+                  </button>
+                  <span className="text-[#D4DAD0]">·</span>
+                  
+                  {/* Add Books */}
+                  <button 
+                    onClick={() => navigateTo('my-books', '/my-books')}
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                  >
+                    Add Books
+                  </button>
+                  <span className="text-[#D4DAD0]">·</span>
+                  
+                  {/* Profile */}
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                  >
+                    Profile
+                  </button>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
 
