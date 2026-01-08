@@ -52,6 +52,12 @@ export default function Footer({ onNavigate, currentPage }) {
             <Mail className="w-4 h-4" />
             Contact
           </a>
+          <a
+            href="#"
+            className="termly-display-preferences text-sm font-medium text-[#5F7252] hover:text-[#4A5940] transition-colors"
+          >
+            Cookie Preferences
+          </a>
         </nav>
         
         {/* Logo - Right Justified */}
