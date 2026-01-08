@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2, MapPin, Store, ChevronDown, Copy, Check, Users, Link } from 'lucide-react';
+import { User, LogOut, Save, Camera, X, Plus, BookMarked, BookOpen, Heart, Download, Trash2, MapPin, Store, ChevronDown, Copy, Check, Users, Link, Eye } from 'lucide-react';
 import { useUser, useReadingQueue } from '../contexts';
 import { db, supabase, auth } from '../lib/supabase';
 import booksData from '../books.json';
@@ -76,6 +76,10 @@ export default function UserProfile({ tasteProfile }) {
   const [savingReferralCode, setSavingReferralCode] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [showRecsHistory, setShowRecsHistory] = useState(false);
+  const [recsHistory, setRecsHistory] = useState([]);
+  const [isLoadingRecsHistory, setIsLoadingRecsHistory] = useState(false);
+  const [isExportingRecs, setIsExportingRecs] = useState(false);
   const genreDropdownRef = useRef(null);
   const locationDropdownRef = useRef(null);
 
@@ -480,6 +484,115 @@ export default function UserProfile({ tasteProfile }) {
     await signOut();
   };
 
+  // Load detailed recommendation history
+  const loadRecsHistory = async () => {
+    if (!user || isLoadingRecsHistory) return;
+    
+    setIsLoadingRecsHistory(true);
+    try {
+      // Get user's recommendations with share data
+      const { data: recommendations } = await db.getUserRecommendations(user.id);
+      
+      if (recommendations && recommendations.length > 0) {
+        // Map to include share stats
+        const historyWithStats = recommendations.map(rec => ({
+          id: rec.id,
+          bookTitle: rec.book_title,
+          bookAuthor: rec.book_author,
+          note: rec.recommendation_note,
+          dateShared: rec.created_at,
+          shareToken: rec.shared_recommendations?.[0]?.share_token,
+          viewCount: rec.shared_recommendations?.[0]?.view_count || 0,
+          accepted: !!rec.shared_recommendations?.[0]?.accepted_at,
+          acceptedAt: rec.shared_recommendations?.[0]?.accepted_at
+        }));
+        setRecsHistory(historyWithStats);
+      }
+    } catch (error) {
+      console.error('Error loading recs history:', error);
+    } finally {
+      setIsLoadingRecsHistory(false);
+    }
+  };
+
+  // Toggle recommendation history visibility
+  const handleToggleRecsHistory = () => {
+    if (!showRecsHistory && recsHistory.length === 0) {
+      loadRecsHistory();
+    }
+    setShowRecsHistory(!showRecsHistory);
+  };
+
+  // Export recommendation history as CSV
+  const handleExportRecsHistory = async () => {
+    if (!user || recsHistory.length === 0) return;
+    
+    setIsExportingRecs(true);
+    try {
+      const escapeCSV = (value) => {
+        if (value === null || value === undefined) return '';
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const lines = [];
+      lines.push('SARAH\'S BOOKS - RECOMMENDATION HISTORY');
+      lines.push(`Export Date,${new Date().toISOString()}`);
+      lines.push(`Total Recommendations,${recsHistory.length}`);
+      lines.push(`Accepted,${recsHistory.filter(r => r.accepted).length}`);
+      lines.push(`Acceptance Rate,${recsHistory.length > 0 ? Math.round((recsHistory.filter(r => r.accepted).length / recsHistory.length) * 100) : 0}%`);
+      lines.push('');
+      lines.push('Book Title,Author,Your Note,Date Shared,Views,Status,Share Link');
+      
+      recsHistory.forEach(rec => {
+        const shareUrl = rec.shareToken 
+          ? `${window.location.origin}/r/${rec.shareToken}${referralCode ? `?ref=${referralCode}` : ''}`
+          : '';
+        lines.push([
+          escapeCSV(rec.bookTitle),
+          escapeCSV(rec.bookAuthor),
+          escapeCSV(rec.note || ''),
+          escapeCSV(rec.dateShared?.split('T')[0] || ''),
+          rec.viewCount,
+          rec.accepted ? 'Accepted' : 'Pending',
+          escapeCSV(shareUrl)
+        ].join(','));
+      });
+
+      const csvContent = lines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sarahs-books-recommendations-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting recs:', error);
+    } finally {
+      setIsExportingRecs(false);
+    }
+  };
+
+  // Copy share link for a recommendation
+  const handleCopyShareLink = async (rec) => {
+    if (!rec.shareToken) return;
+    
+    const shareUrl = `${window.location.origin}/r/${rec.shareToken}${referralCode ? `?ref=${referralCode}` : ''}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setSaveMessage('Link copied!');
+      setTimeout(() => setSaveMessage(''), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const handleExportData = async () => {
     if (!user) return;
     
@@ -538,17 +651,15 @@ export default function UserProfile({ tasteProfile }) {
       });
       lines.push('');
       
-      // Recommendations section
-      lines.push('RECOMMENDATIONS SHARED');
-      lines.push('Title,Author,Note,Date Shared');
-      (recommendations || []).forEach(item => {
-        lines.push([
-          escapeCSV(item.book_title),
-          escapeCSV(item.book_author),
-          escapeCSV(item.recommendation_note || ''),
-          escapeCSV(item.created_at?.split('T')[0] || '')
-        ].join(','));
-      });
+      // Recommendations section - topline stats only (detailed export available separately)
+      lines.push('RECOMMENDATIONS SUMMARY');
+      const recsCount = recommendations?.length || 0;
+      const acceptedCount = recommendations?.filter(r => r.shared_recommendations?.[0]?.accepted_at)?.length || 0;
+      const acceptanceRate = recsCount > 0 ? Math.round((acceptedCount / recsCount) * 100) : 0;
+      lines.push(`Total Recommendations,${recsCount}`);
+      lines.push(`Accepted,${acceptedCount}`);
+      lines.push(`Acceptance Rate,${acceptanceRate}%`);
+      lines.push('(For detailed recommendation history, use the Export button in the Recs Made section)');
       
       // Create and download CSV file
       const csvContent = lines.join('\n');
@@ -865,7 +976,7 @@ export default function UserProfile({ tasteProfile }) {
           </div>
         </div>
         
-        {/* Recs Made Stats */}
+        {/* Recs Made Stats - Collapsible */}
         {stats.recsMade > 0 && (
           <div className="bg-gradient-to-r from-rose-50 to-amber-50 rounded-lg p-3 mb-4 border border-rose-100">
             <div className="flex items-center justify-between">
@@ -893,6 +1004,73 @@ export default function UserProfile({ tasteProfile }) {
                 </div>
               </div>
             </div>
+            
+            {/* Toggle and Export buttons */}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-rose-200/50">
+              <button
+                onClick={handleToggleRecsHistory}
+                className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+              >
+                <ChevronDown className={`w-3 h-3 transition-transform ${showRecsHistory ? 'rotate-180' : ''}`} />
+                {showRecsHistory ? 'Hide History' : 'View History'}
+              </button>
+              {showRecsHistory && recsHistory.length > 0 && (
+                <button
+                  onClick={handleExportRecsHistory}
+                  disabled={isExportingRecs}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                >
+                  <Download className="w-3 h-3" />
+                  {isExportingRecs ? 'Exporting...' : 'Export'}
+                </button>
+              )}
+            </div>
+            
+            {/* Collapsible History List */}
+            {showRecsHistory && (
+              <div className="mt-3 space-y-2">
+                {isLoadingRecsHistory ? (
+                  <div className="text-xs text-[#7A8F6C] text-center py-2">Loading...</div>
+                ) : recsHistory.length === 0 ? (
+                  <div className="text-xs text-[#7A8F6C] text-center py-2">No recommendations yet</div>
+                ) : (
+                  recsHistory.map((rec) => (
+                    <div key={rec.id} className="bg-white/60 rounded-lg p-2 border border-rose-100">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-[#4A5940] truncate">{rec.bookTitle}</p>
+                          {rec.bookAuthor && (
+                            <p className="text-[10px] text-[#7A8F6C] truncate">{rec.bookAuthor}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-[10px] text-[#7A8F6C] flex items-center gap-0.5">
+                            <Eye className="w-3 h-3" />
+                            {rec.viewCount}
+                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            rec.accepted 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {rec.accepted ? '✓' : '⏳'}
+                          </span>
+                        </div>
+                      </div>
+                      {rec.shareToken && (
+                        <button
+                          onClick={() => handleCopyShareLink(rec)}
+                          className="mt-1.5 text-[10px] text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                        >
+                          <Copy className="w-2.5 h-2.5" />
+                          Re-share
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
         <button

@@ -88,18 +88,31 @@ export function RecommendationProvider({ children }) {
   const getShareLink = useCallback(async (recommendationId) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    // Get user's referral code for viral tracking
+    let referralCode = null;
+    try {
+      const { data: profile } = await db.getTasteProfile(user.id);
+      referralCode = profile?.referral_code || null;
+    } catch (err) {
+      console.warn('Could not fetch referral code:', err);
+    }
+
     // Check if share link already exists
     const recommendation = recommendations.find(r => r.id === recommendationId);
     if (recommendation?.shared_recommendations?.[0]?.share_token) {
-      const shareUrl = `${window.location.origin}/r/${recommendation.shared_recommendations[0].share_token}`;
+      // Build URL with referral code
+      let shareUrl = `${window.location.origin}/r/${recommendation.shared_recommendations[0].share_token}`;
+      if (referralCode) {
+        shareUrl += `?ref=${referralCode}`;
+      }
       return { success: true, data: { shareUrl } };
     }
 
     // Get user's display name for the share
     const recommenderName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'A friend';
 
-    // Create new share link with recommender name
-    const { data, error } = await db.createShareLink(recommendationId, recommenderName);
+    // Create new share link with recommender name and referral code
+    const { data, error } = await db.createShareLink(recommendationId, recommenderName, referralCode);
     
     if (error) {
       return { success: false, error: error.message };

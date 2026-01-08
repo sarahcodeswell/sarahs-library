@@ -148,7 +148,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
 
 export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, addToQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
-  const { createRecommendation } = useRecommendations();
+  const { createRecommendation, getShareLink } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [selectedRating, setSelectedRating] = useState(null); // null = all, 1-5 = specific rating
@@ -551,11 +551,13 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         book_title: book.book_title,
       });
       
-      // Generate shareable link
+      // Generate shareable link using getShareLink (creates proper /r/{token} URL)
       const recommendationId = result.data?.id;
       if (recommendationId) {
-        const shareLink = `${window.location.origin}/shared/${recommendationId}`;
-        return { success: true, shareLink };
+        const shareLinkResult = await getShareLink(recommendationId);
+        if (shareLinkResult.success && shareLinkResult.data?.shareUrl) {
+          return { success: true, shareLink: shareLinkResult.data.shareUrl };
+        }
       }
       
       return { success: true };

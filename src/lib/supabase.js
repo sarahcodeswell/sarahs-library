@@ -529,7 +529,7 @@ export const db = {
     }
   },
 
-  createShareLink: async (recommendationId, recommenderName = null) => {
+  createShareLink: async (recommendationId, recommenderName = null, referralCode = null) => {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
@@ -553,10 +553,16 @@ export const db = {
         .single();
       
       if (data) {
+        // Build share URL with optional referral code for viral tracking
+        let shareUrl = `${window.location.origin}/r/${shareToken}`;
+        if (referralCode) {
+          shareUrl += `?ref=${referralCode}`;
+        }
+        
         return {
           data: {
             ...data,
-            shareUrl: `${window.location.origin}/r/${shareToken}`
+            shareUrl
           },
           error: null
         };
