@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Sparkles, Check } from 'lucide-react';
+import { X, Mail, Sparkles, Check, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
@@ -7,6 +7,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const handleMagicLink = async (e) => {
     e.preventDefault();
@@ -81,6 +82,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setError('');
     setMagicLinkSent(false);
     setLoading(false);
+    setShowEmailForm(false);
     onClose();
   };
 
@@ -110,8 +112,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <p className="text-[#4A5940] font-medium mb-2">
               Magic link sent to {email}
             </p>
-            <p className="text-sm text-[#7A8F6C] mb-6">
+            <p className="text-sm text-[#7A8F6C] mb-2">
               Click the link in your email to sign in. You can close this window.
+            </p>
+            <p className="text-xs text-[#96A888] mb-6">
+              Don't see it? Check your spam or junk folder.
             </p>
             <button
               onClick={() => {
@@ -201,61 +206,62 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               </button>
             </div>
 
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E8EBE4]"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-[#96A888]">Or continue with email</span>
-              </div>
-            </div>
-
-            <form onSubmit={handleMagicLink} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#5F7252] mb-2">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
+            {/* Email Magic Link - Collapsible */}
+            <div className="border-t border-[#E8EBE4] pt-4">
               <button
-                type="submit"
-                disabled={loading || !email.trim()}
-                className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                type="button"
+                onClick={() => setShowEmailForm(!showEmailForm)}
+                className="w-full py-2 px-4 text-sm text-[#96A888] hover:text-[#5F7252] transition-colors flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Send Magic Link
-                  </>
-                )}
+                <Mail className="w-4 h-4" />
+                Sign in with email instead
+                <ChevronDown className={`w-4 h-4 transition-transform ${showEmailForm ? 'rotate-180' : ''}`} />
               </button>
-            </form>
+              
+              {showEmailForm && (
+                <form onSubmit={handleMagicLink} className="mt-4 space-y-3">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border border-[#E8EBE4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent text-sm"
+                      placeholder="your@email.com"
+                      required
+                    />
+                  </div>
 
-            <p className="mt-4 text-xs text-center text-[#96A888]">
-              We'll email you a secure link to sign in—no password needed.
-            </p>
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading || !email.trim()}
+                    className="w-full py-2.5 bg-[#5F7252] text-white rounded-lg font-medium hover:bg-[#4A5940] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Send Magic Link
+                      </>
+                    )}
+                  </button>
+                  
+                  <p className="text-xs text-center text-[#96A888]">
+                    We'll email you a secure sign-in link.
+                  </p>
+                </form>
+              )}
+            </div>
           </>
         )}
       </div>
