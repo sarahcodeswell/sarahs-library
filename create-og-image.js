@@ -22,8 +22,8 @@ const ogSvg = `
   <!-- Cream background -->
   <rect width="1200" height="630" fill="#FDFBF4"/>
   
-  <!-- Book stack icon (scaled up and centered) -->
-  <g transform="translate(600, 315) scale(5.5)">
+  <!-- Book stack icon (scaled up much larger and centered) -->
+  <g transform="translate(600, 315) scale(8)">
     <g transform="translate(-32, -32)">
       <!-- bottom book -->
       <rect x="10" y="36" width="44" height="16" rx="4" fill="url(#cover)"/>
