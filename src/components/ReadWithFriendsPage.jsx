@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Users, Mail, Heart, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Mail, Heart, Check, Sparkles, Copy, Link } from 'lucide-react';
 import { track } from '@vercel/analytics';
 
 export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal }) {
@@ -8,6 +8,8 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [position, setPosition] = useState(null);
+  const [referralCode, setReferralCode] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +38,7 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
       });
 
       setPosition(data.position);
+      setReferralCode(data.referralCode);
       setSubmitted(true);
     } catch (err) {
       console.error('Beta signup error:', err);
@@ -132,12 +135,40 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
               <p className="text-sm text-[#5F7252] mb-4">
                 We'll let you know as soon as Read with Friends is ready.
               </p>
-              <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-3 max-w-sm mx-auto">
+              <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-3 max-w-sm mx-auto mb-4">
                 <p className="text-sm text-[#92400E]">
                   <strong>Check your email!</strong> We sent you a confirmation.
                   <span className="block text-xs mt-1 opacity-80">Don't see it? Check your spam or junk folder.</span>
                 </p>
               </div>
+              
+              {referralCode && (
+                <div className="bg-white border border-[#D4DAD0] rounded-lg p-4 max-w-sm mx-auto">
+                  <p className="text-sm text-[#5F7252] mb-2 flex items-center justify-center gap-1">
+                    <Link className="w-4 h-4" />
+                    Share with friends
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`sarahsbooks.com/?ref=${referralCode}`}
+                      className="flex-1 text-xs bg-[#F8F6EE] border border-[#E8EBE4] rounded px-2 py-1.5 text-[#4A5940] font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://www.sarahsbooks.com/?ref=${referralCode}`);
+                        setLinkCopied(true);
+                        setTimeout(() => setLinkCopied(false), 2000);
+                      }}
+                      className="px-3 py-1.5 rounded bg-[#c96b6b] text-white text-xs font-medium hover:bg-[#b85a5a] transition-colors flex items-center gap-1"
+                    >
+                      {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {linkCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <>
