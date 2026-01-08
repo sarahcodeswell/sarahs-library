@@ -130,13 +130,13 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
                 <Check className="w-6 h-6" />
               </div>
               <h3 className="font-serif text-xl text-[#4A5940] mb-2">
-                You're #{position || ''} on the list!
+                {position ? `You're #${position} on the list!` : "You're on the list!"}
               </h3>
               <p className="text-sm text-[#5F7252] mb-4">
                 We'll let you know as soon as Read with Friends is ready.
               </p>
-              <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-3 max-w-sm mx-auto mb-4">
-                <p className="text-sm text-[#92400E]">
+              <div className="bg-[#c96b6b] rounded-lg p-3 max-w-sm mx-auto mb-4">
+                <p className="text-sm text-white">
                   <strong>Check your email!</strong> We sent you a confirmation.
                   <span className="block text-xs mt-1 opacity-80">Don't see it? Check your spam or junk folder.</span>
                 </p>
