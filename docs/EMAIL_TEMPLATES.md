@@ -479,22 +479,18 @@ Configured in **Supabase Dashboard → Auth → Email Templates**
 
 ## Implementation Status
 
-| Email | Status | Priority | Notes |
-|-------|--------|----------|-------|
-| Curator Personal Note | 🟡 Needs update | High | Add cover image, book description, dynamic curator name |
-| Daily Admin Digest | 🟡 Needs update | Low | Add logo only |
-| Curator Waitlist | 🟡 Needs update | Medium | Add position #, link to survey form |
-| Beta Tester | 🟡 Needs update | Medium | Add position #, invite friends CTA |
-| Invite Friends | 🔴 New | Medium | Replace Supabase default with branded Resend email |
-| What's New | 🟡 Needs update | Low | New feature card format, invite friends CTA |
-| Add logo to all | 🔴 Pending | High | LinkedIn logo in header |
+| Email | Status | Notes |
+|-------|--------|-------|
+| Curator Personal Note | ✅ Complete | Logo, cover image, book description, dynamic curator name |
+| Daily Admin Digest | ✅ Complete | Logo added |
+| Curator Waitlist | ✅ Complete | Position #, feedback CTA |
+| Beta Tester | ✅ Complete | Position #, invite friends CTA |
+| Invite Friends | ✅ Complete | Mission, feature cards, curator opportunity |
+| What's New | ✅ Complete | Feature card format, invite friends CTA |
+| Logo in all emails | ✅ Complete | LinkedIn logo in header |
 
-### Implementation Order (Recommended)
-1. **Add logo to shared template** - affects all emails
-2. **Curator Personal Note** - highest user impact, already in use
-3. **Beta Tester + Curator Waitlist** - add position numbers
-4. **Invite Friends** - new email, requires new API endpoint
-5. **What's New** - lower priority, manual sends only
+### Implementation Date
+All email templates implemented on **January 8, 2026**.
 
 ---
 
@@ -539,3 +535,4 @@ Curator note sending must be restricted to users with `role: 'curator'` in their
 |------|--------|
 | 2026-01-08 | Initial spec created with all 6 email templates |
 | 2026-01-08 | Added Invite Friends detailed mockup and UX flow |
+| 2026-01-08 | **All templates implemented** - logo, position numbers, feature cards, invite CTAs |
