@@ -95,7 +95,7 @@ function brandedTemplate({ title, preheader, content, footerText }) {
                 ${footerText || "You're receiving this because you signed up at Sarah's Books."}
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px; color: #96A888;">
-                <a href="${SITE_URL}" style="color: #5F7252; text-decoration: none;">Sarah's Books</a> • For the ♥ of reading
+                <a href="${SITE_URL}" style="color: #5F7252; text-decoration: none;">Sarah's Books</a> • For the <span style="color: #c96b6b;">♥</span> of reading
               </p>
             </td>
           </tr>
@@ -210,8 +210,8 @@ export async function sendCuratorWaitlistEmail(email, position = null) {
 export async function sendBetaTesterEmail(email, position = null) {
   const positionText = position ? `#${position}` : '';
   const title = position 
-    ? `💜 You're ${positionText} on the Beta List!`
-    : "💜 You're In! Beta Access Coming Soon";
+    ? `You're ${positionText} on the Beta List!`
+    : "You're In! Beta Access Coming Soon";
   
   const html = brandedTemplate({
     title,
@@ -223,7 +223,7 @@ export async function sendBetaTesterEmail(email, position = null) {
       <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #4A5940;">
         We're building a thoughtful way to share book recommendations with the people you care about—no more lost screenshots or forgotten titles.
       </p>
-      <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; border-left: 4px solid #c96b6b; margin-bottom: 24px;">
+      <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; border-left: 4px solid #5F7252; margin-bottom: 24px;">
         <p style="margin: 0; font-size: 14px; color: #4A5940; font-weight: 600;">Coming soon:</p>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #7A8F6C;">
           <li>Find friends on the platform</li>
@@ -232,14 +232,14 @@ export async function sendBetaTesterEmail(email, position = null) {
         </ul>
       </div>
       
-      <div style="background-color: #FDF8F8; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
+      <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
         <p style="margin: 0 0 8px 0; font-size: 16px; color: #4A5940; font-weight: 600;">
           📚 Reading with friends is more fun!
         </p>
         <p style="margin: 0 0 16px 0; font-size: 14px; color: #7A8F6C;">
           Know someone who'd love this? Invite them to join the beta waitlist.
         </p>
-        ${primaryButton('Invite Friends →', `${SITE_URL}/invite`, 'rose')}
+        ${primaryButton('Invite Friends →', `${SITE_URL}/invite`, 'sage')}
       </div>
     `,
     footerText: "You're receiving this because you signed up for Read with Friends beta."
@@ -247,7 +247,7 @@ export async function sendBetaTesterEmail(email, position = null) {
 
   return sendEmail({
     to: email,
-    subject: position ? `You're #${position} on the Beta List! 💜` : "You're In! Read with Friends Beta 💜",
+    subject: position ? `You're #${position} on the Beta List!` : "You're In! Read with Friends Beta",
     html,
     fromName: "Sarah from Sarah's Books"
   });
