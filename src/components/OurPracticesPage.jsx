@@ -73,35 +73,31 @@ export default function OurPracticesPage({ onNavigate }) {
         </div>
 
         {/* Community Engagement Guidelines */}
-        <div className="bg-[#F8F6EE] rounded-xl p-6 sm:p-8 border border-[#D4DAD0] mb-6">
-          <h2 className="font-serif text-2xl text-[#4A5940] mb-6">Community Engagement Guidelines</h2>
-          <div className="space-y-6 text-base text-[#5F7252] leading-relaxed">
+        <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0] mb-6">
+          <h2 className="font-serif text-xl text-[#4A5940] mb-4">Community Engagement Guidelines</h2>
+          <div className="space-y-4 text-sm text-[#5F7252] leading-relaxed">
             <p>
               Sarah's Books is a community built on a shared love of reading. We're here to help each other discover great books, share recommendations thoughtfully, and connect over stories that move us.
             </p>
             
             <div>
-              <h3 className="font-semibold text-[#4A5940] mb-4 text-lg">Core Principles</h3>
-              <ul className="space-y-3">
-                <li className="pl-0"><strong className="text-[#5F7252]">Be Neighborly</strong> — Treat others with kindness and respect</li>
-                <li className="pl-0"><strong className="text-[#5F7252]">Stay Book-Focused</strong> — Keep conversations centered on books and reading</li>
-                <li className="pl-0"><strong className="text-[#5F7252]">Respect Diverse Perspectives</strong> — Books mean different things to different people</li>
-                <li className="pl-0"><strong className="text-[#5F7252]">Share Thoughtfully</strong> — Provide honest, helpful recommendations</li>
+              <h3 className="font-medium text-[#4A5940] mb-3">Core Principles</h3>
+              <ul className="space-y-2">
+                <li><strong>Be Neighborly</strong> — Treat others with kindness and respect</li>
+                <li><strong>Stay Book-Focused</strong> — Keep conversations centered on books and reading</li>
+                <li><strong>Mind the Gap</strong> — Books mean different things to different people</li>
+                <li><strong>Share Thoughtfully</strong> — Provide honest, helpful recommendations</li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold text-[#4A5940] mb-4 text-lg">What We Don't Allow</h3>
-              <p className="mb-3">We maintain a welcoming space by not allowing:</p>
-              <ul className="space-y-2 text-sm">
-                <li>• Harassment, abuse, or hate speech</li>
-                <li>• Spam or unsolicited self-promotion</li>
-                <li>• Misinformation or inappropriate content</li>
-                <li>• Platform manipulation or fake accounts</li>
-              </ul>
+              <h3 className="font-medium text-[#4A5940] mb-3">What We Don't Allow</h3>
+              <p>
+                We maintain a welcoming space by not allowing harassment, abuse, or hate speech; spam or unsolicited self-promotion; misinformation or inappropriate content; or platform manipulation and fake accounts.
+              </p>
             </div>
 
-            <p className="text-sm italic text-[#7A8F6C] pt-4">
+            <p className="text-xs italic text-[#7A8F6C]">
               By creating an account, you agree to follow our Community Engagement Guidelines and Terms of Use.
             </p>
           </div>
