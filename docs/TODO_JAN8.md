@@ -1,47 +1,70 @@
 # TODO - January 8, 2026
 
-## Testing & Monitoring (Priority)
+## Priority Tasks
+
+### 1. Setup Testing Strategy
 See: `TESTING_MONITORING_STRATEGY.md`
+- [ ] Fix Sentry configuration
+- [ ] Set up uptime monitoring
+- [ ] Consider Lighthouse CI
 
-### Immediate Actions
-- [ ] Fix Sentry configuration (currently shows "not configured" in console)
-- [ ] Set up basic uptime monitoring
-- [ ] Review bundle size - consider additional code splitting
+### 2. Finish Upstash Enrollment
+- [ ] Complete setup (for rate limiting / caching?)
+
+### 3. Setup Google Analytics
+- [ ] Add GA4 tracking
+- [ ] Configure key events
+
+### 4. Update Admin Panel
+- [ ] Add recommendations made stats
+- [ ] Add beta user signups tracking
+
+### 5. Personalize Emails (Custom SMTP)
+**Goal:** Emails come from `@sarahsbooks.com` instead of `@supabase.co`
+
+**Options:**
+- Resend (free tier: 3k emails/month) - recommended
+- Postmark
+- SendGrid
+
+**Setup steps:**
+1. Sign up for Resend at resend.com
+2. Add DNS records to verify domain (sarahsbooks.com)
+3. In Supabase Dashboard → Settings → Authentication → SMTP Settings:
+   - Host: `smtp.resend.com`
+   - Port: `465`
+   - User: `resend`
+   - Password: Your Resend API key
+   - Sender email: `noreply@sarahsbooks.com`
+   - Sender name: `Sarah's Books`
+
+### 6. Write Curator Tools Spec
+- [ ] Define curator capabilities
+- [ ] Theme management
+- [ ] Book curation workflow
+
+### 7. Write Author Portal Spec (Initial)
+- [ ] Define what authors can see
+- [ ] Anonymized data access
+- [ ] Privacy considerations
+
+### 8. Configure Apple Auth
+- [ ] Check if dev account approved
+- [ ] If yes, configure in Supabase
+
+### 9. Design In-App Feedback
+- [ ] Allow users to submit feedback
+- [ ] Include screenshot capability
+- [ ] Route to you (email? dashboard?)
 
 ---
 
-## UX Issues to Fix
-
-### 1. Referral Details Not Visible
-**Problem:** User profile shows "1 friend joined" but no way to see WHO joined.
-
-**Current state:** 
-- `referrals` table has `invited_email` column
-- Profile only shows count, not details
-
-**Solution:** Add expandable list showing:
-- Email/name of person who joined
-- Date they joined
-- Status (accepted)
-
-### 2. "Shared With" Field Not Showing in Profile
-**Problem:** The "shared with" field added to recommendations isn't displaying in the profile history.
-
-**Root causes:**
-1. Migration 038 needs to be run on Supabase (adds `shared_with` column)
-2. Only NEW recommendations will have this field populated
-3. Existing test data doesn't have recipient info
-
-**Solution:** 
-1. Run migration 038
-2. Field will show for new recommendations where user enters recipient name
-3. Consider: Allow editing "shared with" on existing recommendations?
-
----
-
-## Migrations Pending
-- [ ] Migration 037: Fix RLS for anonymous users viewing shared recommendations
-- [ ] Migration 038: Add `shared_with` column to `user_recommendations`
+## Completed (Jan 7)
+- [x] Migration 037: RLS for anonymous users ✓
+- [x] Migration 038: `shared_with` column ✓
+- [x] Referral details visibility (shows who joined) ✓
+- [x] Mobile copy button overflow fix ✓
+- [x] Recommendation history enhancements ✓
 
 ---
 
@@ -49,3 +72,4 @@ See: `TESTING_MONITORING_STRATEGY.md`
 - Google SSO was slow (possible cold start issue)
 - Admin Dashboard had temporary access issue (resolved)
 - Consider keep-alive pings for critical serverless functions
+- Supabase Pro plan enables custom auth domain (auth.sarahsbooks.com)
