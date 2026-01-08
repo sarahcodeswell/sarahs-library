@@ -126,9 +126,9 @@ export default function AboutPage({ onNavigate, user }) {
         {/* Header with Logo */}
         <div className="mb-8 text-center">
           <img 
-            src="/linkedin-logo.png" 
+            src="/favicon.svg" 
             alt="Sarah's Books" 
-            className="w-24 h-24 mx-auto mb-4"
+            className="w-40 h-40 mx-auto mb-4"
           />
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">

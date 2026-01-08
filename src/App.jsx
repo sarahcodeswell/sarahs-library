@@ -1250,64 +1250,11 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Smart Action Bar - logged in users only */}
-          {messages.length <= 1 && user && (
-            <div className="mb-6 mx-auto max-w-2xl">
-              <div className="bg-white border border-[#E8EBE4] rounded-xl shadow-sm px-4 py-3">
-                <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-                  {/* Reading Queue */}
-                  {queueCount > 0 && (
-                    <>
-                      <button 
-                        onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                        className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                      >
-                        Reading Queue ({queueCount})
-                      </button>
-                      <span className="text-[#D4DAD0]">·</span>
-                    </>
-                  )}
-                  
-                  {/* Collection */}
-                  {collectionCount > 0 && (
-                    <>
-                      <button 
-                        onClick={() => navigateTo('collection', '/collection')}
-                        className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                      >
-                        Collection ({collectionCount})
-                      </button>
-                      <span className="text-[#D4DAD0]">·</span>
-                    </>
-                  )}
-                  
-                  {/* Profile - with action indicator */}
-                  <button 
-                    onClick={() => setShowAuthModal(true)}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all inline-flex items-center gap-1.5"
-                  >
-                    Profile
-                    {(!queueCount && !collectionCount) && (
-                      <span className="w-2 h-2 bg-[#c96b6b] rounded-full" title="Add books to get started"></span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Additional Navigation - Option E Style (no title) */}
+          {/* Navigation - Option E Style (no title) */}
           {messages.length <= 1 && (
             <div className="mb-6 mx-auto max-w-2xl">
               <div className="bg-white border border-[#E8EBE4] rounded-xl shadow-sm px-4 py-3">
                 <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-                  <button
-                    onClick={() => navigateTo('curator-themes', '/curator-themes')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Curator Themes
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
                   <button
                     onClick={() => navigateTo('my-books', '/my-books')}
                     className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
@@ -1316,17 +1263,24 @@ Find similar books from beyond my library that match this taste profile.
                   </button>
                   <span className="text-[#D4DAD0]">·</span>
                   <button
-                    onClick={() => navigateTo('our-mission', '/our-mission')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Our Mission
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  <button
                     onClick={() => navigateTo('about', '/how-it-works')}
                     className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
                   >
                     How It Works
+                  </button>
+                  <span className="text-[#D4DAD0]">·</span>
+                  <button
+                    onClick={() => navigateTo('reading-queue', '/reading-queue')}
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                  >
+                    Reading Queue
+                  </button>
+                  <span className="text-[#D4DAD0]">·</span>
+                  <button
+                    onClick={() => navigateTo('collection', '/collection')}
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                  >
+                    Collection
                   </button>
                 </div>
               </div>
