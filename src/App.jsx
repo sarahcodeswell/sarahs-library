@@ -1242,7 +1242,7 @@ Find similar books from beyond my library that match this taste profile.
           {messages.length <= 1 && (
             <div className="mb-6 text-center">
               <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
-                {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'What should I read next?'}
+                {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'Discover your next great read'}
               </h1>
               <p className="text-sm text-[#7A8F6C]">
                 {user ? 'Ready to find your next great read?' : 'Curated by a real reader, intelligently matched to you'}
@@ -1281,30 +1281,15 @@ Find similar books from beyond my library that match this taste profile.
                     </>
                   )}
                   
-                  {/* Recommendations */}
-                  <button 
-                    onClick={() => navigateTo('recommendations', '/recommendations')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Recommendations
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  
-                  {/* Add Books */}
-                  <button 
-                    onClick={() => navigateTo('my-books', '/my-books')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Add Books
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  
-                  {/* Profile */}
+                  {/* Profile - with action indicator */}
                   <button 
                     onClick={() => setShowAuthModal(true)}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all inline-flex items-center gap-1.5"
                   >
                     Profile
+                    {(!queueCount && !collectionCount) && (
+                      <span className="w-2 h-2 bg-[#c96b6b] rounded-full" title="Add books to get started"></span>
+                    )}
                   </button>
                 </div>
               </div>

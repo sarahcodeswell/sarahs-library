@@ -167,7 +167,7 @@ export default function MeetSarahPage({ onNavigate }) {
         <div id="browse-collection" className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Library className="w-5 h-5 text-[#5F7252]" />
-            <h2 className="font-serif text-2xl text-[#4A5940]">My Collection</h2>
+            <h2 className="font-serif text-2xl text-[#4A5940]">Sarah's Collection</h2>
           </div>
           <p className="text-sm text-[#7A8F6C] mb-6">
             All 200 books I've read and loved. This foundation collection powers the recommendation engine for everyone.
