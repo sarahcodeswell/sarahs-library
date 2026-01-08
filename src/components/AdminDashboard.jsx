@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import * as Sentry from '@sentry/react';
 
 const PERIODS = [
   { value: '1d', label: 'Last 24h' },
@@ -1633,22 +1632,6 @@ export default function AdminDashboard({ onNavigate }) {
 
         {/* Admin Access */}
         <AdminManagement />
-
-        {/* Sentry Test - Remove after verifying */}
-        <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-6">
-          <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Sentry Test (Remove after verifying)
-          </h3>
-          <button
-            onClick={() => {
-              throw new Error('Sentry test error from Admin Dashboard');
-            }}
-            className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700"
-          >
-            Test Sentry Error
-          </button>
-        </div>
 
         {/* Detail Modal */}
         <DetailModal
