@@ -93,3 +93,60 @@ export function clearUserContext() {
     Sentry.setUser(null);
   }
 }
+
+// ============================================
+// RECOMMENDATION MONITORING
+// ============================================
+
+/**
+ * Alert when catalog returns 0 books for a theme filter
+ * This indicates a data gap that needs attention
+ */
+export function alertCatalogEmpty(theme, query) {
+  captureMessage('Catalog returned 0 books for theme', 'warning', {
+    theme,
+    query,
+    action_needed: 'Add books with this theme tag to the database',
+  });
+}
+
+/**
+ * Alert when system falls back to Claude due to empty catalog
+ * This is a potential hallucination risk
+ */
+export function alertClaudeFallback(reason, query, catalogBooksCount) {
+  captureMessage('Recommendation fell back to Claude', 'warning', {
+    reason,
+    query,
+    catalogBooksCount,
+    risk: 'Potential hallucination if Claude generates non-existent books',
+  });
+}
+
+/**
+ * Alert when book enrichment fails (book title not found)
+ * Strong indicator of hallucination
+ */
+export function alertBookEnrichmentFailed(title, author, query) {
+  captureMessage('Book enrichment failed - possible hallucination', 'error', {
+    title,
+    author,
+    query,
+    action_needed: 'Verify if this book exists or if Claude hallucinated',
+  });
+}
+
+/**
+ * Alert when a theme has fewer than minimum books
+ * Proactive warning before it becomes a problem
+ */
+export function alertThemeCoverageGap(theme, bookCount, minimumRequired = 3) {
+  if (bookCount < minimumRequired) {
+    captureMessage('Theme has insufficient book coverage', 'warning', {
+      theme,
+      bookCount,
+      minimumRequired,
+      action_needed: `Add at least ${minimumRequired - bookCount} more books with '${theme}' theme`,
+    });
+  }
+}

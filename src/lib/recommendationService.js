@@ -8,6 +8,7 @@ import { executeRecommendationPath } from './recommendationPaths';
 import { buildRecommendationPrompt, formatResponseWithTransparency } from './responseTemplates';
 import { getTasteAlignmentLabel } from './queryClassifier';
 import { quickCatalogProbe } from './vectorSearch';
+import { alertCatalogEmpty, alertClaudeFallback } from './sentry';
 
 // Cache for reference embeddings (loaded once per session)
 let cachedReferenceEmbeddings = null;
@@ -380,6 +381,16 @@ Description: ${book.description || 'A highly anticipated new release.'}`;
     // FAST PATH 2: For curated list requests, bypass Claude and return catalog books directly
     // This guarantees 100% catalog-only results for theme browsing
     const isCuratedListRequest = themeFilters && themeFilters.length > 0;
+    
+    // SENTRY ALERT: If curated list request but catalog is empty/thin, alert before falling through
+    if (isCuratedListRequest && retrievedContext.catalogBooks.length < 3) {
+      const theme = themeFilters[0];
+      if (retrievedContext.catalogBooks.length === 0) {
+        alertCatalogEmpty(theme, userMessage);
+      }
+      alertClaudeFallback('catalog_insufficient_for_theme', userMessage, retrievedContext.catalogBooks.length);
+    }
+    
     if (isCuratedListRequest && retrievedContext.catalogBooks.length >= 3) {
       // Fast path: curated list
       

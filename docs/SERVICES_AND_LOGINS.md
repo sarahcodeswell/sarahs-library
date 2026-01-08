@@ -115,6 +115,10 @@ A comprehensive list of all external services, tools, and accounts required to r
 - **Cost:** $0 (5K errors/month)
 - **DSN:** _(stored in Vercel env vars as VITE_SENTRY_DSN)_
 - **Account:** _(add login email)_
+- **Recommendation Monitoring Alerts:**
+  - `Catalog returned 0 books for theme` - Data gap, need to tag more books
+  - `Recommendation fell back to Claude` - Hallucination risk when catalog is thin
+  - `Book enrichment failed - possible hallucination` - Claude may have invented a book title
 
 ### UptimeRobot
 - **URL:** https://uptimerobot.com

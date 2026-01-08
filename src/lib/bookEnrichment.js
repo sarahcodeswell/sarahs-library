@@ -3,6 +3,7 @@
 // Used to enrich AI recommendations and ensure consistent data across the app
 
 import catalogBooks from '../books-enriched.json';
+import { alertBookEnrichmentFailed } from './sentry';
 
 // In-memory cache to prevent repeated API calls and 429 errors
 const enrichmentCache = new Map();
@@ -99,6 +100,8 @@ export async function enrichBook(title, author = '', isbn = '') {
     
     if (!data.items || data.items.length === 0) {
       console.warn('[BookEnrichment] No results for:', title, author);
+      // Alert Sentry - this could indicate a hallucinated book title
+      alertBookEnrichmentFailed(title, author, 'enrichBook lookup failed');
       // Cache empty results too
       enrichmentCache.set(cacheKey, { data: null, timestamp: Date.now() });
       return null;
