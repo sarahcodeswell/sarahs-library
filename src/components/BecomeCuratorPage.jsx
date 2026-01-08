@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Sparkles, BookOpen, Users, Palette, Mail, Check } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 export default function BecomeCuratorPage({ onNavigate }) {
   const [email, setEmail] = useState('');
@@ -16,19 +15,19 @@ export default function BecomeCuratorPage({ onNavigate }) {
     setError('');
     
     try {
-      const { error: dbError } = await supabase
-        .from('curator_waitlist')
-        .insert([{ email, created_at: new Date().toISOString() }]);
+      const response = await fetch('/api/waitlist/curator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
       
-      if (dbError) {
-        if (dbError.code === '23505') {
-          setSubmitted(true);
-        } else {
-          throw dbError;
-        }
-      } else {
-        setSubmitted(true);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to join waitlist');
       }
+      
+      setSubmitted(true);
     } catch (err) {
       console.error('Waitlist error:', err);
       setError('Something went wrong. Please try again.');

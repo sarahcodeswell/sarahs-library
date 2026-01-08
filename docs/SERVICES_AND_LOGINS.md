@@ -179,14 +179,28 @@ A comprehensive list of all external services, tools, and accounts required to r
 
 ---
 
-## Email _(to be configured)_
+## Email
 
-### Custom SMTP
-- **Provider:** _(to be selected - e.g., Resend, Postmark, SendGrid)_
-- **What it will do:** Send branded transactional emails (magic links, welcome emails, notifications) from hello@sarahsbooks.com
-- **Plan:** TBD
-- **Cost:** TBD (~$0-20/month depending on volume)
-- **Status:** Pending setup
+### Resend (Transactional Emails)
+- **URL:** https://resend.com/overview
+- **What it does:** Sends branded transactional emails (waitlist confirmations, beta signups, curator notes, daily digest)
+- **Plan:** Free tier
+- **Cost:** $0 (3,000 emails/month, 100/day)
+- **From Address:** hello@sarahsbooks.com (requires domain verification)
+- **Account:** _(add login email)_
+- **Env Vars:** `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+- **Email Types:**
+  - Curator waitlist confirmation
+  - Beta tester (Read with Friends) confirmation
+  - Curator personal notes (from Admin Dashboard)
+  - Daily admin digest
+  - Product updates (future)
+
+### Supabase Auth Emails
+- **Configured in:** Supabase Dashboard → Auth → Email Templates
+- **What it does:** Magic link sign-in, email confirmation, password reset
+- **Custom SMTP:** Can be configured in Supabase for branded auth emails
+- **Templates customized:** Yes (branded HTML templates)
 
 ---
 

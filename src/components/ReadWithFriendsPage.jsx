@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Users, Mail, Heart, Check, Sparkles } from 'lucide-react';
 import { track } from '@vercel/analytics';
-import { db } from '../lib/supabase';
 
 export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal }) {
   const [email, setEmail] = useState(user?.email || '');
@@ -15,15 +14,21 @@ export default function ReadWithFriendsPage({ onNavigate, user, onShowAuthModal 
     setIsSubmitting(true);
 
     try {
-      const { error: dbError } = await db.createBetaTester({
-        user_id: user?.id || null,
-        email: email,
-        name: null,
-        interested_features: [],
-        feedback: null
+      const response = await fetch('/api/waitlist/beta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email,
+          userId: user?.id || null,
+          interestedFeatures: ['read_with_friends']
+        })
       });
 
-      if (dbError) throw dbError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sign up');
+      }
 
       track('beta_signup', {
         feature: 'read_with_friends'
