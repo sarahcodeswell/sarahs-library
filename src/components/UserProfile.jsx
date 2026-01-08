@@ -1044,27 +1044,32 @@ export default function UserProfile({ tasteProfile }) {
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-[10px] text-[#7A8F6C] flex items-center gap-0.5">
+                          <span className="text-[10px] text-[#7A8F6C] flex items-center gap-0.5" title="Views">
                             <Eye className="w-3 h-3" />
                             {rec.viewCount}
                           </span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                            rec.accepted 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {rec.accepted ? '✓' : '⏳'}
+                          <span 
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                              rec.accepted 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-amber-50 text-amber-600'
+                            }`}
+                            title={rec.accepted ? 'Accepted' : 'Pending'}
+                          >
+                            {rec.accepted ? '✓ Accepted' : 'Pending'}
                           </span>
                         </div>
                       </div>
-                      {rec.shareToken && (
+                      {rec.shareToken ? (
                         <button
                           onClick={() => handleCopyShareLink(rec)}
-                          className="mt-1.5 text-[10px] text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                          className="mt-1.5 text-[10px] text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
                         >
-                          <Copy className="w-2.5 h-2.5" />
+                          <Heart className="w-2.5 h-2.5" />
                           Re-share
                         </button>
+                      ) : (
+                        <span className="mt-1.5 text-[10px] text-[#96A888] italic">No share link</span>
                       )}
                     </div>
                   ))

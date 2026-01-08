@@ -191,8 +191,39 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
-        <p className="text-[#7A8F6C]">Loading recommendation...</p>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
+        <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+          {/* Loading skeleton */}
+          <div className="text-center mb-8 animate-pulse">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#E8EBE4] rounded-full mb-4">
+              <div className="w-4 h-4 bg-[#D4DAD0] rounded-full" />
+              <div className="w-32 h-4 bg-[#D4DAD0] rounded" />
+            </div>
+            <div className="w-64 h-6 bg-[#D4DAD0] rounded mx-auto mb-2" />
+          </div>
+          
+          <div className="bg-[#F8F6EE] rounded-2xl border border-[#D4DAD0] p-6 sm:p-8 mb-6 animate-pulse">
+            <div className="text-center mb-6">
+              <div className="w-48 h-6 bg-[#D4DAD0] rounded mx-auto mb-2" />
+              <div className="w-32 h-4 bg-[#E8EBE4] rounded mx-auto" />
+            </div>
+            
+            <div className="bg-white rounded-xl p-5 mb-6 border border-[#E8EBE4]">
+              <div className="w-24 h-4 bg-[#E8EBE4] rounded mb-3" />
+              <div className="space-y-2">
+                <div className="w-full h-4 bg-[#E8EBE4] rounded" />
+                <div className="w-3/4 h-4 bg-[#E8EBE4] rounded" />
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="w-full h-12 bg-[#D4DAD0] rounded-xl" />
+              <div className="w-full h-12 bg-[#E8EBE4] rounded-xl" />
+            </div>
+          </div>
+          
+          <p className="text-center text-sm text-[#96A888]">Loading recommendation...</p>
+        </div>
       </div>
     );
   }
