@@ -1250,44 +1250,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Navigation - Option E Style (no title) */}
-          {messages.length <= 1 && (
-            <div className="mb-6 mx-auto max-w-2xl">
-              <div className="bg-white border border-[#E8EBE4] rounded-xl shadow-sm px-4 py-3">
-                <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-                  <button
-                    onClick={() => navigateTo('my-books', '/my-books')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Add Books
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  <button
-                    onClick={() => navigateTo('about', '/how-it-works')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    How It Works
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  <button
-                    onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Reading Queue
-                  </button>
-                  <span className="text-[#D4DAD0]">·</span>
-                  <button
-                    onClick={() => navigateTo('collection', '/collection')}
-                    className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-                  >
-                    Collection
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-
           {/* Curator Theme Cards - Grid Layout */}
           {messages.length <= 1 && (
             <>
@@ -1602,6 +1564,39 @@ Find similar books from beyond my library that match this taste profile.
                 <Send className="w-4 h-4" />
               </button>
             </div>
+
+          {/* Navigation Links - Plain text with hover underline */}
+          {messages.length <= 1 && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
+              <button
+                onClick={() => navigateTo('curator-themes', '/curator-themes')}
+                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+              >
+                Curator Themes
+              </button>
+              <span className="text-[#D4DAD0]">·</span>
+              <button
+                onClick={() => navigateTo('my-books', '/my-books')}
+                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+              >
+                Add Books
+              </button>
+              <span className="text-[#D4DAD0]">·</span>
+              <button
+                onClick={() => navigateTo('our-mission', '/our-mission')}
+                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+              >
+                Our Mission
+              </button>
+              <span className="text-[#D4DAD0]">·</span>
+              <button
+                onClick={() => navigateTo('about', '/how-it-works')}
+                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
+              >
+                How It Works
+              </button>
+            </div>
+          )}
 
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
