@@ -26,43 +26,72 @@ export default function TermsOfUsePage({ onNavigate }) {
   );
 }
 
-// Termly Terms of Use HTML
+// Termly Terms of Use HTML with branded styling
 const TERMS_HTML = `
 <style>
   .terms-content {
-    font-family: Arial, sans-serif;
-    color: #595959;
+    font-family: Lato, Arial, sans-serif;
+    background: #faf8f5;
     line-height: 1.6;
   }
+  .terms-content [data-custom-class='body'],
+  .terms-content [data-custom-class='body'] * {
+    background: #faf8f5 !important;
+  }
+  .terms-content [data-custom-class='title'],
+  .terms-content [data-custom-class='title'] *,
   .terms-content h1 {
-    font-size: 26px;
-    color: #000000;
+    font-family: Lato, Arial, sans-serif !important;
+    font-size: 26px !important;
+    color: #3d4d39 !important;
     font-weight: bold;
     margin-bottom: 1rem;
   }
+  .terms-content [data-custom-class='subtitle'],
+  .terms-content [data-custom-class='subtitle'] * {
+    font-family: Lato, Arial, sans-serif !important;
+    color: #5b7355 !important;
+    font-size: 14px !important;
+  }
+  .terms-content [data-custom-class='heading_1'],
+  .terms-content [data-custom-class='heading_1'] *,
   .terms-content h2 {
-    font-size: 19px;
-    color: #000000;
+    font-family: Lato, Arial, sans-serif !important;
+    font-size: 19px !important;
+    color: #3d4d39 !important;
     font-weight: bold;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
+  .terms-content [data-custom-class='heading_2'],
+  .terms-content [data-custom-class='heading_2'] *,
   .terms-content h3 {
-    font-size: 17px;
-    color: #000000;
+    font-family: Arial, sans-serif !important;
+    font-size: 17px !important;
+    color: #000000 !important;
     font-weight: bold;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
   }
+  .terms-content [data-custom-class='body_text'],
+  .terms-content [data-custom-class='body_text'] *,
   .terms-content p {
+    color: #5b7355 !important;
+    font-size: 14px !important;
+    font-family: Lato, Arial, sans-serif !important;
     margin-bottom: 1rem;
   }
+  .terms-content [data-custom-class='link'],
+  .terms-content [data-custom-class='link'] *,
   .terms-content a {
-    color: #3030F1;
+    color: #e8b4ba !important;
+    font-size: 14px !important;
+    font-family: Arial, sans-serif !important;
+    word-break: break-word !important;
     text-decoration: underline;
   }
   .terms-content a:hover {
-    color: #5F7252;
+    color: #5F7252 !important;
   }
   .terms-content ul, .terms-content ol {
     margin-left: 1.5rem;
@@ -70,6 +99,8 @@ const TERMS_HTML = `
   }
   .terms-content li {
     margin-bottom: 0.5rem;
+    color: #5b7355 !important;
+    font-size: 14px !important;
   }
   .terms-content strong {
     font-weight: bold;
@@ -78,9 +109,12 @@ const TERMS_HTML = `
     font-style: italic;
   }
   .terms-content .subtitle {
-    color: #595959;
+    color: #5b7355;
     font-size: 14px;
     margin-bottom: 2rem;
+  }
+  .terms-content .MsoNormal {
+    margin: 0;
   }
 </style>
 

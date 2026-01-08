@@ -26,43 +26,72 @@ export default function PrivacyPolicyPage({ onNavigate }) {
   );
 }
 
-// Termly Privacy Policy HTML
+// Termly Privacy Policy HTML with branded styling
 const PRIVACY_POLICY_HTML = `
 <style>
   .privacy-policy-content {
-    font-family: Arial, sans-serif;
-    color: #595959;
+    font-family: Lato, Arial, sans-serif;
+    background: #faf8f5;
     line-height: 1.6;
   }
+  .privacy-policy-content [data-custom-class='body'],
+  .privacy-policy-content [data-custom-class='body'] * {
+    background: #faf8f5 !important;
+  }
+  .privacy-policy-content [data-custom-class='title'],
+  .privacy-policy-content [data-custom-class='title'] *,
   .privacy-policy-content h1 {
-    font-size: 26px;
-    color: #000000;
+    font-family: Lato, Arial, sans-serif !important;
+    font-size: 26px !important;
+    color: #3d4d39 !important;
     font-weight: bold;
     margin-bottom: 1rem;
   }
+  .privacy-policy-content [data-custom-class='subtitle'],
+  .privacy-policy-content [data-custom-class='subtitle'] * {
+    font-family: Lato, Arial, sans-serif !important;
+    color: #5b7355 !important;
+    font-size: 14px !important;
+  }
+  .privacy-policy-content [data-custom-class='heading_1'],
+  .privacy-policy-content [data-custom-class='heading_1'] *,
   .privacy-policy-content h2 {
-    font-size: 19px;
-    color: #000000;
+    font-family: Lato, Arial, sans-serif !important;
+    font-size: 19px !important;
+    color: #3d4d39 !important;
     font-weight: bold;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
+  .privacy-policy-content [data-custom-class='heading_2'],
+  .privacy-policy-content [data-custom-class='heading_2'] *,
   .privacy-policy-content h3 {
-    font-size: 17px;
-    color: #000000;
+    font-family: Arial, sans-serif !important;
+    font-size: 17px !important;
+    color: #000000 !important;
     font-weight: bold;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
   }
+  .privacy-policy-content [data-custom-class='body_text'],
+  .privacy-policy-content [data-custom-class='body_text'] *,
   .privacy-policy-content p {
+    color: #5b7355 !important;
+    font-size: 14px !important;
+    font-family: Lato, Arial, sans-serif !important;
     margin-bottom: 1rem;
   }
+  .privacy-policy-content [data-custom-class='link'],
+  .privacy-policy-content [data-custom-class='link'] *,
   .privacy-policy-content a {
-    color: #3030F1;
+    color: #e8b4ba !important;
+    font-size: 14px !important;
+    font-family: Arial, sans-serif !important;
+    word-break: break-word !important;
     text-decoration: underline;
   }
   .privacy-policy-content a:hover {
-    color: #5F7252;
+    color: #5F7252 !important;
   }
   .privacy-policy-content ul, .privacy-policy-content ol {
     margin-left: 1.5rem;
@@ -70,6 +99,8 @@ const PRIVACY_POLICY_HTML = `
   }
   .privacy-policy-content li {
     margin-bottom: 0.5rem;
+    color: #5b7355 !important;
+    font-size: 14px !important;
   }
   .privacy-policy-content strong {
     font-weight: bold;
@@ -83,17 +114,22 @@ const PRIVACY_POLICY_HTML = `
     margin: 1rem 0;
   }
   .privacy-policy-content td {
-    border: 1px solid #000;
+    border: 1px solid #3d4d39;
     padding: 0.5rem;
+    color: #5b7355 !important;
+    font-size: 14px !important;
   }
   .privacy-policy-content .subtitle {
-    color: #595959;
+    color: #5b7355;
     font-size: 14px;
     margin-bottom: 2rem;
   }
+  .privacy-policy-content .MsoNormal {
+    margin: 0;
+  }
 </style>
 
-<h1>Privacy Notice</h1>
+<h1 style="color: #3d4d39 !important;">Privacy Notice</h1>
 <p class="subtitle"><strong>Last updated January 07, 2026</strong></p>
 
 <p>This Privacy Notice for <strong>Darkridge</strong> (doing business as <strong>Sarah's Books</strong>) ("<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>"), describes how and why we might access, collect, store, use, and/or share ("<strong>process</strong>") your personal information when you use our services ("<strong>Services</strong>"), including when you:</p>
