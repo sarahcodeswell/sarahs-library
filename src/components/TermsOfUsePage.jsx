@@ -31,12 +31,12 @@ const TERMS_HTML = `
 <style>
   .terms-content {
     font-family: Lato, Arial, sans-serif;
-    background: #faf8f5;
+    background: transparent;
     line-height: 1.6;
   }
   .terms-content [data-custom-class='body'],
   .terms-content [data-custom-class='body'] * {
-    background: #faf8f5 !important;
+    background: transparent !important;
   }
   .terms-content [data-custom-class='title'],
   .terms-content [data-custom-class='title'] *,

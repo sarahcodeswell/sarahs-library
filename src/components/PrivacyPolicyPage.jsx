@@ -31,12 +31,12 @@ const PRIVACY_POLICY_HTML = `
 <style>
   .privacy-policy-content {
     font-family: Lato, Arial, sans-serif;
-    background: #faf8f5;
+    background: transparent;
     line-height: 1.6;
   }
   .privacy-policy-content [data-custom-class='body'],
   .privacy-policy-content [data-custom-class='body'] * {
-    background: #faf8f5 !important;
+    background: transparent !important;
   }
   .privacy-policy-content [data-custom-class='title'],
   .privacy-policy-content [data-custom-class='title'] *,
