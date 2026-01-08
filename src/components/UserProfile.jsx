@@ -75,6 +75,9 @@ export default function UserProfile({ tasteProfile }) {
   const [referralCodeError, setReferralCodeError] = useState('');
   const [savingReferralCode, setSavingReferralCode] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
+  const [referralDetails, setReferralDetails] = useState([]);
+  const [showReferralDetails, setShowReferralDetails] = useState(false);
+  const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showRecsHistory, setShowRecsHistory] = useState(false);
   const [recsHistory, setRecsHistory] = useState([]);
@@ -147,6 +150,39 @@ export default function UserProfile({ tasteProfile }) {
     } catch (error) {
       console.error('Error loading profile:', error);
     }
+  };
+
+  // Load referral details (who joined via your link)
+  const loadReferralDetails = async () => {
+    if (!user || !supabase || isLoadingReferrals) return;
+    
+    setIsLoadingReferrals(true);
+    try {
+      const { data: referrals } = await supabase
+        .from('referrals')
+        .select('invited_email, created_at, status')
+        .eq('inviter_id', user.id)
+        .eq('status', 'accepted')
+        .order('created_at', { ascending: false });
+      
+      if (referrals) {
+        setReferralDetails(referrals.map(r => ({
+          email: r.invited_email,
+          joinedAt: r.created_at
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading referral details:', error);
+    } finally {
+      setIsLoadingReferrals(false);
+    }
+  };
+
+  const handleToggleReferralDetails = () => {
+    if (!showReferralDetails && referralDetails.length === 0) {
+      loadReferralDetails();
+    }
+    setShowReferralDetails(!showReferralDetails);
   };
   
   // Close dropdowns when clicking outside
@@ -1226,13 +1262,48 @@ export default function UserProfile({ tasteProfile }) {
             </div>
             
             {referralCount > 0 && (
-              <div className="flex items-center gap-2 text-sm pt-1">
-                <span className="inline-flex items-center justify-center w-6 h-6 bg-[#5F7252] text-white rounded-full text-xs font-medium">
-                  {referralCount}
-                </span>
-                <span className="text-[#5F7252]">
-                  {referralCount === 1 ? 'friend has joined' : 'friends have joined'} via your link
-                </span>
+              <div className="bg-[#F0F4ED] rounded-lg p-3 border border-[#D4DAD0]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 bg-[#5F7252] text-white rounded-full text-xs font-medium">
+                      {referralCount}
+                    </span>
+                    <span className="text-sm text-[#5F7252]">
+                      {referralCount === 1 ? 'friend has joined' : 'friends have joined'} via your link
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleToggleReferralDetails}
+                    className="text-xs text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
+                  >
+                    <ChevronDown className={`w-3 h-3 transition-transform ${showReferralDetails ? 'rotate-180' : ''}`} />
+                    {showReferralDetails ? 'Hide' : 'View'}
+                  </button>
+                </div>
+                
+                {showReferralDetails && (
+                  <div className="mt-3 space-y-2">
+                    {isLoadingReferrals ? (
+                      <div className="text-xs text-[#7A8F6C] text-center py-2">Loading...</div>
+                    ) : referralDetails.length === 0 ? (
+                      <div className="text-xs text-[#7A8F6C] text-center py-2">No referrals yet</div>
+                    ) : (
+                      referralDetails.map((ref, idx) => (
+                        <div key={idx} className="bg-white/60 rounded-lg p-2 border border-[#E8EBE4] flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-[#E8EBE4] rounded-full flex items-center justify-center">
+                              <Users className="w-3 h-3 text-[#5F7252]" />
+                            </div>
+                            <span className="text-xs text-[#4A5940]">{ref.email}</span>
+                          </div>
+                          <span className="text-[10px] text-[#96A888]">
+                            {new Date(ref.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
