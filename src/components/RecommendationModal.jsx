@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2, Copy, Check } from 'lucide-react';
+import { X, Loader2, Copy, Check, Mail, MessageCircle, Twitter, Facebook } from 'lucide-react';
 
 export default function RecommendationModal({ isOpen, onClose, book, onSubmit }) {
   const [note, setNote] = useState('');
@@ -52,6 +52,53 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
 
   if (!isOpen || !book) return null;
 
+  // Share options for the success state
+  const shareText = note 
+    ? `I recommend "${book.book_title}" — ${note}`
+    : `I recommend "${book.book_title}" by ${book.book_author}`;
+  const encodedUrl = encodeURIComponent(shareLink || '');
+  const encodedText = encodeURIComponent(shareText);
+
+  const shareOptions = [
+    {
+      name: 'Copy',
+      icon: linkCopied ? Check : Copy,
+      color: 'bg-[#5F7252]',
+      onClick: handleCopyLink,
+      label: linkCopied ? 'Copied!' : 'Copy'
+    },
+    {
+      name: 'Email',
+      icon: Mail,
+      color: 'bg-[#EA4335]',
+      href: `mailto:?subject=${encodeURIComponent(`Book Recommendation: ${book.book_title}`)}&body=${encodedText}%0A%0A${encodedUrl}`
+    },
+    {
+      name: 'iMessage',
+      icon: MessageCircle,
+      color: 'bg-[#34C759]',
+      href: `sms:?body=${encodedText}%20${encodedUrl}`
+    },
+    {
+      name: 'WhatsApp',
+      icon: MessageCircle,
+      color: 'bg-[#25D366]',
+      href: `https://wa.me/?text=${encodedText}%20${encodedUrl}`
+    },
+    {
+      name: 'Twitter',
+      icon: Twitter,
+      color: 'bg-[#1DA1F2]',
+      href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`
+    },
+    {
+      name: 'Facebook',
+      icon: Facebook,
+      color: 'bg-[#1877F2]',
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+    }
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-[#E8EBE4]">
@@ -69,6 +116,15 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
 
         {shareLink ? (
           <div className="p-6">
+            {/* Success message */}
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800 flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                Recommendation created!
+              </p>
+            </div>
+
+            {/* Book info */}
             <div className="mb-4 p-4 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
               <h3 className="font-medium text-[#4A5940] mb-1">{book.book_title}</h3>
               {book.book_author && (
@@ -76,34 +132,54 @@ export default function RecommendationModal({ isOpen, onClose, book, onSubmit })
               )}
             </div>
 
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800 mb-3">
-                ✓ Recommendation created! Share this link with friends:
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  className="flex-1 px-3 py-2 text-sm bg-white border border-[#E8EBE4] rounded-lg"
-                />
-                <button
-                  onClick={handleCopyLink}
-                  className="px-4 py-2 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] transition-colors flex items-center gap-2"
-                >
-                  {linkCopied ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Copied!
-                    </>
+            {/* Share options grid */}
+            <div className="mb-4">
+              <p className="text-sm text-[#5F7252] font-medium mb-3">Share via:</p>
+              <div className="grid grid-cols-3 gap-3">
+                {shareOptions.map((option) => (
+                  option.onClick ? (
+                    <button
+                      key={option.name}
+                      onClick={option.onClick}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#F8F6EE] transition-colors"
+                    >
+                      <div className={`w-10 h-10 rounded-full ${option.color} flex items-center justify-center`}>
+                        <option.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-[#5F7252] font-medium">{option.label}</span>
+                    </button>
                   ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
-                  )}
-                </button>
+                    <a
+                      key={option.name}
+                      href={option.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#F8F6EE] transition-colors"
+                    >
+                      <div className={`w-10 h-10 rounded-full ${option.color} flex items-center justify-center`}>
+                        <option.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs text-[#5F7252] font-medium">{option.name}</span>
+                    </a>
+                  )
+                ))}
               </div>
+            </div>
+
+            {/* Link preview */}
+            <div className="mb-4 bg-[#F8F6EE] rounded-lg px-3 py-2 flex items-center gap-2">
+              <input
+                type="text"
+                value={shareLink}
+                readOnly
+                className="flex-1 bg-transparent text-xs text-[#7A8F6C] outline-none truncate"
+              />
+              <button
+                onClick={handleCopyLink}
+                className="text-xs text-[#5F7252] font-medium hover:text-[#4A5940] transition-colors whitespace-nowrap"
+              >
+                {linkCopied ? 'Copied!' : 'Copy'}
+              </button>
             </div>
 
             <button
