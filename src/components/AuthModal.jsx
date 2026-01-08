@@ -93,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#E8EBE4]">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-serif text-[#4A5940]">
-            {magicLinkSent ? 'Check Your Email' : 'Welcome'}
+            {magicLinkSent ? 'Check Your Email' : "Welcome to Sarah's Books!"}
           </h2>
           <button
             onClick={handleClose}
