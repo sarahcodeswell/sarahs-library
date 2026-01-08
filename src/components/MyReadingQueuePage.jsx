@@ -652,7 +652,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         </button>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Your Queue</h1>
+          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Reading Queue</h1>
           <p className="text-[#7A8F6C]">
             {queueBooks.length} {queueBooks.length === 1 ? 'book' : 'books'} you want to read
           </p>

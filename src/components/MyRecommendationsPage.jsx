@@ -315,7 +315,7 @@ export default function MyRecommendationsPage({ onNavigate, user, onShowAuthModa
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
               >
                 <Library className="w-4 h-4" />
-                Go to Your Collection
+                Go to My Collection
               </button>
             </div>
           </div>
