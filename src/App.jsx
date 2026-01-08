@@ -1301,7 +1301,7 @@ Find similar books from beyond my library that match this taste profile.
                 
                 {/* Profile */}
                 <button 
-                  onClick={() => navigateTo('profile', '/profile')}
+                  onClick={() => setShowAuthModal(true)}
                   className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
                 >
                   Profile
