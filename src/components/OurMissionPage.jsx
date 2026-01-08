@@ -21,7 +21,7 @@ export default function OurMissionPage({ onNavigate }) {
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-3">Our Mission</h1>
           <p className="text-base text-[#7A8F6C] leading-relaxed max-w-2xl mx-auto">
-            We exist to encourage a love of reading and to support the local ecosystems that make it possible.
+            To encourage a love of reading and support the local ecosystems that make it possible.
           </p>
         </div>
 
@@ -45,9 +45,9 @@ export default function OurMissionPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Your Choices Matter */}
-        <div className="bg-white rounded-xl p-6 sm:p-8 border border-[#D4DAD0] mb-6">
-          <h2 className="font-serif text-xl text-[#4A5940] mb-6 text-center">Your Choices Matter</h2>
+        {/* Shop Local */}
+        <div className="bg-transparent rounded-xl p-6 sm:p-8 mb-6">
+          <h2 className="font-serif text-xl text-[#4A5940] mb-6 text-left">Shop Local</h2>
           
           <div className="space-y-6">
             {/* Bookshop.org */}
