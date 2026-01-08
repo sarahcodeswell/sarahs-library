@@ -6,6 +6,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [position, setPosition] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +28,7 @@ export default function BecomeCuratorPage({ onNavigate }) {
         throw new Error(data.error || 'Failed to join waitlist');
       }
       
+      setPosition(data.position);
       setSubmitted(true);
     } catch (err) {
       console.error('Waitlist error:', err);
@@ -117,10 +119,18 @@ export default function BecomeCuratorPage({ onNavigate }) {
               <div className="w-12 h-12 rounded-full bg-[#6B8E9C] text-white flex items-center justify-center mx-auto mb-4">
                 <Check className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-xl text-[#4A5940] mb-2">You're on the list!</h3>
-              <p className="text-sm text-[#5F7252]">
+              <h3 className="font-serif text-xl text-[#4A5940] mb-2">
+                You're #{position || ''} on the list!
+              </h3>
+              <p className="text-sm text-[#5F7252] mb-4">
                 We'll let you know as soon as curator features are ready.
               </p>
+              <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-3 max-w-sm mx-auto">
+                <p className="text-sm text-[#92400E]">
+                  <strong>Check your email!</strong> We sent you a confirmation.
+                  <span className="block text-xs mt-1 opacity-80">Don't see it? Check your spam or junk folder.</span>
+                </p>
+              </div>
             </div>
           ) : (
             <>

@@ -98,6 +98,7 @@ export default async function handler(request) {
     return json({ 
       success: true, 
       message: "You're signed up for beta!",
+      position: position,
       emailSent: emailResult.success
     });
 
