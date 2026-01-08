@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage({ onNavigate }) {
 const PRIVACY_POLICY_HTML = `
 <style>
   .privacy-policy-content {
-    font-family: Lato, Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     background: transparent;
     line-height: 1.6;
   }
@@ -41,7 +41,7 @@ const PRIVACY_POLICY_HTML = `
   .privacy-policy-content [data-custom-class='title'],
   .privacy-policy-content [data-custom-class='title'] *,
   .privacy-policy-content h1 {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 26px !important;
     color: #3d4d39 !important;
     font-weight: bold;
@@ -49,14 +49,14 @@ const PRIVACY_POLICY_HTML = `
   }
   .privacy-policy-content [data-custom-class='subtitle'],
   .privacy-policy-content [data-custom-class='subtitle'] * {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     color: #5b7355 !important;
     font-size: 14px !important;
   }
   .privacy-policy-content [data-custom-class='heading_1'],
   .privacy-policy-content [data-custom-class='heading_1'] *,
   .privacy-policy-content h2 {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 19px !important;
     color: #3d4d39 !important;
     font-weight: bold;
@@ -66,7 +66,7 @@ const PRIVACY_POLICY_HTML = `
   .privacy-policy-content [data-custom-class='heading_2'],
   .privacy-policy-content [data-custom-class='heading_2'] *,
   .privacy-policy-content h3 {
-    font-family: Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 17px !important;
     color: #000000 !important;
     font-weight: bold;
@@ -78,7 +78,7 @@ const PRIVACY_POLICY_HTML = `
   .privacy-policy-content p {
     color: #5b7355 !important;
     font-size: 14px !important;
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     margin-bottom: 1rem;
   }
   .privacy-policy-content [data-custom-class='link'],
@@ -86,7 +86,7 @@ const PRIVACY_POLICY_HTML = `
   .privacy-policy-content a {
     color: #e8b4ba !important;
     font-size: 14px !important;
-    font-family: Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     word-break: break-word !important;
     text-decoration: underline;
   }

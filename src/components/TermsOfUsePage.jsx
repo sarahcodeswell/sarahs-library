@@ -30,7 +30,7 @@ export default function TermsOfUsePage({ onNavigate }) {
 const TERMS_HTML = `
 <style>
   .terms-content {
-    font-family: Lato, Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     background: transparent;
     line-height: 1.6;
   }
@@ -41,7 +41,7 @@ const TERMS_HTML = `
   .terms-content [data-custom-class='title'],
   .terms-content [data-custom-class='title'] *,
   .terms-content h1 {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 26px !important;
     color: #3d4d39 !important;
     font-weight: bold;
@@ -49,14 +49,14 @@ const TERMS_HTML = `
   }
   .terms-content [data-custom-class='subtitle'],
   .terms-content [data-custom-class='subtitle'] * {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     color: #5b7355 !important;
     font-size: 14px !important;
   }
   .terms-content [data-custom-class='heading_1'],
   .terms-content [data-custom-class='heading_1'] *,
   .terms-content h2 {
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 19px !important;
     color: #3d4d39 !important;
     font-weight: bold;
@@ -66,7 +66,7 @@ const TERMS_HTML = `
   .terms-content [data-custom-class='heading_2'],
   .terms-content [data-custom-class='heading_2'] *,
   .terms-content h3 {
-    font-family: Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 17px !important;
     color: #000000 !important;
     font-weight: bold;
@@ -78,7 +78,7 @@ const TERMS_HTML = `
   .terms-content p {
     color: #5b7355 !important;
     font-size: 14px !important;
-    font-family: Lato, Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     margin-bottom: 1rem;
   }
   .terms-content [data-custom-class='link'],
@@ -86,7 +86,7 @@ const TERMS_HTML = `
   .terms-content a {
     color: #e8b4ba !important;
     font-size: 14px !important;
-    font-family: Arial, sans-serif !important;
+    font-family: 'Poppins', sans-serif !important;
     word-break: break-word !important;
     text-decoration: underline;
   }
