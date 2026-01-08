@@ -15,7 +15,7 @@ export default function TermsOfUsePage({ onNavigate }) {
         </button>
 
         {/* Terms of Use Content */}
-        <div className="bg-white rounded-xl border border-[#E8EBE4] p-8 shadow-sm">
+        <div className="p-8">
           <div 
             className="terms-content"
             dangerouslySetInnerHTML={{ __html: TERMS_HTML }}

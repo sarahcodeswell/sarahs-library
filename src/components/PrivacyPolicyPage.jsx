@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage({ onNavigate }) {
         </button>
 
         {/* Privacy Policy Content */}
-        <div className="bg-white rounded-xl border border-[#E8EBE4] p-8 shadow-sm">
+        <div className="p-8">
           <div 
             className="privacy-policy-content"
             dangerouslySetInnerHTML={{ __html: PRIVACY_POLICY_HTML }}
