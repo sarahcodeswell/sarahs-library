@@ -332,16 +332,20 @@ Currently, invites go through Supabase Auth which sends their default invite ema
 │  │                                 │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│  ─── WHAT IS SARAH'S BOOKS? ───         │
+│  ─── OUR MISSION ───                    │
 │                                         │
-│  A curated book recommendation          │
-│  platform built for readers who love    │
-│  discovering their next great book.     │
+│  We believe the best book              │
+│  recommendations come from people,      │
+│  not algorithms. Sarah's Books is a     │
+│  platform where passionate readers      │
+│  curate and share the books they love.  │
+│                                         │
+│  ─── WHAT YOU CAN DO ───                │
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ 📖 Personalized Recommendations │    │
-│  │    Tell us what you love, and   │    │
-│  │    we'll find your next read.   │    │
+│  │ 📖 Get Curated Recommendations  │    │
+│  │    Discover books handpicked by │    │
+│  │    readers who share your taste.│    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  ┌─────────────────────────────────┐    │
@@ -351,9 +355,10 @@ Currently, invites go through Supabase Auth which sends their default invite ema
 │  └─────────────────────────────────┘    │
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ 💜 Share with Friends           │    │
-│  │    Recommend books to people    │    │
-│  │    you care about. (Coming soon)│    │
+│  │ ✨ Become a Curator             │    │
+│  │    Love recommending books?     │    │
+│  │    Join our waitlist to curate  │    │
+│  │    your own collection.         │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  [ Join Sarah's Books → ]               │
