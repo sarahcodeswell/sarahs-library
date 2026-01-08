@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 // Health check endpoint for monitoring
 export default async function handler(req, res) {
   try {
@@ -33,7 +35,6 @@ export default async function handler(req, res) {
 
     // Check database connectivity
     try {
-      const { createClient } = require('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
       
