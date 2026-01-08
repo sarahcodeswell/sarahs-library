@@ -1,6 +1,7 @@
 // API endpoint for curator waitlist signup with confirmation email
 import { createClient } from '@supabase/supabase-js';
 import { sendCuratorWaitlistEmail } from '../utils/email.js';
+import { getOrCreateReferralCode } from '../utils/referralCodes.js';
 
 export const config = {
   runtime: 'edge',
@@ -86,6 +87,13 @@ export default async function handler(request) {
       .from('curator_waitlist')
       .select('*', { count: 'exact', head: true });
 
+    // Generate referral code for this email
+    const { code: referralCode } = await getOrCreateReferralCode(
+      supabase, 
+      email, 
+      'curator_waitlist'
+    );
+
     // Send confirmation email with position (don't fail if email fails)
     const emailResult = await sendCuratorWaitlistEmail(email, position);
     
@@ -97,6 +105,7 @@ export default async function handler(request) {
       success: true, 
       message: "You're on the waitlist!",
       position: position,
+      referralCode: referralCode,
       emailSent: emailResult.success
     });
 

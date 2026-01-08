@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { lookupReferralCode, linkUserToReferralCode } from './utils/referralCodes.js';
 
 export const config = {
   runtime: 'edge',
@@ -32,14 +33,22 @@ export default async function handler(req) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find the inviter by their referral code
-    const { data: inviterProfile, error: profileError } = await supabase
-      .from('taste_profiles')
-      .select('user_id')
-      .eq('referral_code', referralCode)
-      .single();
+    // Look up the referral code in the centralized table
+    const { inviterId, inviterEmail } = await lookupReferralCode(supabase, referralCode);
 
-    if (profileError || !inviterProfile) {
+    // Fall back to taste_profiles for backward compatibility
+    let finalInviterId = inviterId;
+    if (!finalInviterId) {
+      const { data: inviterProfile } = await supabase
+        .from('taste_profiles')
+        .select('user_id')
+        .eq('referral_code', referralCode)
+        .single();
+      
+      finalInviterId = inviterProfile?.user_id;
+    }
+
+    if (!finalInviterId) {
       console.log('Referral code not found:', referralCode);
       return json({ success: false, message: 'Invalid referral code' });
     }
@@ -48,7 +57,7 @@ export default async function handler(req) {
     const { error: insertError } = await supabase
       .from('referrals')
       .insert({
-        inviter_id: inviterProfile.user_id,
+        inviter_id: finalInviterId,
         invited_email: newUserEmail || null,
         invited_user_id: newUserId,
         status: 'accepted',
@@ -60,6 +69,11 @@ export default async function handler(req) {
       console.error('Error recording referral:', insertError);
       // Don't fail the signup, just log the error
       return json({ success: false, message: 'Failed to record referral' });
+    }
+
+    // Link the new user to their referral code if they have one
+    if (newUserEmail) {
+      await linkUserToReferralCode(supabase, newUserEmail, newUserId);
     }
 
     return json({ success: true, message: 'Referral recorded' });

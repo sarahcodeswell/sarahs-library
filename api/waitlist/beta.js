@@ -1,6 +1,7 @@
 // API endpoint for beta tester signup (Read with Friends) with confirmation email
 import { createClient } from '@supabase/supabase-js';
 import { sendBetaTesterEmail } from '../utils/email.js';
+import { getOrCreateReferralCode } from '../utils/referralCodes.js';
 
 export const config = {
   runtime: 'edge',
@@ -88,6 +89,13 @@ export default async function handler(request) {
       .from('beta_testers')
       .select('*', { count: 'exact', head: true });
 
+    // Generate referral code for this email
+    const { code: referralCode } = await getOrCreateReferralCode(
+      supabase, 
+      email, 
+      'beta_signup'
+    );
+
     // Send confirmation email with position
     const emailResult = await sendBetaTesterEmail(email, position);
     
@@ -99,6 +107,7 @@ export default async function handler(request) {
       success: true, 
       message: "You're signed up for beta!",
       position: position,
+      referralCode: referralCode,
       emailSent: emailResult.success
     });
 

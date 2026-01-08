@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { sendInviteFriendsEmail } from './utils/email.js';
+import { getOrCreateReferralCode } from './utils/referralCodes.js';
 
 export const config = {
   runtime: 'edge',
@@ -18,6 +20,7 @@ export default async function handler(req) {
   try {
     const body = await req.json();
     const invitedEmail = String(body?.email || '').trim().toLowerCase();
+    const personalMessage = body?.message || null;
     const inviterToken = req.headers.get('authorization')?.replace('Bearer ', '');
 
     // Validate email
@@ -41,12 +44,35 @@ export default async function handler(req) {
       },
     });
 
-    // Verify the inviter is authenticated
+    // Verify the inviter is authenticated and get their info
     let inviterId = null;
+    let inviterEmail = null;
+    let inviterName = null;
+    let inviterReferralCode = null;
+    
     if (inviterToken) {
       const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(inviterToken);
       if (!userError && user) {
         inviterId = user.id;
+        inviterEmail = user.email;
+        
+        // Get inviter's profile for display name
+        const { data: profile } = await supabaseAdmin
+          .from('taste_profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        inviterName = profile?.display_name || user.email?.split('@')[0] || 'A friend';
+        
+        // Get or create referral code from centralized table
+        const { code } = await getOrCreateReferralCode(
+          supabaseAdmin, 
+          user.email, 
+          'invite',
+          user.id
+        );
+        inviterReferralCode = code;
       }
     }
 
@@ -74,13 +100,23 @@ export default async function handler(req) {
       }
     }
 
-    // Send the invite via Supabase Auth
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invitedEmail, {
-      redirectTo: `${process.env.SITE_URL || 'https://www.sarahsbooks.com'}/`,
+    // Build signup URL with referral code
+    const siteUrl = process.env.SITE_URL || 'https://www.sarahsbooks.com';
+    const signupUrl = inviterReferralCode 
+      ? `${siteUrl}/?ref=${inviterReferralCode}` 
+      : siteUrl;
+
+    // Send branded invite email via Resend
+    const emailResult = await sendInviteFriendsEmail({
+      recipientEmail: invitedEmail,
+      inviterName: inviterName || 'A friend',
+      inviterEmail: inviterEmail || 'hello@sarahsbooks.com',
+      personalMessage,
+      signupUrl
     });
 
-    if (error) {
-      console.error('Invite error:', error);
+    if (!emailResult.success) {
+      console.error('Invite email error:', emailResult.error);
       return json({ error: 'Failed to send invitation' }, 500);
     }
 
@@ -90,6 +126,7 @@ export default async function handler(req) {
         inviter_id: inviterId,
         invited_email: invitedEmail,
         status: 'pending',
+        referral_type: 'email',
         created_at: new Date().toISOString(),
       }, {
         onConflict: 'inviter_id,invited_email',
