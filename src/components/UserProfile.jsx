@@ -1178,8 +1178,8 @@ export default function UserProfile({ tasteProfile }) {
         {referralCode && (
           <div className="space-y-3">
             {/* Referral Link Display */}
-            <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] border border-[#D4DAD0] rounded-lg">
+            <div className="flex gap-2 min-w-0">
+              <div className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] border border-[#D4DAD0] rounded-lg overflow-hidden">
                 <Link className="w-4 h-4 text-[#96A888] flex-shrink-0" />
                 <span className="text-sm text-[#4A5940] truncate">
                   sarahsbooks.com/?ref={referralCode}
@@ -1195,14 +1195,14 @@ export default function UserProfile({ tasteProfile }) {
                     console.error('Failed to copy:', err);
                   }
                 }}
-                className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5 ${
+                className={`flex-shrink-0 px-3 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5 ${
                   linkCopied 
                     ? 'bg-green-500 text-white' 
                     : 'bg-[#5F7252] text-white hover:bg-[#4A5940]'
                 }`}
               >
                 {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {linkCopied ? 'Copied!' : 'Copy'}
+                <span className="hidden sm:inline">{linkCopied ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
 
