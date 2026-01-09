@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Heart, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3, Star } from 'lucide-react';
+import { X, BookOpen, Heart, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3, Star, Share2, MessageSquare } from 'lucide-react';
 import { useBookEnrichment } from './BookCard';
 import { ExpandableDescription } from './ExpandableDescription';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
@@ -42,6 +42,9 @@ const ratingLabels = {
  * - onRemove: Function to remove book from queue
  * - onNotForMe: Function to dismiss the book
  * - onRatingChange: Function to handle rating change (bookId, rating)
+ * - onRecommend: Function to recommend book to a friend
+ * - onWriteReview: Function to write a review
+ * - review: Existing review text if any
  */
 export default function BookDetailModal({
   book,
@@ -50,6 +53,7 @@ export default function BookDetailModal({
   bookStatus = null,
   isInCollection = false,
   rating = null,
+  review = null,
   onAddToQueue,
   onStartReading,
   onFinished,
@@ -57,6 +61,8 @@ export default function BookDetailModal({
   onRemove,
   onNotForMe,
   onRatingChange,
+  onRecommend,
+  onWriteReview,
 }) {
   const [isClosing, setIsClosing] = useState(false);
   const [showRating, setShowRating] = useState(false);
@@ -227,7 +233,8 @@ export default function BookDetailModal({
     // In Collection (finished)
     if (isInCollection || bookStatus === 'finished') {
       return (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Rating section */}
           {showRating || !localRating ? (
             <div className="text-center py-2">
               <p className="text-sm text-[#7A8F6C] mb-3">{localRating ? 'Update your rating:' : 'How did you like it?'}</p>
@@ -270,7 +277,26 @@ export default function BookDetailModal({
               <p className="text-xs text-[#7A8F6C] italic">{ratingLabels[localRating]}</p>
             </div>
           )}
-          <div className="flex items-center justify-center gap-1 text-sm text-[#5F7252]">
+          
+          {/* Action buttons for collection books */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => { onWriteReview?.(book); handleClose(); }}
+              className="flex-1 py-2.5 px-4 border border-[#E8EBE4] rounded-xl text-[#5F7252] hover:bg-[#F8F6EE] transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {review ? 'Edit Review' : 'Write Review'}
+            </button>
+            <button
+              onClick={() => { onRecommend?.(book); handleClose(); }}
+              className="flex-1 py-2.5 px-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Recommend
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-center gap-1 text-sm text-[#5F7252] pt-2">
             <Library className="w-4 h-4" />
             <span>In your collection</span>
           </div>
@@ -362,53 +388,57 @@ export default function BookDetailModal({
             </div>
           ) : null}
 
-          {/* Get It section */}
-          <div className="mb-6 p-4 bg-[#F8F6EE] rounded-xl">
-            <p className="text-xs text-[#7A8F6C] mb-3 italic">
-              Support local bookstores, independent sellers, and public libraries
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={`https://bookshop.org/search?keywords=${encodeURIComponent(title + ' ' + author)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
-              >
-                <ShoppingBag className="w-3.5 h-3.5" />
-                Bookshop.org
-              </a>
-              <a
-                href={`https://www.worldcat.org/search?q=${encodeURIComponent(title + ' ' + author)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
-              >
-                <Library className="w-3.5 h-3.5" />
-                Find at Library
-              </a>
-              <a
-                href={`https://www.audible.com/search?keywords=${encodeURIComponent(title + ' ' + author)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
-              >
-                <Headphones className="w-3.5 h-3.5" />
-                Audible
-              </a>
+          {/* Get It section - only show for books NOT in collection */}
+          {!isInCollection && bookStatus !== 'finished' && (
+            <div className="mb-6 p-4 bg-[#F8F6EE] rounded-xl">
+              <p className="text-xs text-[#7A8F6C] mb-3 italic">
+                Support local bookstores, independent sellers, and public libraries
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={`https://bookshop.org/search?keywords=${encodeURIComponent(title + ' ' + author)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  Bookshop.org
+                </a>
+                <a
+                  href={`https://www.worldcat.org/search?q=${encodeURIComponent(title + ' ' + author)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
+                >
+                  <Library className="w-3.5 h-3.5" />
+                  Find at Library
+                </a>
+                <a
+                  href={`https://libro.fm/search?q=${encodeURIComponent(title + ' ' + author)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-white hover:bg-[#E8EBE4] rounded-lg text-xs text-[#5F7252] transition-colors flex items-center gap-1.5 border border-[#E8EBE4]"
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  Libro.fm
+                </a>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Goodreads link */}
-          <a
-            href={`https://www.goodreads.com/search?q=${encodeURIComponent(title + ' ' + author)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6"
-          >
-            <Star className="w-4 h-4" />
-            Read reviews on Goodreads
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          {/* Goodreads link - only show for books NOT in collection */}
+          {!isInCollection && bookStatus !== 'finished' && (
+            <a
+              href={`https://www.goodreads.com/search?q=${encodeURIComponent(title + ' ' + author)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6"
+            >
+              <Star className="w-4 h-4" />
+              Read reviews on Goodreads
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
 
           {/* Action buttons */}
           <div className="border-t border-[#E8EBE4] pt-4">

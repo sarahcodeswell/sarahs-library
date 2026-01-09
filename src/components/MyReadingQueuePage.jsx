@@ -1438,6 +1438,17 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
             console.error('Error updating rating:', err);
           }
         }}
+        review={selectedBook?.review || null}
+        onWriteReview={(book) => {
+          // Navigate to collection page to write review
+          onNavigate('collection');
+          track('write_review_clicked', { book_title: book.book_title || book.title });
+        }}
+        onRecommend={(book) => {
+          // Navigate to collection page to recommend
+          onNavigate('collection');
+          track('recommend_clicked', { book_title: book.book_title || book.title });
+        }}
       />
 
       {/* Finished Book Modal - asks about adding to collection */}
