@@ -339,8 +339,11 @@ export default async function handler(req) {
         return json({ type: 'recommendations-user', data: result });
       }
 
-      case 'collection': {
-        // Get all user books (collections)
+      // NOTE: 'collection' case is defined earlier (line ~119) - queries reading_queue
+      // This duplicate was removed to fix the bug where it was querying user_books instead
+
+      case 'user-books': {
+        // Legacy: Get all user books from user_books table (for backward compatibility)
         const { data: userBooks } = await supabase.from('user_books').select('*');
         
         // Get admin's collection for overlap calculation
@@ -379,10 +382,11 @@ export default async function handler(req) {
           }))
           .sort((a, b) => b.bookCount - a.bookCount);
         
-        return json({ type: 'collection', data: result });
+        return json({ type: 'user-books', data: result });
       }
 
-      case 'collection-user': {
+      case 'user-books-user': {
+        // Legacy: Get specific user's books from user_books table
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
         
