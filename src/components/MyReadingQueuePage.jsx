@@ -133,40 +133,15 @@ function DragOverlayCard({ book }) {
   );
 }
 
-// Sortable book card for Currently Reading (with drag handle, enrichment)
+// Compact sortable book card for Currently Reading
 function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onMoveToQueue }) {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Auto-enrich with cover and genres if missing
-  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+  // Auto-enrich with cover if missing
+  const { coverUrl, isEnriching } = useBookEnrichment(
     book.book_title,
     book.book_author,
     book.cover_image_url,
     book.genres
   );
-  
-  // Look up full book details from local catalog
-  const bookDetails = useMemo(() => {
-    const t = String(book?.book_title || '');
-    const key = t.toLowerCase().trim();
-    const catalogBook = booksData.find(b => b.title?.toLowerCase().trim() === key);
-    
-    if (catalogBook) {
-      return { ...catalogBook, source: 'catalog' };
-    }
-    
-    if (book.description || book.why_recommended) {
-      return {
-        title: book.book_title,
-        author: book.book_author,
-        description: book.description || book.why_recommended,
-        themes: [],
-        source: 'stored'
-      };
-    }
-    
-    return null;
-  }, [book]);
 
   const {
     attributes,
@@ -188,86 +163,60 @@ function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onM
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all ${
+      className={`rounded-lg border border-[#E8EBE4] bg-[#FDFCF9] p-3 hover:shadow-md transition-all ${
         isDragging ? 'shadow-lg' : ''
       }`}
     >
-      <div className="flex gap-3">
-        {/* Drag handle + index */}
-        <div className="flex flex-col items-center gap-1 pt-1">
-          <span className="text-lg font-serif text-[#5F7252] w-6 text-center select-none">
-            {index + 1}
-          </span>
-          <button
-            {...attributes}
-            {...listeners}
-            className="p-1 rounded cursor-grab active:cursor-grabbing text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors touch-none"
-            title="Drag to reorder"
-          >
-            <GripVertical className="w-4 h-4" />
-          </button>
+      <div className="flex items-center gap-3">
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="p-1 rounded cursor-grab active:cursor-grabbing text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors touch-none flex-shrink-0"
+          title="Drag to reorder"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        
+        {/* Small cover */}
+        <div className="flex-shrink-0 w-10 h-14 rounded bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden">
+          {coverUrl ? (
+            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+          ) : isEnriching ? (
+            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+          ) : (
+            <BookOpen className="w-4 h-4 text-white/70" />
+          )}
         </div>
         
-        {/* Book cover with enrichment */}
-        <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} size="md" />
-        
+        {/* Title and author */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-[#4A5940] text-base leading-tight">{book.book_title}</h3>
-          <p className="text-sm text-[#7A8F6C] mt-0.5">by {book.book_author}</p>
-          
-          {/* Genre badges */}
-          <div className="mt-2">
-            <GenreBadges genres={genres} maxDisplay={2} />
-          </div>
-          
-          {/* Description preview or expand toggle */}
-          {bookDetails?.description && (
-            <>
-              {expanded ? (
-                <div className="mt-2">
-                  <p className="text-xs text-[#7A8F6C]">{bookDetails.description}</p>
-                  <button 
-                    onClick={() => setExpanded(false)}
-                    className="text-xs text-[#5F7252] hover:underline mt-1 flex items-center gap-1"
-                  >
-                    Show less <ChevronUp className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => setExpanded(true)}
-                  className="text-xs text-[#5F7252] hover:underline mt-2 flex items-center gap-1"
-                >
-                  Show more <ChevronDown className="w-3 h-3" />
-                </button>
-              )}
-            </>
-          )}
-          
-          {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            <button
-              onClick={() => onMoveToQueue(book)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
-              title="Move back to Want to Read"
-            >
-              ← Want to Read
-            </button>
-            <button
-              onClick={() => onFinished(book)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-            >
-              <Book className="w-3.5 h-3.5" />
-              Finished
-            </button>
-            <button
-              onClick={() => onNotForMe(book)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors"
-              title="Not for me"
-            >
-              Not for me
-            </button>
-          </div>
+          <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
+          <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+        </div>
+        
+        {/* Compact action buttons */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={() => onMoveToQueue(book)}
+            className="px-2 py-1 rounded text-xs text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
+            title="Move back to Want to Read"
+          >
+            ←
+          </button>
+          <button
+            onClick={() => onFinished(book)}
+            className="px-2.5 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+          >
+            Finished
+          </button>
+          <button
+            onClick={() => onNotForMe(book)}
+            className="p-1 rounded text-[#96A888] hover:text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors"
+            title="Not for me"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
@@ -1264,28 +1213,30 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           />
         </div>
 
-        {/* Want to Read Section Header */}
-        {currentlyReadingBooks.length > 0 && queueBooks.length > 0 && (
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-              <Book className="w-4 h-4 text-[#5F7252]" />
-            </div>
-            <h2 className="text-lg font-serif text-[#4A5940]">Want to Read</h2>
-          </div>
-        )}
-
-        {/* Search Bar */}
+        {/* Want to Read Section */}
         {queueBooks.length > 0 && (
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#96A888]" />
-              <input
-                type="text"
-                placeholder="Search your reading queue..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[#E8EBE4] focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-              />
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                  <Book className="w-4 h-4 text-[#5F7252]" />
+                </div>
+                <h2 className="text-lg font-serif text-[#4A5940]">Want to Read</h2>
+                <span className="text-sm text-[#96A888]">({queueBooks.length})</span>
+              </div>
+              {/* Compact search - only show if more than 5 books */}
+              {queueBooks.length > 5 && (
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-40 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
