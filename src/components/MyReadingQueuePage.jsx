@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Book } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Book, PartyPopper } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
 import { db } from '../lib/supabase';
@@ -304,6 +304,24 @@ function CollectionBookThumbnail({ book, onClick }) {
   );
 }
 
+// Want to Read drop zone (for dragging from Currently Reading back)
+function WantToReadDropZone({ isOver, children }) {
+  const { setNodeRef } = useDroppable({ id: 'want-to-read-zone' });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`mb-6 rounded-xl transition-all duration-200 ${
+        isOver 
+          ? 'ring-2 ring-[#5F7252] ring-offset-2 bg-[#5F7252]/5' 
+          : ''
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
 // Add to Collection drop zone (positive signal - finished and kept)
 function CollectionDropZone({ isOver }) {
   const { setNodeRef } = useDroppable({ id: 'collection-zone' });
@@ -438,7 +456,7 @@ function FinishedBookModal({ book, onAddToCollection, onNoThanks, onClose }) {
         <div className="text-center mb-6">
           {/* Fun celebration icon */}
           <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] flex items-center justify-center shadow-lg">
-            <span className="text-2xl">🎉</span>
+            <PartyPopper className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-xl font-serif text-[#4A5940]">
             Congrats! You finished
@@ -1173,7 +1191,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
   const handleDragOver = (event) => {
     const { over } = event;
-    if (over?.id === 'reading-zone' || over?.id === 'collection-zone' || over?.id === 'not-for-me-zone') {
+    if (over?.id === 'reading-zone' || over?.id === 'want-to-read-zone' || over?.id === 'collection-zone' || over?.id === 'not-for-me-zone') {
       setOverZone(over.id);
     } else {
       setOverZone(null);
@@ -1193,6 +1211,16 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       if (book && book.status === 'want_to_read') {
         await handleStartReading(book);
         track('book_dragged_to_reading', { book_title: book.book_title });
+      }
+      return;
+    }
+
+    // Handle dropping from Currently Reading back to Want to Read
+    if (over.id === 'want-to-read-zone') {
+      const book = readingQueue.find(b => b.id === active.id);
+      if (book && book.status === 'reading') {
+        await handleMoveToQueue(book);
+        track('book_dragged_to_want_to_read', { book_title: book.book_title });
       }
       return;
     }
@@ -1288,7 +1316,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         >
 
         {/* ===== WANT TO READ (Top) ===== */}
-        <div className="mb-6">
+        <WantToReadDropZone isOver={overZone === 'want-to-read-zone' && activeBook?.status === 'reading'}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
@@ -1413,7 +1441,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
               </div>
             </SortableContext>
           )}
-        </div>
+        </WantToReadDropZone>
 
         {/* ===== CURRENTLY READING (Middle) ===== */}
         <div className="mb-6">
