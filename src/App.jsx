@@ -982,10 +982,10 @@ Find similar books from beyond my library that match this taste profile.
                         </>
                       )}
                       
-                      {/* Add Books - available to all */}
+                      {/* Upload Books - available to all */}
                       <button onClick={() => navigateTo('my-books', '/add-books')} className={MENU_BUTTON_CLASS}>
                         <Upload className="w-4 h-4" />
-                        Add Books
+                        Upload Books
                       </button>
                       
                       {user && (
@@ -1562,7 +1562,7 @@ Find similar books from beyond my library that match this taste profile.
                 onClick={() => navigateTo('my-books', '/my-books')}
                 className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
               >
-                Add Books
+                Upload Books
               </button>
               <span className="text-[#D4DAD0]">·</span>
               <button

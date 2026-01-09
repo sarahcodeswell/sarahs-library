@@ -431,15 +431,22 @@ function FinishedBookModal({ book, onAddToCollection, onNoThanks, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative overflow-hidden">
+        {/* Celebratory background decoration */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5F7252] via-[#96A888] to-[#5F7252]" />
+        
         <div className="text-center mb-6">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-            <Book className="w-6 h-6 text-[#5F7252]" />
+          {/* Fun celebration icon */}
+          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#5F7252] to-[#7A8F6C] flex items-center justify-center shadow-lg">
+            <span className="text-2xl">🎉</span>
           </div>
-          <h3 className="text-lg font-serif text-[#4A5940]">
-            Finished "{book.book_title}"!
+          <h3 className="text-xl font-serif text-[#4A5940]">
+            Congrats! You finished
           </h3>
-          <p className="text-sm text-[#7A8F6C] mt-2">Add to your collection?</p>
+          <p className="text-lg font-serif text-[#5F7252] italic mt-1">
+            {book.book_title}
+          </p>
+          <p className="text-sm text-[#7A8F6C] mt-3">Add to your collection?</p>
         </div>
 
         <div className="space-y-3">
