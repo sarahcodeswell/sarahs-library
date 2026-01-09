@@ -799,11 +799,13 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
 }
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
-  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem } = useReadingQueue();
+  const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem, addToQueue } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
   const [collectionBooks, setCollectionBooks] = useState([]);
+  const [addBookSearch, setAddBookSearch] = useState('');
+  const [showAddBook, setShowAddBook] = useState(false);
 
   // Load collection books for preview
   useEffect(() => {
@@ -850,6 +852,45 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     
     loadCollection();
   }, [user, readingQueue]);
+
+  // Search results for adding books
+  const addBookResults = useMemo(() => {
+    if (!addBookSearch.trim() || addBookSearch.length < 2) return [];
+    const query = addBookSearch.toLowerCase();
+    
+    // Search the catalog
+    const results = booksData
+      .filter(book => 
+        book.title?.toLowerCase().includes(query) ||
+        book.author?.toLowerCase().includes(query)
+      )
+      .slice(0, 5); // Limit to 5 results
+    
+    // Filter out books already in queue
+    const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
+    return results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
+  }, [addBookSearch, readingQueue]);
+
+  // Add a book to the queue
+  const handleAddBook = async (book) => {
+    const result = await addToQueue({
+      book_title: book.title,
+      book_author: book.author,
+      description: book.description,
+      status: 'want_to_read',
+    });
+    
+    if (result.success) {
+      track('book_added_to_queue_direct', {
+        book_title: book.title,
+        book_author: book.author,
+      });
+      setAddBookSearch('');
+      setShowAddBook(false);
+    } else {
+      alert('Failed to add book. Please try again.');
+    }
+  };
 
   // Handle ownership toggle
   const handleToggleOwned = async (bookId, owned) => {
@@ -1245,22 +1286,78 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 <span className="text-sm text-[#96A888]">({queueBooks.length})</span>
               )}
             </div>
-            {/* Compact search - only show if more than 5 books */}
-            {queueBooks.length > 5 && (
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-40 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Add book button */}
+              <button
+                onClick={() => setShowAddBook(!showAddBook)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  showAddBook 
+                    ? 'bg-[#5F7252] text-white' 
+                    : 'bg-[#E8EBE4] text-[#5F7252] hover:bg-[#D4DAD0]'
+                }`}
+              >
+                {showAddBook ? <ChevronUp className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+                Add Book
+              </button>
+              {/* Filter search - only show if more than 5 books */}
+              {queueBooks.length > 5 && !showAddBook && (
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                  <input
+                    type="text"
+                    placeholder="Filter..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-32 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
-          {filteredBooks.length === 0 ? (
+          {/* Add Book Search Panel */}
+          {showAddBook && (
+            <div className="mb-4 p-4 rounded-xl bg-[#F8F6EE] border border-[#E8EBE4]">
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                <input
+                  type="text"
+                  placeholder="Search for a book by title or author..."
+                  value={addBookSearch}
+                  onChange={(e) => setAddBookSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#E8EBE4] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              {addBookResults.length > 0 ? (
+                <div className="space-y-2">
+                  {addBookResults.map((book) => (
+                    <div
+                      key={book.title}
+                      className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E8EBE4] hover:border-[#5F7252] transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-[#4A5940] text-sm truncate">{book.title}</p>
+                        <p className="text-xs text-[#7A8F6C] truncate">{book.author}</p>
+                      </div>
+                      <button
+                        onClick={() => handleAddBook(book)}
+                        className="ml-3 px-3 py-1 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex-shrink-0"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : addBookSearch.length >= 2 ? (
+                <p className="text-sm text-[#96A888] text-center py-2">No books found. Try a different search.</p>
+              ) : (
+                <p className="text-sm text-[#96A888] text-center py-2">Type at least 2 characters to search</p>
+              )}
+            </div>
+          )}
+
+          {filteredBooks.length === 0 && !showAddBook && (
             <div className="rounded-xl border-2 border-dashed border-[#96A888] bg-[#F8F6EE]/50 py-8 px-4 text-center">
               {searchQuery ? (
                 <p className="text-[#7A8F6C] text-sm">No books found matching "{searchQuery}"</p>
@@ -1270,17 +1367,28 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   <p className="text-[#7A8F6C] text-sm mb-3">
                     Your reading list is empty
                   </p>
-                  <button
-                    onClick={() => onNavigate('home')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-                  >
-                    <Star className="w-4 h-4" />
-                    Get Recommendations
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <button
+                      onClick={() => setShowAddBook(true)}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                    >
+                      <Search className="w-4 h-4" />
+                      Add a Book
+                    </button>
+                    <button
+                      onClick={() => onNavigate('home')}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
+                    >
+                      <Star className="w-4 h-4" />
+                      Get Recommendations
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-          ) : (
+          )}
+          
+          {filteredBooks.length > 0 && (
             <SortableContext
               items={filteredBooks.map(b => b.id)}
               strategy={verticalListSortingStrategy}
@@ -1353,7 +1461,10 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
             </div>
             {collectionBooks.length > 0 && (
               <button
-                onClick={() => onNavigate('collection')}
+                onClick={() => {
+                  onNavigate('collection');
+                  window.scrollTo(0, 0);
+                }}
                 className="text-sm text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
               >
                 View All
