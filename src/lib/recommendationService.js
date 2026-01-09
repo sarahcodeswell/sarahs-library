@@ -716,7 +716,10 @@ export function parseRecommendations(responseText) {
     
     if (trimmed.startsWith('Title:')) {
       if (currentRec) recommendations.push(currentRec);
-      currentRec = { title: trimmed.substring(6).trim() };
+      // Strip surrounding quotes from title if present
+      let title = trimmed.substring(6).trim();
+      title = title.replace(/^["']|["']$/g, '');
+      currentRec = { title };
     } else if (trimmed.startsWith('Author:') && currentRec) {
       currentRec.author = trimmed.substring(7).trim();
     } else if (trimmed.startsWith('Source:') && currentRec) {

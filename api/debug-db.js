@@ -81,5 +81,47 @@ export default async function handler(req, res) {
     results.tests.booksWithEmbeddings = { success: false, error: e.message };
   }
   
+  // Test 4: Check Kristin Hannah books specifically
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, author, embedding')
+      .ilike('author', '%kristin hannah%');
+    
+    results.tests.kristinHannahBooks = {
+      success: !error,
+      count: data?.length || 0,
+      books: data?.map(b => ({ 
+        title: b.title, 
+        hasEmbedding: !!b.embedding,
+        embeddingType: typeof b.embedding
+      })),
+      error: error?.message
+    };
+  } catch (e) {
+    results.tests.kristinHannahBooks = { success: false, error: e.message };
+  }
+  
+  // Test 5: Count books with vs without embeddings
+  try {
+    const { count: withEmbeddings } = await supabase
+      .from('books')
+      .select('*', { count: 'exact', head: true })
+      .not('embedding', 'is', null);
+    
+    const { count: withoutEmbeddings } = await supabase
+      .from('books')
+      .select('*', { count: 'exact', head: true })
+      .is('embedding', null);
+    
+    results.tests.embeddingCoverage = {
+      withEmbeddings,
+      withoutEmbeddings,
+      total: (withEmbeddings || 0) + (withoutEmbeddings || 0)
+    };
+  } catch (e) {
+    results.tests.embeddingCoverage = { error: e.message };
+  }
+  
   return res.status(200).json(results);
 }
