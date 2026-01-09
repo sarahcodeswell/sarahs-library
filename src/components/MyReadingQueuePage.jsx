@@ -133,60 +133,117 @@ function DragOverlayCard({ book }) {
   );
 }
 
-// Currently Reading drop zone with books list
-function ReadingDropZone({ isOver, books, onMarkAsRead, onRemove }) {
+// Currently Reading section with Reading Now vs On Hold
+function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
+  
+  // Split books into active (Reading Now) and paused (On Hold)
+  const activeBooks = books.filter(b => b.is_active !== false);
+  const pausedBooks = books.filter(b => b.is_active === false);
   
   return (
     <div
       ref={setNodeRef}
       className={`rounded-xl border-2 transition-all duration-200 ${
         isOver 
-          ? 'border-amber-400 bg-amber-50 scale-[1.01]' 
+          ? 'border-[#5F7252] bg-[#5F7252]/5 scale-[1.01]' 
           : books.length > 0 
-            ? 'border-amber-200 bg-gradient-to-r from-amber-50/50 to-white' 
-            : 'border-dashed border-amber-300 bg-amber-50/30'
+            ? 'border-[#E8EBE4] bg-white' 
+            : 'border-dashed border-[#96A888] bg-[#F8F6EE]/50'
       }`}
     >
       {books.length > 0 ? (
-        <div className="p-4 space-y-3">
-          {books.map((book) => (
-            <div
-              key={book.id}
-              className="rounded-lg border border-amber-200 bg-white p-3 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full flex-shrink-0">
-                    Reading
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
-                    <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+        <div className="p-4">
+          {/* Reading Now Section */}
+          {activeBooks.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-[#5F7252] uppercase tracking-wide mb-2">Reading Now</p>
+              <div className="space-y-2">
+                {activeBooks.map((book) => (
+                  <div
+                    key={book.id}
+                    className="rounded-lg border border-[#E8EBE4] bg-[#F8F6EE] p-3 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
+                        <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => onToggleActive(book, false)}
+                          className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-white transition-colors"
+                          title="Pause reading"
+                        >
+                          <span className="text-sm">⏸</span>
+                        </button>
+                        <button
+                          onClick={() => onMarkAsRead(book)}
+                          className="px-2 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+                        >
+                          Finished
+                        </button>
+                        <button
+                          onClick={() => onRemove(book)}
+                          className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => onMarkAsRead(book)}
-                    className="px-2 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
-                  >
-                    Finished
-                  </button>
-                  <button
-                    onClick={() => onRemove(book)}
-                    className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
-          ))}
+          )}
+          
+          {/* On Hold Section */}
+          {pausedBooks.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-[#96A888] uppercase tracking-wide mb-2">On Hold</p>
+              <div className="space-y-2">
+                {pausedBooks.map((book) => (
+                  <div
+                    key={book.id}
+                    className="rounded-lg border border-[#E8EBE4] bg-white p-3 hover:shadow-sm transition-all opacity-75"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-[#7A8F6C] text-sm truncate">{book.book_title}</p>
+                        <p className="text-xs text-[#96A888] truncate">{book.book_author}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => onToggleActive(book, true)}
+                          className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
+                          title="Resume reading"
+                        >
+                          <span className="text-sm">▶️</span>
+                        </button>
+                        <button
+                          onClick={() => onMarkAsRead(book)}
+                          className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] bg-[#F8F6EE] hover:bg-[#E8EBE4] transition-colors"
+                        >
+                          Finished
+                        </button>
+                        <button
+                          onClick={() => onRemove(book)}
+                          className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-amber-600' : 'text-amber-400'}`}>
+        <div className={`flex items-center justify-center gap-2 py-8 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
           <BookOpen className="w-5 h-5" />
-          <span className="text-sm font-medium">Drag a book here to start reading</span>
+          <span className="text-sm font-medium">What are you reading right now?</span>
         </div>
       )}
     </div>
@@ -721,6 +778,19 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
+  const handleToggleActive = async (book, isActive) => {
+    const result = await updateQueueItem(book.id, { is_active: isActive });
+    
+    if (result.success) {
+      track('book_active_toggled', {
+        book_title: book.book_title,
+        is_active: isActive,
+      });
+    } else {
+      alert('Failed to update book. Please try again.');
+    }
+  };
+
   // Track which zone is being hovered
   const [overZone, setOverZone] = useState(null);
 
@@ -872,16 +942,17 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         {/* Currently Reading Drop Zone */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-amber-600" />
+            <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-[#5F7252]" />
             </div>
             <h2 className="text-lg font-serif text-[#4A5940]">Currently Reading</h2>
           </div>
-          <ReadingDropZone 
+          <CurrentlyReadingSection 
             isOver={overZone === 'reading-zone'} 
             books={currentlyReadingBooks}
             onMarkAsRead={handleMarkAsRead}
             onRemove={handleRemoveBook}
+            onToggleActive={handleToggleActive}
           />
         </div>
 
