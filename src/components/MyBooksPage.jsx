@@ -77,7 +77,7 @@ function parseGoodreadsCsv(text) {
 
 export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
   const { userBooks, isLoadingBooks, addBook, removeBook, updateBook } = useUserBooks();
-  const { readingQueue, addToQueue } = useReadingQueue();
+  const { readingQueue, addToQueue, updateQueueStatus } = useReadingQueue();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -309,17 +309,23 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       }
 
       let successCount = 0;
-      let skippedCount = 0;
+      let updatedCount = 0;
       for (const book of books) {
-        // Check if book already exists in reading queue (prevent duplicates)
-        const alreadyInQueue = readingQueue.some(item => 
+        // Check if book already exists in reading queue
+        const existingBook = readingQueue.find(item => 
           item.book_title?.toLowerCase() === book.title?.toLowerCase() &&
           item.book_author?.toLowerCase() === (book.author || '').toLowerCase()
         );
         
-        if (alreadyInQueue) {
-          skippedCount++;
-          continue; // Skip duplicates
+        if (existingBook) {
+          // Book exists - update status if different (allows re-import to fix statuses)
+          if (existingBook.status !== book.status) {
+            const updateResult = await updateQueueStatus(existingBook.id, book.status);
+            if (updateResult.success) {
+              updatedCount++;
+            }
+          }
+          continue; // Don't add duplicate
         }
 
         // Get description from catalog first, then AI-generated, then null
@@ -346,24 +352,25 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       track('books_added_from_goodreads', {
         total_in_csv: books.length,
         successfully_added: successCount,
-        skipped_duplicates: skippedCount,
+        statuses_updated: updatedCount,
         descriptions_generated: Object.keys(descriptions).length,
       });
 
       setIsUploadingGoodreads(false);
       
       // Build informative success message
-      let message = '';
+      const parts = [];
       if (successCount > 0) {
-        message = `Added ${successCount} book${successCount !== 1 ? 's' : ''} from Goodreads!`;
+        parts.push(`Added ${successCount} new book${successCount !== 1 ? 's' : ''}`);
       }
-      if (skippedCount > 0) {
-        message += message ? ` (${skippedCount} already in your library)` : `${skippedCount} book${skippedCount !== 1 ? 's were' : ' was'} already in your library.`;
+      if (updatedCount > 0) {
+        parts.push(`Updated ${updatedCount} book status${updatedCount !== 1 ? 'es' : ''}`);
       }
-      if (message) {
-        alert(message);
+      
+      if (parts.length > 0) {
+        alert(parts.join(', ') + ' from Goodreads!');
       } else if (books.length > 0) {
-        alert('All books from this CSV are already in your library.');
+        alert('All books from this CSV are already in your library with correct statuses.');
       }
     } catch (error) {
       console.error('Error processing Goodreads CSV:', error);
