@@ -64,8 +64,8 @@ export default async function handler(req) {
       }
 
       case 'queue': {
-        // Only show "want to read" and "reading" books
-        const { data: queue } = await supabase.from('reading_queue').select('*').in('status', ['want_to_read', 'reading']);
+        // Only show "want to read" books (excludes currently reading)
+        const { data: queue } = await supabase.from('reading_queue').select('*').eq('status', 'want_to_read');
         // Group by user
         const userQueues = new Map();
         (queue || []).forEach(q => {
@@ -88,6 +88,31 @@ export default async function handler(req) {
           .sort((a, b) => b.bookCount - a.bookCount);
         
         return json({ type: 'queue', data: result });
+      }
+
+      case 'reading': {
+        // Currently reading books
+        const { data: reading } = await supabase.from('reading_queue').select('*').eq('status', 'reading');
+        // Group by user
+        const userReading = new Map();
+        (reading || []).forEach(q => {
+          const u = userMap.get(q.user_id);
+          const email = u?.email || 'Unknown';
+          if (email === 'sarah@darkridge.com') return; // Exclude admin
+          if (!userReading.has(email)) {
+            userReading.set(email, { name: getDisplayName(u), email, userId: q.user_id, books: [] });
+          }
+          userReading.get(email).books.push({
+            title: q.book_title,
+            author: q.book_author,
+            addedAt: q.added_at
+          });
+        });
+        const result = Array.from(userReading.values())
+          .map(u => ({ ...u, bookCount: u.books.length }))
+          .sort((a, b) => b.bookCount - a.bookCount);
+        
+        return json({ type: 'reading', data: result });
       }
 
       case 'finished': {

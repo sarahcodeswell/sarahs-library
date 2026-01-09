@@ -114,10 +114,13 @@ export default async function handler(req) {
     };
 
     // Queue stats - separate by status
-    // want_to_read/reading = Books Queued (want to read)
+    // want_to_read = Books in queue (want to read)
+    // reading = Currently reading
     // finished = Books Read (marked as read in-app via queue)
-    // already_read = Books Added (marked via recommendation "Already Read" button)
+    // already_read = Books Added (marked via recommendation "Already Read" button or Goodreads import)
     // Collection = finished + already_read (both represent "books I've read")
+    const wantToReadBooks = queue.filter(q => q.status === 'want_to_read');
+    const readingBooks = queue.filter(q => q.status === 'reading');
     const queuedBooks = queue.filter(q => q.status === 'want_to_read' || q.status === 'reading');
     const finishedBooks = queue.filter(q => q.status === 'finished');
     const alreadyReadBooks = queue.filter(q => q.status === 'already_read');
@@ -125,6 +128,13 @@ export default async function handler(req) {
     
     const queueStats = {
       totalBooks: queue.length,
+      // Want to Read (queue only, excludes currently reading)
+      wantToRead: wantToReadBooks.length,
+      wantToReadUsers: new Set(wantToReadBooks.map(q => q.user_id)).size,
+      // Currently Reading (new status)
+      reading: readingBooks.length,
+      readingUsers: new Set(readingBooks.map(q => q.user_id)).size,
+      // Combined queued (want_to_read + reading) for backward compatibility
       queued: queuedBooks.length,
       queuedUsers: new Set(queuedBooks.map(q => q.user_id)).size,
       finished: finishedBooks.length,

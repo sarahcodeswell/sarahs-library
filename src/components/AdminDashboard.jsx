@@ -1419,18 +1419,19 @@ export default function AdminDashboard({ onNavigate }) {
             onClick={() => setModal({ isOpen: true, type: 'users', title: 'All Users', icon: Users })}
           />
           <StatCard
-            title="Books Queued"
-            value={stats?.queue?.queued || 0}
-            subtitle={`${stats?.queue?.queuedUsers || 0} users`}
+            title="Want to Read"
+            value={stats?.queue?.wantToRead || 0}
+            subtitle={`${stats?.queue?.wantToReadUsers || 0} users`}
             icon={BookMarked}
-            onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Books Queued', icon: BookMarked })}
+            onClick={() => setModal({ isOpen: true, type: 'queue', title: 'Want to Read', icon: BookMarked })}
           />
           <StatCard
-            title="Books Read"
-            value={stats?.queue?.finished || 0}
-            subtitle={`${stats?.queue?.finishedUsers || 0} users`}
+            title="Currently Reading"
+            value={stats?.queue?.reading || 0}
+            subtitle={`${stats?.queue?.readingUsers || 0} users`}
             icon={BookOpen}
-            onClick={() => setModal({ isOpen: true, type: 'finished', title: 'Books Read', icon: BookOpen })}
+            color="bg-amber-500"
+            onClick={() => setModal({ isOpen: true, type: 'reading', title: 'Currently Reading', icon: BookOpen })}
           />
           <StatCard
             title="Books Added"
