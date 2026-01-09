@@ -131,35 +131,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         ) : (
           /* Sign In Form */
           <>
-            <p className="text-sm text-[#7A8F6C] mb-4">
+            <p className="text-sm text-[#7A8F6C] mb-6">
               Discover great reads, build your library, and share recommendations
             </p>
 
-            {/* Community Guidelines & Terms Acceptance */}
-            <div className="mb-6 p-3 bg-[#F8F6EE] rounded-lg border border-[#E8EBE4]">
-              <p className="text-xs text-[#5F7252] leading-relaxed">
-                By continuing, you agree to our{' '}
-                <button
-                  type="button"
-                  onClick={() => window.open('/our-practices', '_blank')}
-                  className="text-[#5F7252] underline hover:text-[#4A5940]"
-                >
-                  Community Guidelines
-                </button>
-                {' '}and{' '}
-                <button
-                  type="button"
-                  onClick={() => window.open('/terms-of-use', '_blank')}
-                  className="text-[#5F7252] underline hover:text-[#4A5940]"
-                >
-                  Terms of Use
-                </button>
-                .
-              </p>
-            </div>
-
             {/* OAuth Buttons */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               <button
                 onClick={() => handleOAuthSignIn('google')}
                 type="button"
@@ -205,6 +182,26 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 )}
               </button>
             </div>
+
+            {/* Community Guidelines & Terms - moved below auth buttons */}
+            <p className="text-xs text-[#96A888] text-center mb-4">
+              By continuing, you agree to our{' '}
+              <button
+                type="button"
+                onClick={() => window.open('/our-practices', '_blank')}
+                className="text-[#5F7252] underline hover:text-[#4A5940]"
+              >
+                Community Guidelines
+              </button>
+              {' '}and{' '}
+              <button
+                type="button"
+                onClick={() => window.open('/terms-of-use', '_blank')}
+                className="text-[#5F7252] underline hover:text-[#4A5940]"
+              >
+                Terms of Use
+              </button>
+            </p>
 
             {/* Email Magic Link - Collapsible */}
             <div className="border-t border-[#E8EBE4] pt-4">

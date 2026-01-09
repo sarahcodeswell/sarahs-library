@@ -451,25 +451,22 @@ export default function UserProfile({ tasteProfile }) {
     try {
       devLog('[Profile] Loading stats for user:', user.id);
       
-      // Check if user is master admin
-      const isMasterAdmin = user.email === MASTER_ADMIN_EMAIL;
+      // Parallel fetch all data for better performance
+      const [userBooksResult, queueResult, recommendationsResult, profileResult] = await Promise.all([
+        db.getUserBooks(user.id),
+        db.getReadingQueue(user.id),
+        db.getUserRecommendations(user.id),
+        db.getTasteProfile(user.id),
+      ]);
       
-      // Get user_books (books added to collection via photo/manual entry)
-      const { data: userBooks, error: userBooksError } = await db.getUserBooks(user.id);
-      if (userBooksError) {
-        console.error('[Profile] Error loading user_books:', userBooksError);
-      }
-      devLog('[Profile] User books loaded:', { total: userBooks?.length });
+      const userBooks = userBooksResult.data;
+      const queue = queueResult.data;
+      const recommendations = recommendationsResult.data;
+      const profile = profileResult.data;
       
-      // Get reading queue data
-      const { data: queue, error: queueError } = await db.getReadingQueue(user.id);
-      if (queueError) {
-        console.error('[Profile] Error loading reading queue:', queueError);
-      }
-      devLog('[Profile] Reading queue loaded:', { total: queue?.length });
+      devLog('[Profile] Data loaded in parallel');
       
       // Collection = user_books + books marked as 'finished' or 'already_read' in reading_queue
-      // Note: Admin's catalog books are now in reading_queue, so no special handling needed
       const collectionBooks = queue?.filter(item => item.status === 'finished' || item.status === 'already_read') || [];
       let collectionCount = (userBooks?.length || 0) + collectionBooks.length;
       
@@ -478,22 +475,16 @@ export default function UserProfile({ tasteProfile }) {
         item.status === 'want_to_read' || item.status === 'reading'
       ) || [];
       
-      // Get recommendations count
-      const { data: recommendations } = await db.getUserRecommendations(user.id);
-      
-      // Get sharing stats - recs made by this user
+      // Get sharing stats - recs made by this user (only if supabase available)
       let recsMade = 0;
       let recsAccepted = 0;
       if (supabase) {
-        // Get the user's display name from profile
-        const { data: profile } = await db.getTasteProfile(user.id);
         const userName = profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
         
-        // Query shared_recommendations by recommender_name
         const { data: shares } = await supabase
           .from('shared_recommendations')
-          .select('id, accepted_at, recommender_name')
-          .or(`recommender_name.ilike.%${userName}%`);
+          .select('id, accepted_at')
+          .ilike('recommender_name', `%${userName}%`);
         
         if (shares) {
           recsMade = shares.length;
@@ -509,7 +500,6 @@ export default function UserProfile({ tasteProfile }) {
         recsAccepted
       };
       devLog('[Profile] Stats calculated:', stats);
-      devLog('[Profile] User books:', userBooks?.length || 0, 'Finished:', collectionBooks.length);
       setStats(stats);
     } catch (error) {
       console.error('[Profile] Error loading stats:', error);
