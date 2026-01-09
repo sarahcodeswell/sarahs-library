@@ -507,6 +507,8 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   const [owned, setOwned] = useState(book.owned || false);
   const [showAcquisition, setShowAcquisition] = useState(false);
+  const [enrichedDescription, setEnrichedDescription] = useState(book.description || null);
+  const [isEnrichingDescription, setIsEnrichingDescription] = useState(false);
   
   // Auto-enrich reputation when expanded and missing
   useEffect(() => {
@@ -527,20 +529,42 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
     }
   }, [expanded, reputation, isEnrichingReputation, book]);
   
-  // Use stored data from the book itself (from recommendations or queue)
+  // Auto-enrich description when expanded and missing
+  useEffect(() => {
+    if (expanded && !enrichedDescription && !isEnrichingDescription && book.book_title) {
+      setIsEnrichingDescription(true);
+      import('../lib/bookEnrichment.js').then(({ enrichBook }) => {
+        enrichBook(book.book_title, book.book_author)
+          .then((data) => {
+            if (data?.description) {
+              setEnrichedDescription(data.description);
+              // Save to DB for future use
+              if (onUpdateBook) {
+                onUpdateBook(book.id, { description: data.description });
+              }
+            }
+          })
+          .catch(console.error)
+          .finally(() => setIsEnrichingDescription(false));
+      });
+    }
+  }, [expanded, enrichedDescription, isEnrichingDescription, book.book_title, book.book_author, book.id, onUpdateBook]);
+  
+  // Use stored data or enriched data
   const bookDetails = useMemo(() => {
-    if (book.description || book.why_recommended) {
+    const description = enrichedDescription || book.description || book.why_recommended;
+    if (description) {
       return {
         title: book.book_title,
         author: book.book_author,
-        description: book.description || book.why_recommended,
+        description,
         themes: book.themes || [],
-        source: 'stored'
+        source: enrichedDescription ? 'enriched' : 'stored'
       };
     }
     
     return null;
-  }, [book]);
+  }, [book, enrichedDescription]);
 
   // Auto-enrich with cover and genres if missing
   const { coverUrl, genres, isEnriching } = useBookEnrichment(
@@ -629,10 +653,13 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
                   <GenreBadges genres={genres} maxDisplay={2} />
                 </div>
                 
-                {/* Show more/less toggle for book details */}
-                {bookDetails && (
-                  <ExpandToggle expanded={expanded} onToggle={() => setExpanded(!expanded)} className="mt-2" />
-                )}
+                {/* Show more/less toggle for book details - always show so users can expand to load details */}
+                <ExpandToggle 
+                  expanded={expanded} 
+                  onToggle={() => setExpanded(!expanded)} 
+                  className="mt-2"
+                  isLoading={isEnrichingDescription}
+                />
               </div>
             </div>
             
@@ -747,23 +774,30 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
           )}
           
           {/* Expanded Book Details */}
-          {expanded && bookDetails && (
+          {expanded && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
-              {bookDetails.favorite && (
+              {isEnrichingDescription && !bookDetails && (
+                <div className="flex items-center gap-2 py-4">
+                  <div className="w-4 h-4 border-2 border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
+                  <span className="text-sm text-[#96A888]">Loading book details...</span>
+                </div>
+              )}
+              
+              {bookDetails?.favorite && (
                 <div className="mb-3 flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                   <p className="text-xs font-medium text-[#4A5940]">All-Time Favorite</p>
                 </div>
               )}
               
-              {bookDetails.description && (
+              {bookDetails?.description && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
                   <ExpandableDescription text={stripAccoladesFromDescription(bookDetails.description)} />
                 </div>
               )}
               
-              {bookDetails.themes && bookDetails.themes.length > 0 && (
+              {bookDetails?.themes && bookDetails.themes.length > 0 && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">Themes:</p>
                   <div className="flex flex-wrap gap-2">
@@ -783,26 +817,28 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
                 </div>
               )}
               
-              {/* Reviews Link */}
-              <div className="pt-3 border-t border-[#E8EBE4]">
-                <a
-                  href={`https://www.goodreads.com/search?q=${encodeURIComponent((bookDetails.title || book.book_title) + ' ' + (bookDetails.author || book.book_author))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    track('read_reviews_clicked', { 
-                      book_title: bookDetails.title || book.book_title,
-                      book_author: bookDetails.author || book.book_author,
-                      source: 'reading_queue'
-                    });
-                  }}
-                  className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
-                >
-                  <Star className="w-3.5 h-3.5" />
-                  Read Reviews on Goodreads
-                </a>
-              </div>
+              {/* Reviews Link - always show when expanded */}
+              {!isEnrichingDescription && (
+                <div className="pt-3 border-t border-[#E8EBE4]">
+                  <a
+                    href={`https://www.goodreads.com/search?q=${encodeURIComponent((bookDetails?.title || book.book_title) + ' ' + (bookDetails?.author || book.book_author))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      track('read_reviews_clicked', { 
+                        book_title: bookDetails?.title || book.book_title,
+                        book_author: bookDetails?.author || book.book_author,
+                        source: 'reading_queue'
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    Read Reviews on Goodreads
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>

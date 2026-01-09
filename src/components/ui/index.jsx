@@ -78,14 +78,23 @@ export function ReputationBox({ reputation }) {
 /**
  * Expand/Collapse toggle button
  */
-export function ExpandToggle({ expanded, onToggle, className = '' }) {
+export function ExpandToggle({ expanded, onToggle, className = '', isLoading = false }) {
   return (
     <button
       onClick={onToggle}
       className={`flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors ${className}`}
     >
-      <span>{expanded ? 'Show less' : 'Show more'}</span>
-      <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      {isLoading ? (
+        <>
+          <div className="w-3 h-3 border border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
+          <span>Loading...</span>
+        </>
+      ) : (
+        <>
+          <span>{expanded ? 'Show less' : 'About this book'}</span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </>
+      )}
     </button>
   );
 }

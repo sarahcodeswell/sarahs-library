@@ -1562,31 +1562,6 @@ Find similar books from beyond my library that match this taste profile.
               </button>
             </div>
 
-          {/* Navigation Links - Plain text with hover underline */}
-          {messages.length <= 1 && (
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
-              <button
-                onClick={() => navigateTo('my-books', '/my-books')}
-                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-              >
-                Upload Books
-              </button>
-              <span className="text-[#D4DAD0]">·</span>
-              <button
-                onClick={() => navigateTo('reading-queue', '/reading-queue')}
-                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-              >
-                Reading Queue
-              </button>
-              <span className="text-[#D4DAD0]">·</span>
-              <button
-                onClick={() => navigateTo('collection', '/collection')}
-                className="font-medium text-[#5F7252] hover:text-[#4A5940] hover:underline underline-offset-4 decoration-2 transition-all"
-              >
-                My Collection
-              </button>
-            </div>
-          )}
 
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
