@@ -228,9 +228,15 @@ function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onM
         </div>
       </div>
       
-      {/* Expanded section with Goodreads link */}
+      {/* Expanded section with description and Goodreads link */}
       {expanded && (
         <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+          {book.description && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
+              <p className="text-xs text-[#7A8F6C] leading-relaxed line-clamp-3">{book.description}</p>
+            </div>
+          )}
           <a
             href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + book.book_author)}`}
             target="_blank"
@@ -816,9 +822,11 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
           {expanded && (
             <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
               {isEnrichingDescription && !bookDetails && (
-                <div className="flex items-center gap-2 py-4">
-                  <div className="w-4 h-4 border-2 border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
-                  <span className="text-sm text-[#96A888]">Loading book details...</span>
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-3 w-24 bg-[#E8EBE4] rounded" />
+                  <div className="h-3 w-full bg-[#E8EBE4] rounded" />
+                  <div className="h-3 w-full bg-[#E8EBE4] rounded" />
+                  <div className="h-3 w-3/4 bg-[#E8EBE4] rounded" />
                 </div>
               )}
               

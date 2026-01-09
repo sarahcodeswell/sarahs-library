@@ -85,10 +85,7 @@ export function ExpandToggle({ expanded, onToggle, className = '', isLoading = f
       className={`flex items-center gap-1 text-xs font-medium text-[#7A8F6C] hover:text-[#4A5940] transition-colors ${className}`}
     >
       {isLoading ? (
-        <>
-          <div className="w-3 h-3 border border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
-          <span>Loading...</span>
-        </>
+        <span className="animate-pulse text-[#96A888]">Loading details...</span>
       ) : (
         <>
           <span>{expanded ? 'Show less' : 'About this book'}</span>
