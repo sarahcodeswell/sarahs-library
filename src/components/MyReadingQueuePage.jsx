@@ -1286,36 +1286,44 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 <span className="text-sm text-[#96A888]">({queueBooks.length})</span>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              {/* Add book button */}
-              <button
-                onClick={() => setShowAddBook(!showAddBook)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  showAddBook 
-                    ? 'bg-[#5F7252] text-white' 
-                    : 'bg-[#E8EBE4] text-[#5F7252] hover:bg-[#D4DAD0]'
-                }`}
-              >
-                {showAddBook ? <ChevronUp className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-                Add Book
-              </button>
-              {/* Filter search - only show if more than 5 books */}
-              {queueBooks.length > 5 && !showAddBook && (
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-                  <input
-                    type="text"
-                    placeholder="Filter..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-32 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-                  />
-                </div>
-              )}
-            </div>
+            {/* Filter search - only show if more than 5 books */}
+            {queueBooks.length > 5 && (
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                <input
+                  type="text"
+                  placeholder="Filter..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-32 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Add Book Search Panel */}
+          {/* Action buttons - always visible */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setShowAddBook(!showAddBook)}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                showAddBook 
+                  ? 'bg-[#5F7252] text-white' 
+                  : 'bg-[#F8F6EE] border border-[#E8EBE4] text-[#5F7252] hover:bg-[#E8EBE4]'
+              }`}
+            >
+              <Search className="w-4 h-4" />
+              I know what I want to read
+            </button>
+            <button
+              onClick={() => onNavigate('home')}
+              className="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium bg-[#F8F6EE] border border-[#E8EBE4] text-[#5F7252] hover:bg-[#E8EBE4] transition-colors flex items-center justify-center gap-2"
+            >
+              <Star className="w-4 h-4" />
+              Help me find my next read
+            </button>
+          </div>
+
+          {/* Search Panel - shown when "I know what I want to read" is clicked */}
           {showAddBook && (
             <div className="mb-4 p-4 rounded-xl bg-[#F8F6EE] border border-[#E8EBE4]">
               <div className="relative mb-3">
@@ -1350,7 +1358,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   ))}
                 </div>
               ) : addBookSearch.length >= 2 ? (
-                <p className="text-sm text-[#96A888] text-center py-2">No books found. Try a different search.</p>
+                <p className="text-sm text-[#96A888] text-center py-2">No books found in our catalog. Try a different search.</p>
               ) : (
                 <p className="text-sm text-[#96A888] text-center py-2">Type at least 2 characters to search</p>
               )}
@@ -1358,31 +1366,13 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           )}
 
           {filteredBooks.length === 0 && !showAddBook && (
-            <div className="rounded-xl border-2 border-dashed border-[#96A888] bg-[#F8F6EE]/50 py-8 px-4 text-center">
+            <div className="rounded-xl border-2 border-dashed border-[#96A888] bg-[#F8F6EE]/50 py-6 px-4 text-center">
               {searchQuery ? (
                 <p className="text-[#7A8F6C] text-sm">No books found matching "{searchQuery}"</p>
               ) : (
-                <div className="max-w-xs mx-auto">
-                  <Book className="w-8 h-8 text-[#96A888] mx-auto mb-3" />
-                  <p className="text-[#7A8F6C] text-sm mb-3">
-                    Your reading list is empty
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <button
-                      onClick={() => setShowAddBook(true)}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-                    >
-                      <Search className="w-4 h-4" />
-                      Add a Book
-                    </button>
-                    <button
-                      onClick={() => onNavigate('home')}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[#5F7252] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
-                    >
-                      <Star className="w-4 h-4" />
-                      Get Recommendations
-                    </button>
-                  </div>
+                <div className="flex items-center justify-center gap-2 text-[#96A888]">
+                  <Book className="w-5 h-5" />
+                  <span className="text-sm">Your reading list is empty</span>
                 </div>
               )}
             </div>
@@ -1432,8 +1422,8 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           />
         </div>
 
-        {/* Drop Zones - only show when dragging */}
-        {activeId && (
+        {/* Drop Zones - only show Collection/Not for me when dragging from Currently Reading */}
+        {activeId && activeBook?.status === 'reading' && (
           <div className="mb-6 grid grid-cols-2 gap-4">
             <CollectionDropZone isOver={overZone === 'collection-zone'} />
             <NotForMeDropZone isOver={overZone === 'not-for-me-zone'} />
