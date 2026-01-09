@@ -211,7 +211,7 @@ export default function AboutPage({ onNavigate, user }) {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E8EBE4] text-[#4A5940] text-sm font-medium hover:bg-[#D4DAD0] transition-colors"
               >
                 <Upload className="w-4 h-4" />
-                Add books you've read
+                Upload books you've read
               </button>
               
               {/* Rating Guide */}

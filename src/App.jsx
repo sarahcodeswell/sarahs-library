@@ -1187,7 +1187,7 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'my-books' && (
         <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback message="Loading Add Books..." />}>
+          <Suspense fallback={<LoadingFallback message="Loading Upload Books..." />}>
             <MyBooksPage 
               onNavigate={setCurrentPage}
               user={user}
