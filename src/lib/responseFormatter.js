@@ -57,6 +57,26 @@ If AVAILABLE_BOOKS is empty, acknowledge you couldn't find matches and suggest b
 You MUST call the format_recommendations tool with your formatted response.`;
 
 /**
+ * Retry a function with exponential backoff
+ */
+async function withRetry(fn, maxRetries = 2, baseDelay = 500) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`[ResponseFormatter] Retry ${attempt + 1}/${maxRetries} after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Format verified book data into a recommendation response
  * 
  * @param {string} userQuery - Original user query
@@ -84,20 +104,27 @@ ${booksContext}
 Format these books as recommendations, explaining why each fits the user's request.`;
 
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 1000,
-        temperature: 0,
-        system: FORMATTING_SYSTEM_PROMPT,
-        messages: [
-          { role: 'user', content: userMessage }
-        ],
-        tools: [FORMAT_RECOMMENDATIONS_TOOL],
-        tool_choice: { type: 'tool', name: 'format_recommendations' }
-      })
+    const response = await withRetry(async () => {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 1000,
+          temperature: 0,
+          system: FORMATTING_SYSTEM_PROMPT,
+          messages: [
+            { role: 'user', content: userMessage }
+          ],
+          tools: [FORMAT_RECOMMENDATIONS_TOOL],
+          tool_choice: { type: 'tool', name: 'format_recommendations' }
+        })
+      });
+      
+      if (!resp.ok) {
+        throw new Error(`API error: ${resp.status}`);
+      }
+      return resp;
     });
 
     if (!response.ok) {

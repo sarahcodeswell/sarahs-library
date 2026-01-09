@@ -61,6 +61,26 @@ EXAMPLES:
 You MUST call the extract_search_intent tool with your extraction.`;
 
 /**
+ * Retry a function with exponential backoff
+ */
+async function withRetry(fn, maxRetries = 2, baseDelay = 500) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`[QueryExtractor] Retry ${attempt + 1}/${maxRetries} after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Extract structured search parameters from a user query using Claude tool use
  * 
  * @param {string} userQuery - The raw user query
@@ -72,20 +92,27 @@ export async function extractSearchIntent(userQuery) {
   }
 
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 500,
-        temperature: 0, // Deterministic output
-        system: EXTRACTION_SYSTEM_PROMPT,
-        messages: [
-          { role: 'user', content: userQuery }
-        ],
-        tools: [EXTRACT_SEARCH_INTENT_TOOL],
-        tool_choice: { type: 'tool', name: 'extract_search_intent' }
-      })
+    const response = await withRetry(async () => {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 500,
+          temperature: 0, // Deterministic output
+          system: EXTRACTION_SYSTEM_PROMPT,
+          messages: [
+            { role: 'user', content: userQuery }
+          ],
+          tools: [EXTRACT_SEARCH_INTENT_TOOL],
+          tool_choice: { type: 'tool', name: 'extract_search_intent' }
+        })
+      });
+      
+      if (!resp.ok) {
+        throw new Error(`API error: ${resp.status}`);
+      }
+      return resp;
     });
 
     if (!response.ok) {

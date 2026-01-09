@@ -5,7 +5,7 @@ import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
-import { getRecommendations, parseRecommendations } from './lib/recommendationService';
+import { parseRecommendations } from './lib/recommendationService';
 import { getRecommendationsV2, parseRecommendationsV2 } from './lib/recommendationServiceV2';
 import { useBookEnrichment } from './components/BookCard';
 import { validateMessage, validateBook } from './lib/validation';
@@ -64,8 +64,7 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 // Affiliate links extracted to ./lib/affiliateLinks.js
 // ChatMessage, BookDetail, FormattedText, FormattedRecommendations extracted to ./components/
 
-// Feature flag for V2 recommendations - can be toggled via environment variable
-const USE_V2_RECOMMENDATIONS = import.meta.env.VITE_USE_V2_RECOMMENDATIONS !== 'false';
+// V2 Recommendations is now the default - V1 code retained for reference only
 
 function AboutSection({ onShare }) {
   return (
@@ -720,16 +719,11 @@ Find similar books from beyond my library that match this taste profile.
         setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0, mode: 'full' }), 1000);
       }
 
-      // RECOMMENDATION SERVICE - V2 uses Claude Tool Use for extraction
-      let result;
-      if (USE_V2_RECOMMENDATIONS) {
-        result = await getRecommendationsV2(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
-        // V2 returns { success, response, recommendations, metadata }
-        if (result.success) {
-          result.text = result.response;
-        }
-      } else {
-        result = await getRecommendations(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
+      // RECOMMENDATION SERVICE V2 - Claude Tool Use for extraction, deterministic routing
+      const result = await getRecommendationsV2(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
+      // V2 returns { success, response, recommendations, metadata }
+      if (result.success) {
+        result.text = result.response;
       }
       
       if (!result.success) {
