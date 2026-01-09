@@ -235,7 +235,8 @@ export default function BookDetailModal({
       return (
         <div className="space-y-4">
           {/* Rating section */}
-          {showRating || !localRating ? (
+          {showRating ? (
+            // Editing mode - show interactive rating picker
             <div className="text-center py-2">
               <p className="text-sm text-[#7A8F6C] mb-3">{localRating ? 'Update your rating:' : 'How did you like it?'}</p>
               <div className="flex justify-center">
@@ -250,8 +251,17 @@ export default function BookDetailModal({
                   showLegend={true}
                 />
               </div>
+              {!localRating && (
+                <button
+                  onClick={() => setShowRating(false)}
+                  className="mt-2 text-xs text-[#96A888] hover:text-[#5F7252]"
+                >
+                  Cancel
+                </button>
+              )}
             </div>
-          ) : (
+          ) : localRating ? (
+            // Has rating - show display mode with edit button
             <div className="text-center py-2">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <span className="text-sm text-[#7A8F6C] mr-2">Your rating:</span>
@@ -273,8 +283,18 @@ export default function BookDetailModal({
                   <Edit3 className="w-4 h-4" />
                 </button>
               </div>
-              {/* Show rating label */}
               <p className="text-xs text-[#7A8F6C] italic">{ratingLabels[localRating]}</p>
+            </div>
+          ) : (
+            // No rating yet - show "Add Rating" button (prevents accidental ratings)
+            <div className="text-center py-2">
+              <button
+                onClick={() => setShowRating(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-[#E8EBE4] rounded-xl text-[#5F7252] hover:bg-[#F8F6EE] transition-colors text-sm"
+              >
+                <Heart className="w-4 h-4" />
+                Add Rating
+              </button>
             </div>
           )}
           
