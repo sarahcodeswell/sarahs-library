@@ -133,13 +133,13 @@ function DragOverlayCard({ book }) {
   );
 }
 
-// Currently Reading section with Reading Now vs On Hold
+// Currently Reading section with On My Nightstand vs On Deck
 function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
   
-  // Split books into active (Reading Now) and paused (On Hold)
-  const activeBooks = books.filter(b => b.is_active !== false);
-  const pausedBooks = books.filter(b => b.is_active === false);
+  // Split books into active (On My Nightstand) and on deck
+  const nightstandBooks = books.filter(b => b.is_active !== false);
+  const onDeckBooks = books.filter(b => b.is_active === false);
   
   return (
     <div
@@ -148,47 +148,69 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
         isOver 
           ? 'border-[#5F7252] bg-[#5F7252]/5 scale-[1.01]' 
           : books.length > 0 
-            ? 'border-[#E8EBE4] bg-white' 
+            ? 'border-[#E8EBE4] bg-[#F8F6EE]' 
             : 'border-dashed border-[#96A888] bg-[#F8F6EE]/50'
       }`}
     >
       {books.length > 0 ? (
         <div className="p-4">
-          {/* Reading Now Section */}
-          {activeBooks.length > 0 && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-[#5F7252] uppercase tracking-wide mb-2">Reading Now</p>
-              <div className="space-y-2">
-                {activeBooks.map((book) => (
+          {/* On My Nightstand Section - Full rich cards */}
+          {nightstandBooks.length > 0 && (
+            <div className={onDeckBooks.length > 0 ? "mb-6" : ""}>
+              <p className="text-xs font-medium text-[#5F7252] uppercase tracking-wide mb-3">On My Nightstand</p>
+              <div className="space-y-4">
+                {nightstandBooks.map((book) => (
                   <div
                     key={book.id}
-                    className="rounded-lg border border-[#E8EBE4] bg-[#F8F6EE] p-3 hover:shadow-sm transition-all"
+                    className="rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
-                        <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+                    <div className="flex gap-4">
+                      {/* Book cover placeholder or actual cover */}
+                      <div className="flex-shrink-0 w-16 h-24 rounded-lg bg-gradient-to-br from-[#5F7252] to-[#4A5940] flex items-center justify-center shadow-sm">
+                        {book.cover_image_url ? (
+                          <img src={book.cover_image_url} alt="" className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <BookOpen className="w-6 h-6 text-white/80" />
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => onToggleActive(book, false)}
-                          className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-white transition-colors"
-                          title="Pause reading"
-                        >
-                          <span className="text-sm">⏸</span>
-                        </button>
-                        <button
-                          onClick={() => onMarkAsRead(book)}
-                          className="px-2 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
-                        >
-                          Finished
-                        </button>
-                        <button
-                          onClick={() => onRemove(book)}
-                          className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-[#4A5940] text-base leading-tight">{book.book_title}</h3>
+                        <p className="text-sm text-[#7A8F6C] mt-0.5">by {book.book_author}</p>
+                        
+                        {/* Genre tag if available */}
+                        {book.genre && (
+                          <span className="inline-block mt-2 px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] text-xs rounded-full">
+                            {book.genre}
+                          </span>
+                        )}
+                        
+                        {/* Description preview */}
+                        {book.description && (
+                          <p className="text-xs text-[#7A8F6C] mt-2 line-clamp-2">{book.description}</p>
+                        )}
+                        
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2 mt-3">
+                          <button
+                            onClick={() => onToggleActive(book, false)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
+                          >
+                            Move to Deck
+                          </button>
+                          <button
+                            onClick={() => onMarkAsRead(book)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+                          >
+                            Finished
+                          </button>
+                          <button
+                            onClick={() => onRemove(book)}
+                            className="p-1.5 rounded-lg text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors ml-auto"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -197,32 +219,41 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
             </div>
           )}
           
-          {/* On Hold Section */}
-          {pausedBooks.length > 0 && (
+          {/* On Deck Section - Compact cards */}
+          {onDeckBooks.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-[#96A888] uppercase tracking-wide mb-2">On Hold</p>
+              <p className="text-xs font-medium text-[#96A888] uppercase tracking-wide mb-3">On Deck</p>
               <div className="space-y-2">
-                {pausedBooks.map((book) => (
+                {onDeckBooks.map((book) => (
                   <div
                     key={book.id}
-                    className="rounded-lg border border-[#E8EBE4] bg-white p-3 hover:shadow-sm transition-all opacity-75"
+                    className="rounded-lg border border-[#E8EBE4] bg-[#FDFCF9]/60 p-3 hover:bg-[#FDFCF9] transition-all"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-[#7A8F6C] text-sm truncate">{book.book_title}</p>
+                    <div className="flex items-center gap-3">
+                      {/* Small cover */}
+                      <div className="flex-shrink-0 w-10 h-14 rounded bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center">
+                        {book.cover_image_url ? (
+                          <img src={book.cover_image_url} alt="" className="w-full h-full object-cover rounded" />
+                        ) : (
+                          <BookOpen className="w-4 h-4 text-white/70" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[#5F7252] text-sm truncate">{book.book_title}</p>
                         <p className="text-xs text-[#96A888] truncate">{book.book_author}</p>
                       </div>
+                      
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => onToggleActive(book, true)}
-                          className="p-1.5 rounded text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors"
-                          title="Resume reading"
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F7252] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
                         >
-                          <span className="text-sm">▶️</span>
+                          Start
                         </button>
                         <button
                           onClick={() => onMarkAsRead(book)}
-                          className="px-2 py-1 rounded text-xs font-medium text-[#5F7252] bg-[#F8F6EE] hover:bg-[#E8EBE4] transition-colors"
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#7A8F6C] hover:bg-[#E8EBE4] transition-colors"
                         >
                           Finished
                         </button>
@@ -243,7 +274,7 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
       ) : (
         <div className={`flex items-center justify-center gap-2 py-8 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
           <BookOpen className="w-5 h-5" />
-          <span className="text-sm font-medium">What are you reading right now?</span>
+          <span className="text-sm font-medium">What's on your nightstand?</span>
         </div>
       )}
     </div>
