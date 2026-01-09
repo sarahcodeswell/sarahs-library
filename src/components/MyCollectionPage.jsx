@@ -488,7 +488,7 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
       const existingBook = readingQueue.find(
         qb => qb.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
               qb.book_author?.toLowerCase() === book.book_author?.toLowerCase() &&
-              qb.status === 'finished'
+              (qb.status === 'finished' || qb.status === 'already_read')
       );
       
       if (existingBook) {

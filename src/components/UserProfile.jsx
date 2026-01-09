@@ -468,10 +468,10 @@ export default function UserProfile({ tasteProfile }) {
       }
       devLog('[Profile] Reading queue loaded:', { total: queue?.length });
       
-      // Collection = user_books + books marked as 'finished' in reading_queue
+      // Collection = user_books + books marked as 'finished' or 'already_read' in reading_queue
       // Note: Admin's catalog books are now in reading_queue, so no special handling needed
-      const finishedBooks = queue?.filter(item => item.status === 'finished') || [];
-      let collectionCount = (userBooks?.length || 0) + finishedBooks.length;
+      const collectionBooks = queue?.filter(item => item.status === 'finished' || item.status === 'already_read') || [];
+      let collectionCount = (userBooks?.length || 0) + collectionBooks.length;
       
       // Queue = books marked as 'want_to_read' or 'reading'
       const queueBooks = queue?.filter(item => 

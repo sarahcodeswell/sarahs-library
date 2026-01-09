@@ -65,17 +65,17 @@ export default function RecommendationCard({
                  (queueBook.status === 'want_to_read' || queueBook.status === 'reading')
   );
   
-  // Check if book is already marked as finished
+  // Check if book is already marked as read (finished or already_read)
   const isFinished = readingQueue?.some(
     queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
-                 queueBook.status === 'finished'
+                 (queueBook.status === 'finished' || queueBook.status === 'already_read')
   );
   
-  // Get user's rating for this book (from reading queue)
+  // Get user's rating for this book (from reading queue - either finished or already_read)
   const userBookRating = useMemo(() => {
     const queueItem = readingQueue?.find(
       queueBook => normalizeTitle(queueBook.book_title) === normalizeTitle(rec.title) &&
-                   queueBook.status === 'finished'
+                   (queueBook.status === 'finished' || queueBook.status === 'already_read')
     );
     return queueItem?.rating || null;
   }, [readingQueue, rec.title]);

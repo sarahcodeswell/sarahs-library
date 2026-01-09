@@ -165,7 +165,7 @@ export default function App() {
     [readingQueue]
   );
   const collectionCount = useMemo(() => 
-    readingQueue.filter(item => item.status === 'already_read').length, 
+    readingQueue.filter(item => item.status === 'already_read' || item.status === 'finished').length, 
     [readingQueue]
   );
 
