@@ -56,7 +56,7 @@ function CollectionBookCard({ book, onRatingChange, onRecommend, onRemove, isLoa
   }, [description]);
 
   return (
-    <div className="px-5 py-4">
+    <div className="px-5 py-4" data-book-id={book.id}>
       <div className="flex items-start justify-between gap-4">
         <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} />
         

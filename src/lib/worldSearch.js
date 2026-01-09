@@ -173,3 +173,74 @@ export async function findSimilarBooks(bookTitle, authorName, limit = 10) {
     return [];
   }
 }
+
+/**
+ * Fetch book description using Serper web search
+ * Searches for book synopsis/description from web sources
+ * 
+ * @param {string} title - Book title
+ * @param {string} author - Book author
+ * @returns {Promise<Object>} Object with description and source
+ */
+export async function fetchBookDescription(title, author) {
+  console.log('[WorldSearch] Fetching description for:', title, 'by', author);
+  
+  try {
+    // Search for book synopsis/description
+    const searchQuery = `"${title}" by ${author} book synopsis description`;
+    const results = await searchWeb(searchQuery);
+    
+    if (!results || results.length === 0) {
+      console.log('[WorldSearch] No web results for description');
+      return { description: null, source: null };
+    }
+    
+    // Extract description from search results
+    // Look for snippets that contain book-related content
+    let bestDescription = null;
+    let source = null;
+    
+    for (const result of results) {
+      const snippet = result.snippet || '';
+      const resultTitle = (result.title || '').toLowerCase();
+      
+      // Prioritize results from known book sites
+      const isBookSite = resultTitle.includes('goodreads') || 
+                         resultTitle.includes('amazon') ||
+                         resultTitle.includes('barnes') ||
+                         resultTitle.includes('book') ||
+                         result.link?.includes('goodreads') ||
+                         result.link?.includes('amazon');
+      
+      // Skip very short snippets
+      if (snippet.length < 100) continue;
+      
+      // Skip snippets that are just reviews or ratings
+      if (snippet.toLowerCase().includes('rating') && snippet.length < 150) continue;
+      
+      if (isBookSite && snippet.length > 100) {
+        bestDescription = snippet;
+        source = result.link;
+        break;
+      }
+      
+      // Fallback to any decent snippet
+      if (!bestDescription && snippet.length > 150) {
+        bestDescription = snippet;
+        source = result.link;
+      }
+    }
+    
+    if (bestDescription) {
+      console.log('[WorldSearch] Found description, length:', bestDescription.length);
+      return { description: bestDescription, source };
+    }
+    
+    console.log('[WorldSearch] No suitable description found in results');
+    return { description: null, source: null };
+    
+  } catch (error) {
+    console.error('[WorldSearch] Error fetching description:', error);
+    return { description: null, source: null };
+  }
+}

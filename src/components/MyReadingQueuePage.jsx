@@ -135,7 +135,9 @@ function DragOverlayCard({ book }) {
 }
 
 // Compact sortable book card for Currently Reading
-function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onMoveToQueue }) {
+function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onMoveToQueue, onUpdateBook }) {
+  const [expanded, setExpanded] = useState(false);
+  
   // Auto-enrich with cover if missing
   const { coverUrl, isEnriching } = useBookEnrichment(
     book.book_title,
@@ -190,10 +192,15 @@ function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onM
           )}
         </div>
         
-        {/* Title and author */}
+        {/* Title, author, and expand toggle */}
         <div className="flex-1 min-w-0">
           <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
           <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+          <ExpandToggle 
+            expanded={expanded} 
+            onToggle={() => setExpanded(!expanded)} 
+            className="mt-1"
+          />
         </div>
         
         {/* Compact action buttons */}
@@ -220,6 +227,21 @@ function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onM
           </button>
         </div>
       </div>
+      
+      {/* Expanded section with Goodreads link */}
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-[#E8EBE4]">
+          <a
+            href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.book_title + ' ' + book.book_author)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-xs text-[#5F7252] hover:text-[#4A5940] transition-colors font-medium"
+          >
+            <Star className="w-3.5 h-3.5" />
+            Read Reviews on Goodreads
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -539,28 +561,28 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
     }
   }, [expanded, reputation, isEnrichingReputation, book]);
   
-  // Auto-enrich description when expanded and missing
+  // Auto-enrich description when expanded and missing - use Serper web search
   useEffect(() => {
     if (expanded && !enrichedDescription && !isEnrichingDescription && book.book_title) {
       setIsEnrichingDescription(true);
       console.log('[BookDetails] Fetching description for:', book.book_title, book.book_author);
-      import('../lib/bookEnrichment.js').then(({ enrichBook }) => {
-        enrichBook(book.book_title, book.book_author)
-          .then((data) => {
-            console.log('[BookDetails] Enrichment result:', data);
-            if (data?.description) {
-              console.log('[BookDetails] Got description, length:', data.description.length);
-              setEnrichedDescription(data.description);
+      import('../lib/worldSearch.js').then(({ fetchBookDescription }) => {
+        fetchBookDescription(book.book_title, book.book_author)
+          .then((result) => {
+            console.log('[BookDetails] Serper result:', result);
+            if (result?.description) {
+              console.log('[BookDetails] Got description, length:', result.description.length);
+              setEnrichedDescription(result.description);
               // Save to DB for future use
               if (onUpdateBook) {
-                onUpdateBook(book.id, { description: data.description });
+                onUpdateBook(book.id, { description: result.description });
               }
             } else {
-              console.log('[BookDetails] No description in result');
+              console.log('[BookDetails] No description from Serper');
             }
           })
           .catch((err) => {
-            console.error('[BookDetails] Enrichment error:', err);
+            console.error('[BookDetails] Serper error:', err);
           })
           .finally(() => setIsEnrichingDescription(false));
       });
@@ -613,8 +635,8 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
       style={style}
       className={`rounded-xl border ${
         isFirst 
-          ? 'bg-gradient-to-r from-[#F8F6EE] to-white border-[#5F7252] ring-1 ring-[#5F7252]/20' 
-          : 'bg-white border-[#E8EBE4]'
+          ? 'bg-gradient-to-r from-[#F8F6EE] to-transparent border-[#5F7252] ring-1 ring-[#5F7252]/20' 
+          : 'bg-gradient-to-r from-[#F8F6EE]/50 to-transparent border-[#E8EBE4]'
       } p-4 hover:shadow-md transition-all ${
         isDragging ? 'shadow-lg' : ''
       }`}
@@ -807,10 +829,14 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
                 </div>
               )}
               
-              {bookDetails?.description && (
+              {bookDetails?.description ? (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-[#4A5940] mb-2">About this book:</p>
                   <ExpandableDescription text={stripAccoladesFromDescription(bookDetails.description)} />
+                </div>
+              ) : !isEnrichingDescription && (
+                <div className="mb-3 text-sm text-[#96A888] italic">
+                  No description available. Check Goodreads for more details.
                 </div>
               )}
               
@@ -1613,7 +1639,25 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 <CollectionBookThumbnail 
                   key={book.id} 
                   book={book} 
-                  onClick={() => onNavigate('collection')} 
+                  onClick={() => {
+                    // Navigate to collection and scroll to this specific book
+                    onNavigate('collection');
+                    // Use setTimeout to allow page to render before scrolling
+                    setTimeout(() => {
+                      const bookElement = document.querySelector(`[data-book-id="${book.id}"]`);
+                      if (bookElement) {
+                        bookElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Add a brief highlight effect
+                        bookElement.classList.add('ring-2', 'ring-[#5F7252]', 'ring-offset-2');
+                        setTimeout(() => {
+                          bookElement.classList.remove('ring-2', 'ring-[#5F7252]', 'ring-offset-2');
+                        }, 2000);
+                      } else {
+                        // Fallback: scroll to top if book not found
+                        window.scrollTo(0, 0);
+                      }
+                    }, 100);
+                  }} 
                 />
               ))}
             </div>
