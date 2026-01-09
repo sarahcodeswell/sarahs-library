@@ -69,20 +69,41 @@ This makes sense because:
 
 ## User Flows
 
-### Flow 1: Queue → Read
+### Flow 1: Queue → Read (In-App Journey)
 ```
-User gets recommendation → Adds to queue (want_to_read) → Reads book → Marks complete (finished)
+User gets AI recommendation → Adds to queue (want_to_read) → Reads book → Marks complete (finished)
 ```
+**Status progression:** `want_to_read` → `reading` (optional) → `finished`
 
-### Flow 2: Already Read
+### Flow 2: Already Read (AI Recommendation)
 ```
-User gets recommendation → Clicks "Already Read" (already_read) → Optionally rates
+User gets AI recommendation → Clicks "Already Read" (already_read) → Optionally rates
 ```
+**Status:** `already_read`
 
 ### Flow 3: Import from Goodreads
 ```
 User imports CSV → Books added as (already_read) → Appear in collection
 ```
+**Status:** `already_read`
+
+### Flow 4: Manual Add to Collection
+```
+User manually adds book via "Add Books" feature → Book added as (already_read)
+```
+**Status:** `already_read`
+
+### Flow 5: Accept Friend's Recommendation
+```
+Friend shares recommendation → User clicks "Add to Queue" → Book added as (want_to_read)
+```
+**Status:** `want_to_read`
+
+### Flow 6: Friend's Recommendation - Already Read
+```
+Friend shares recommendation → User clicks "Already Read" → Book added as (already_read)
+```
+**Status:** `already_read`
 
 ---
 
