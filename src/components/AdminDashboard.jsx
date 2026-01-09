@@ -1441,14 +1441,21 @@ export default function AdminDashboard({ onNavigate }) {
           />
         </div>
 
-        {/* Engagement Stats - 4 cards per row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {/* Engagement Stats - 6 cards per row */}
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
           <StatCard
             title="Recs Made"
             value={stats?.sharing?.totalShares || 0}
-            subtitle={`${stats?.sharing?.accepted || 0} accepted (${stats?.sharing?.totalShares > 0 ? Math.round((stats?.sharing?.accepted / stats?.sharing?.totalShares) * 100) : 0}%)`}
+            subtitle={`by ${stats?.sharing?.uniqueSharers || 0} users`}
             icon={Share2}
             onClick={() => setModal({ isOpen: true, type: 'sharing', title: 'Recommendations Made', icon: Share2 })}
+          />
+          <StatCard
+            title="Recs Accepted"
+            value={stats?.sharing?.accepted || 0}
+            subtitle={`${stats?.sharing?.totalShares > 0 ? Math.round((stats?.sharing?.accepted / stats?.sharing?.totalShares) * 100) : 0}% accept rate`}
+            icon={Check}
+            color="bg-emerald-500"
           />
           <StatCard
             title="Referrals"
@@ -1480,6 +1487,152 @@ export default function AdminDashboard({ onNavigate }) {
             color="bg-rose-500"
             onClick={() => setModal({ isOpen: true, type: 'betaTesters', title: 'Beta Testers', icon: Users })}
           />
+        </div>
+
+        {/* Data Quality Breakdown */}
+        <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-[#4A5940]">Data Quality Breakdown</h3>
+            {stats?.dataQualityScore != null && (
+              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
+                stats.dataQualityScore >= 40 ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+              }`}>
+                {stats.dataQualityScore}/100
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <ProgressBar
+              label="Profile Completeness"
+              value=""
+              percent={stats?.dataQuality?.profileCompleteness || 0}
+            />
+            <ProgressBar
+              label="Engagement Rate"
+              value=""
+              percent={stats?.dataQuality?.engagementRate || 0}
+            />
+            <ProgressBar
+              label="Rating Density"
+              value=""
+              percent={stats?.dataQuality?.ratingDensity || 0}
+            />
+            <ProgressBar
+              label="Referral Health"
+              value=""
+              percent={stats?.dataQuality?.referralHealth || 0}
+              color="bg-emerald-500"
+            />
+          </div>
+        </div>
+
+        {/* K-Factor Leaderboard */}
+        {stats?.referrals?.topReferrers?.length > 0 && (
+          <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
+            <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Top Referrers (K-Factor Leaderboard)
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[#96A888] border-b border-[#E8EBE4]">
+                    <th className="pb-2 font-medium">#</th>
+                    <th className="pb-2 font-medium">User</th>
+                    <th className="pb-2 font-medium text-right">Sent</th>
+                    <th className="pb-2 font-medium text-right">Accepted</th>
+                    <th className="pb-2 font-medium text-right">K-Factor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.referrals.topReferrers.map((r, i) => (
+                    <tr key={i} className="border-b border-[#E8EBE4] last:border-0">
+                      <td className="py-2 text-[#5F7252] font-medium">{i + 1}</td>
+                      <td className="py-2 text-[#4A5940]">{r.email}</td>
+                      <td className="py-2 text-right text-[#7A8F6C]">{r.sent}</td>
+                      <td className="py-2 text-right text-[#5F7252] font-medium">{r.accepted}</td>
+                      <td className="py-2 text-right">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          parseFloat(r.kFactor) >= 0.5 ? 'bg-green-100 text-green-700' :
+                          parseFloat(r.kFactor) >= 0.25 ? 'bg-amber-100 text-amber-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {r.kFactor}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Curator Waitlist & Beta Testers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {stats?.curatorWaitlist?.recent?.length > 0 && (
+            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
+                Recent Curator Waitlist Signups
+              </h3>
+              <div className="space-y-2">
+                {stats.curatorWaitlist.recent.map((w, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
+                    <span className="text-[#4A5940]">{w.email}</span>
+                    <span className="text-xs text-[#96A888]">
+                      {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {stats?.betaTesters?.recent?.length > 0 && (
+            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Recent Beta Signups
+              </h3>
+              <div className="space-y-2">
+                {stats.betaTesters.recent.map((b, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
+                    <div>
+                      <span className="text-[#4A5940]">{b.email}</span>
+                      {b.interestedFeatures?.length > 0 && (
+                        <span className="text-xs text-[#96A888] ml-2">({b.interestedFeatures.join(', ')})</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-[#96A888]">
+                      {b.createdAt ? new Date(b.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Top Genres */}
+        <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
+          <h3 className="text-sm font-semibold text-[#4A5940] mb-4">Top Genres</h3>
+          {stats?.demographics?.topGenres?.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              {stats.demographics.topGenres.slice(0, 6).map((g, i) => (
+                <ProgressBar
+                  key={i}
+                  label={g.genre}
+                  value={g.count}
+                  percent={g.percent}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#96A888] italic">No genre preferences yet</p>
+          )}
         </div>
 
         {/* Demographics Section */}
@@ -1528,152 +1681,6 @@ export default function AdminDashboard({ onNavigate }) {
               <p className="text-sm text-[#96A888] italic">No age data yet</p>
             )}
           </div>
-        </div>
-
-        {/* Top Genres */}
-        <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-          <h3 className="text-sm font-semibold text-[#4A5940] mb-4">Top Genres</h3>
-          {stats?.demographics?.topGenres?.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-              {stats.demographics.topGenres.slice(0, 6).map((g, i) => (
-                <ProgressBar
-                  key={i}
-                  label={g.genre}
-                  value={g.count}
-                  percent={g.percent}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-[#96A888] italic">No genre preferences yet</p>
-          )}
-        </div>
-
-        {/* K-Factor Leaderboard */}
-        {stats?.referrals?.topReferrers?.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-            <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Top Referrers (K-Factor Leaderboard)
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-[#96A888] border-b border-[#E8EBE4]">
-                    <th className="pb-2 font-medium">#</th>
-                    <th className="pb-2 font-medium">User</th>
-                    <th className="pb-2 font-medium text-right">Sent</th>
-                    <th className="pb-2 font-medium text-right">Accepted</th>
-                    <th className="pb-2 font-medium text-right">K-Factor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.referrals.topReferrers.map((r, i) => (
-                    <tr key={i} className="border-b border-[#E8EBE4] last:border-0">
-                      <td className="py-2 text-[#5F7252] font-medium">{i + 1}</td>
-                      <td className="py-2 text-[#4A5940]">{r.email}</td>
-                      <td className="py-2 text-right text-[#7A8F6C]">{r.sent}</td>
-                      <td className="py-2 text-right text-[#5F7252] font-medium">{r.accepted}</td>
-                      <td className="py-2 text-right">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          parseFloat(r.kFactor) >= 0.5 ? 'bg-green-100 text-green-700' :
-                          parseFloat(r.kFactor) >= 0.25 ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {r.kFactor}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Data Quality Breakdown */}
-        <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#4A5940]">Data Quality Breakdown</h3>
-            {stats?.dataQualityScore != null && (
-              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-                stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
-                stats.dataQualityScore >= 40 ? 'bg-amber-100 text-amber-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {stats.dataQualityScore}/100
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-            <ProgressBar
-              label="Profile Completeness"
-              value=""
-              percent={stats?.dataQuality?.profileCompleteness || 0}
-            />
-            <ProgressBar
-              label="Engagement Rate"
-              value=""
-              percent={stats?.dataQuality?.engagementRate || 0}
-            />
-            <ProgressBar
-              label="Rating Density"
-              value=""
-              percent={stats?.dataQuality?.ratingDensity || 0}
-            />
-            <ProgressBar
-              label="Referral Health"
-              value=""
-              percent={stats?.dataQuality?.referralHealth || 0}
-              color="bg-emerald-500"
-            />
-          </div>
-        </div>
-
-        {/* Curator Waitlist & Beta Testers */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          {stats?.curatorWaitlist?.recent?.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
-              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                Recent Curator Waitlist Signups
-              </h3>
-              <div className="space-y-2">
-                {stats.curatorWaitlist.recent.map((w, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
-                    <span className="text-[#4A5940]">{w.email}</span>
-                    <span className="text-xs text-[#96A888]">
-                      {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {stats?.betaTesters?.recent?.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
-              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Recent Beta Signups
-              </h3>
-              <div className="space-y-2">
-                {stats.betaTesters.recent.map((b, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
-                    <div>
-                      <span className="text-[#4A5940]">{b.email}</span>
-                      {b.interestedFeatures?.length > 0 && (
-                        <span className="text-xs text-[#96A888] ml-2">({b.interestedFeatures.join(', ')})</span>
-                      )}
-                    </div>
-                    <span className="text-xs text-[#96A888]">
-                      {b.createdAt ? new Date(b.createdAt).toLocaleDateString() : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* User Management */}
