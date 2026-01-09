@@ -24,6 +24,25 @@ The `reading_queue` table has a `status` column with the following valid values:
 
 Both represent "books the user has read" but track different user journeys.
 
+### The `reading` Status
+
+The `reading` status represents books the user is **currently reading**. This is an intermediate state between `want_to_read` and `finished`.
+
+**Backend Support:** ✅ Fully supported
+- Database schema allows `reading` as a valid status
+- Goodreads CSV import maps `currently-reading` → `reading`
+- Admin dashboard counts `reading` as part of "Books Queued"
+
+**Frontend Support:** ⏳ Pending implementation
+- Currently no UI to mark a book as "currently reading"
+- No visual distinction in queue between "want to read" and "reading"
+
+**Proposed Frontend Implementation:**
+1. Add "Start Reading" button on queue items (changes `want_to_read` → `reading`)
+2. Add "Currently Reading" section at top of queue page
+3. Add visual indicator (e.g., progress bar or badge) for books being read
+4. Consider adding reading progress tracking (page number, percentage)
+
 ---
 
 ## Admin Dashboard Stat Cards
@@ -83,9 +102,12 @@ User gets AI recommendation → Clicks "Already Read" (already_read) → Optiona
 
 ### Flow 3: Import from Goodreads
 ```
-User imports CSV → Books added as (already_read) → Appear in collection
+User imports CSV → Books routed by Goodreads shelf status:
+  - "read" shelf → already_read (Collection)
+  - "currently-reading" shelf → reading (Queue - Currently Reading)
+  - "to-read" shelf → want_to_read (Queue - Want to Read)
 ```
-**Status:** `already_read`
+**Status:** Varies based on Goodreads `Exclusive Shelf` column
 
 ### Flow 4: Manual Add to Collection
 ```
