@@ -42,6 +42,8 @@ function parseGoodreadsCsv(text) {
   const headers = parseCsvLine(lines[0]).map(h => String(h || '').trim());
   const idxTitle = headers.findIndex(h => h.toLowerCase() === 'title');
   const idxAuthor = headers.findIndex(h => h.toLowerCase() === 'author' || h.toLowerCase() === 'author l-f');
+  const idxExclusiveShelf = headers.findIndex(h => h.toLowerCase() === 'exclusive shelf');
+  const idxDateRead = headers.findIndex(h => h.toLowerCase() === 'date read');
   if (idxTitle < 0) return [];
 
   const items = [];
@@ -50,7 +52,25 @@ function parseGoodreadsCsv(text) {
     const title = String(cols[idxTitle] || '').trim();
     const author = idxAuthor >= 0 ? String(cols[idxAuthor] || '').trim() : '';
     if (!title) continue;
-    items.push({ title, author });
+    
+    // Parse Goodreads shelf status
+    const exclusiveShelf = idxExclusiveShelf >= 0 ? String(cols[idxExclusiveShelf] || '').trim().toLowerCase() : '';
+    const dateRead = idxDateRead >= 0 ? String(cols[idxDateRead] || '').trim() : '';
+    
+    // Map Goodreads shelf to Sarah's Books status
+    // read -> already_read (collection)
+    // currently-reading -> reading (queue)
+    // to-read -> want_to_read (queue)
+    let status = 'want_to_read'; // default
+    if (exclusiveShelf === 'read') {
+      status = 'already_read';
+    } else if (exclusiveShelf === 'currently-reading') {
+      status = 'reading';
+    } else if (exclusiveShelf === 'to-read') {
+      status = 'want_to_read';
+    }
+    
+    items.push({ title, author, status, dateRead });
   }
   return items;
 }
@@ -289,19 +309,33 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       }
 
       let successCount = 0;
+      let skippedCount = 0;
       for (const book of books) {
+        // Check if book already exists in reading queue (prevent duplicates)
+        const alreadyInQueue = readingQueue.some(item => 
+          item.book_title?.toLowerCase() === book.title?.toLowerCase() &&
+          item.book_author?.toLowerCase() === (book.author || '').toLowerCase()
+        );
+        
+        if (alreadyInQueue) {
+          skippedCount++;
+          continue; // Skip duplicates
+        }
+
         // Get description from catalog first, then AI-generated, then null
         const catalogDesc = getCatalogDescription(book.title);
         const aiDescKey = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
         const description = catalogDesc || descriptions[aiDescKey] || null;
 
-        // Add books from Goodreads CSV with status='already_read'
-        // This distinguishes imported books from books finished in-app
+        // Use status from Goodreads CSV:
+        // - 'read' -> 'already_read' (collection)
+        // - 'currently-reading' -> 'reading' (queue)
+        // - 'to-read' -> 'want_to_read' (queue)
         const result = await addToQueue({
           title: book.title,
           author: book.author || '',
           description: description,
-          status: 'already_read',
+          status: book.status, // Use parsed status from CSV
         });
         
         if (result.success) {
@@ -312,13 +346,24 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       track('books_added_from_goodreads', {
         total_in_csv: books.length,
         successfully_added: successCount,
+        skipped_duplicates: skippedCount,
         descriptions_generated: Object.keys(descriptions).length,
       });
 
       setIsUploadingGoodreads(false);
       
+      // Build informative success message
+      let message = '';
       if (successCount > 0) {
-        alert(`Added ${successCount} book${successCount !== 1 ? 's' : ''} from Goodreads to your collection!`);
+        message = `Added ${successCount} book${successCount !== 1 ? 's' : ''} from Goodreads!`;
+      }
+      if (skippedCount > 0) {
+        message += message ? ` (${skippedCount} already in your library)` : `${skippedCount} book${skippedCount !== 1 ? 's were' : ' was'} already in your library.`;
+      }
+      if (message) {
+        alert(message);
+      } else if (books.length > 0) {
+        alert('All books from this CSV are already in your library.');
       }
     } catch (error) {
       console.error('Error processing Goodreads CSV:', error);
