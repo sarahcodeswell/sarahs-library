@@ -96,8 +96,8 @@ export default async function handler(request) {
       'beta_signup'
     );
 
-    // Send confirmation email with position
-    const emailResult = await sendBetaTesterEmail(email, position);
+    // Send confirmation email with position and referral code
+    const emailResult = await sendBetaTesterEmail(email, position, referralCode);
     
     if (!emailResult.success) {
       console.warn('Beta email failed:', emailResult.error);

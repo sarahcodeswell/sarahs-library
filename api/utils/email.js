@@ -151,8 +151,9 @@ function primaryButton(text, url, color = 'green') {
  * Send curator waitlist confirmation email
  * @param {string} email - Recipient email
  * @param {number} position - Position on the waitlist
+ * @param {string} referralCode - User's referral code for sharing
  */
-export async function sendCuratorWaitlistEmail(email, position = null) {
+export async function sendCuratorWaitlistEmail(email, position = null, referralCode = null) {
   const positionText = position ? `#${position}` : '';
   const title = position 
     ? `✨ You're ${positionText} on the Curator Waitlist!`
@@ -183,11 +184,19 @@ export async function sendCuratorWaitlistEmail(email, position = null) {
         Tell us which features interest you most—your feedback shapes what we build.
       </p>
       
-      ${primaryButton('Share Your Feedback →', `${SITE_URL}/curator-feedback`)}
-      
-      <div style="text-align: center; margin: 20px 0;">
-        <span style="color: #96A888; font-size: 13px;">— or —</span>
+      ${referralCode ? `
+      <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
+        <p style="margin: 0 0 8px 0; font-size: 16px; color: #4A5940; font-weight: 600;">
+          📚 Know someone who'd make a great curator?
+        </p>
+        <p style="margin: 0 0 16px 0; font-size: 14px; color: #7A8F6C;">
+          Share your link and invite them to join the waitlist.
+        </p>
+        <p style="margin: 0 0 12px 0; font-size: 13px; color: #96A888; font-family: monospace; background: #fff; padding: 8px 12px; border-radius: 6px; display: inline-block;">
+          ${SITE_URL}/?ref=${referralCode}
+        </p>
       </div>
+      ` : ''}
       
       ${primaryButton('Explore Sarah\'s Books →', SITE_URL)}
     `,
@@ -206,8 +215,9 @@ export async function sendCuratorWaitlistEmail(email, position = null) {
  * Send beta tester (Read with Friends) confirmation email
  * @param {string} email - Recipient email
  * @param {number} position - Position on the beta list
+ * @param {string} referralCode - User's referral code for sharing
  */
-export async function sendBetaTesterEmail(email, position = null) {
+export async function sendBetaTesterEmail(email, position = null, referralCode = null) {
   const positionText = position ? `#${position}` : '';
   const title = position 
     ? `You're ${positionText} on the Beta List!`
@@ -232,15 +242,19 @@ export async function sendBetaTesterEmail(email, position = null) {
         </ul>
       </div>
       
+      ${referralCode ? `
       <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
         <p style="margin: 0 0 8px 0; font-size: 16px; color: #4A5940; font-weight: 600;">
           📚 Reading with friends is more fun!
         </p>
         <p style="margin: 0 0 16px 0; font-size: 14px; color: #7A8F6C;">
-          Know someone who'd love this? Invite them to join the beta waitlist.
+          Know someone who'd love this? Share your link to invite them.
         </p>
-        ${primaryButton('Invite Friends →', `${SITE_URL}/invite`, 'sage')}
+        <p style="margin: 0 0 12px 0; font-size: 13px; color: #96A888; font-family: monospace; background: #fff; padding: 8px 12px; border-radius: 6px; display: inline-block;">
+          ${SITE_URL}/?ref=${referralCode}
+        </p>
       </div>
+      ` : ''}
     `,
     footerText: "You're receiving this because you signed up for Read with Friends beta."
   });

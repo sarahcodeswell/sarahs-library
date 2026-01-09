@@ -94,8 +94,8 @@ export default async function handler(request) {
       'curator_waitlist'
     );
 
-    // Send confirmation email with position (don't fail if email fails)
-    const emailResult = await sendCuratorWaitlistEmail(email, position);
+    // Send confirmation email with position and referral code (don't fail if email fails)
+    const emailResult = await sendCuratorWaitlistEmail(email, position, referralCode);
     
     if (!emailResult.success) {
       console.warn('Waitlist email failed:', emailResult.error);
