@@ -526,27 +526,14 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
     }
   }, [expanded, reputation, isEnrichingReputation, book]);
   
-  // Look up full book details from local catalog, or use stored data
+  // Use stored data from the book itself (from recommendations or queue)
   const bookDetails = useMemo(() => {
-    const t = String(book?.book_title || '');
-    const key = t.toLowerCase().trim();
-    const catalogBook = booksData.find(b => b.title?.toLowerCase().trim() === key);
-    
-    // If found in catalog, use catalog data
-    if (catalogBook) {
-      return {
-        ...catalogBook,
-        source: 'catalog'
-      };
-    }
-    
-    // Otherwise, use stored data from the book itself (from recommendations)
     if (book.description || book.why_recommended) {
       return {
         title: book.book_title,
         author: book.book_author,
         description: book.description || book.why_recommended,
-        themes: [],
+        themes: book.themes || [],
         source: 'stored'
       };
     }
