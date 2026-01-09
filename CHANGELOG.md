@@ -4,12 +4,26 @@
 
 ### January 9, 2026
 
+#### UX Improvements (Demo-Ready)
+- **Information parity**: Currently Reading cards now show covers, genres, descriptions
+  - `NightstandBookCard`: Full rich card with auto-enriched cover, genre badges, expandable description
+  - `OnDeckBookCard`: Compact card with auto-enriched cover
+  - Uses same `useBookEnrichment` hook as Want to Read cards
+- **Bi-directional status changes**: Books can now move back to queue
+  - "← Back to Queue" button on Nightstand cards
+  - Arrow button on On Deck cards
+  - No more one-way door - books move freely between states
+
 #### Backend Health & Cleanup
 - **Schema fix**: Added `reputation` column to `reading_queue` (migration 045)
-- **Removed dead code**: Empty migration file, unused constants
+- **Removed dead code**: Empty migration file (024), unused constants
 - **Console.log cleanup**: Wrapped 40+ debug logs in `import.meta.env.DEV` guards
 - **Security audit**: Passed - 0 npm vulnerabilities, RLS policies verified
 - **Code quality**: ESLint warnings reduced, no errors
+
+#### Documentation
+- Created `CHANGELOG.md` for daily work tracking
+- Created `docs/DEMO_CHECKLIST.md` for Otis meeting prep
 
 #### Database Schema
 - 21 tables, all with RLS enabled
