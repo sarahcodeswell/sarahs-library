@@ -306,7 +306,7 @@ function CollectionBookThumbnail({ book, onClick }) {
 }
 
 // Want to Read drop zone (for dragging from Currently Reading back)
-function WantToReadDropZone({ isOver, children }) {
+function WantToReadDropZone({ isOver, children, showDropHint }) {
   const { setNodeRef } = useDroppable({ id: 'want-to-read-zone' });
   
   return (
@@ -319,6 +319,17 @@ function WantToReadDropZone({ isOver, children }) {
       }`}
     >
       {children}
+      {/* Bottom drop indicator - shows when dragging from Currently Reading */}
+      {showDropHint && (
+        <div className={`mt-3 py-3 rounded-lg border-2 border-dashed flex items-center justify-center gap-2 transition-all ${
+          isOver 
+            ? 'border-[#5F7252] bg-[#5F7252]/10 text-[#5F7252]' 
+            : 'border-[#96A888] text-[#96A888]'
+        }`}>
+          <ChevronUp className="w-5 h-5" />
+          <span className="text-sm font-medium">Drop here → Back to Want to Read</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -337,8 +348,8 @@ function CollectionDropZone({ isOver }) {
       }`}
     >
       <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#7A8F6C]'}`}>
-        <Library className="w-5 h-5" />
-        <span className="text-sm font-medium">Add to My Collection</span>
+        <ChevronDown className="w-5 h-5" />
+        <span className="text-sm font-medium">Drop here → Finished! Add to Collection</span>
       </div>
     </div>
   );
@@ -1355,11 +1366,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         </button>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Reading Queue</h1>
-          <p className="text-[#7A8F6C]">
-            {currentlyReadingBooks.length > 0 && `${currentlyReadingBooks.length} currently reading · `}
-            {queueBooks.length} {queueBooks.length === 1 ? 'book' : 'books'} to read
-          </p>
+          <h1 className="text-3xl font-serif text-[#4A5940]">Reading Queue</h1>
         </div>
 
         <DndContext
@@ -1371,7 +1378,10 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         >
 
         {/* ===== WANT TO READ (Top) ===== */}
-        <WantToReadDropZone isOver={overZone === 'want-to-read-zone' && activeBook?.status === 'reading'}>
+        <WantToReadDropZone 
+          isOver={overZone === 'want-to-read-zone' && activeBook?.status === 'reading'}
+          showDropHint={activeId && activeBook?.status === 'reading'}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
@@ -1548,11 +1558,10 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           />
         </div>
 
-        {/* Drop Zones - only show Collection/Not for me when dragging from Currently Reading */}
+        {/* Drop Zone - only show Collection when dragging from Currently Reading */}
         {activeId && activeBook?.status === 'reading' && (
-          <div className="mb-6 grid grid-cols-2 gap-4">
+          <div className="mb-6">
             <CollectionDropZone isOver={overZone === 'collection-zone'} />
-            <NotForMeDropZone isOver={overZone === 'not-for-me-zone'} />
           </div>
         )}
 
