@@ -300,11 +300,16 @@ function CurrentlyReadingSection({ isOver, books, onFinished, onNotForMe, onMove
 
 // Collection book thumbnail with cover enrichment
 function CollectionBookThumbnail({ book, onClick }) {
+  // Support both field naming conventions
+  const title = book.book_title || book.title;
+  const author = book.book_author || book.author;
+  const existingCover = book.cover_image_url || book.cover_url;
+  
   // Auto-enrich cover if missing
   const { coverUrl, isEnriching } = useBookEnrichment(
-    book.title,
-    book.author,
-    book.cover_url,
+    title,
+    author,
+    existingCover,
     null
   );
 
@@ -322,7 +327,7 @@ function CollectionBookThumbnail({ book, onClick }) {
           <BookOpen className="w-6 h-6 text-white/70" />
         )}
       </div>
-      <p className="text-xs text-[#5F7252] mt-1.5 truncate font-medium">{book.title}</p>
+      <p className="text-xs text-[#5F7252] mt-1.5 truncate font-medium">{title}</p>
       {book.rating && (
         <div className="flex items-center gap-0.5 mt-0.5">
           {[...Array(book.rating)].map((_, i) => (
