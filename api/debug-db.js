@@ -123,5 +123,42 @@ export default async function handler(req, res) {
     results.tests.embeddingCoverage = { error: e.message };
   }
   
+  // Test 6: Test find_books_by_author RPC
+  try {
+    const { data, error } = await supabase
+      .rpc('find_books_by_author', {
+        author_filter: 'Kristin Hannah',
+        limit_count: 5
+      });
+    
+    results.tests.findBooksByAuthor = {
+      success: !error,
+      count: data?.length || 0,
+      books: data?.map(b => b.title),
+      error: error?.message,
+      errorCode: error?.code
+    };
+  } catch (e) {
+    results.tests.findBooksByAuthor = { success: false, error: e.message };
+  }
+  
+  // Test 7: Direct query for Kristin Hannah (bypass RPC)
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('title, author')
+      .ilike('author', '%Kristin Hannah%')
+      .limit(5);
+    
+    results.tests.directAuthorQuery = {
+      success: !error,
+      count: data?.length || 0,
+      books: data?.map(b => ({ title: b.title, author: b.author })),
+      error: error?.message
+    };
+  } catch (e) {
+    results.tests.directAuthorQuery = { success: false, error: e.message };
+  }
+  
   return res.status(200).json(results);
 }
