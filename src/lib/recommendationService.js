@@ -549,21 +549,37 @@ ${retrievedContext.worldBooks.slice(0, 5).map((b, i) =>
 ═══════════════════════════════════════`;
     }
     
-    // WORLD PATH: Let Claude use its knowledge for requests outside catalog
-    // This is the ONLY case where Claude can add its own suggestions
+    // WORLD PATH: When no catalog books found
+    // CRITICAL: Do NOT let Claude hallucinate author names or book details
+    // Only allow Claude to use its knowledge if we explicitly route to WORLD path
     if (retrievedContext.catalogBooks.length === 0 && 
         retrievedContext.worldBooks.length === 0 && 
         !retrievedContext.verifiedBook) {
-      contextText += `\n\n📚 USE YOUR KNOWLEDGE - OUTSIDE MY CURATED COLLECTION:
-This request doesn't match books in my personal catalog and no specific books were found.
+      
+      // Only allow Claude knowledge for explicit WORLD path (not fallback failures)
+      if (routingDecision.path === 'WORLD' && routingDecision.confidence !== 'low') {
+        contextText += `\n\n📚 OUTSIDE MY CURATED COLLECTION:
+This request is outside my personal catalog.
 
-YOU MAY use your broad book knowledge to recommend excellent books for this request.
+YOU MAY recommend well-known books, but CRITICAL RULES:
+- ONLY recommend books you are 100% CERTAIN about (title AND author)
+- If unsure about author, say "I believe this is by..." 
+- Focus on: Pulitzer winners, Booker Prize, NYT bestsellers, books with 100k+ Goodreads ratings
+- Start with: "This is outside my curated collection, but I know some great options..."`;
+      } else {
+        // Probe failed or low confidence - DO NOT let Claude hallucinate
+        // Instead, admit we couldn't find matches
+        contextText += `\n\n⚠️ SEARCH LIMITATION:
+I wasn't able to search my catalog effectively for this request.
 
-IMPORTANT FRAMING:
-- Start with: "This is outside my curated collection, but I know some great options..."
-- Recommend well-known, critically acclaimed books that truly match the request
-- Be specific about WHY each book fits their criteria
-- Focus on quality: Goodreads 4.0+, award winners, critical acclaim`;
+RESPOND WITH:
+"I'm having trouble searching my collection right now. Could you try:
+1. Browsing one of my curated lists (Women's Stories, Emotional Truth, etc.)
+2. Being more specific about what you're looking for
+3. Trying again in a moment"
+
+Do NOT make up book recommendations. Do NOT guess author names.`;
+      }
     }
 
     // Add taste divergence guidance if needed
