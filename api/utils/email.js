@@ -54,52 +54,97 @@ export async function sendEmail({ to, subject, html, fromName = "Sarah's Books" 
 
 /**
  * Email template wrapper with Sarah's Books branding
- * Includes logo in header
+ * Mobile-friendly and dark mode resistant
  */
 function brandedTemplate({ title, preheader, content, footerText }) {
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  ${preheader ? `<span style="display:none;font-size:1px;color:#FDFBF4;max-height:0;overflow:hidden;">${preheader}</span>` : ''}
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>${title}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    table {border-collapse: collapse;}
+    .button-link {padding: 14px 32px !important;}
+  </style>
+  <![endif]-->
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+    body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; max-width: 100% !important; }
+      .mobile-padding { padding: 20px !important; }
+      .mobile-stack { display: block !important; width: 100% !important; }
+    }
+    /* Prevent dark mode color inversion */
+    [data-ogsc] .dark-mode-bg { background-color: #FFFFFF !important; }
+    [data-ogsc] .dark-mode-text { color: #4A5940 !important; }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FDFBF4; font-family: 'Poppins', Georgia, 'Times New Roman', serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FDFBF4; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; background-color: #FDFBF4 !important; font-family: Georgia, 'Times New Roman', serif; -webkit-font-smoothing: antialiased;">
+  ${preheader ? `<div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #FDFBF4;">${preheader}</div>` : ''}
+  
+  <!-- Email wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FDFBF4;">
     <tr>
-      <td align="center">
-        <table width="100%" style="max-width: 560px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          <!-- Header with Logo -->
+      <td align="center" style="padding: 40px 16px;">
+        
+        <!-- Email container -->
+        <table role="presentation" class="email-container" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width: 560px; width: 100%; background-color: #FFFFFF; border-radius: 16px; overflow: hidden;">
+          
+          <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); padding: 24px 32px; text-align: center;">
-              <img src="${LOGO_URL}" alt="Sarah's Books" width="120" style="display: block; margin: 0 auto 16px auto; max-width: 120px; height: auto;" />
-              <h1 style="margin: 0; color: #FFFFFF; font-size: 22px; font-weight: normal; letter-spacing: 0.5px;">
-                ${title}
-              </h1>
+            <td align="center" style="background-color: #5F7252; padding: 28px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom: 16px;">
+                    <img src="${LOGO_URL}" alt="Sarah's Books" width="100" height="auto" style="display: block; max-width: 100px; border: 0;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 600; font-family: Georgia, serif; line-height: 1.3;">
+                      ${title}
+                    </h1>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
           <!-- Content -->
           <tr>
-            <td style="padding: 32px;">
-              ${content}
+            <td class="mobile-padding dark-mode-bg" style="padding: 32px; background-color: #FFFFFF;">
+              <div class="dark-mode-text" style="color: #4A5940;">
+                ${content}
+              </div>
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="background-color: #F8F6EE; padding: 24px 32px; text-align: center;">
-              <p style="margin: 0; font-size: 12px; color: #96A888;">
+            <td align="center" style="background-color: #F8F6EE; padding: 24px; border-top: 1px solid #E8EBE4;">
+              <p style="margin: 0 0 8px 0; font-size: 12px; color: #7A8F6C; line-height: 1.5;">
                 ${footerText || "You're receiving this because you signed up at Sarah's Books."}
               </p>
-              <p style="margin: 8px 0 0 0; font-size: 12px; color: #96A888;">
-                <a href="${SITE_URL}" style="color: #5F7252; text-decoration: none;">Sarah's Books</a> • For the <span style="color: #c96b6b;">♥</span> of reading
+              <p style="margin: 0; font-size: 12px; color: #7A8F6C;">
+                <a href="${SITE_URL}" style="color: #5F7252; text-decoration: none; font-weight: 600;">Sarah's Books</a> 
+                <span style="color: #96A888;">&bull;</span> 
+                For the <span style="color: #c96b6b;">&#10084;</span> of reading
               </p>
             </td>
           </tr>
+          
         </table>
+        
       </td>
     </tr>
   </table>
@@ -126,21 +171,28 @@ function featureCard(icon, title, description) {
 }
 
 /**
- * Primary button component
+ * Primary button component - mobile friendly with solid colors for dark mode
  */
 function primaryButton(text, url, color = 'green') {
-  const gradient = color === 'rose' 
-    ? 'linear-gradient(135deg, #c96b6b 0%, #b55a5a 100%)'
-    : 'linear-gradient(135deg, #5F7252 0%, #4A5940 100%)';
+  const bgColor = color === 'rose' ? '#c96b6b' : '#5F7252';
   
   return `
-    <table width="100%" cellpadding="0" cellspacing="0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="center">
+        <td align="center" style="padding: 8px 0;">
+          <!--[if mso]>
+          <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" strokecolor="${bgColor}" fillcolor="${bgColor}">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:Georgia,serif;font-size:14px;font-weight:bold;">${text}</center>
+          </v:roundrect>
+          <![endif]-->
+          <!--[if !mso]><!-->
           <a href="${url}" 
-             style="display: inline-block; background: ${gradient}; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 14px; font-weight: 600;">
+             class="button-link"
+             style="display: inline-block; background-color: ${bgColor}; color: #FFFFFF !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Georgia, serif; mso-hide: all;">
             ${text}
           </a>
+          <!--<![endif]-->
         </td>
       </tr>
     </table>
@@ -231,7 +283,7 @@ export async function sendBetaTesterEmail(email, position = null, referralCode =
         You're officially signed up for <strong>Read with Friends</strong> beta access!
       </p>
       <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #4A5940;">
-        We're building a thoughtful way to share book recommendations with the people you care about—no more lost screenshots or forgotten titles.
+        We're building a thoughtful way to share book recommendations with the people you care about—because the best recommendations come from people, not algorithms.
       </p>
       <div style="background-color: #F8F6EE; border-radius: 12px; padding: 20px; border-left: 4px solid #5F7252; margin-bottom: 24px;">
         <p style="margin: 0; font-size: 14px; color: #4A5940; font-weight: 600;">Coming soon:</p>
