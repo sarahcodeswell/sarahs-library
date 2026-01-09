@@ -148,7 +148,7 @@ export default function StarRating({ rating, onRatingChange, readOnly = false, s
           </button>
         );
       })}
-      {!readOnly && rating && (
+      {!readOnly && rating > 0 && (
         <button
           type="button"
           onClick={(e) => {

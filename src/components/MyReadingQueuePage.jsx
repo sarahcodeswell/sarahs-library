@@ -910,7 +910,7 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem, addToQueue } = useReadingQueue();
-  const { createRecommendation } = useRecommendations();
+  const { createRecommendation, getShareLink } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
@@ -1485,10 +1485,23 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         book={recommendBook}
         onSubmit={async (book, note, sharedWith) => {
           const result = await createRecommendation(book, note, sharedWith);
+          
           if (result.success) {
             track('recommendation_created_from_queue', { book_title: book.book_title });
+            
+            // Generate shareable link
+            const recommendationId = result.data?.id;
+            if (recommendationId) {
+              const shareLinkResult = await getShareLink(recommendationId);
+              if (shareLinkResult.success && shareLinkResult.data?.shareUrl) {
+                return { success: true, shareLink: shareLinkResult.data.shareUrl };
+              }
+            }
+            
+            return { success: true };
+          } else {
+            throw new Error(result.error || 'Failed to create recommendation');
           }
-          return result;
         }}
       />
 

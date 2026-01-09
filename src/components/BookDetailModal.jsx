@@ -241,7 +241,7 @@ export default function BookDetailModal({
               <p className="text-sm text-[#7A8F6C] mb-3">{localRating ? 'Update your rating:' : 'How did you like it?'}</p>
               <div className="flex justify-center">
                 <StarRating
-                  rating={localRating || 0}
+                  rating={localRating || null}
                   onRatingChange={(newRating) => {
                     setLocalRating(newRating);
                     onRatingChange?.(book.id, newRating);
