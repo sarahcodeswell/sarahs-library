@@ -868,7 +868,13 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     
     // Filter out books already in queue
     const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
-    return results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
+    const filtered = results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
+    
+    if (import.meta.env.DEV) {
+      console.log('[Search] Query:', query, 'Catalog size:', booksData.length, 'Results:', results.length, 'Filtered:', filtered.length);
+    }
+    
+    return filtered;
   }, [addBookSearch, readingQueue]);
 
   // Add a book to the queue
