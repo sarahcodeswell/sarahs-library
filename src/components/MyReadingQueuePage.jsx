@@ -134,7 +134,7 @@ function DragOverlayCard({ book }) {
 }
 
 // Rich book card for Nightstand (uses enrichment for cover/genres)
-function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
+function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
   const [expanded, setExpanded] = useState(false);
   
   // Auto-enrich with cover and genres if missing
@@ -208,7 +208,14 @@ function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
           )}
           
           {/* Action buttons */}
-          <div className="flex items-center gap-2 mt-3">
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <button
+              onClick={() => onMoveToQueue(book)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
+              title="Move back to reading queue"
+            >
+              ← Back to Queue
+            </button>
             <button
               onClick={() => onToggleActive(book, false)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
@@ -235,7 +242,7 @@ function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
 }
 
 // Compact book card for On Deck (uses enrichment for cover)
-function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
+function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
   // Auto-enrich with cover if missing
   const { coverUrl, isEnriching } = useBookEnrichment(
     book.book_title,
@@ -265,6 +272,13 @@ function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
         
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
+            onClick={() => onMoveToQueue(book)}
+            className="px-2 py-1 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
+            title="Move back to reading queue"
+          >
+            ←
+          </button>
+          <button
             onClick={() => onToggleActive(book, true)}
             className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F7252] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
           >
@@ -289,7 +303,7 @@ function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
 }
 
 // Currently Reading section with On My Nightstand vs On Deck
-function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive }) {
+function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
   
   // Split books into active (On My Nightstand) and on deck
@@ -321,6 +335,7 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
                     onMarkAsRead={onMarkAsRead}
                     onRemove={onRemove}
                     onToggleActive={onToggleActive}
+                    onMoveToQueue={onMoveToQueue}
                   />
                 ))}
               </div>
@@ -339,6 +354,7 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
                     onMarkAsRead={onMarkAsRead}
                     onRemove={onRemove}
                     onToggleActive={onToggleActive}
+                    onMoveToQueue={onMoveToQueue}
                   />
                 ))}
               </div>
@@ -902,6 +918,20 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
+  // Move book from Currently Reading back to Want to Read queue
+  const handleMoveToQueue = async (book) => {
+    const result = await updateQueueStatus(book.id, 'want_to_read');
+    
+    if (result.success) {
+      track('book_moved_to_queue', {
+        book_title: book.book_title,
+        from_status: 'reading',
+      });
+    } else {
+      alert('Failed to move book. Please try again.');
+    }
+  };
+
   // Track which zone is being hovered
   const [overZone, setOverZone] = useState(null);
 
@@ -1064,6 +1094,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
             onMarkAsRead={handleMarkAsRead}
             onRemove={handleRemoveBook}
             onToggleActive={handleToggleActive}
+            onMoveToQueue={handleMoveToQueue}
           />
         </div>
 
