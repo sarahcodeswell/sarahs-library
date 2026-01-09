@@ -567,28 +567,30 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
     }
   }, [expanded, reputation, isEnrichingReputation, book]);
   
-  // Auto-enrich description when expanded and missing - use Serper web search
+  // Auto-enrich description when expanded and missing - use Claude for quality descriptions
   useEffect(() => {
     if (expanded && !enrichedDescription && !isEnrichingDescription && book.book_title) {
       setIsEnrichingDescription(true);
-      console.log('[BookDetails] Fetching description for:', book.book_title, book.book_author);
-      import('../lib/worldSearch.js').then(({ fetchBookDescription }) => {
-        fetchBookDescription(book.book_title, book.book_author)
+      console.log('[BookDetails] Generating description for:', book.book_title, book.book_author);
+      import('../lib/descriptionService.js').then(({ generateBookDescriptions }) => {
+        generateBookDescriptions([{ title: book.book_title, author: book.book_author }])
           .then((result) => {
-            console.log('[BookDetails] Serper result:', result);
-            if (result?.description) {
-              console.log('[BookDetails] Got description, length:', result.description.length);
-              setEnrichedDescription(result.description);
+            console.log('[BookDetails] Claude result:', result);
+            const key = `${book.book_title.toLowerCase()}|${(book.book_author || '').toLowerCase()}`;
+            const description = result[key];
+            if (description) {
+              console.log('[BookDetails] Got description, length:', description.length);
+              setEnrichedDescription(description);
               // Save to DB for future use
               if (onUpdateBook) {
-                onUpdateBook(book.id, { description: result.description });
+                onUpdateBook(book.id, { description });
               }
             } else {
-              console.log('[BookDetails] No description from Serper');
+              console.log('[BookDetails] No description from Claude');
             }
           })
           .catch((err) => {
-            console.error('[BookDetails] Serper error:', err);
+            console.error('[BookDetails] Description error:', err);
           })
           .finally(() => setIsEnrichingDescription(false));
       });
