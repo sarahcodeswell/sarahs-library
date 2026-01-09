@@ -188,14 +188,17 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       return;
     }
 
+    console.log('handleRemoveBook: Attempting to remove book', { bookId, bookTitle });
     const result = await removeBook(bookId);
+    console.log('handleRemoveBook: Result', result);
     
     if (result.success) {
       track('book_removed', {
         book_title: bookTitle,
       });
     } else {
-      alert('Failed to remove book. Please try again.');
+      console.error('handleRemoveBook: Failed', result.error);
+      alert(`Failed to remove book. ${result.error || 'Please try again.'}`);
     }
   };
 
@@ -341,6 +344,8 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       return;
     }
 
+    console.log('handleAddToReadingQueue: Starting', { book, status });
+
     // Check if already in reading queue
     const alreadyInQueue = readingQueue.some(item => 
       item.book_title?.toLowerCase() === book.book_title?.toLowerCase() &&
@@ -358,6 +363,8 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       status: status,
     });
 
+    console.log('handleAddToReadingQueue: Result', result);
+
     if (result.success) {
       // Remove from staging area (user_books) after successfully adding to reading queue
       await removeBook(book.id);
@@ -370,7 +377,8 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
         status: status,
       });
     } else {
-      alert('Failed to add to reading queue. Please try again.');
+      console.error('handleAddToReadingQueue: Failed', result.error);
+      alert(`Failed to add to reading queue. ${result.error || 'Please try again.'}`);
     }
   };
 

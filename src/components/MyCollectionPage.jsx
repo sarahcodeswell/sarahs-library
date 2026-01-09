@@ -447,12 +447,15 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
     let success = false;
     let error = null;
 
+    // Determine source - default to reading_queue if not specified (most common case)
+    const source = book.source || 'reading_queue';
+
     // Handle removal based on source
-    if (book.source === 'reading_queue') {
+    if (source === 'reading_queue') {
       const result = await removeFromQueue(book.id);
       success = result.success;
       error = result.error;
-    } else if (book.source === 'user_books') {
+    } else if (source === 'user_books') {
       try {
         const { error: removeError } = await db.removeUserBook(book.id);
         success = !removeError;
@@ -469,15 +472,32 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
         success = false;
         error = err.message;
       }
+    } else {
+      // Unknown source - try reading_queue first, then user_books
+      console.warn('Unknown book source:', source, 'for book:', book.book_title);
+      const result = await removeFromQueue(book.id);
+      if (result.success) {
+        success = true;
+      } else {
+        // Try user_books as fallback
+        try {
+          const { error: removeError } = await db.removeUserBook(book.id);
+          success = !removeError;
+          error = removeError;
+        } catch (err) {
+          success = false;
+          error = err.message;
+        }
+      }
     }
     
     if (success) {
       track('book_removed_from_collection', {
         book_title: book.book_title,
-        source: book.source
+        source: source
       });
     } else {
-      alert(`Failed to remove book. ${error ? error.message : 'Please try again.'}`);
+      alert(`Failed to remove book. ${error ? error.message || error : 'Please try again.'}`);
     }
   };
 
