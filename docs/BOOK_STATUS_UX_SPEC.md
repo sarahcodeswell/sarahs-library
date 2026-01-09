@@ -293,9 +293,32 @@ reading_queue table:
 - `supabase/migrations/044_add_is_active_to_reading_queue.sql` - New column
 - `docs/BOOK_STATUS_UX_SPEC.md` - This spec document
 
-## Tomorrow's Priorities
+## Tomorrow's Priorities (January 9, 2026)
 
-1. Review "On My Nightstand" / "On Deck" UI with fresh eyes
-2. Decide on "Set Aside" implementation
-3. Consider notes capability for active reads
-4. Update spec with final decisions
+### 1. Information Parity
+- **Issue**: Cover images visible in Want to Read, but missing on Nightstand cards
+- **Fix**: Ensure all book cards show covers, genre, description regardless of status
+- Screenshot shows "Skylark" has no cover while "The Beauty of Broken Things" does
+
+### 2. Bi-directional Status Changes
+- **Issue**: Drag-drop only works one way (queue → nightstand)
+- **Need**: Books should move freely between all states:
+  - Want to Read ↔ On My Nightstand ↔ On Deck
+  - Any state → Finished
+  - Any state → Set Aside (abandoned)
+- Currently feels like a "one-way door"
+
+### 3. Intuitive Status Change UI
+- **Issue**: No clear way for users to change book status after initial placement
+- **Need**: Consistent actions available from any book card:
+  - Move to Queue (want to read)
+  - Move to Nightstand (start reading)
+  - Move to Deck (pause)
+  - Mark Finished
+  - Set Aside (abandon - private, no rating)
+
+### 4. Set Aside Implementation
+- Add `set_aside` status for abandoned books
+- Private (not shown in collection or public profile)
+- No rating prompt - just quiet removal
+- Non-judgmental language
