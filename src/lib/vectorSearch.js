@@ -432,6 +432,37 @@ export async function findCatalogBooksByTheme(themes, limit = 20) {
 }
 
 /**
+ * Search catalog by title or author (simple text search)
+ * Used for "I know what I want to read" feature
+ * @param {string} query - Search query (title or author)
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Matching books from catalog
+ */
+export async function searchCatalogByText(query, limit = 10) {
+  if (!query || query.length < 2) return [];
+  
+  try {
+    // Use ilike for case-insensitive partial matching
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, author, description, genre, themes, sarah_assessment')
+      .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+      .limit(limit);
+
+    if (error) {
+      console.error('[searchCatalogByText] Error:', error);
+      return [];
+    }
+
+    console.log('[searchCatalogByText] Query:', query, 'Results:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('[searchCatalogByText] Failed:', error);
+    return [];
+  }
+}
+
+/**
  * Get loved authors from a user's collection (authors of 4-5 star books)
  * @param {string} userId - User ID
  * @returns {Promise<Array>} Authors with their book counts and avg ratings

@@ -8,7 +8,7 @@ import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';
-import booksData from '../books.json';
+import { searchCatalogByText } from '../lib/vectorSearch';
 
 import {
   DndContext,
@@ -831,6 +831,8 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [collectionBooks, setCollectionBooks] = useState([]);
   const [addBookSearch, setAddBookSearch] = useState('');
   const [showAddBook, setShowAddBook] = useState(false);
+  const [addBookResults, setAddBookResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Load collection books for preview
   useEffect(() => {
@@ -878,29 +880,32 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     loadCollection();
   }, [user, readingQueue]);
 
-  // Search results for adding books
-  const addBookResults = useMemo(() => {
-    if (!addBookSearch.trim() || addBookSearch.length < 2) return [];
-    const query = addBookSearch.toLowerCase();
+  // Search catalog when user types (debounced)
+  useEffect(() => {
+    if (!addBookSearch.trim() || addBookSearch.length < 2) {
+      setAddBookResults([]);
+      return;
+    }
     
-    // Ensure booksData is an array
-    const catalog = Array.isArray(booksData) ? booksData : [];
+    const searchTimeout = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchCatalogByText(addBookSearch, 10);
+        
+        // Filter out books already in queue
+        const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
+        const filtered = results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
+        
+        setAddBookResults(filtered.slice(0, 5));
+      } catch (err) {
+        console.error('[BookSearch] Error:', err);
+        setAddBookResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // 300ms debounce
     
-    // Search the catalog
-    const results = catalog
-      .filter(book => 
-        book.title?.toLowerCase().includes(query) ||
-        book.author?.toLowerCase().includes(query)
-      )
-      .slice(0, 5); // Limit to 5 results
-    
-    // Filter out books already in queue
-    const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
-    const filtered = results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
-    
-    console.log('[BookSearch] Query:', query, 'Catalog:', catalog.length, 'Results:', results.length, 'Filtered:', filtered.length);
-    
-    return filtered;
+    return () => clearTimeout(searchTimeout);
   }, [addBookSearch, readingQueue]);
 
   // Add a book to the queue
@@ -1379,11 +1384,16 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   autoFocus
                 />
               </div>
-              {addBookResults.length > 0 ? (
+              {isSearching ? (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <div className="w-4 h-4 border-2 border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
+                  <span className="text-sm text-[#96A888]">Searching catalog...</span>
+                </div>
+              ) : addBookResults.length > 0 ? (
                 <div className="space-y-2">
                   {addBookResults.map((book) => (
                     <div
-                      key={book.title}
+                      key={book.id || book.title}
                       className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E8EBE4] hover:border-[#5F7252] transition-colors"
                     >
                       <div className="min-w-0 flex-1">
