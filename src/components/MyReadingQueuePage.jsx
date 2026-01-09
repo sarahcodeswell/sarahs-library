@@ -15,8 +15,11 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
+  useDroppable,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -89,6 +92,127 @@ const themeInfo = {
   children: { label: "Children's Books", icon: null, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
+
+// Droppable zone component for status changes
+function DroppableZone({ id, label, icon: Icon, color, isOver, children, isEmpty }) {
+  const { setNodeRef } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-xl border-2 border-dashed p-4 transition-all duration-200 ${
+        isOver 
+          ? `${color.activeBorder} ${color.activeBg} scale-[1.02]` 
+          : `${color.border} ${color.bg}`
+      }`}
+    >
+      {children ? (
+        children
+      ) : (
+        <div className={`flex items-center justify-center gap-2 py-4 ${isOver ? color.activeText : color.text}`}>
+          <Icon className="w-5 h-5" />
+          <span className="text-sm font-medium">{label}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Compact book card for drag overlay
+function DragOverlayCard({ book }) {
+  return (
+    <div className="rounded-xl border border-[#5F7252] bg-white p-3 shadow-xl opacity-90 max-w-xs">
+      <div className="flex items-center gap-2">
+        <BookOpen className="w-4 h-4 text-[#5F7252]" />
+        <div className="min-w-0">
+          <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
+          <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Currently Reading drop zone with books list
+function ReadingDropZone({ isOver, books, onMarkAsRead, onRemove }) {
+  const { setNodeRef } = useDroppable({ id: 'reading-zone' });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-xl border-2 transition-all duration-200 ${
+        isOver 
+          ? 'border-amber-400 bg-amber-50 scale-[1.01]' 
+          : books.length > 0 
+            ? 'border-amber-200 bg-gradient-to-r from-amber-50/50 to-white' 
+            : 'border-dashed border-amber-300 bg-amber-50/30'
+      }`}
+    >
+      {books.length > 0 ? (
+        <div className="p-4 space-y-3">
+          {books.map((book) => (
+            <div
+              key={book.id}
+              className="rounded-lg border border-amber-200 bg-white p-3 hover:shadow-sm transition-all"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full flex-shrink-0">
+                    Reading
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-[#4A5940] text-sm truncate">{book.book_title}</p>
+                    <p className="text-xs text-[#7A8F6C] truncate">{book.book_author}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => onMarkAsRead(book)}
+                    className="px-2 py-1 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+                  >
+                    Finished
+                  </button>
+                  <button
+                    onClick={() => onRemove(book)}
+                    className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-amber-600' : 'text-amber-400'}`}>
+          <BookOpen className="w-5 h-5" />
+          <span className="text-sm font-medium">Drag a book here to start reading</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Finished drop zone
+function FinishedDropZone({ isOver }) {
+  const { setNodeRef } = useDroppable({ id: 'finished-zone' });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-xl border-2 border-dashed transition-all duration-200 ${
+        isOver 
+          ? 'border-[#5F7252] bg-[#5F7252]/10 scale-[1.01]' 
+          : 'border-[#96A888] bg-[#F8F6EE]/50'
+      }`}
+    >
+      <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
+        <Library className="w-5 h-5" />
+        <span className="text-sm font-medium">Drag here to mark as finished</span>
+      </div>
+    </div>
+  );
+}
 
 function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading, isFirst, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
@@ -443,10 +567,23 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         distance: 8,
       },
     }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Track which item is being dragged
+  const [activeId, setActiveId] = useState(null);
+  const activeBook = useMemo(() => {
+    if (!activeId) return null;
+    return readingQueue.find(book => book.id === activeId);
+  }, [activeId, readingQueue]);
 
   // Filter books by status
   const currentlyReadingBooks = useMemo(() => {
@@ -584,12 +721,54 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
-  const handleDragEnd = (event) => {
+  // Track which zone is being hovered
+  const [overZone, setOverZone] = useState(null);
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragOver = (event) => {
+    const { over } = event;
+    if (over?.id === 'reading-zone' || over?.id === 'finished-zone') {
+      setOverZone(over.id);
+    } else {
+      setOverZone(null);
+    }
+  };
+
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
+    setActiveId(null);
+    setOverZone(null);
     
-    if (active.id !== over?.id) {
+    if (!over) return;
+
+    // Check if dropped on a status zone
+    if (over.id === 'reading-zone') {
+      const book = readingQueue.find(b => b.id === active.id);
+      if (book && book.status === 'want_to_read') {
+        await handleStartReading(book);
+        track('book_dragged_to_reading', { book_title: book.book_title });
+      }
+      return;
+    }
+
+    if (over.id === 'finished-zone') {
+      const book = readingQueue.find(b => b.id === active.id);
+      if (book) {
+        await handleMarkAsRead(book);
+        track('book_dragged_to_finished', { book_title: book.book_title });
+      }
+      return;
+    }
+
+    // Otherwise, handle reordering within the list
+    if (active.id !== over.id) {
       const oldIndex = filteredBooks.findIndex(item => item.id === active.id);
       const newIndex = filteredBooks.findIndex(item => item.id === over.id);
+      
+      if (oldIndex === -1 || newIndex === -1) return;
       
       const newOrder = arrayMove(filteredBooks, oldIndex, newIndex);
       setLocalOrder(newOrder.map(item => item.id));
@@ -683,71 +862,28 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           </p>
         </div>
 
-        {/* Currently Reading Section */}
-        {currentlyReadingBooks.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-amber-600" />
-              </div>
-              <h2 className="text-lg font-serif text-[#4A5940]">Currently Reading</h2>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+        {/* Currently Reading Drop Zone */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-amber-600" />
             </div>
-            <div className="space-y-3">
-              {currentlyReadingBooks.map((book) => (
-                <div
-                  key={book.id}
-                  className="rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-white p-4 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-                        <div className="flex gap-3 flex-1 min-w-0">
-                          <BookCover 
-                            coverUrl={book.cover_image_url} 
-                            title={book.book_title} 
-                            isEnriching={false} 
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full">
-                                Reading
-                              </span>
-                            </div>
-                            <h3 className="font-medium text-[#4A5940] text-base">
-                              {book.book_title}
-                            </h3>
-                            {book.book_author && (
-                              <p className="text-sm text-[#7A8F6C]">
-                                by {book.book_author}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => handleMarkAsRead(book)}
-                            className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-                            title="Mark as Finished"
-                          >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>Finished</span>
-                          </button>
-                          <button
-                            onClick={() => handleRemoveBook(book)}
-                            className="p-1.5 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-                            title="Remove from queue"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-lg font-serif text-[#4A5940]">Currently Reading</h2>
           </div>
-        )}
+          <ReadingDropZone 
+            isOver={overZone === 'reading-zone'} 
+            books={currentlyReadingBooks}
+            onMarkAsRead={handleMarkAsRead}
+            onRemove={handleRemoveBook}
+          />
+        </div>
 
         {/* Want to Read Section Header */}
         {currentlyReadingBooks.length > 0 && queueBooks.length > 0 && (
@@ -799,41 +935,49 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
             )}
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+          <SortableContext
+            items={filteredBooks.map(b => b.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={filteredBooks.map(b => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {filteredBooks.map((book, index) => (
-                  <SortableBookCard
-                    key={book.id}
-                    book={book}
-                    index={index}
-                    onMarkAsRead={handleMarkAsRead}
-                    onRemove={handleRemoveBook}
-                    onStartReading={handleStartReading}
-                    isFirst={index === 0}
-                    onUpdateBook={updateQueueItem}
-                    onToggleOwned={handleToggleOwned}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+            <div className="space-y-3">
+              {filteredBooks.map((book, index) => (
+                <SortableBookCard
+                  key={book.id}
+                  book={book}
+                  index={index}
+                  onMarkAsRead={handleMarkAsRead}
+                  onRemove={handleRemoveBook}
+                  onStartReading={handleStartReading}
+                  isFirst={index === 0}
+                  onUpdateBook={updateQueueItem}
+                  onToggleOwned={handleToggleOwned}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        )}
+
+        {/* Finished Drop Zone - only show when dragging */}
+        {activeId && (
+          <div className="mt-6">
+            <FinishedDropZone isOver={overZone === 'finished-zone'} />
+          </div>
         )}
 
         {/* Inline tip at bottom */}
-        {filteredBooks.length > 0 && (
+        {filteredBooks.length > 0 && !activeId && (
           <div className="mt-6 flex items-center gap-2 text-xs text-[#96A888]">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Drag the handle to reorder your queue. Tap "Finished" to move books to your collection.</span>
+            <span>Drag books to reorder, or drop on zones above to change status.</span>
           </div>
         )}
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeBook ? <DragOverlayCard book={activeBook} /> : null}
+        </DragOverlay>
+
+        </DndContext>
       </div>
     </div>
   );
