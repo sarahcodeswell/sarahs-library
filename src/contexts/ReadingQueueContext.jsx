@@ -81,6 +81,7 @@ export function ReadingQueueProvider({ children }) {
       book_title: book.title,
       book_author: book.author,
       status: book.status || 'want_to_read',
+      is_active: book.is_active !== undefined ? book.is_active : true,
       added_at: new Date().toISOString(),
       description: book.description || null,
       why_recommended: book.why || null,

@@ -255,6 +255,11 @@ export const db = {
       insertData.reputation = book.reputation;
     }
     
+    // Include is_active for currently reading books (Reading Now vs On Hold)
+    if (book.is_active !== undefined) {
+      insertData.is_active = book.is_active;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('reading_queue')

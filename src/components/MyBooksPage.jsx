@@ -335,13 +335,14 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
 
         // Use status from Goodreads CSV:
         // - 'read' -> 'already_read' (collection)
-        // - 'currently-reading' -> 'reading' (queue)
+        // - 'currently-reading' -> 'reading' (queue, is_active = true)
         // - 'to-read' -> 'want_to_read' (queue)
         const result = await addToQueue({
           title: book.title,
           author: book.author || '',
           description: description,
-          status: book.status, // Use parsed status from CSV
+          status: book.status,
+          is_active: book.status === 'reading' ? true : undefined, // Currently reading books are active by default
         });
         
         if (result.success) {
