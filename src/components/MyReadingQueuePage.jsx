@@ -133,6 +133,161 @@ function DragOverlayCard({ book }) {
   );
 }
 
+// Rich book card for Nightstand (uses enrichment for cover/genres)
+function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  // Auto-enrich with cover and genres if missing
+  const { coverUrl, genres, isEnriching } = useBookEnrichment(
+    book.book_title,
+    book.book_author,
+    book.cover_image_url,
+    book.genres
+  );
+  
+  // Look up full book details from local catalog
+  const bookDetails = useMemo(() => {
+    const t = String(book?.book_title || '');
+    const key = t.toLowerCase().trim();
+    const catalogBook = booksData.find(b => b.title?.toLowerCase().trim() === key);
+    
+    if (catalogBook) {
+      return { ...catalogBook, source: 'catalog' };
+    }
+    
+    if (book.description || book.why_recommended) {
+      return {
+        title: book.book_title,
+        author: book.book_author,
+        description: book.description || book.why_recommended,
+        themes: [],
+        source: 'stored'
+      };
+    }
+    
+    return null;
+  }, [book]);
+
+  return (
+    <div className="rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all">
+      <div className="flex gap-4">
+        {/* Book cover with enrichment */}
+        <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} size="md" />
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-[#4A5940] text-base leading-tight">{book.book_title}</h3>
+          <p className="text-sm text-[#7A8F6C] mt-0.5">by {book.book_author}</p>
+          
+          {/* Genre badges */}
+          <div className="mt-2">
+            <GenreBadges genres={genres} maxDisplay={2} />
+          </div>
+          
+          {/* Description preview or expand toggle */}
+          {bookDetails?.description && (
+            <>
+              {expanded ? (
+                <div className="mt-2">
+                  <p className="text-xs text-[#7A8F6C]">{bookDetails.description}</p>
+                  <button 
+                    onClick={() => setExpanded(false)}
+                    className="text-xs text-[#5F7252] hover:underline mt-1 flex items-center gap-1"
+                  >
+                    Show less <ChevronUp className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setExpanded(true)}
+                  className="text-xs text-[#5F7252] hover:underline mt-2 flex items-center gap-1"
+                >
+                  Show more <ChevronDown className="w-3 h-3" />
+                </button>
+              )}
+            </>
+          )}
+          
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              onClick={() => onToggleActive(book, false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
+            >
+              Move to Deck
+            </button>
+            <button
+              onClick={() => onMarkAsRead(book)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+            >
+              Finished
+            </button>
+            <button
+              onClick={() => onRemove(book)}
+              className="p-1.5 rounded-lg text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors ml-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Compact book card for On Deck (uses enrichment for cover)
+function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive }) {
+  // Auto-enrich with cover if missing
+  const { coverUrl, isEnriching } = useBookEnrichment(
+    book.book_title,
+    book.book_author,
+    book.cover_image_url,
+    book.genres
+  );
+
+  return (
+    <div className="rounded-lg border border-[#E8EBE4] bg-[#FDFCF9]/60 p-3 hover:bg-[#FDFCF9] transition-all">
+      <div className="flex items-center gap-3">
+        {/* Small cover with enrichment */}
+        <div className="flex-shrink-0 w-10 h-14 rounded bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden">
+          {coverUrl ? (
+            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+          ) : isEnriching ? (
+            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+          ) : (
+            <BookOpen className="w-4 h-4 text-white/70" />
+          )}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-[#5F7252] text-sm truncate">{book.book_title}</p>
+          <p className="text-xs text-[#96A888] truncate">{book.book_author}</p>
+        </div>
+        
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={() => onToggleActive(book, true)}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F7252] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
+          >
+            Start
+          </button>
+          <button
+            onClick={() => onMarkAsRead(book)}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#7A8F6C] hover:bg-[#E8EBE4] transition-colors"
+          >
+            Finished
+          </button>
+          <button
+            onClick={() => onRemove(book)}
+            className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Currently Reading section with On My Nightstand vs On Deck
 function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
@@ -160,60 +315,13 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
               <p className="text-xs font-medium text-[#5F7252] uppercase tracking-wide mb-3">On My Nightstand</p>
               <div className="space-y-4">
                 {nightstandBooks.map((book) => (
-                  <div
+                  <NightstandBookCard
                     key={book.id}
-                    className="rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all"
-                  >
-                    <div className="flex gap-4">
-                      {/* Book cover placeholder or actual cover */}
-                      <div className="flex-shrink-0 w-16 h-24 rounded-lg bg-gradient-to-br from-[#5F7252] to-[#4A5940] flex items-center justify-center shadow-sm">
-                        {book.cover_image_url ? (
-                          <img src={book.cover_image_url} alt="" className="w-full h-full object-cover rounded-lg" />
-                        ) : (
-                          <BookOpen className="w-6 h-6 text-white/80" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-[#4A5940] text-base leading-tight">{book.book_title}</h3>
-                        <p className="text-sm text-[#7A8F6C] mt-0.5">by {book.book_author}</p>
-                        
-                        {/* Genre tag if available */}
-                        {book.genre && (
-                          <span className="inline-block mt-2 px-2 py-0.5 bg-[#E8EBE4] text-[#5F7252] text-xs rounded-full">
-                            {book.genre}
-                          </span>
-                        )}
-                        
-                        {/* Description preview */}
-                        {book.description && (
-                          <p className="text-xs text-[#7A8F6C] mt-2 line-clamp-2">{book.description}</p>
-                        )}
-                        
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <button
-                            onClick={() => onToggleActive(book, false)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
-                          >
-                            Move to Deck
-                          </button>
-                          <button
-                            onClick={() => onMarkAsRead(book)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
-                          >
-                            Finished
-                          </button>
-                          <button
-                            onClick={() => onRemove(book)}
-                            className="p-1.5 rounded-lg text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors ml-auto"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    book={book}
+                    onMarkAsRead={onMarkAsRead}
+                    onRemove={onRemove}
+                    onToggleActive={onToggleActive}
+                  />
                 ))}
               </div>
             </div>
@@ -225,47 +333,13 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
               <p className="text-xs font-medium text-[#96A888] uppercase tracking-wide mb-3">On Deck</p>
               <div className="space-y-2">
                 {onDeckBooks.map((book) => (
-                  <div
+                  <OnDeckBookCard
                     key={book.id}
-                    className="rounded-lg border border-[#E8EBE4] bg-[#FDFCF9]/60 p-3 hover:bg-[#FDFCF9] transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Small cover */}
-                      <div className="flex-shrink-0 w-10 h-14 rounded bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center">
-                        {book.cover_image_url ? (
-                          <img src={book.cover_image_url} alt="" className="w-full h-full object-cover rounded" />
-                        ) : (
-                          <BookOpen className="w-4 h-4 text-white/70" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[#5F7252] text-sm truncate">{book.book_title}</p>
-                        <p className="text-xs text-[#96A888] truncate">{book.book_author}</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => onToggleActive(book, true)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F7252] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
-                        >
-                          Start
-                        </button>
-                        <button
-                          onClick={() => onMarkAsRead(book)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#7A8F6C] hover:bg-[#E8EBE4] transition-colors"
-                        >
-                          Finished
-                        </button>
-                        <button
-                          onClick={() => onRemove(book)}
-                          className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    book={book}
+                    onMarkAsRead={onMarkAsRead}
+                    onRemove={onRemove}
+                    onToggleActive={onToggleActive}
+                  />
                 ))}
               </div>
             </div>
