@@ -103,20 +103,9 @@ function brandedTemplate({ title, preheader, content, footerText }) {
           <!-- Header -->
           <tr>
             <td align="center" style="background-color: #5F7252; padding: 28px 24px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td align="center" style="padding-bottom: 16px;">
-                    <img src="${LOGO_URL}" alt="Sarah's Books" width="100" height="auto" style="display: block; max-width: 100px; border: 0;" />
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center">
-                    <h1 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 600; font-family: Georgia, serif; line-height: 1.3;">
-                      ${title}
-                    </h1>
-                  </td>
-                </tr>
-              </table>
+              <h1 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 600; font-family: Georgia, serif; line-height: 1.3;">
+                ${title}
+              </h1>
             </td>
           </tr>
           
