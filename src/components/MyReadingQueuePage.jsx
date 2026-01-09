@@ -1416,9 +1416,20 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         onMoveToQueue={handleMoveToQueue}
         onRemove={handleRemoveBook}
         onNotForMe={handleNotForMe}
-        onRate={(book) => {
-          // Navigate to collection to rate
-          onNavigate('collection');
+        onRatingChange={async (bookId, newRating) => {
+          // Update rating using the queue context (same as Collection page)
+          try {
+            const result = await updateQueueItem(bookId, { rating: newRating });
+            if (result.success) {
+              // Update local collection books state
+              setCollectionBooks(prev => prev.map(b => 
+                b.id === bookId ? { ...b, rating: newRating } : b
+              ));
+              track('book_rated_from_modal', { book_id: bookId, rating: newRating });
+            }
+          } catch (err) {
+            console.error('Error updating rating:', err);
+          }
         }}
       />
 
@@ -1433,9 +1444,10 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Breadcrumb */}
         <button
           onClick={() => onNavigate('home')}
-          className="mb-6 flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors"
+          className="flex items-center gap-1.5 text-sm text-[#7A8F6C] hover:text-[#5F7252] transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home

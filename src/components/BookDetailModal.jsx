@@ -3,6 +3,7 @@ import { X, BookOpen, Star, Library, Trash2, ArrowLeft, ExternalLink, Headphones
 import { useBookEnrichment } from './BookCard';
 import { ExpandableDescription } from './ExpandableDescription';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
+import StarRating from './StarRating';
 
 /**
  * BookDetailModal - A reusable modal for displaying book details
@@ -21,7 +22,7 @@ import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
  * - onMoveToQueue: Function to move book back to queue
  * - onRemove: Function to remove book from queue
  * - onNotForMe: Function to dismiss the book
- * - onRate: Function to rate the book
+ * - onRatingChange: Function to handle rating change (bookId, rating)
  */
 export default function BookDetailModal({
   book,
@@ -36,9 +37,11 @@ export default function BookDetailModal({
   onMoveToQueue,
   onRemove,
   onNotForMe,
-  onRate,
+  onRatingChange,
 }) {
   const [isClosing, setIsClosing] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [localRating, setLocalRating] = useState(rating);
   
   // Auto-enrich with cover if missing
   const { coverUrl, genres, isEnriching } = useBookEnrichment(
@@ -167,25 +170,30 @@ export default function BookDetailModal({
     if (isInCollection || bookStatus === 'finished') {
       return (
         <div className="space-y-3">
-          {!rating ? (
-            <button
-              onClick={() => { onRate?.(book); handleClose(); }}
-              className="w-full py-3 px-4 bg-[#5F7252] text-white rounded-xl font-medium hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2"
-            >
-              <Star className="w-5 h-5" />
-              Rate & Review
-            </button>
+          {showRating || !localRating ? (
+            <div className="text-center py-2">
+              <p className="text-sm text-[#7A8F6C] mb-3">{localRating ? 'Update your rating:' : 'How did you like it?'}</p>
+              <StarRating
+                rating={localRating || 0}
+                onRatingChange={(newRating) => {
+                  setLocalRating(newRating);
+                  onRatingChange?.(book.id, newRating);
+                  setShowRating(false);
+                }}
+                size="lg"
+              />
+            </div>
           ) : (
             <div className="flex items-center justify-center gap-1 py-2">
               <span className="text-sm text-[#7A8F6C] mr-2">Your rating:</span>
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-5 h-5 ${star <= rating ? 'fill-[#5F7252] text-[#5F7252]' : 'text-[#E8EBE4]'}`}
+                  className={`w-5 h-5 ${star <= localRating ? 'fill-[#5F7252] text-[#5F7252]' : 'text-[#E8EBE4]'}`}
                 />
               ))}
               <button
-                onClick={() => onRate?.(book)}
+                onClick={() => setShowRating(true)}
                 className="ml-2 p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
                 title="Edit rating"
               >
