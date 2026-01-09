@@ -133,8 +133,8 @@ function DragOverlayCard({ book }) {
   );
 }
 
-// Rich book card for Nightstand (uses enrichment for cover/genres)
-function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
+// Sortable book card for Currently Reading (with drag handle, enrichment)
+function SortableCurrentlyReadingCard({ book, index, onAddToCollection, onNotForMe, onMoveToQueue }) {
   const [expanded, setExpanded] = useState(false);
   
   // Auto-enrich with cover and genres if missing
@@ -168,9 +168,46 @@ function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMo
     return null;
   }, [book]);
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: book.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
   return (
-    <div className="rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all">
-      <div className="flex gap-4">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-xl border border-[#E8EBE4] bg-[#FDFCF9] p-4 hover:shadow-md transition-all ${
+        isDragging ? 'shadow-lg' : ''
+      }`}
+    >
+      <div className="flex gap-3">
+        {/* Drag handle + index */}
+        <div className="flex flex-col items-center gap-1 pt-1">
+          <span className="text-lg font-serif text-[#5F7252] w-6 text-center select-none">
+            {index + 1}
+          </span>
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-1 rounded cursor-grab active:cursor-grabbing text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] transition-colors touch-none"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        </div>
+        
         {/* Book cover with enrichment */}
         <BookCover coverUrl={coverUrl} title={book.book_title} isEnriching={isEnriching} size="md" />
         
@@ -212,27 +249,22 @@ function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMo
             <button
               onClick={() => onMoveToQueue(book)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
-              title="Move back to reading queue"
+              title="Move back to Want to Read"
             >
-              ← Back to Queue
+              ← Want to Read
             </button>
             <button
-              onClick={() => onToggleActive(book, false)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
-            >
-              Move to Deck
-            </button>
-            <button
-              onClick={() => onMarkAsRead(book)}
+              onClick={() => onAddToCollection(book)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
             >
-              Finished
+              Add to Collection
             </button>
             <button
-              onClick={() => onRemove(book)}
-              className="p-1.5 rounded-lg text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors ml-auto"
+              onClick={() => onNotForMe(book)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors"
+              title="Not for me"
             >
-              <Trash2 className="w-4 h-4" />
+              Not for me
             </button>
           </div>
         </div>
@@ -241,74 +273,9 @@ function NightstandBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMo
   );
 }
 
-// Compact book card for On Deck (uses enrichment for cover)
-function OnDeckBookCard({ book, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
-  // Auto-enrich with cover if missing
-  const { coverUrl, isEnriching } = useBookEnrichment(
-    book.book_title,
-    book.book_author,
-    book.cover_image_url,
-    book.genres
-  );
-
-  return (
-    <div className="rounded-lg border border-[#E8EBE4] bg-[#FDFCF9]/60 p-3 hover:bg-[#FDFCF9] transition-all">
-      <div className="flex items-center gap-3">
-        {/* Small cover with enrichment */}
-        <div className="flex-shrink-0 w-10 h-14 rounded bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden">
-          {coverUrl ? (
-            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
-          ) : isEnriching ? (
-            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-          ) : (
-            <BookOpen className="w-4 h-4 text-white/70" />
-          )}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-[#5F7252] text-sm truncate">{book.book_title}</p>
-          <p className="text-xs text-[#96A888] truncate">{book.book_author}</p>
-        </div>
-        
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            onClick={() => onMoveToQueue(book)}
-            className="px-2 py-1 rounded-lg text-xs font-medium text-[#96A888] hover:text-[#5F7252] hover:bg-[#E8EBE4] transition-colors"
-            title="Move back to reading queue"
-          >
-            ←
-          </button>
-          <button
-            onClick={() => onToggleActive(book, true)}
-            className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F7252] bg-[#E8EBE4] hover:bg-[#DDE2D6] transition-colors"
-          >
-            Start
-          </button>
-          <button
-            onClick={() => onMarkAsRead(book)}
-            className="px-2.5 py-1 rounded-lg text-xs font-medium text-[#7A8F6C] hover:bg-[#E8EBE4] transition-colors"
-          >
-            Finished
-          </button>
-          <button
-            onClick={() => onRemove(book)}
-            className="p-1 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Currently Reading section with On My Nightstand vs On Deck
-function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onToggleActive, onMoveToQueue }) {
+// Currently Reading section - sortable list
+function CurrentlyReadingSection({ isOver, books, onAddToCollection, onNotForMe, onMoveToQueue }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
-  
-  // Split books into active (On My Nightstand) and on deck
-  const nightstandBooks = books.filter(b => b.is_active !== false);
-  const onDeckBooks = books.filter(b => b.is_active === false);
   
   return (
     <div
@@ -323,57 +290,37 @@ function CurrentlyReadingSection({ isOver, books, onMarkAsRead, onRemove, onTogg
     >
       {books.length > 0 ? (
         <div className="p-4">
-          {/* On My Nightstand Section - Full rich cards */}
-          {nightstandBooks.length > 0 && (
-            <div className={onDeckBooks.length > 0 ? "mb-6" : ""}>
-              <p className="text-xs font-medium text-[#5F7252] uppercase tracking-wide mb-3">On My Nightstand</p>
-              <div className="space-y-4">
-                {nightstandBooks.map((book) => (
-                  <NightstandBookCard
-                    key={book.id}
-                    book={book}
-                    onMarkAsRead={onMarkAsRead}
-                    onRemove={onRemove}
-                    onToggleActive={onToggleActive}
-                    onMoveToQueue={onMoveToQueue}
-                  />
-                ))}
-              </div>
+          <SortableContext
+            items={books.map(b => b.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-3">
+              {books.map((book, index) => (
+                <SortableCurrentlyReadingCard
+                  key={book.id}
+                  book={book}
+                  index={index}
+                  onAddToCollection={onAddToCollection}
+                  onNotForMe={onNotForMe}
+                  onMoveToQueue={onMoveToQueue}
+                />
+              ))}
             </div>
-          )}
-          
-          {/* On Deck Section - Compact cards */}
-          {onDeckBooks.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-[#96A888] uppercase tracking-wide mb-3">On Deck</p>
-              <div className="space-y-2">
-                {onDeckBooks.map((book) => (
-                  <OnDeckBookCard
-                    key={book.id}
-                    book={book}
-                    onMarkAsRead={onMarkAsRead}
-                    onRemove={onRemove}
-                    onToggleActive={onToggleActive}
-                    onMoveToQueue={onMoveToQueue}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          </SortableContext>
         </div>
       ) : (
         <div className={`flex items-center justify-center gap-2 py-8 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
           <BookOpen className="w-5 h-5" />
-          <span className="text-sm font-medium">What's on your nightstand?</span>
+          <span className="text-sm font-medium">Drag a book here to start reading</span>
         </div>
       )}
     </div>
   );
 }
 
-// Finished drop zone
-function FinishedDropZone({ isOver }) {
-  const { setNodeRef } = useDroppable({ id: 'finished-zone' });
+// Add to Collection drop zone (positive signal - finished and kept)
+function CollectionDropZone({ isOver }) {
+  const { setNodeRef } = useDroppable({ id: 'collection-zone' });
   
   return (
     <div
@@ -381,18 +328,39 @@ function FinishedDropZone({ isOver }) {
       className={`rounded-xl border-2 border-dashed transition-all duration-200 ${
         isOver 
           ? 'border-[#5F7252] bg-[#5F7252]/10 scale-[1.01]' 
-          : 'border-[#96A888] bg-[#F8F6EE]/50'
+          : 'border-[#5F7252]/50 bg-[#F8F6EE]/50'
       }`}
     >
-      <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
+      <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#7A8F6C]'}`}>
         <Library className="w-5 h-5" />
-        <span className="text-sm font-medium">Drag here to mark as finished</span>
+        <span className="text-sm font-medium">Add to My Collection</span>
       </div>
     </div>
   );
 }
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading, isFirst, onUpdateBook, onToggleOwned }) {
+// "Not for me" drop zone (negative signal - dismissed)
+function NotForMeDropZone({ isOver }) {
+  const { setNodeRef } = useDroppable({ id: 'not-for-me-zone' });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-xl border-2 border-dashed transition-all duration-200 ${
+        isOver 
+          ? 'border-[#96A888] bg-[#96A888]/10 scale-[1.01]' 
+          : 'border-[#96A888]/50 bg-[#F8F6EE]/30'
+      }`}
+    >
+      <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#7A8F6C]' : 'text-[#96A888]'}`}>
+        <Trash2 className="w-5 h-5" />
+        <span className="text-sm font-medium">Not for me</span>
+      </div>
+    </div>
+  );
+}
+
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading, onNotForMe, isFirst, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
@@ -583,15 +551,15 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading,
               <button
                 onClick={() => onMarkAsRead(book)}
                 className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-                title="Mark as Finished"
+                title="Add to My Collection"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Finished</span>
+                <Library className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Collection</span>
               </button>
               <button
-                onClick={() => onRemove(book)}
-                className="p-1.5 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
-                title="Remove from queue"
+                onClick={() => onNotForMe(book)}
+                className="p-1.5 rounded text-[#96A888] hover:text-[#7A8F6C] hover:bg-[#F8F6EE] transition-colors"
+                title="Not for me"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -905,19 +873,6 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
-  const handleToggleActive = async (book, isActive) => {
-    const result = await updateQueueItem(book.id, { is_active: isActive });
-    
-    if (result.success) {
-      track('book_active_toggled', {
-        book_title: book.book_title,
-        is_active: isActive,
-      });
-    } else {
-      alert('Failed to update book. Please try again.');
-    }
-  };
-
   // Move book from Currently Reading back to Want to Read queue
   const handleMoveToQueue = async (book) => {
     const result = await updateQueueStatus(book.id, 'want_to_read');
@@ -925,10 +880,37 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     if (result.success) {
       track('book_moved_to_queue', {
         book_title: book.book_title,
-        from_status: 'reading',
+        from_status: book.status,
       });
     } else {
       alert('Failed to move book. Please try again.');
+    }
+  };
+
+  // Add book to collection (finished and kept - strongest positive signal)
+  const handleAddToCollection = async (book) => {
+    await handleMarkAsRead(book);
+    track('book_added_to_collection', {
+      book_title: book.book_title,
+      from_status: book.status,
+    });
+  };
+
+  // "Not for me" - dismiss book and add to dismissed_recommendations
+  const handleNotForMe = async (book) => {
+    // Remove from reading queue
+    const result = await removeFromQueue(book.id);
+    
+    if (result.success) {
+      // Add to dismissed_recommendations (same as recommendation dismissal)
+      await db.addDismissedRecommendation(user.id, book.book_title, book.book_author);
+      
+      track('book_not_for_me', {
+        book_title: book.book_title,
+        from_status: book.status,
+      });
+    } else {
+      alert('Failed to remove book. Please try again.');
     }
   };
 
@@ -941,7 +923,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
   const handleDragOver = (event) => {
     const { over } = event;
-    if (over?.id === 'reading-zone' || over?.id === 'finished-zone') {
+    if (over?.id === 'reading-zone' || over?.id === 'collection-zone' || over?.id === 'not-for-me-zone') {
       setOverZone(over.id);
     } else {
       setOverZone(null);
@@ -965,11 +947,20 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       return;
     }
 
-    if (over.id === 'finished-zone') {
+    if (over.id === 'collection-zone') {
       const book = readingQueue.find(b => b.id === active.id);
       if (book) {
-        await handleMarkAsRead(book);
-        track('book_dragged_to_finished', { book_title: book.book_title });
+        await handleAddToCollection(book);
+        track('book_dragged_to_collection', { book_title: book.book_title });
+      }
+      return;
+    }
+
+    if (over.id === 'not-for-me-zone') {
+      const book = readingQueue.find(b => b.id === active.id);
+      if (book) {
+        await handleNotForMe(book);
+        track('book_dragged_to_not_for_me', { book_title: book.book_title });
       }
       return;
     }
@@ -1091,9 +1082,8 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           <CurrentlyReadingSection 
             isOver={overZone === 'reading-zone'} 
             books={currentlyReadingBooks}
-            onMarkAsRead={handleMarkAsRead}
-            onRemove={handleRemoveBook}
-            onToggleActive={handleToggleActive}
+            onAddToCollection={handleAddToCollection}
+            onNotForMe={handleNotForMe}
             onMoveToQueue={handleMoveToQueue}
           />
         </div>
@@ -1158,9 +1148,10 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   key={book.id}
                   book={book}
                   index={index}
-                  onMarkAsRead={handleMarkAsRead}
+                  onMarkAsRead={handleAddToCollection}
                   onRemove={handleRemoveBook}
                   onStartReading={handleStartReading}
+                  onNotForMe={handleNotForMe}
                   isFirst={index === 0}
                   onUpdateBook={updateQueueItem}
                   onToggleOwned={handleToggleOwned}
@@ -1170,18 +1161,19 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           </SortableContext>
         )}
 
-        {/* Finished Drop Zone - only show when dragging */}
+        {/* Drop Zones - only show when dragging */}
         {activeId && (
-          <div className="mt-6">
-            <FinishedDropZone isOver={overZone === 'finished-zone'} />
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <CollectionDropZone isOver={overZone === 'collection-zone'} />
+            <NotForMeDropZone isOver={overZone === 'not-for-me-zone'} />
           </div>
         )}
 
         {/* Inline tip at bottom */}
-        {filteredBooks.length > 0 && !activeId && (
+        {(filteredBooks.length > 0 || currentlyReadingBooks.length > 0) && !activeId && (
           <div className="mt-6 flex items-center gap-2 text-xs text-[#96A888]">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Drag books to reorder, or drop on zones above to change status.</span>
+            <span>Drag books to reorder, or drop on zones to change status.</span>
           </div>
         )}
 
