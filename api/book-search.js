@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     // Transform results to our format
-    const books = (data.items || []).slice(0, 8).map(item => {
+    const allBooks = (data.items || []).map(item => {
       const book = item.volumeInfo;
       const identifiers = book.industryIdentifiers || [];
       const isbn = identifiers.find(id => id.type === 'ISBN_13')?.identifier ||
@@ -71,6 +71,15 @@ export default async function handler(req, res) {
         source: 'google_books'
       };
     });
+    
+    // Deduplicate by title + author (Google Books often returns multiple editions)
+    const seen = new Set();
+    const books = allBooks.filter(book => {
+      const key = `${book.title?.toLowerCase()}:${book.author?.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 6);
 
     console.log(`[book-search] Query: "${query}" → ${books.length} results`);
 

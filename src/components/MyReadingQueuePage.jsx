@@ -921,12 +921,12 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
     
     const result = await addToQueue({
-      book_title: book.title,
-      book_author: book.author,
-      description: book.subjects?.join(', ') || null, // Use subjects as description
+      title: book.title,
+      author: book.author,
+      description: book.description || book.subjects?.join(', ') || null,
       cover_image_url: book.cover_url,
+      isbn: book.isbn,
       status: 'want_to_read',
-      source: 'world_search' // Track that this came from world search
     });
     
     if (result.success) {
