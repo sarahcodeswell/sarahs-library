@@ -737,6 +737,34 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
           </div>
         );
 
+      case 'reading':
+        // Currently reading books - show users with their reading books
+        return (
+          <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
+            {data.map((u, i) => (
+              <div key={i} className="py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
+                    {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
+                  </div>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                    {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
+                  </span>
+                </div>
+                <div className="pl-2 border-l-2 border-amber-200 space-y-1.5">
+                  {u.books?.map((b, j) => (
+                    <div key={j} className="text-xs">
+                      <p className="text-[#4A5940] font-medium">{b.title}</p>
+                      <p className="text-[#7A8F6C]">by {b.author}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
       case 'finished':
         // If viewing a specific user's finished books
         if (selectedUser && userBooks) {
