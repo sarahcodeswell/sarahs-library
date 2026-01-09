@@ -212,3 +212,90 @@ reading_queue table:
 
 *Created: January 8, 2026*
 *Status: Draft Spec*
+
+---
+
+# Session Summary: January 8, 2026
+
+## Work Completed
+
+### 1. Goodreads CSV Import Fix
+- **Issue**: Import was ignoring `Exclusive Shelf` column, treating all books as `already_read`
+- **Fix**: Now correctly maps Goodreads shelves → Sarah's Books statuses:
+  - `read` → `already_read` (Collection)
+  - `currently-reading` → `reading` (Currently Reading)
+  - `to-read` → `want_to_read` (Want to Read)
+
+### 2. User Data Fixes
+- **Heather**: Fixed to 123 read, 57 want-to-read, 7 currently reading
+- **Otis**: Added "Becoming Supernatural" as currently reading
+- **Just Mercy duplicate**: Removed (was appearing twice with slightly different titles)
+
+### 3. Admin Dashboard - Currently Reading
+- Added new "Currently Reading" stat tile (separate from "Books Queued")
+- Added drill-down modal with user list → book list navigation
+- Added `reading-user` API endpoint for modal data
+
+### 4. Database: `is_active` Column
+- Added `is_active` boolean to `reading_queue` table
+- Enables "On My Nightstand" (active) vs "On Deck" (paused) sub-states
+- Migration 044 deployed to production
+
+### 5. Currently Reading UI Redesign
+- **On My Nightstand**: Rich cards with cover, genre, description
+- **On Deck**: Compact cards for paused books
+- Cream palette throughout (fixed white-on-cream brand violation)
+- Empty state: "What's on your nightstand?"
+
+## Gaps & Open Questions
+
+### 1. "Set Aside" Status (Abandoned Books)
+- Need a way for readers to remove books they won't finish
+- Proposed: `set_aside` status - private, no rating prompt
+- **Decision pending**: Confirm "Set Aside" is the right language
+
+### 2. Notes for Currently Reading
+- Readers should be able to take notes on books they're reading
+- Not yet implemented
+- **Decision pending**: Where do notes live? Inline or modal?
+
+### 3. Three-Space Navigation
+- Spec proposes three distinct tabs: Currently Reading, Collection, Want to Read
+- Current UI still uses single "Reading Queue" page with sections
+- **Decision pending**: Full navigation redesign or incremental?
+
+### 4. Onboarding Flow
+- Spec proposes "What are you reading?" as first question
+- Not yet implemented
+- **Decision pending**: Priority vs other features
+
+## Learnings
+
+1. **Information parity matters**: Books shouldn't lose richness when moving between statuses. Currently Reading cards now match Want to Read cards.
+
+2. **Language matters**: "Reading Now" / "On Hold" felt mechanical. "On My Nightstand" / "On Deck" feels more personal and on-brand.
+
+3. **Backend was already ready**: The `status` field taxonomy already supported the UX we wanted. We just needed `is_active` for the sub-state.
+
+4. **Brand consistency**: White cards on cream background = brand violation. All cards now use cream variants (`#FDFCF9`, `#F8F6EE`).
+
+5. **Abandoned books need grace**: "Pause" implies return. Sometimes readers just stop. "Set Aside" is non-judgmental and honest.
+
+## Files Changed Today
+
+- `src/components/MyReadingQueuePage.jsx` - Currently Reading redesign
+- `src/components/MyBooksPage.jsx` - Goodreads import fix
+- `src/components/AdminDashboard.jsx` - Currently Reading tile + modal
+- `api/admin/stats.js` - Reading stats endpoint
+- `api/admin/details.js` - Reading-user drill-down endpoint
+- `src/contexts/ReadingQueueContext.jsx` - is_active support
+- `src/lib/supabase.js` - is_active in addToReadingQueue
+- `supabase/migrations/044_add_is_active_to_reading_queue.sql` - New column
+- `docs/BOOK_STATUS_UX_SPEC.md` - This spec document
+
+## Tomorrow's Priorities
+
+1. Review "On My Nightstand" / "On Deck" UI with fresh eyes
+2. Decide on "Set Aside" implementation
+3. Consider notes capability for active reads
+4. Update spec with final decisions
