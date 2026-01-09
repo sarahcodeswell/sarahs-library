@@ -509,7 +509,7 @@ export default function UserProfile({ tasteProfile }) {
         recsAccepted
       };
       devLog('[Profile] Stats calculated:', stats);
-      devLog('[Profile] User books:', userBooks?.length || 0, 'Finished:', finishedBooks.length);
+      devLog('[Profile] User books:', userBooks?.length || 0, 'Finished:', collectionBooks.length);
       setStats(stats);
     } catch (error) {
       console.error('[Profile] Error loading stats:', error);
