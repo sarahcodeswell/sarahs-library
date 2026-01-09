@@ -883,8 +883,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     if (!addBookSearch.trim() || addBookSearch.length < 2) return [];
     const query = addBookSearch.toLowerCase();
     
+    // Ensure booksData is an array
+    const catalog = Array.isArray(booksData) ? booksData : [];
+    
     // Search the catalog
-    const results = booksData
+    const results = catalog
       .filter(book => 
         book.title?.toLowerCase().includes(query) ||
         book.author?.toLowerCase().includes(query)
@@ -895,9 +898,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
     const filtered = results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
     
-    if (import.meta.env.DEV) {
-      console.log('[Search] Query:', query, 'Catalog size:', booksData.length, 'Results:', results.length, 'Filtered:', filtered.length);
-    }
+    console.log('[BookSearch] Query:', query, 'Catalog:', catalog.length, 'Results:', results.length, 'Filtered:', filtered.length);
     
     return filtered;
   }, [addBookSearch, readingQueue]);
