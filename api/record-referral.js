@@ -38,7 +38,9 @@ export default async function handler(req) {
 
     // Fall back to taste_profiles for backward compatibility
     let finalInviterId = inviterId;
-    if (!finalInviterId) {
+    let finalInviterEmail = inviterEmail;
+    
+    if (!finalInviterId && !finalInviterEmail) {
       const { data: inviterProfile } = await supabase
         .from('taste_profiles')
         .select('user_id')
@@ -48,22 +50,34 @@ export default async function handler(req) {
       finalInviterId = inviterProfile?.user_id;
     }
 
-    if (!finalInviterId) {
+    // Need either inviter_id OR inviter_email to track the referral
+    if (!finalInviterId && !finalInviterEmail) {
       console.log('Referral code not found:', referralCode);
       return json({ success: false, message: 'Invalid referral code' });
     }
 
-    // Record the referral
+    // Record the referral - allow null inviter_id if we have inviter_email
+    // This handles beta/curator waitlist users who haven't created full accounts
+    const referralData = {
+      invited_email: newUserEmail || null,
+      invited_user_id: newUserId,
+      status: 'accepted',
+      referral_type: 'link',
+      accepted_at: new Date().toISOString()
+    };
+    
+    // Add inviter_id if available, otherwise store inviter_email in a way we can track
+    if (finalInviterId) {
+      referralData.inviter_id = finalInviterId;
+    }
+    // Store inviter email for attribution even without user_id
+    if (finalInviterEmail) {
+      referralData.inviter_email = finalInviterEmail;
+    }
+
     const { error: insertError } = await supabase
       .from('referrals')
-      .insert({
-        inviter_id: finalInviterId,
-        invited_email: newUserEmail || null,
-        invited_user_id: newUserId,
-        status: 'accepted',
-        referral_type: 'link',
-        accepted_at: new Date().toISOString()
-      });
+      .insert(referralData);
 
     if (insertError) {
       console.error('Error recording referral:', insertError);

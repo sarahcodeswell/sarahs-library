@@ -55,24 +55,33 @@ export default async function handler(request) {
       </p>
     ` : '';
 
-    // Build email HTML
+    // Build email HTML - mobile-friendly, no logo
     const emailHtml = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>A Note from ${curatorName}</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; }
+      .mobile-padding { padding: 20px !important; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FDFBF4; font-family: 'Poppins', Georgia, 'Times New Roman', serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FDFBF4; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; background-color: #FDFBF4 !important; font-family: Georgia, 'Times New Roman', serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FDFBF4;">
     <tr>
-      <td align="center">
-        <table width="100%" style="max-width: 560px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          <!-- Header with Logo -->
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" class="email-container" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width: 560px; width: 100%; background-color: #FFFFFF; border-radius: 16px; overflow: hidden;">
+          <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); padding: 24px 32px; text-align: center;">
-              <img src="https://www.sarahsbooks.com/linkedin-logo.png" alt="Sarah's Books" width="120" style="display: block; margin: 0 auto 16px auto; max-width: 120px; height: auto;" />
-              <h1 style="margin: 0; color: #FFFFFF; font-size: 22px; font-weight: normal; letter-spacing: 0.5px;">
+            <td align="center" style="background-color: #5F7252; padding: 28px 24px;">
+              <h1 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 600; font-family: Georgia, serif; line-height: 1.3;">
                 📚 A Note from ${curatorName}, Your Curator
               </h1>
             </td>
@@ -141,8 +150,8 @@ export default async function handler(request) {
           <!-- CTA -->
           <tr>
             <td style="padding: 0 32px 32px 32px; text-align: center;">
-              <a href="https://www.sarahsbooks.com/queue" 
-                 style="display: inline-block; background: linear-gradient(135deg, #5F7252 0%, #4A5940 100%); color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 14px; font-weight: 600;">
+              <a href="https://www.sarahsbooks.com/my-queue" 
+                 style="display: inline-block; background-color: #5F7252; color: #FFFFFF !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Georgia, serif;">
                 View Your Reading Queue →
               </a>
             </td>

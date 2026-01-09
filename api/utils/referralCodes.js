@@ -109,11 +109,24 @@ export async function lookupReferralCode(supabase, code) {
   if (!code) return { inviterId: null, inviterEmail: null };
   
   try {
-    const { data, error } = await supabase
+    // Try exact match first, then case-insensitive
+    const normalizedCode = code.trim().toUpperCase();
+    
+    let { data, error } = await supabase
       .from('referral_codes')
       .select('user_id, email')
-      .eq('code', code.toUpperCase())
+      .eq('code', normalizedCode)
       .single();
+    
+    // If not found, try case-insensitive search
+    if (!data && (error?.code === 'PGRST116' || !error)) {
+      const { data: iData } = await supabase
+        .from('referral_codes')
+        .select('user_id, email')
+        .ilike('code', normalizedCode)
+        .single();
+      data = iData;
+    }
     
     if (error || !data) {
       return { inviterId: null, inviterEmail: null };
