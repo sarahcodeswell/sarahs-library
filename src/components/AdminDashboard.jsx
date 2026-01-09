@@ -738,29 +738,48 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
         );
 
       case 'reading':
-        // Currently reading books - show users with their reading books
+        // Currently reading books - if viewing a specific user's books
+        if (selectedUser && userBooks) {
+          return (
+            <div>
+              <button
+                onClick={() => { setSelectedUser(null); setUserBooks(null); }}
+                className="text-xs text-[#5F7252] hover:text-[#4A5940] mb-3 flex items-center gap-1"
+              >
+                ← Back to all users
+              </button>
+              <p className="text-sm font-medium text-[#4A5940] mb-3">{selectedUser.email}'s Currently Reading</p>
+              <div className="divide-y divide-[#E8EBE4] max-h-80 overflow-y-auto">
+                {userBooks.books?.map((b, i) => (
+                  <div key={i} className="py-2.5 flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-[#4A5940] font-medium">{b.title}</p>
+                      <p className="text-xs text-[#7A8F6C]">by {b.author}</p>
+                      {b.addedAt && <p className="text-xs text-[#96A888] mt-1">{new Date(b.addedAt).toLocaleDateString()}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        // Show users with book counts (clickable to drill down)
         return (
           <div className="divide-y divide-[#E8EBE4] max-h-96 overflow-y-auto">
             {data.map((u, i) => (
-              <div key={i} className="py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
-                    {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
-                  </div>
-                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                    {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
-                  </span>
+              <button
+                key={i}
+                onClick={() => fetchUserDetails('reading-user', u.userId, u.email)}
+                className="w-full py-2.5 flex items-center justify-between hover:bg-[#F8F6EE] transition-colors text-left px-1 -mx-1 rounded"
+              >
+                <div>
+                  <p className="text-sm text-[#4A5940] font-medium">{u.name || u.email}</p>
+                  {u.name && <p className="text-xs text-[#96A888]">{u.email}</p>}
                 </div>
-                <div className="pl-2 border-l-2 border-amber-200 space-y-1.5">
-                  {u.books?.map((b, j) => (
-                    <div key={j} className="text-xs">
-                      <p className="text-[#4A5940] font-medium">{b.title}</p>
-                      <p className="text-[#7A8F6C]">by {b.author}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                <span className="text-xs bg-[#E8EBE4] text-[#5F7252] px-2 py-0.5 rounded-full font-medium">
+                  {u.bookCount} {u.bookCount === 1 ? 'book' : 'books'}
+                </span>
+              </button>
             ))}
           </div>
         );

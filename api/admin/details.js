@@ -207,6 +207,24 @@ export default async function handler(req) {
         return json({ type: 'queue-user', data: result });
       }
 
+      case 'reading-user': {
+        const userId = url.searchParams.get('userId');
+        if (!userId) return json({ error: 'userId required' }, 400);
+        
+        const { data: reading } = await supabase.from('reading_queue').select('*').eq('user_id', userId).eq('status', 'reading');
+        const u = userMap.get(userId);
+        const result = {
+          email: u?.email || 'Unknown',
+          books: (reading || []).map(q => ({
+            title: q.book_title,
+            author: q.book_author,
+            addedAt: q.added_at
+          })).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+        };
+        
+        return json({ type: 'reading-user', data: result });
+      }
+
       case 'finished-user': {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
