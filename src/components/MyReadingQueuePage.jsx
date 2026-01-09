@@ -164,7 +164,7 @@ function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onM
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border border-[#E8EBE4] bg-[#FDFCF9] p-3 hover:shadow-md transition-all ${
+      className={`rounded-lg border border-[#E8EBE4] bg-gradient-to-r from-[#F8F6EE] to-transparent p-3 hover:shadow-md transition-all ${
         isDragging ? 'shadow-lg' : ''
       }`}
     >
@@ -235,8 +235,8 @@ function CurrentlyReadingSection({ isOver, books, onFinished, onNotForMe, onMove
         isOver 
           ? 'border-[#5F7252] bg-[#5F7252]/5 scale-[1.01]' 
           : books.length > 0 
-            ? 'border-[#E8EBE4] bg-[#F8F6EE]' 
-            : 'border-dashed border-[#96A888] bg-[#F8F6EE]/50'
+            ? 'border-[#E8EBE4] bg-transparent' 
+            : 'border-dashed border-[#96A888] bg-transparent'
       }`}
     >
       {books.length > 0 ? (
