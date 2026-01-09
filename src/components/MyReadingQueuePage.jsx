@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Book, PartyPopper } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, BookOpen, Library, Headphones, ShoppingBag, Star, Info, GripVertical, ChevronDown, ChevronUp, Book, PartyPopper, X } from 'lucide-react';
 import { track } from '@vercel/analytics';
 import { useReadingQueue } from '../contexts/ReadingQueueContext';
+import { useRecommendations } from '../contexts/RecommendationContext';
 import { db } from '../lib/supabase';
 import { useBookEnrichment } from './BookCard';
 import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
@@ -9,6 +10,7 @@ import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';
 import BookDetailModal from './BookDetailModal';
+import RecommendationModal from './RecommendationModal';
 // World book search is handled via /api/book-search endpoint
 // This is SEPARATE from the recommendations system which uses vectorSearch
 
@@ -908,6 +910,7 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
 
 export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }) {
   const { readingQueue, removeFromQueue, updateQueueStatus, updateQueueItem, addToQueue } = useReadingQueue();
+  const { createRecommendation } = useRecommendations();
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
@@ -917,6 +920,12 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [addBookResults, setAddBookResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null); // For BookDetailModal
+  const [showRecommendModal, setShowRecommendModal] = useState(false);
+  const [recommendBook, setRecommendBook] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewBook, setReviewBook] = useState(null);
+  const [reviewText, setReviewText] = useState('');
+  const [isSavingReview, setIsSavingReview] = useState(false);
 
   // Load collection books for preview
   useEffect(() => {
@@ -1440,13 +1449,18 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         }}
         review={selectedBook?.review || null}
         onWriteReview={(book) => {
-          // Navigate to collection page to write review
-          onNavigate('collection');
+          // Open review modal
+          setSelectedBook(null);
+          setReviewBook(book);
+          setReviewText(book.review || '');
+          setShowReviewModal(true);
           track('write_review_clicked', { book_title: book.book_title || book.title });
         }}
         onRecommend={(book) => {
-          // Navigate to collection page to recommend
-          onNavigate('collection');
+          // Open recommendation modal
+          setSelectedBook(null);
+          setRecommendBook(book);
+          setShowRecommendModal(true);
           track('recommend_clicked', { book_title: book.book_title || book.title });
         }}
       />
@@ -1459,6 +1473,115 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           onNoThanks={handleFinishedNoCollection}
           onClose={() => setFinishedBook(null)}
         />
+      )}
+
+      {/* Recommendation Modal */}
+      <RecommendationModal
+        isOpen={showRecommendModal}
+        onClose={() => {
+          setShowRecommendModal(false);
+          setRecommendBook(null);
+        }}
+        book={recommendBook}
+        onSubmit={async (book, note, sharedWith) => {
+          const result = await createRecommendation(book, note, sharedWith);
+          if (result.success) {
+            track('recommendation_created_from_queue', { book_title: book.book_title });
+          }
+          return result;
+        }}
+      />
+
+      {/* Write Review Modal */}
+      {showReviewModal && reviewBook && (
+        <div 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={() => {
+            setShowReviewModal(false);
+            setReviewBook(null);
+            setReviewText('');
+          }}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div 
+            className="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-[#E8EBE4] px-4 py-3 flex items-center justify-between">
+              <h2 className="font-serif text-lg text-[#4A5940]">
+                {reviewBook.review ? 'Edit Review' : 'Write a Review'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setReviewBook(null);
+                  setReviewText('');
+                }}
+                className="p-2 rounded-full hover:bg-[#F8F6EE] transition-colors text-[#7A8F6C]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="text-center">
+                <p className="font-medium text-[#4A5940]">{reviewBook.book_title}</p>
+                <p className="text-sm text-[#7A8F6C]">by {reviewBook.book_author}</p>
+              </div>
+              
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="What did you think of this book? Share your thoughts..."
+                className="w-full h-32 p-3 border border-[#E8EBE4] rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                autoFocus
+              />
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowReviewModal(false);
+                    setReviewBook(null);
+                    setReviewText('');
+                  }}
+                  className="flex-1 py-2.5 px-4 border border-[#E8EBE4] rounded-xl text-[#5F7252] hover:bg-[#F8F6EE] transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!reviewText.trim() && !reviewBook.review) {
+                      setShowReviewModal(false);
+                      setReviewBook(null);
+                      setReviewText('');
+                      return;
+                    }
+                    
+                    setIsSavingReview(true);
+                    try {
+                      await db.updateUserBook(reviewBook.id, { review: reviewText.trim() || null });
+                      setCollectionBooks(prev => prev.map(b => 
+                        b.id === reviewBook.id ? { ...b, review: reviewText.trim() || null } : b
+                      ));
+                      track('review_saved', { book_title: reviewBook.book_title, has_review: !!reviewText.trim() });
+                      setShowReviewModal(false);
+                      setReviewBook(null);
+                      setReviewText('');
+                    } catch (err) {
+                      console.error('Error saving review:', err);
+                    } finally {
+                      setIsSavingReview(false);
+                    }
+                  }}
+                  disabled={isSavingReview}
+                  className="flex-1 py-2.5 px-4 bg-[#5F7252] text-white rounded-xl hover:bg-[#4A5940] transition-colors text-sm disabled:opacity-50"
+                >
+                  {isSavingReview ? 'Saving...' : 'Save Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
