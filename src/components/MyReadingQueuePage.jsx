@@ -1088,12 +1088,17 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     setFinishedBook(null);
   };
 
-  // Mark as finished but don't add to collection
+  // Mark as finished but don't add to collection - also add to dismissed_recommendations
+  // This gives reader credit for finishing while signaling "wouldn't recommend"
   const handleFinishedNoCollection = async (book) => {
-    // Just update status to finished without adding to user_books
+    // Update status to finished (keeps in reading_queue for counting)
     const result = await updateQueueStatus(book.id, 'finished');
     
     if (result.success) {
+      // Also add to dismissed_recommendations as negative signal
+      // "Finished but wouldn't add to collection" = valuable algo signal
+      await db.addDismissedRecommendation(user.id, book.book_title, book.book_author);
+      
       track('book_finished_no_collection', {
         book_title: book.book_title,
       });
