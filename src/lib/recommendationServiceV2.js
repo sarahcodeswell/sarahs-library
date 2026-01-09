@@ -156,7 +156,9 @@ async function routeAndRetrieve(validated, exclusionTitles) {
   }
   
   // Filter out excluded books
+  const beforeFilter = books.length;
   books = filterExcluded(books, exclusionTitles);
+  console.log('[V2] Filtered:', beforeFilter, '→', books.length, '(excluded', exclusionTitles.size, 'titles)');
   
   // Deduplicate by title
   books = deduplicateBooks(books);
