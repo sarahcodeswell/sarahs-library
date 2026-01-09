@@ -259,9 +259,45 @@ function CurrentlyReadingSection({ isOver, books, onFinished, onNotForMe, onMove
           </SortableContext>
         </div>
       ) : (
-        <div className={`flex items-center justify-center gap-2 py-8 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
+        <div className={`flex flex-col items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#96A888]'}`}>
           <BookOpen className="w-5 h-5" />
-          <span className="text-sm font-medium">Drag a book here to start reading</span>
+          <span className="text-sm">Drag a book down here to start reading</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Collection book thumbnail with cover enrichment
+function CollectionBookThumbnail({ book, onClick }) {
+  // Auto-enrich cover if missing
+  const { coverUrl, isEnriching } = useBookEnrichment(
+    book.title,
+    book.author,
+    book.cover_url,
+    null
+  );
+
+  return (
+    <div
+      className="flex-shrink-0 w-20 group cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="w-20 h-28 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
+        {coverUrl ? (
+          <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+        ) : isEnriching ? (
+          <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+        ) : (
+          <BookOpen className="w-6 h-6 text-white/70" />
+        )}
+      </div>
+      <p className="text-xs text-[#5F7252] mt-1.5 truncate font-medium">{book.title}</p>
+      {book.rating && (
+        <div className="flex items-center gap-0.5 mt-0.5">
+          {[...Array(book.rating)].map((_, i) => (
+            <Star key={i} className="w-2.5 h-2.5 fill-[#5F7252] text-[#5F7252]" />
+          ))}
         </div>
       )}
     </div>
@@ -1196,13 +1232,88 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-        {/* Currently Reading Drop Zone */}
-        <div className="mb-8">
+
+        {/* ===== WANT TO READ (Top) ===== */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                <Book className="w-4 h-4 text-[#5F7252]" />
+              </div>
+              <h2 className="text-lg font-serif text-[#4A5940]">Want to Read</h2>
+              {queueBooks.length > 0 && (
+                <span className="text-sm text-[#96A888]">({queueBooks.length})</span>
+              )}
+            </div>
+            {/* Compact search - only show if more than 5 books */}
+            {queueBooks.length > 5 && (
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-40 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
+                />
+              </div>
+            )}
+          </div>
+
+          {filteredBooks.length === 0 ? (
+            <div className="rounded-xl border-2 border-dashed border-[#96A888] bg-[#F8F6EE]/50 py-8 px-4 text-center">
+              {searchQuery ? (
+                <p className="text-[#7A8F6C] text-sm">No books found matching "{searchQuery}"</p>
+              ) : (
+                <div className="max-w-xs mx-auto">
+                  <Book className="w-8 h-8 text-[#96A888] mx-auto mb-3" />
+                  <p className="text-[#7A8F6C] text-sm mb-3">
+                    Your reading list is empty
+                  </p>
+                  <button
+                    onClick={() => onNavigate('home')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+                  >
+                    <Star className="w-4 h-4" />
+                    Get Recommendations
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <SortableContext
+              items={filteredBooks.map(b => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {filteredBooks.map((book, index) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    index={index}
+                    onRemove={handleRemoveBook}
+                    onStartReading={handleStartReading}
+                    onNotForMe={handleNotForMe}
+                    isFirst={index === 0}
+                    onUpdateBook={updateQueueItem}
+                    onToggleOwned={handleToggleOwned}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          )}
+        </div>
+
+        {/* ===== CURRENTLY READING (Middle) ===== */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-[#5F7252]" />
             </div>
             <h2 className="text-lg font-serif text-[#4A5940]">Currently Reading</h2>
+            {currentlyReadingBooks.length > 0 && (
+              <span className="text-sm text-[#96A888]">({currentlyReadingBooks.length})</span>
+            )}
           </div>
           <CurrentlyReadingSection 
             isOver={overZone === 'reading-zone'} 
@@ -1213,93 +1324,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           />
         </div>
 
-        {/* Want to Read Section */}
-        {queueBooks.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-                  <Book className="w-4 h-4 text-[#5F7252]" />
-                </div>
-                <h2 className="text-lg font-serif text-[#4A5940]">Want to Read</h2>
-                <span className="text-sm text-[#96A888]">({queueBooks.length})</span>
-              </div>
-              {/* Compact search - only show if more than 5 books */}
-              {queueBooks.length > 5 && (
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-40 pl-8 pr-3 py-1.5 rounded-lg border border-[#E8EBE4] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7252] focus:border-transparent"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {filteredBooks.length === 0 ? (
-          <div className="text-center py-12">
-            {searchQuery ? (
-              <p className="text-[#7A8F6C] text-sm">No books found matching "{searchQuery}"</p>
-            ) : (
-              <div className="max-w-sm mx-auto">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-                  <BookOpen className="w-8 h-8 text-[#5F7252]" />
-                </div>
-                <h3 className="font-medium text-[#4A5940] mb-2">Your reading queue is empty</h3>
-                <p className="text-[#7A8F6C] text-sm mb-4">
-                  Ready to discover your next great read?
-                </p>
-                <button
-                  onClick={() => onNavigate('home')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
-                >
-                  <Star className="w-4 h-4" />
-                  Ask Sarah for Recommendations
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <SortableContext
-            items={filteredBooks.map(b => b.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-3">
-              {filteredBooks.map((book, index) => (
-                <SortableBookCard
-                  key={book.id}
-                  book={book}
-                  index={index}
-                  onRemove={handleRemoveBook}
-                  onStartReading={handleStartReading}
-                  onNotForMe={handleNotForMe}
-                  isFirst={index === 0}
-                  onUpdateBook={updateQueueItem}
-                  onToggleOwned={handleToggleOwned}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        )}
-
         {/* Drop Zones - only show when dragging */}
         {activeId && (
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="mb-6 grid grid-cols-2 gap-4">
             <CollectionDropZone isOver={overZone === 'collection-zone'} />
             <NotForMeDropZone isOver={overZone === 'not-for-me-zone'} />
-          </div>
-        )}
-
-        {/* Inline tip at bottom */}
-        {(filteredBooks.length > 0 || currentlyReadingBooks.length > 0) && !activeId && (
-          <div className="mt-6 flex items-center gap-2 text-xs text-[#96A888]">
-            <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Drag books to reorder, or drop on zones to change status.</span>
           </div>
         )}
 
@@ -1310,17 +1339,19 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
         </DndContext>
 
-        {/* Collection Preview Section */}
-        {collectionBooks.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-[#E8EBE4]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-                  <Library className="w-4 h-4 text-[#5F7252]" />
-                </div>
-                <h2 className="text-lg font-serif text-[#4A5940]">My Collection</h2>
-                <span className="text-sm text-[#96A888]">({collectionBooks.length}+ books)</span>
+        {/* ===== MY COLLECTION (Bottom) ===== */}
+        <div className="pt-6 border-t border-[#E8EBE4]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                <Library className="w-4 h-4 text-[#5F7252]" />
               </div>
+              <h2 className="text-lg font-serif text-[#4A5940]">My Collection</h2>
+              {collectionBooks.length > 0 && (
+                <span className="text-sm text-[#96A888]">({collectionBooks.length}+)</span>
+              )}
+            </div>
+            {collectionBooks.length > 0 && (
               <button
                 onClick={() => onNavigate('collection')}
                 className="text-sm text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
@@ -1328,35 +1359,28 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                 View All
                 <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
               </button>
-            </div>
-            
+            )}
+          </div>
+          
+          {collectionBooks.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
               {collectionBooks.map((book) => (
-                <div
-                  key={book.id}
-                  className="flex-shrink-0 w-20 group cursor-pointer"
-                  onClick={() => onNavigate('collection')}
-                >
-                  <div className="w-20 h-28 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
-                    {book.cover_url ? (
-                      <img src={book.cover_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <BookOpen className="w-6 h-6 text-white/70" />
-                    )}
-                  </div>
-                  <p className="text-xs text-[#5F7252] mt-1.5 truncate font-medium">{book.title}</p>
-                  {book.rating && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      {[...Array(book.rating)].map((_, i) => (
-                        <Star key={i} className="w-2.5 h-2.5 fill-[#5F7252] text-[#5F7252]" />
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <CollectionBookThumbnail 
+                  key={book.id} 
+                  book={book} 
+                  onClick={() => onNavigate('collection')} 
+                />
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-xl border-2 border-dashed border-[#96A888]/50 bg-[#F8F6EE]/30 py-6 px-4 text-center">
+              <Library className="w-6 h-6 text-[#96A888] mx-auto mb-2" />
+              <p className="text-[#96A888] text-sm">
+                Books you love will appear here after finishing
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
