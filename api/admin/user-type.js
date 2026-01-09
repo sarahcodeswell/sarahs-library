@@ -49,26 +49,26 @@ export default async function handler(req) {
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
       // Get queue data with status breakdown
+      // Status taxonomy:
+      // - want_to_read, reading = "Queued" (books user wants to read)
+      // - finished = "Read" (books completed via queue workflow)
+      // - already_read = part of "Added" (books marked as read without queue workflow)
+      // - "Added" = finished + already_read (total collection)
       const { data: queueData } = await supabase
         .from('reading_queue')
         .select('user_id, status');
       const queueCounts = new Map(); // Books queued (want_to_read, reading)
-      const readCounts = new Map();  // Books read (finished)
+      const readCounts = new Map();  // Books read (finished only - queue workflow)
+      const addedCounts = new Map(); // Books added to collection (finished + already_read)
       (queueData || []).forEach(q => {
-        if (q.status === 'finished') {
-          readCounts.set(q.user_id, (readCounts.get(q.user_id) || 0) + 1);
-        } else {
+        if (q.status === 'want_to_read' || q.status === 'reading') {
           queueCounts.set(q.user_id, (queueCounts.get(q.user_id) || 0) + 1);
+        } else if (q.status === 'finished') {
+          readCounts.set(q.user_id, (readCounts.get(q.user_id) || 0) + 1);
+          addedCounts.set(q.user_id, (addedCounts.get(q.user_id) || 0) + 1);
+        } else if (q.status === 'already_read') {
+          addedCounts.set(q.user_id, (addedCounts.get(q.user_id) || 0) + 1);
         }
-      });
-
-      // Get user_books counts (books added to collection)
-      const { data: booksData } = await supabase
-        .from('user_books')
-        .select('user_id');
-      const bookCounts = new Map();
-      (booksData || []).forEach(b => {
-        bookCounts.set(b.user_id, (bookCounts.get(b.user_id) || 0) + 1);
       });
 
       // Get recommendations received
@@ -131,7 +131,7 @@ export default async function handler(req) {
           // Activity counts
           booksQueued: queueCounts.get(u.id) || 0,
           booksRead: readCounts.get(u.id) || 0,
-          booksAdded: bookCounts.get(u.id) || 0,
+          booksAdded: addedCounts.get(u.id) || 0,
           recsReceived: recsReceivedCounts.get(u.id) || 0,
           recsMade: recsMadeCounts.get(u.id) || 0,
           recsAccepted: recsAcceptedCounts.get(u.id) || 0

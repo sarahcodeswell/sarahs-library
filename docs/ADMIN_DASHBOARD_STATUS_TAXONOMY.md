@@ -112,6 +112,10 @@ Friend shares recommendation → User clicks "Already Read" → Book added as (a
 1. **MyCollectionPage** was only showing `finished`, not `already_read` - FIXED
 2. **Admin stats** were only counting `already_read` for "Books Added" - FIXED
 3. **Admin details modal** was only querying `already_read` - FIXED
+4. **Duplicate `case 'collection'`** in details.js - second case was overriding first - FIXED
+5. **user-type.js drill-down stats** were using wrong data sources:
+   - `booksQueued` was counting ALL non-finished (including `already_read`) - FIXED
+   - `booksAdded` was querying `user_books` table instead of `reading_queue` - FIXED
 
 ---
 
