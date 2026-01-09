@@ -6,6 +6,7 @@ import bookCatalog from './books.json';
 import { db } from './lib/supabase';
 import { extractThemes } from './lib/themeExtractor';
 import { getRecommendations, parseRecommendations } from './lib/recommendationService';
+import { getRecommendationsV2, parseRecommendationsV2 } from './lib/recommendationServiceV2';
 import { useBookEnrichment } from './components/BookCard';
 import { validateMessage, validateBook } from './lib/validation';
 import { cacheUtils } from './lib/cache';
@@ -62,6 +63,9 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 // Affiliate links extracted to ./lib/affiliateLinks.js
 // ChatMessage, BookDetail, FormattedText, FormattedRecommendations extracted to ./components/
+
+// Feature flag for V2 recommendations - set to true to enable new architecture
+const USE_V2_RECOMMENDATIONS = true;
 
 function AboutSection({ onShare }) {
   return (
@@ -716,12 +720,21 @@ Find similar books from beyond my library that match this taste profile.
         setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0, mode: 'full' }), 1000);
       }
 
-      // NEW CLEAN RECOMMENDATION SERVICE
-      const result = await getRecommendations(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
+      // RECOMMENDATION SERVICE - V2 uses Claude Tool Use for extraction
+      let result;
+      if (USE_V2_RECOMMENDATIONS) {
+        result = await getRecommendationsV2(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
+        // V2 returns { success, response, recommendations, metadata }
+        if (result.success) {
+          result.text = result.response;
+        }
+      } else {
+        result = await getRecommendations(user?.id, userMessage, readingQueue, effectiveThemes, shownBooksInSession);
+      }
       
       if (!result.success) {
         setMessages(prev => [...prev, {
-          text: result.error || "I'm having trouble thinking right now. Could you try again?",
+          text: result.error || result.response || "I'm having trouble thinking right now. Could you try again?",
           isUser: false
         }]);
         return;

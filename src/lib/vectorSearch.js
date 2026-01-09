@@ -568,19 +568,22 @@ export async function quickCatalogProbe(query, limit = 5) {
       const similarities = books.map(b => b.similarity || 0);
       result.metrics.maxSimilarity = Math.max(...similarities);
       result.metrics.avgSimilarity = similarities.reduce((a, b) => a + b, 0) / similarities.length;
-      result.metrics.matchCount = books.filter(b => (b.similarity || 0) > 0.5).length;
+      result.metrics.matchCount = books.filter(b => (b.similarity || 0) > 0.35).length;
     }
     
     // Determine confidence and recommended path based on thresholds
+    // NOTE: These thresholds are for vector similarity of text queries to book embeddings
+    // Text query → book similarity is typically 0.35-0.50
+    // Book → book similarity is typically 0.50-0.70
     const { maxSimilarity, matchCount } = result.metrics;
     
-    if (maxSimilarity >= 0.75 && matchCount >= 3) {
+    if (maxSimilarity >= 0.50 && matchCount >= 3) {
       result.confidence = 'high';
       result.recommendedPath = 'CATALOG';
-    } else if (maxSimilarity >= 0.60 && matchCount >= 2) {
+    } else if (maxSimilarity >= 0.40 && matchCount >= 2) {
       result.confidence = 'medium';
       result.recommendedPath = 'HYBRID';
-    } else if (maxSimilarity >= 0.50 && matchCount >= 1) {
+    } else if (maxSimilarity >= 0.35 && matchCount >= 1) {
       result.confidence = 'low';
       result.recommendedPath = 'HYBRID';
     } else {
