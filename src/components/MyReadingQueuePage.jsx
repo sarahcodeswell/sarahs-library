@@ -544,18 +544,25 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
   useEffect(() => {
     if (expanded && !enrichedDescription && !isEnrichingDescription && book.book_title) {
       setIsEnrichingDescription(true);
+      console.log('[BookDetails] Fetching description for:', book.book_title, book.book_author);
       import('../lib/bookEnrichment.js').then(({ enrichBook }) => {
         enrichBook(book.book_title, book.book_author)
           .then((data) => {
+            console.log('[BookDetails] Enrichment result:', data);
             if (data?.description) {
+              console.log('[BookDetails] Got description, length:', data.description.length);
               setEnrichedDescription(data.description);
               // Save to DB for future use
               if (onUpdateBook) {
                 onUpdateBook(book.id, { description: data.description });
               }
+            } else {
+              console.log('[BookDetails] No description in result');
             }
           })
-          .catch(console.error)
+          .catch((err) => {
+            console.error('[BookDetails] Enrichment error:', err);
+          })
           .finally(() => setIsEnrichingDescription(false));
       });
     }
