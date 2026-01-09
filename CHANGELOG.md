@@ -4,15 +4,18 @@
 
 ### January 9, 2026
 
-#### UX Improvements (Demo-Ready)
-- **Information parity**: Currently Reading cards now show covers, genres, descriptions
-  - `NightstandBookCard`: Full rich card with auto-enriched cover, genre badges, expandable description
-  - `OnDeckBookCard`: Compact card with auto-enriched cover
-  - Uses same `useBookEnrichment` hook as Want to Read cards
-- **Bi-directional status changes**: Books can now move back to queue
-  - "← Back to Queue" button on Nightstand cards
-  - Arrow button on On Deck cards
-  - No more one-way door - books move freely between states
+#### Reading Queue Redesign (Demo-Ready)
+- **Currently Reading**: Now sortable with drag handles and numbered positions
+  - Removed "On My Nightstand" / "On Deck" labels (redundant)
+  - Rich cards with auto-enriched covers, genres, expandable descriptions
+  - "← Want to Read" button to move books back
+- **New status actions**:
+  - "Add to Collection" replaces "Finished" (clearer intent, strongest positive signal)
+  - "Not for me" replaces trash/remove (consistent with recommendation dismissal)
+  - Both available as buttons AND drag-drop zones
+- **"Not for me" integration**: Adds to `dismissed_recommendations` table
+  - Same backend as recommendation dismissal
+  - Negative signal useful for algo (books user doesn't want)
 
 #### Backend Health & Cleanup
 - **Schema fix**: Added `reputation` column to `reading_queue` (migration 045)
