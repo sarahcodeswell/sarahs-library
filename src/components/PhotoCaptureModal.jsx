@@ -19,16 +19,26 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
       return;
     }
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid image file (JPG, PNG, or WebP).');
+    // Validate file type - include HEIC for iOS
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    // Also check file extension for iOS which may not set proper MIME type
+    const fileName = file.name?.toLowerCase() || '';
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!validTypes.includes(file.type) && !hasValidExtension && file.type !== '') {
+      setError('Please upload a valid image file (JPG, PNG, WebP, or HEIC).');
       return;
     }
 
-    const imageUrl = URL.createObjectURL(file);
-    setCapturedImage({ file, url: imageUrl });
-    setError('');
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      setCapturedImage({ file, url: imageUrl });
+      setError('');
+    } catch (urlError) {
+      console.error('URL.createObjectURL error:', urlError);
+      setError('Unable to preview this image. Please try a different image format.');
+    }
   };
 
   const handleProcess = async () => {
@@ -42,12 +52,31 @@ export default function PhotoCaptureModal({ isOpen, onClose, onPhotoCaptured }) 
       const reader = new FileReader();
       const base64Promise = new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(capturedImage.file);
+        reader.onerror = (e) => {
+          console.error('FileReader error:', e);
+          reject(new Error('Failed to read image file. Please try a different image or take a new photo.'));
+        };
+        try {
+          reader.readAsDataURL(capturedImage.file);
+        } catch (readError) {
+          console.error('readAsDataURL error:', readError);
+          reject(new Error('Unable to process this image format. Please try saving the image and uploading it again.'));
+        }
       });
 
-      const base64Image = await base64Promise;
-      const mediaType = capturedImage.file.type || 'image/jpeg';
+      let base64Image;
+      try {
+        base64Image = await base64Promise;
+      } catch (readErr) {
+        throw readErr;
+      }
+      
+      // Validate we got a proper base64 string
+      if (!base64Image || !base64Image.startsWith('data:')) {
+        throw new Error('Invalid image data. Please try a different image.');
+      }
+      
+      const mediaType = capturedImage.file.type || 'image/png';
 
       const response = await fetch('/api/recognize-books', {
         method: 'POST',
