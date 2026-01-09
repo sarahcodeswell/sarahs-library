@@ -42,6 +42,7 @@ function findInCatalog(title, author) {
  * @returns {Promise<Object>} Enriched book data
  */
 export async function enrichBook(title, author = '', isbn = '') {
+  console.log('[BookEnrichment] enrichBook called with:', { title, author, isbn });
   try {
     // Create cache key
     const cacheKey = `${title}|${author}|${isbn}`.toLowerCase();
@@ -86,7 +87,9 @@ export async function enrichBook(title, author = '', isbn = '') {
       url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`;
     }
     
+    console.log('[BookEnrichment] Fetching from Google Books:', url);
     const response = await fetch(url);
+    console.log('[BookEnrichment] Response status:', response.status);
     if (!response.ok) {
       console.warn('[BookEnrichment] Google Books API error:', response.status);
       // Cache the failure to prevent repeated 429 errors
@@ -97,6 +100,7 @@ export async function enrichBook(title, author = '', isbn = '') {
     }
     
     const data = await response.json();
+    console.log('[BookEnrichment] Got data, items count:', data.items?.length || 0);
     
     if (!data.items || data.items.length === 0) {
       console.warn('[BookEnrichment] No results for:', title, author);
