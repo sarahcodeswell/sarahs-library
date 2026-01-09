@@ -926,28 +926,30 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         item => item.status === 'finished' || item.status === 'already_read'
       );
       
-      // Combine and dedupe
+      // Combine and dedupe - preserve full book data including rating
       const allBooks = [
         ...(userBooks || []).map(b => ({
-          id: b.id,
-          title: b.book_title,
-          author: b.book_author,
-          cover_url: b.cover_image_url,
+          ...b,
+          book_title: b.book_title,
+          book_author: b.book_author,
+          cover_image_url: b.cover_image_url,
           rating: b.rating,
+          description: b.description,
         })),
         ...finishedFromQueue.map(b => ({
-          id: b.id,
-          title: b.book_title,
-          author: b.book_author,
-          cover_url: b.cover_image_url,
+          ...b,
+          book_title: b.book_title,
+          book_author: b.book_author,
+          cover_image_url: b.cover_image_url,
           rating: b.rating,
+          description: b.description,
         })),
       ];
       
       // Remove duplicates by title
       const seen = new Set();
       const unique = allBooks.filter(book => {
-        const key = book.title?.toLowerCase();
+        const key = book.book_title?.toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

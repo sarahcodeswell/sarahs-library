@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Star, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3 } from 'lucide-react';
+import { X, BookOpen, Heart, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3 } from 'lucide-react';
 import { useBookEnrichment } from './BookCard';
 import { ExpandableDescription } from './ExpandableDescription';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import StarRating from './StarRating';
+import { generateBookDescriptions } from '../lib/descriptionService';
+
+// Heart colors matching StarRating component
+const heartColors = {
+  1: { fill: '#F5E8E8', stroke: '#F5E8E8' },
+  2: { fill: '#E8CBCB', stroke: '#E8CBCB' },
+  3: { fill: '#DBADAD', stroke: '#DBADAD' },
+  4: { fill: '#CE9494', stroke: '#CE9494' },
+  5: { fill: '#C97B7B', stroke: '#C97B7B' },
+};
+
+// Rating labels
+const ratingLabels = {
+  1: 'Not my cup of tea',
+  2: 'Had some good moments',
+  3: 'Solid read, glad I read it',
+  4: 'Really loved this one',
+  5: 'All-time favorite',
+};
 
 /**
  * BookDetailModal - A reusable modal for displaying book details
@@ -42,6 +61,45 @@ export default function BookDetailModal({
   const [isClosing, setIsClosing] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [localRating, setLocalRating] = useState(rating);
+  const [enrichedDescription, setEnrichedDescription] = useState(null);
+  const [isEnrichingDescription, setIsEnrichingDescription] = useState(false);
+
+  // Sync localRating with prop when book changes
+  useEffect(() => {
+    setLocalRating(rating);
+  }, [rating, book?.id]);
+
+  // Auto-enrich description when modal opens
+  useEffect(() => {
+    if (isOpen && book && !enrichedDescription && !isEnrichingDescription) {
+      const bookDesc = book.description || book.why_recommended;
+      if (bookDesc) {
+        setEnrichedDescription(bookDesc);
+      } else {
+        // Fetch description from Claude
+        setIsEnrichingDescription(true);
+        const title = book.book_title || book.title;
+        const author = book.book_author || book.author;
+        generateBookDescriptions([{ title, author }])
+          .then((result) => {
+            const key = `${title.toLowerCase()}|${(author || '').toLowerCase()}`;
+            if (result[key]) {
+              setEnrichedDescription(result[key]);
+            }
+          })
+          .catch(console.error)
+          .finally(() => setIsEnrichingDescription(false));
+      }
+    }
+  }, [isOpen, book, enrichedDescription, isEnrichingDescription]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEnrichedDescription(null);
+      setShowRating(false);
+    }
+  }, [isOpen]);
   
   // Auto-enrich with cover if missing
   const { coverUrl, genres, isEnriching } = useBookEnrichment(
@@ -173,32 +231,43 @@ export default function BookDetailModal({
           {showRating || !localRating ? (
             <div className="text-center py-2">
               <p className="text-sm text-[#7A8F6C] mb-3">{localRating ? 'Update your rating:' : 'How did you like it?'}</p>
-              <StarRating
-                rating={localRating || 0}
-                onRatingChange={(newRating) => {
-                  setLocalRating(newRating);
-                  onRatingChange?.(book.id, newRating);
-                  setShowRating(false);
-                }}
-                size="lg"
-              />
+              <div className="flex justify-center">
+                <StarRating
+                  rating={localRating || 0}
+                  onRatingChange={(newRating) => {
+                    setLocalRating(newRating);
+                    onRatingChange?.(book.id, newRating);
+                    if (newRating) setShowRating(false);
+                  }}
+                  size="lg"
+                  showLegend={true}
+                />
+              </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-1 py-2">
-              <span className="text-sm text-[#7A8F6C] mr-2">Your rating:</span>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-5 h-5 ${star <= localRating ? 'fill-[#5F7252] text-[#5F7252]' : 'text-[#E8EBE4]'}`}
-                />
-              ))}
-              <button
-                onClick={() => setShowRating(true)}
-                className="ml-2 p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
-                title="Edit rating"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
+            <div className="text-center py-2">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <span className="text-sm text-[#7A8F6C] mr-2">Your rating:</span>
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Heart
+                    key={value}
+                    className="w-5 h-5"
+                    style={{
+                      fill: value <= localRating ? heartColors[value].fill : 'none',
+                      color: value <= localRating ? heartColors[value].stroke : '#D4DAD0',
+                    }}
+                  />
+                ))}
+                <button
+                  onClick={() => setShowRating(true)}
+                  className="ml-2 p-1 text-[#96A888] hover:text-[#C97B7B] transition-colors"
+                  title="Edit rating"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Show rating label */}
+              <p className="text-xs text-[#7A8F6C] italic">{ratingLabels[localRating]}</p>
             </div>
           )}
           <div className="flex items-center justify-center gap-1 text-sm text-[#5F7252]">
@@ -277,12 +346,21 @@ export default function BookDetailModal({
           </div>
 
           {/* Description */}
-          {description && (
+          {isEnrichingDescription ? (
             <div className="mb-6">
               <h4 className="text-sm font-medium text-[#4A5940] mb-2">About this book</h4>
-              <ExpandableDescription text={description} />
+              <div className="space-y-2 animate-pulse">
+                <div className="h-3 w-full bg-[#E8EBE4] rounded" />
+                <div className="h-3 w-full bg-[#E8EBE4] rounded" />
+                <div className="h-3 w-3/4 bg-[#E8EBE4] rounded" />
+              </div>
             </div>
-          )}
+          ) : (enrichedDescription || description) ? (
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-[#4A5940] mb-2">About this book</h4>
+              <ExpandableDescription text={stripAccoladesFromDescription(enrichedDescription || description)} />
+            </div>
+          ) : null}
 
           {/* Get It section */}
           <div className="mb-6 p-4 bg-[#F8F6EE] rounded-xl">
