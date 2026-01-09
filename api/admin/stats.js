@@ -115,11 +115,13 @@ export default async function handler(req) {
 
     // Queue stats - separate by status
     // want_to_read/reading = Books Queued (want to read)
-    // finished = Books Read (finished in-app)
-    // already_read = Books in Collection (imported or marked as already read)
+    // finished = Books Read (marked as read in-app via queue)
+    // already_read = Books Added (marked via recommendation "Already Read" button)
+    // Collection = finished + already_read (both represent "books I've read")
     const queuedBooks = queue.filter(q => q.status === 'want_to_read' || q.status === 'reading');
     const finishedBooks = queue.filter(q => q.status === 'finished');
     const alreadyReadBooks = queue.filter(q => q.status === 'already_read');
+    const collectionBooks = queue.filter(q => q.status === 'finished' || q.status === 'already_read');
     
     const queueStats = {
       totalBooks: queue.length,
@@ -127,8 +129,9 @@ export default async function handler(req) {
       queuedUsers: new Set(queuedBooks.map(q => q.user_id)).size,
       finished: finishedBooks.length,
       finishedUsers: new Set(finishedBooks.map(q => q.user_id)).size,
-      alreadyRead: alreadyReadBooks.length,
-      alreadyReadUsers: new Set(alreadyReadBooks.map(q => q.user_id)).size,
+      // alreadyRead now includes BOTH finished and already_read for "Books Added" stat
+      alreadyRead: collectionBooks.length,
+      alreadyReadUsers: new Set(collectionBooks.map(q => q.user_id)).size,
       inPeriod: queueInPeriod.length,
       uniqueBooks: new Set(queue.map(q => q.book_title?.toLowerCase())).size,
       avgPerUser: profiles.length > 0 ? (queue.length / profiles.length).toFixed(1) : 0

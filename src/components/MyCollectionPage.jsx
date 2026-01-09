@@ -206,8 +206,9 @@ export default function MyCollectionPage({ onNavigate, user, onShowAuthModal }) 
   };
 
   // Combine finished books from reading_queue and user_books table
+  // Both 'finished' (read in-app) and 'already_read' (marked via recommendation) count as collection
   const readBooks = useMemo(() => {
-    const finishedBooks = readingQueue.filter(item => item.status === 'finished');
+    const finishedBooks = readingQueue.filter(item => item.status === 'finished' || item.status === 'already_read');
     
     // Create a map to track books by title+author to avoid duplicates
     const bookMap = new Map();
