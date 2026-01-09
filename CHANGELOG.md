@@ -5,17 +5,51 @@
 ### January 9, 2026
 
 #### Reading Queue Redesign (Demo-Ready)
-- **Currently Reading**: Now sortable with drag handles and numbered positions
-  - Removed "On My Nightstand" / "On Deck" labels (redundant)
-  - Rich cards with auto-enriched covers, genres, expandable descriptions
-  - "← Want to Read" button to move books back
-- **New status actions**:
-  - "Add to Collection" replaces "Finished" (clearer intent, strongest positive signal)
-  - "Not for me" replaces trash/remove (consistent with recommendation dismissal)
-  - Both available as buttons AND drag-drop zones
-- **"Not for me" integration**: Adds to `dismissed_recommendations` table
-  - Same backend as recommendation dismissal
-  - Negative signal useful for algo (books user doesn't want)
+
+**Complete Status Flow:**
+```
+Want to Read → Currently Reading → Finished?
+    │               │                 │
+    │               │          ┌──────┴──────┐
+    │               │         Yes           No
+    │               │          │             │
+    │               │     [Rate/Review]   "Finished, not for me"
+    │               │          │             │
+    │               │     Collection    dismissed_recommendations
+    │               │                   + status='finished'
+    │               │
+    └───────────────┴──► "Not for me" (dismissed, didn't finish)
+```
+
+**Data Signals (richest to weakest):**
+1. Added to Collection = loved it, would recommend (strongest positive)
+2. Finished, not in collection = read but wouldn't recommend (negative signal)
+3. Not for me (didn't finish) = dismissed (negative signal)
+4. Currently Reading = engaged
+5. Want to Read = interested (weakest signal)
+
+**Currently Reading:**
+- Sortable with drag handles and numbered positions
+- Rich cards with auto-enriched covers, genres, descriptions
+- "Finished" button → modal asks "Add to collection?"
+  - Yes → rating + review step → adds to `user_books`
+  - No → marks as finished + adds to `dismissed_recommendations`
+- "← Want to Read" moves back
+- "Not for me" dismisses (adds to `dismissed_recommendations`)
+
+**Want to Read:**
+- "Get It ▼" expands purchase options (Bookshop, Libro.fm, Library, Amazon)
+- "Start Reading" (sage green, on-brand) → moves to Currently Reading
+- "Not for me" dismisses
+- Ownership toggle tracks if user owns the book
+
+**Collection Preview:**
+- Shows at bottom of Reading Queue page
+- Horizontal scroll of cover thumbnails with ratings
+- "View All →" links to full collection
+
+**Database Changes:**
+- Migration 046: Added `review` TEXT column to `user_books`
 
 #### Backend Health & Cleanup
 - **Schema fix**: Added `reputation` column to `reading_queue` (migration 045)
