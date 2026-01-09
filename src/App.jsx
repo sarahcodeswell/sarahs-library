@@ -143,6 +143,16 @@ export default function App() {
   const thanksCooldownRef = useRef(false);
   const [selectedThemes, setSelectedThemes] = useState([]);
   const [expandedTheme, setExpandedTheme] = useState(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // Track scroll position for floating button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Navigation helper to reduce duplication
   const navigateTo = useCallback((page, path) => {
@@ -1640,6 +1650,20 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {/* Floating New Search Button - shows when scrolled down */}
+          {showScrollToTop && messages.length > 1 && (
+            <button
+              onClick={() => {
+                handleNewSearch();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-[#5F7252] text-white rounded-full shadow-lg hover:bg-[#4A5940] transition-all hover:scale-105"
+              aria-label="Start new search"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="text-sm font-medium">New Search</span>
+            </button>
+          )}
           
         </main>
       )}

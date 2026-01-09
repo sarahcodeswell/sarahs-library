@@ -8,6 +8,7 @@ import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';
+import BookDetailModal from './BookDetailModal';
 // World book search is handled via /api/book-search endpoint
 // This is SEPARATE from the recommendations system which uses vectorSearch
 
@@ -910,6 +911,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [showAddBook, setShowAddBook] = useState(false);
   const [addBookResults, setAddBookResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null); // For BookDetailModal
 
   // Load collection books for preview
   useEffect(() => {
@@ -1388,6 +1390,38 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFBF4] via-[#FBF9F0] to-[#F5EFDC]">
+      {/* Book Detail Modal */}
+      <BookDetailModal
+        book={selectedBook}
+        isOpen={!!selectedBook}
+        onClose={() => setSelectedBook(null)}
+        bookStatus={selectedBook ? (readingQueue.find(b => 
+          (b.book_title === selectedBook.book_title || b.book_title === selectedBook.title) &&
+          (b.book_author === selectedBook.book_author || b.book_author === selectedBook.author)
+        )?.status || null) : null}
+        isInCollection={selectedBook?._isInCollection || false}
+        rating={selectedBook?.rating || null}
+        onAddToQueue={async (book) => {
+          await addToQueue({
+            book_title: book.book_title || book.title,
+            book_author: book.book_author || book.author,
+            cover_image_url: book.cover_image_url || book.coverUrl,
+            description: book.description,
+            status: 'want_to_read'
+          });
+          track('book_added_from_modal', { book_title: book.book_title || book.title });
+        }}
+        onStartReading={handleStartReading}
+        onFinished={handleFinished}
+        onMoveToQueue={handleMoveToQueue}
+        onRemove={handleRemoveBook}
+        onNotForMe={handleNotForMe}
+        onRate={(book) => {
+          // Navigate to collection to rate
+          onNavigate('collection');
+        }}
+      />
+
       {/* Finished Book Modal - asks about adding to collection */}
       {finishedBook && (
         <FinishedBookModal
@@ -1650,23 +1684,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   key={book.id} 
                   book={book} 
                   onClick={() => {
-                    // Navigate to collection and scroll to this specific book
-                    onNavigate('collection');
-                    // Use setTimeout to allow page to render before scrolling
-                    setTimeout(() => {
-                      const bookElement = document.querySelector(`[data-book-id="${book.id}"]`);
-                      if (bookElement) {
-                        bookElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Add a brief highlight effect
-                        bookElement.classList.add('ring-2', 'ring-[#5F7252]', 'ring-offset-2');
-                        setTimeout(() => {
-                          bookElement.classList.remove('ring-2', 'ring-[#5F7252]', 'ring-offset-2');
-                        }, 2000);
-                      } else {
-                        // Fallback: scroll to top if book not found
-                        window.scrollTo(0, 0);
-                      }
-                    }, 100);
+                    // Open modal instead of navigating
+                    setSelectedBook({ ...book, _isInCollection: true });
+                    track('collection_book_clicked', { book_title: book.book_title || book.title });
                   }} 
                 />
               ))}
