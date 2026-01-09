@@ -8,7 +8,8 @@ import { BookCover, GenreBadges, ReputationBox, ExpandToggle } from './ui';
 import { enrichBookReputation } from '../lib/reputationEnrichment';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
 import { ExpandableDescription } from './ExpandableDescription';
-import { searchCatalogByText } from '../lib/vectorSearch';
+// World book search is handled via /api/book-search endpoint
+// This is SEPARATE from the recommendations system which uses vectorSearch
 
 import {
   DndContext,
@@ -867,7 +868,9 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     loadCollection();
   }, [user, readingQueue]);
 
-  // Search catalog when user types (debounced)
+  // Search WORLD library when user types (debounced)
+  // Uses Open Library API via /api/book-search
+  // This is SEPARATE from recommendations (which use deterministicRouter + Claude)
   useEffect(() => {
     if (!addBookSearch.trim() || addBookSearch.length < 2) {
       setAddBookResults([]);
@@ -877,37 +880,60 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     const searchTimeout = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const results = await searchCatalogByText(addBookSearch, 10);
+        const response = await fetch('/api/book-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: addBookSearch })
+        });
         
-        // Filter out books already in queue
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
+        
+        const data = await response.json();
+        const results = data.books || [];
+        
+        // Check which books user already has (in queue or collection)
         const queueTitles = new Set(readingQueue.map(b => b.book_title?.toLowerCase()));
-        const filtered = results.filter(book => !queueTitles.has(book.title?.toLowerCase()));
+        const resultsWithStatus = results.map(book => ({
+          ...book,
+          alreadyInQueue: queueTitles.has(book.title?.toLowerCase())
+        }));
         
-        setAddBookResults(filtered.slice(0, 5));
+        setAddBookResults(resultsWithStatus.slice(0, 6));
       } catch (err) {
-        console.error('[BookSearch] Error:', err);
+        console.error('[WorldBookSearch] Error:', err);
         setAddBookResults([]);
       } finally {
         setIsSearching(false);
       }
-    }, 300); // 300ms debounce
+    }, 400); // 400ms debounce for API calls
     
     return () => clearTimeout(searchTimeout);
   }, [addBookSearch, readingQueue]);
 
-  // Add a book to the queue
+  // Add a book to the queue (from world search)
   const handleAddBook = async (book) => {
+    // If already in queue, don't add again
+    if (book.alreadyInQueue) {
+      alert('This book is already in your reading queue!');
+      return;
+    }
+    
     const result = await addToQueue({
       book_title: book.title,
       book_author: book.author,
-      description: book.description,
+      description: book.subjects?.join(', ') || null, // Use subjects as description
+      cover_image_url: book.cover_url,
       status: 'want_to_read',
+      source: 'world_search' // Track that this came from world search
     });
     
     if (result.success) {
-      track('book_added_to_queue_direct', {
+      track('book_added_from_world_search', {
         book_title: book.title,
         book_author: book.author,
+        source: 'open_library'
       });
       setAddBookSearch('');
       setShowAddBook(false);
@@ -1374,30 +1400,55 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
               {isSearching ? (
                 <div className="flex items-center justify-center gap-2 py-4">
                   <div className="w-4 h-4 border-2 border-[#96A888] border-t-[#5F7252] rounded-full animate-spin" />
-                  <span className="text-sm text-[#96A888]">Searching catalog...</span>
+                  <span className="text-sm text-[#96A888]">Searching books...</span>
                 </div>
               ) : addBookResults.length > 0 ? (
                 <div className="space-y-2">
                   {addBookResults.map((book) => (
                     <div
-                      key={book.id || book.title}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E8EBE4] hover:border-[#5F7252] transition-colors"
+                      key={book.open_library_key || book.title}
+                      className={`flex items-center gap-3 p-2 rounded-lg bg-white border transition-colors ${
+                        book.alreadyInQueue 
+                          ? 'border-[#96A888] bg-[#F8F6EE]' 
+                          : 'border-[#E8EBE4] hover:border-[#5F7252]'
+                      }`}
                     >
+                      {/* Cover image */}
+                      {book.cover_url ? (
+                        <img 
+                          src={book.cover_url} 
+                          alt={book.title}
+                          className="w-10 h-14 object-cover rounded shadow-sm flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-14 bg-[#E8EBE4] rounded flex items-center justify-center flex-shrink-0">
+                          <Book className="w-4 h-4 text-[#96A888]" />
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-[#4A5940] text-sm truncate">{book.title}</p>
                         <p className="text-xs text-[#7A8F6C] truncate">{book.author}</p>
+                        {book.year && (
+                          <p className="text-xs text-[#96A888]">{book.year}</p>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleAddBook(book)}
-                        className="ml-3 px-3 py-1 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex-shrink-0"
-                      >
-                        Add
-                      </button>
+                      {book.alreadyInQueue ? (
+                        <span className="ml-2 px-2 py-1 rounded text-xs font-medium text-[#7A8F6C] bg-[#E8EBE4] flex-shrink-0">
+                          In Queue
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleAddBook(book)}
+                          className="ml-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex-shrink-0"
+                        >
+                          Add
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : addBookSearch.length >= 2 ? (
-                <p className="text-sm text-[#96A888] text-center py-2">No books found in our catalog. Try a different search.</p>
+                <p className="text-sm text-[#96A888] text-center py-2">No books found. Try a different search.</p>
               ) : (
                 <p className="text-sm text-[#96A888] text-center py-2">Type at least 2 characters to search</p>
               )}
