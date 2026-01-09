@@ -305,31 +305,30 @@ function CollectionBookThumbnail({ book, onClick }) {
   );
 }
 
-// Want to Read drop zone (for dragging from Currently Reading back)
-function WantToReadDropZone({ isOver, children, showDropHint }) {
+// Want to Read section wrapper (no longer a drop zone itself)
+function WantToReadSection({ children }) {
+  return (
+    <div className="mb-6 rounded-xl">
+      {children}
+    </div>
+  );
+}
+
+// Bottom drop zone for moving books back to Want to Read
+function BackToQueueDropZone({ isOver }) {
   const { setNodeRef } = useDroppable({ id: 'want-to-read-zone' });
   
   return (
     <div
       ref={setNodeRef}
-      className={`mb-6 rounded-xl transition-all duration-200 ${
+      className={`mt-3 py-4 rounded-lg border-2 border-dashed flex items-center justify-center gap-2 transition-all ${
         isOver 
-          ? 'ring-2 ring-[#5F7252] ring-offset-2 bg-[#5F7252]/5' 
-          : ''
+          ? 'border-[#5F7252] bg-[#5F7252]/10 text-[#5F7252] scale-[1.01]' 
+          : 'border-[#96A888] text-[#96A888]'
       }`}
     >
-      {children}
-      {/* Bottom drop indicator - shows when dragging from Currently Reading */}
-      {showDropHint && (
-        <div className={`mt-3 py-3 rounded-lg border-2 border-dashed flex items-center justify-center gap-2 transition-all ${
-          isOver 
-            ? 'border-[#5F7252] bg-[#5F7252]/10 text-[#5F7252]' 
-            : 'border-[#96A888] text-[#96A888]'
-        }`}>
-          <ChevronUp className="w-5 h-5" />
-          <span className="text-sm font-medium">Drop here → Back to Want to Read</span>
-        </div>
-      )}
+      <ChevronUp className="w-5 h-5" />
+      <span className="text-sm font-medium">Drop here → Back to Want to Read</span>
     </div>
   );
 }
@@ -1385,10 +1384,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         >
 
         {/* ===== WANT TO READ (Top) ===== */}
-        <WantToReadDropZone 
-          isOver={overZone === 'want-to-read-zone' && activeBook?.status === 'reading'}
-          showDropHint={activeId && activeBook?.status === 'reading'}
-        >
+        <WantToReadSection>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
@@ -1543,7 +1539,12 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
               </div>
             </SortableContext>
           )}
-        </WantToReadDropZone>
+        </WantToReadSection>
+
+        {/* Back to Queue drop zone - shows when dragging from Currently Reading */}
+        {activeId && activeBook?.status === 'reading' && (
+          <BackToQueueDropZone isOver={overZone === 'want-to-read-zone'} />
+        )}
 
         {/* ===== CURRENTLY READING (Middle) ===== */}
         <div className="mb-6">
@@ -1565,10 +1566,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           />
         </div>
 
-        {/* Drop Zone - only show Collection when dragging from Currently Reading */}
+        {/* Drop Zones - only show Collection/Not for me when dragging from Currently Reading */}
         {activeId && activeBook?.status === 'reading' && (
-          <div className="mb-6">
+          <div className="mb-6 grid grid-cols-2 gap-4">
             <CollectionDropZone isOver={overZone === 'collection-zone'} />
+            <NotForMeDropZone isOver={overZone === 'not-for-me-zone'} />
           </div>
         )}
 
