@@ -134,7 +134,7 @@ function DragOverlayCard({ book }) {
 }
 
 // Sortable book card for Currently Reading (with drag handle, enrichment)
-function SortableCurrentlyReadingCard({ book, index, onAddToCollection, onNotForMe, onMoveToQueue }) {
+function SortableCurrentlyReadingCard({ book, index, onFinished, onNotForMe, onMoveToQueue }) {
   const [expanded, setExpanded] = useState(false);
   
   // Auto-enrich with cover and genres if missing
@@ -254,10 +254,11 @@ function SortableCurrentlyReadingCard({ book, index, onAddToCollection, onNotFor
               ← Want to Read
             </button>
             <button
-              onClick={() => onAddToCollection(book)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors"
+              onClick={() => onFinished(book)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
             >
-              Add to Collection
+              <Book className="w-3.5 h-3.5" />
+              Finished
             </button>
             <button
               onClick={() => onNotForMe(book)}
@@ -274,7 +275,7 @@ function SortableCurrentlyReadingCard({ book, index, onAddToCollection, onNotFor
 }
 
 // Currently Reading section - sortable list
-function CurrentlyReadingSection({ isOver, books, onAddToCollection, onNotForMe, onMoveToQueue }) {
+function CurrentlyReadingSection({ isOver, books, onFinished, onNotForMe, onMoveToQueue }) {
   const { setNodeRef } = useDroppable({ id: 'reading-zone' });
   
   return (
@@ -300,7 +301,7 @@ function CurrentlyReadingSection({ isOver, books, onAddToCollection, onNotForMe,
                   key={book.id}
                   book={book}
                   index={index}
-                  onAddToCollection={onAddToCollection}
+                  onFinished={onFinished}
                   onNotForMe={onNotForMe}
                   onMoveToQueue={onMoveToQueue}
                 />
@@ -360,7 +361,136 @@ function NotForMeDropZone({ isOver }) {
   );
 }
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading, onNotForMe, isFirst, onUpdateBook, onToggleOwned }) {
+// Finished Book Modal - asks if user wants to add to collection with rating/review
+function FinishedBookModal({ book, onAddToCollection, onNoThanks, onClose }) {
+  const [step, setStep] = useState('ask'); // 'ask' or 'rate'
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [review, setReview] = useState('');
+
+  const handleYes = () => {
+    setStep('rate');
+  };
+
+  const handleSaveAndDone = () => {
+    onAddToCollection(book, rating || null, review.trim() || null);
+  };
+
+  const handleSkip = () => {
+    onAddToCollection(book, null, null);
+  };
+
+  if (step === 'rate') {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+              <Library className="w-6 h-6 text-[#5F7252]" />
+            </div>
+            <h3 className="text-lg font-serif text-[#4A5940]">Added to your collection!</h3>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-sm text-[#7A8F6C] mb-3 text-center">How would you rate it?</p>
+            <div className="flex justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="p-1 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= (hoverRating || rating)
+                        ? 'fill-[#5F7252] text-[#5F7252]'
+                        : 'text-[#E8EBE4]'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-sm text-[#7A8F6C] mb-2">Share your thoughts (optional)</p>
+            <textarea
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              placeholder="What did you love about this book? Would you recommend it to others?"
+              className="w-full p-3 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder:text-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252] resize-none"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleSkip}
+              className="flex-1 px-4 py-2.5 text-[#7A8F6C] hover:bg-[#F8F6EE] rounded-lg text-sm font-medium transition-colors"
+            >
+              Skip
+            </button>
+            <button
+              onClick={handleSaveAndDone}
+              className="flex-1 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+            >
+              Save & Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+            <Book className="w-6 h-6 text-[#5F7252]" />
+          </div>
+          <h3 className="text-lg font-serif text-[#4A5940]">
+            Finished "{book.book_title}"!
+          </h3>
+          <p className="text-sm text-[#7A8F6C] mt-2">Add to your collection?</p>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={handleYes}
+            className="w-full p-4 rounded-xl border-2 border-[#5F7252] bg-[#5F7252]/5 hover:bg-[#5F7252]/10 transition-colors text-left"
+          >
+            <p className="font-medium text-[#4A5940]">Yes, add to my collection</p>
+            <p className="text-xs text-[#7A8F6C] mt-1">
+              I loved it! Show me more books like this.
+            </p>
+          </button>
+
+          <button
+            onClick={() => onNoThanks(book)}
+            className="w-full p-4 rounded-xl border border-[#E8EBE4] hover:bg-[#F8F6EE] transition-colors text-left"
+          >
+            <p className="font-medium text-[#7A8F6C]">No thanks</p>
+            <p className="text-xs text-[#96A888] mt-1">
+              Keep my collection for books I've loved.
+            </p>
+          </button>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full mt-4 text-xs text-[#96A888] hover:text-[#7A8F6C]"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, isFirst, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
@@ -542,19 +672,11 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading,
               )}
               <button
                 onClick={() => onStartReading(book)}
-                className="px-3 py-1.5 rounded text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
                 title="Start Reading"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Start</span>
-              </button>
-              <button
-                onClick={() => onMarkAsRead(book)}
-                className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
-                title="Add to My Collection"
-              >
-                <Library className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Collection</span>
+                <span className="hidden sm:inline">Start Reading</span>
               </button>
               <button
                 onClick={() => onNotForMe(book)}
@@ -696,6 +818,53 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   const [searchQuery, setSearchQuery] = useState('');
   const [localOrder, setLocalOrder] = useState([]);
   const [finishedBook, setFinishedBook] = useState(null); // For showing confirmation modal
+  const [collectionBooks, setCollectionBooks] = useState([]);
+
+  // Load collection books for preview
+  useEffect(() => {
+    const loadCollection = async () => {
+      if (!user) return;
+      
+      // Get user_books (collection)
+      const { data: userBooks } = await db.getUserBooks(user.id);
+      
+      // Get finished books from reading queue
+      const finishedFromQueue = readingQueue.filter(
+        item => item.status === 'finished' || item.status === 'already_read'
+      );
+      
+      // Combine and dedupe
+      const allBooks = [
+        ...(userBooks || []).map(b => ({
+          id: b.id,
+          title: b.book_title,
+          author: b.book_author,
+          cover_url: b.cover_image_url,
+          rating: b.rating,
+        })),
+        ...finishedFromQueue.map(b => ({
+          id: b.id,
+          title: b.book_title,
+          author: b.book_author,
+          cover_url: b.cover_image_url,
+          rating: b.rating,
+        })),
+      ];
+      
+      // Remove duplicates by title
+      const seen = new Set();
+      const unique = allBooks.filter(book => {
+        const key = book.title?.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      
+      setCollectionBooks(unique.slice(0, 10)); // Show up to 10 for preview
+    };
+    
+    loadCollection();
+  }, [user, readingQueue]);
 
   // Handle ownership toggle
   const handleToggleOwned = async (bookId, owned) => {
@@ -887,13 +1056,50 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
+  // Show the "Finished" modal to ask about adding to collection
+  const handleFinished = (book) => {
+    setFinishedBook(book);
+  };
+
   // Add book to collection (finished and kept - strongest positive signal)
-  const handleAddToCollection = async (book) => {
+  const handleAddToCollection = async (book, rating = null, review = null) => {
     await handleMarkAsRead(book);
+    
+    // If rating or review provided, update the user_books entry
+    if (rating || review) {
+      // The book was just added to user_books by handleMarkAsRead
+      // We need to update it with the rating/review
+      const { data: userBooks } = await db.getUserBooks(user.id);
+      const addedBook = userBooks?.find(b => 
+        b.book_title?.toLowerCase() === book.book_title?.toLowerCase()
+      );
+      if (addedBook) {
+        await db.updateUserBook(addedBook.id, { rating, review });
+      }
+    }
+    
     track('book_added_to_collection', {
       book_title: book.book_title,
       from_status: book.status,
+      has_rating: !!rating,
+      has_review: !!review,
     });
+    
+    setFinishedBook(null);
+  };
+
+  // Mark as finished but don't add to collection
+  const handleFinishedNoCollection = async (book) => {
+    // Just update status to finished without adding to user_books
+    const result = await updateQueueStatus(book.id, 'finished');
+    
+    if (result.success) {
+      track('book_finished_no_collection', {
+        book_title: book.book_title,
+      });
+    }
+    
+    setFinishedBook(null);
   };
 
   // "Not for me" - dismiss book and add to dismissed_recommendations
@@ -950,7 +1156,8 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     if (over.id === 'collection-zone') {
       const book = readingQueue.find(b => b.id === active.id);
       if (book) {
-        await handleAddToCollection(book);
+        // Show the finished modal for collection prompt
+        handleFinished(book);
         track('book_dragged_to_collection', { book_title: book.book_title });
       }
       return;
@@ -1001,50 +1208,14 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFBF4] via-[#FBF9F0] to-[#F5EFDC]">
-      {/* Finished Book Confirmation Modal */}
+      {/* Finished Book Modal - asks about adding to collection */}
       {finishedBook && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-[#5F7252]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-[#4A5940]">Moved to Collection!</h3>
-                <p className="text-xs text-[#7A8F6C]">{finishedBook.book_title}</p>
-              </div>
-            </div>
-            <p className="text-sm text-[#5F7252] mb-4">
-              Rate this book to improve your future recommendations.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setFinishedBook(null);
-                  onNavigate('collection');
-                  track('finished_confirmation_go_to_collection', {
-                    book_title: finishedBook.book_title
-                  });
-                }}
-                className="flex-1 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors flex items-center justify-center gap-2"
-              >
-                <Library className="w-4 h-4" />
-                Go to Collection
-              </button>
-              <button
-                onClick={() => {
-                  setFinishedBook(null);
-                  track('finished_confirmation_stay', {
-                    book_title: finishedBook.book_title
-                  });
-                }}
-                className="px-4 py-2.5 bg-[#F8F6EE] text-[#5F7252] rounded-lg text-sm font-medium hover:bg-[#E8EBE4] transition-colors"
-              >
-                Stay Here
-              </button>
-            </div>
-          </div>
-        </div>
+        <FinishedBookModal
+          book={finishedBook}
+          onAddToCollection={handleAddToCollection}
+          onNoThanks={handleFinishedNoCollection}
+          onClose={() => setFinishedBook(null)}
+        />
       )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -1082,7 +1253,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           <CurrentlyReadingSection 
             isOver={overZone === 'reading-zone'} 
             books={currentlyReadingBooks}
-            onAddToCollection={handleAddToCollection}
+            onFinished={handleFinished}
             onNotForMe={handleNotForMe}
             onMoveToQueue={handleMoveToQueue}
           />
@@ -1148,7 +1319,6 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                   key={book.id}
                   book={book}
                   index={index}
-                  onMarkAsRead={handleAddToCollection}
                   onRemove={handleRemoveBook}
                   onStartReading={handleStartReading}
                   onNotForMe={handleNotForMe}
@@ -1183,6 +1353,54 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         </DragOverlay>
 
         </DndContext>
+
+        {/* Collection Preview Section */}
+        {collectionBooks.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-[#E8EBE4]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+                  <Library className="w-4 h-4 text-[#5F7252]" />
+                </div>
+                <h2 className="text-lg font-serif text-[#4A5940]">My Collection</h2>
+                <span className="text-sm text-[#96A888]">({collectionBooks.length}+ books)</span>
+              </div>
+              <button
+                onClick={() => onNavigate('collection')}
+                className="text-sm text-[#5F7252] hover:text-[#4A5940] font-medium flex items-center gap-1"
+              >
+                View All
+                <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
+              </button>
+            </div>
+            
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+              {collectionBooks.map((book) => (
+                <div
+                  key={book.id}
+                  className="flex-shrink-0 w-20 group cursor-pointer"
+                  onClick={() => onNavigate('collection')}
+                >
+                  <div className="w-20 h-28 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
+                    {book.cover_url ? (
+                      <img src={book.cover_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <BookOpen className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <p className="text-xs text-[#5F7252] mt-1.5 truncate font-medium">{book.title}</p>
+                  {book.rating && (
+                    <div className="flex items-center gap-0.5 mt-0.5">
+                      {[...Array(book.rating)].map((_, i) => (
+                        <Star key={i} className="w-2.5 h-2.5 fill-[#5F7252] text-[#5F7252]" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
