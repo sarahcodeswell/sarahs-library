@@ -590,7 +590,9 @@ export const db = {
     if (!supabase) return { data: null, error: { message: 'Supabase not configured' } };
     
     try {
-      console.log('[getSharedRecommendation] Looking up token:', shareToken);
+      if (import.meta.env.DEV) {
+        console.log('[getSharedRecommendation] Looking up token:', shareToken);
+      }
       
       const { data, error } = await supabase
         .from('shared_recommendations')
@@ -618,7 +620,9 @@ export const db = {
         return { data: null, error };
       }
       
-      console.log('[getSharedRecommendation] Found data:', data);
+      if (import.meta.env.DEV) {
+        console.log('[getSharedRecommendation] Found data:', data);
+      }
       
       // Increment view count
       if (data) {

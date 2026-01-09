@@ -46,17 +46,7 @@ const TermsOfUsePage = lazy(() => import('./components/TermsOfUsePage'));
 const SharedRecommendationPage = lazy(() => import('./components/SharedRecommendationPage'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
-const BOOKSHOP_AFFILIATE_ID = '119544';
-const AMAZON_AFFILIATE_TAG = 'sarahsbooks01-20';
-const LIBRO_FM_AFFILIATE_ID = 'sarahsbooks'; // TODO: Replace with actual affiliate ID when available
-const AUDIBLE_AFFILIATE_TAG = 'sarahsbooks01-20'; // Uses Amazon Associates
-const CURRENT_YEAR = new Date().getFullYear();
-
-// Text utilities imported from ./lib/textUtils
-// CATALOG_TITLE_INDEX imported from ./lib/catalogIndex.js
-
-// CSV parsing imported from ./lib/csvParser
-// Library context builder imported from ./lib/libraryContext
+// Affiliate IDs are now managed in ./lib/affiliateLinks.js
 
 
 // FormattedText extracted to ./components/FormattedText.jsx
@@ -697,7 +687,7 @@ Find similar books from beyond my library that match this taste profile.
     // Clear theme selection if user typed a different query
     if (!isThemeQuery && selectedThemes.length > 0) {
       setSelectedThemes([]);
-      console.log('[App] Cleared theme filter - user typed custom query');
+      if (import.meta.env.DEV) console.log('[App] Cleared theme filter - user typed custom query');
     }
 
     setInputValue('');
@@ -745,7 +735,7 @@ Find similar books from beyond my library that match this taste profile.
       // - World fallback (worldFallback)  
       // - World path using Claude knowledge (skipPostProcessing)
       if (result.fastPath || result.worldFallback || result.skipPostProcessing) {
-        console.log('[App] Skipping post-processing for:', result.fastPath ? 'fastPath' : result.worldFallback ? 'worldFallback' : 'worldPath');
+        if (import.meta.env.DEV) console.log('[App] Skipping post-processing for:', result.fastPath ? 'fastPath' : result.worldFallback ? 'worldFallback' : 'worldPath');
         // Track shown books for pagination (avoid repeats on "Show me more")
         if (result.shownBooks && result.shownBooks.length > 0) {
           setShownBooksInSession(prev => [...prev, ...result.shownBooks]);

@@ -713,15 +713,17 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
   }, [sortedBooks, searchQuery]);
 
   const handleMarkAsRead = async (book) => {
-    console.log('🔍 [handleMarkAsRead] Starting process for:', {
-      bookId: book.id,
-      title: book.book_title,
-      author: book.book_author,
-      userId: user?.id
-    });
+    if (import.meta.env.DEV) {
+      console.log('🔍 [handleMarkAsRead] Starting process for:', {
+        bookId: book.id,
+        title: book.book_title,
+        author: book.book_author,
+        userId: user?.id
+      });
+    }
     
     if (!user) {
-      console.log('❌ [handleMarkAsRead] No user logged in');
+      if (import.meta.env.DEV) console.log('❌ [handleMarkAsRead] No user logged in');
       onShowAuthModal();
       return;
     }
@@ -729,18 +731,20 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     let addedToCollection = false;
 
     // First update the status to 'finished'
-    console.log('📝 [handleMarkAsRead] Updating status to finished...');
+    if (import.meta.env.DEV) console.log('📝 [handleMarkAsRead] Updating status to finished...');
     const statusResult = await updateQueueStatus(book.id, 'finished');
     
-    console.log('📊 [handleMarkAsRead] Status update result:', {
-      success: statusResult.success,
-      error: statusResult.error
-    });
+    if (import.meta.env.DEV) {
+      console.log('📊 [handleMarkAsRead] Status update result:', {
+        success: statusResult.success,
+        error: statusResult.error
+      });
+    }
     
     if (statusResult.success) {
       // Also add to user's collection (user_books table)
       try {
-        console.log('📚 [handleMarkAsRead] Adding to user collection...');
+        if (import.meta.env.DEV) console.log('📚 [handleMarkAsRead] Adding to user collection...');
         const { db } = await import('../lib/supabase');
         const collectionResult = await db.addUserBook(user.id, {
           title: book.book_title,
@@ -748,16 +752,18 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
           addedVia: 'reading_queue'
         });
         
-        console.log('📊 [handleMarkAsRead] Collection add result:', {
-          success: !collectionResult.error,
-          error: collectionResult.error,
-          data: collectionResult.data
-        });
+        if (import.meta.env.DEV) {
+          console.log('📊 [handleMarkAsRead] Collection add result:', {
+            success: !collectionResult.error,
+            error: collectionResult.error,
+            data: collectionResult.data
+          });
+        }
         
         if (collectionResult.error) {
           console.error('❌ [handleMarkAsRead] Failed to add to collection:', collectionResult.error);
         } else {
-          console.log('✅ [handleMarkAsRead] Book successfully added to collection:', book.book_title);
+          if (import.meta.env.DEV) console.log('✅ [handleMarkAsRead] Book successfully added to collection:', book.book_title);
           addedToCollection = true;
         }
       } catch (error) {
@@ -776,7 +782,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
       alert('Failed to update book status. Please try again.');
     }
     
-    console.log('🏁 [handleMarkAsRead] Process completed');
+    if (import.meta.env.DEV) console.log('🏁 [handleMarkAsRead] Process completed');
   };
 
   const handleRemoveBook = async (book) => {

@@ -63,7 +63,7 @@ export async function findSimilarBooks(query, limit = 10, threshold = 0.7) {
  */
 export async function getBooksByThemes(themes, limit = 20) {
   try {
-    console.log('[getBooksByThemes] Searching for themes:', themes);
+    if (import.meta.env.DEV) console.log('[getBooksByThemes] Searching for themes:', themes);
     
     // Use overlaps (&&) operator - finds books where themes array overlaps with search themes
     // This is more flexible than contains - matches if ANY theme matches
@@ -78,7 +78,7 @@ export async function getBooksByThemes(themes, limit = 20) {
       return [];
     }
 
-    console.log('[getBooksByThemes] Found', data?.length || 0, 'books');
+    if (import.meta.env.DEV) console.log('[getBooksByThemes] Found', data?.length || 0, 'books');
     return data || [];
   } catch (error) {
     console.error('[getBooksByThemes] Failed:', error);
@@ -559,7 +559,7 @@ export async function quickCatalogProbe(query, limit = 5) {
     
     result.metrics.probeTimeMs = Date.now() - startTime;
     
-    console.log(`[CatalogProbe] ${query.substring(0, 30)}... → ${result.recommendedPath} (max: ${result.metrics.maxSimilarity.toFixed(2)}, count: ${result.metrics.matchCount}, ${result.metrics.probeTimeMs}ms)`);
+    if (import.meta.env.DEV) console.log(`[CatalogProbe] ${query.substring(0, 30)}... → ${result.recommendedPath} (max: ${result.metrics.maxSimilarity.toFixed(2)}, count: ${result.metrics.matchCount}, ${result.metrics.probeTimeMs}ms)`);
     
     return result;
     

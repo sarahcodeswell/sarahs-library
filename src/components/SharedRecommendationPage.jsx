@@ -30,10 +30,10 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         return;
       }
 
-      console.log('[SharedRecommendationPage] Loading recommendation for token:', shareToken);
+      if (import.meta.env.DEV) console.log('[SharedRecommendationPage] Loading recommendation for token:', shareToken);
       const { data, error: fetchError } = await db.getSharedRecommendation(shareToken);
       
-      console.log('[SharedRecommendationPage] Result:', { data, error: fetchError });
+      if (import.meta.env.DEV) console.log('[SharedRecommendationPage] Result:', { data, error: fetchError });
       
       if (fetchError) {
         console.error('[SharedRecommendationPage] Fetch error:', fetchError);
@@ -64,9 +64,9 @@ export default function SharedRecommendationPage({ shareToken, onNavigate, onSho
         
         if (!existingEntry) {
           await db.createReceivedRecommendation(user.id, data);
-          console.log('[SharedRecommendationPage] Created inbox entry for user');
+          if (import.meta.env.DEV) console.log('[SharedRecommendationPage] Created inbox entry for user');
         } else {
-          console.log('[SharedRecommendationPage] Inbox entry already exists');
+          if (import.meta.env.DEV) console.log('[SharedRecommendationPage] Inbox entry already exists');
         }
       }
       

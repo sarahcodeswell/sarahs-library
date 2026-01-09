@@ -9,7 +9,7 @@ import { findSimilarBooks, getBooksByThemes, findCatalogBooksByAuthor, findCatal
  * Returns books from Sarah's 197 curated books
  */
 export async function catalogSearchPath(query, classification) {
-  console.log('[CatalogPath] Starting catalog search');
+  if (import.meta.env.DEV) console.log('[CatalogPath] Starting catalog search');
   
   const results = {
     source: 'catalog',
@@ -63,18 +63,18 @@ export async function catalogSearchPath(query, classification) {
         .map(m => themeMap[m.toLowerCase()] || m.toLowerCase())
         .filter(t => ['women', 'emotional', 'identity', 'spiritual', 'justice'].includes(t));
       
-      console.log('[CatalogPath] Theme search for:', themes);
+      if (import.meta.env.DEV) console.log('[CatalogPath] Theme search for:', themes);
       
       if (themes.length > 0) {
         const books = await getBooksByThemes(themes, 10);
-        console.log('[CatalogPath] getBooksByThemes returned:', books?.length, 'books');
+        if (import.meta.env.DEV) console.log('[CatalogPath] getBooksByThemes returned:', books?.length, 'books');
         if (books && books.length > 0) {
           results.books = books.map(b => ({
             ...b,
             source: 'catalog',
             badge: 'From Sarah\'s Collection'
           }));
-          console.log('[CatalogPath] Mapped to results.books:', results.books.length);
+          if (import.meta.env.DEV) console.log('[CatalogPath] Mapped to results.books:', results.books.length);
         }
         
         const themeLabels = {
@@ -104,7 +104,7 @@ export async function catalogSearchPath(query, classification) {
     console.error('[CatalogPath] Error:', err);
   }
 
-  console.log('[CatalogPath] Found', results.books.length, 'books');
+  if (import.meta.env.DEV) console.log('[CatalogPath] Found', results.books.length, 'books');
   return results;
 }
 
@@ -114,7 +114,7 @@ export async function catalogSearchPath(query, classification) {
  * Uses web search + quality framework
  */
 export async function worldSearchPath(query, classification) {
-  console.log('[WorldPath] Using Claude knowledge for world recommendations');
+  if (import.meta.env.DEV) console.log('[WorldPath] Using Claude knowledge for world recommendations');
   
   // SIMPLIFIED: For open discovery queries, let Claude use its knowledge
   // Web search is reserved for TEMPORAL path (new releases) only
@@ -139,7 +139,7 @@ export async function worldSearchPath(query, classification) {
     results.explanation = `This is outside my curated collection, but I know some excellent options.`;
   }
 
-  console.log('[WorldPath] Delegating to Claude knowledge');
+  if (import.meta.env.DEV) console.log('[WorldPath] Delegating to Claude knowledge');
   return results;
 }
 
@@ -149,7 +149,7 @@ export async function worldSearchPath(query, classification) {
  * Returns both with clear labeling
  */
 export async function hybridPath(query, classification) {
-  console.log('[HybridPath] Starting hybrid search');
+  if (import.meta.env.DEV) console.log('[HybridPath] Starting hybrid search');
   
   // Get catalog results first
   const catalogResults = await catalogSearchPath(query, classification);
@@ -184,7 +184,7 @@ export async function hybridPath(query, classification) {
     });
   }
 
-  console.log('[HybridPath] Sections:', sections.length);
+  if (import.meta.env.DEV) console.log('[HybridPath] Sections:', sections.length);
   
   return {
     source: 'hybrid',
@@ -200,7 +200,7 @@ export async function hybridPath(query, classification) {
  * For queries about new releases, upcoming books, or recent publications
  */
 export async function temporalSearchPath(query, classification, userId = null) {
-  console.log('[TemporalPath] Starting temporal search');
+  if (import.meta.env.DEV) console.log('[TemporalPath] Starting temporal search');
   
   const results = {
     source: 'temporal',
@@ -272,7 +272,7 @@ export async function temporalSearchPath(query, classification, userId = null) {
     console.error('[TemporalPath] Error:', err);
   }
 
-  console.log('[TemporalPath] Found', results.books.length, 'books');
+  if (import.meta.env.DEV) console.log('[TemporalPath] Found', results.books.length, 'books');
   return results;
 }
 
@@ -395,7 +395,7 @@ async function extractAndEnrichBook(results, author) {
         };
       }
     } catch (err) {
-      console.log('[TemporalPath] Book enrichment failed:', err.message);
+      if (import.meta.env.DEV) console.log('[TemporalPath] Book enrichment failed:', err.message);
     }
   }
   
@@ -442,7 +442,7 @@ Respond with ONLY the numbers of the 3 best books, comma-separated (e.g., "1, 3,
         .map(i => books[i]);
     }
   } catch (err) {
-    console.log('[QualityFilter] Error:', err.message);
+    if (import.meta.env.DEV) console.log('[QualityFilter] Error:', err.message);
   }
   
   // Fallback: return first 3

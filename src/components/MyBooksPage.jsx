@@ -208,9 +208,9 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       return;
     }
 
-    console.log('handleRemoveBook: Attempting to remove book', { bookId, bookTitle });
+    if (import.meta.env.DEV) console.log('handleRemoveBook: Attempting to remove book', { bookId, bookTitle });
     const result = await removeBook(bookId);
-    console.log('handleRemoveBook: Result', result);
+    if (import.meta.env.DEV) console.log('handleRemoveBook: Result', result);
     
     if (result.success) {
       track('book_removed', {
@@ -397,7 +397,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       return;
     }
 
-    console.log('handleAddToReadingQueue: Starting', { book, status });
+    if (import.meta.env.DEV) console.log('handleAddToReadingQueue: Starting', { book, status });
 
     // Check if already in reading queue
     const alreadyInQueue = readingQueue.some(item => 
@@ -416,7 +416,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
       status: status,
     });
 
-    console.log('handleAddToReadingQueue: Result', result);
+    if (import.meta.env.DEV) console.log('handleAddToReadingQueue: Result', result);
 
     if (result.success) {
       // Remove from staging area (user_books) after successfully adding to reading queue
