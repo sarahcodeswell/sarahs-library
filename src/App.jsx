@@ -64,8 +64,8 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 // Affiliate links extracted to ./lib/affiliateLinks.js
 // ChatMessage, BookDetail, FormattedText, FormattedRecommendations extracted to ./components/
 
-// Feature flag for V2 recommendations - set to true to enable new architecture
-const USE_V2_RECOMMENDATIONS = true;
+// Feature flag for V2 recommendations - can be toggled via environment variable
+const USE_V2_RECOMMENDATIONS = import.meta.env.VITE_USE_V2_RECOMMENDATIONS !== 'false';
 
 function AboutSection({ onShare }) {
   return (

@@ -84,7 +84,7 @@ This document specifies the architecture for Sarah's Books recommendation system
 │  ┌──────────────────┬────────────────────────────────────────────┐  │
 │  │ Intent           │ Action                                     │  │
 │  ├──────────────────┼────────────────────────────────────────────┤  │
-│  │ similar_author   │ findCatalogBooksByAuthor(author)           │  │
+│  │ similar_author   │ World search (Serper + Google Books API)   │  │
 │  │ similar_book     │ Vector search with book's embedding        │  │
 │  │ theme_search     │ Vector search with search_query            │  │
 │  │ mood_search      │ Vector search with search_query            │  │

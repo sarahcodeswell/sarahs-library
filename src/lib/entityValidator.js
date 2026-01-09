@@ -36,12 +36,20 @@ const NORMALIZED_TITLES = CATALOG_TITLES.map(t => ({
   normalized: normalizeString(t)
 }));
 
-// Sarah's allowed themes
-const ALLOWED_THEMES = [
-  'women', 'emotional', 'identity', 'justice', 'spiritual', 
-  'family', 'belonging', 'resilience', 'historical', 'contemporary',
-  'mystery', 'thriller', 'literary', 'memoir'
-];
+// Sarah's allowed themes - extracted from catalog
+const CATALOG_THEMES = new Set();
+bookCatalog.forEach(book => {
+  (book.themes || []).forEach(theme => {
+    if (theme) CATALOG_THEMES.add(theme.toLowerCase().trim());
+  });
+});
+const ALLOWED_THEMES = Array.from(CATALOG_THEMES);
+// Fallback if catalog has no themes
+if (ALLOWED_THEMES.length === 0) {
+  ALLOWED_THEMES.push('women', 'emotional', 'identity', 'justice', 'spiritual', 
+    'family', 'belonging', 'resilience', 'historical', 'contemporary',
+    'mystery', 'thriller', 'literary', 'memoir');
+}
 
 // Valid intents
 const VALID_INTENTS = [
