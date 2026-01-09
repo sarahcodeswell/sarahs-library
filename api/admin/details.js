@@ -117,8 +117,8 @@ export default async function handler(req) {
       }
 
       case 'collection': {
-        // Books marked as "already_read" (imported or indicated as already read)
-        const { data: collection } = await supabase.from('reading_queue').select('*').eq('status', 'already_read');
+        // Books in user's collection: both 'already_read' (imported) and 'finished' (read in-app)
+        const { data: collection } = await supabase.from('reading_queue').select('*').in('status', ['already_read', 'finished']);
         // Group by user
         const userCollection = new Map();
         (collection || []).forEach(q => {
@@ -205,7 +205,8 @@ export default async function handler(req) {
         const userId = url.searchParams.get('userId');
         if (!userId) return json({ error: 'userId required' }, 400);
         
-        const { data: collection } = await supabase.from('reading_queue').select('*').eq('user_id', userId).eq('status', 'already_read');
+        // Include both 'already_read' (imported) and 'finished' (read in-app)
+        const { data: collection } = await supabase.from('reading_queue').select('*').eq('user_id', userId).in('status', ['already_read', 'finished']);
         const u = userMap.get(userId);
         const result = {
           email: u?.email || 'Unknown',
