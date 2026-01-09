@@ -347,8 +347,8 @@ function CollectionDropZone({ isOver }) {
       }`}
     >
       <div className={`flex items-center justify-center gap-2 py-6 px-4 ${isOver ? 'text-[#5F7252]' : 'text-[#7A8F6C]'}`}>
-        <ChevronDown className="w-5 h-5" />
-        <span className="text-sm font-medium">Drop here → Finished! Add to Collection</span>
+        <Library className="w-5 h-5" />
+        <span className="text-sm font-medium">Add to Collection</span>
       </div>
     </div>
   );
