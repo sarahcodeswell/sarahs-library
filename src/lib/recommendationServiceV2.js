@@ -100,14 +100,21 @@ async function routeAndRetrieve(validated, exclusionTitles) {
   
   switch (intent) {
     case 'similar_author':
-      // Find books by this author and similar authors
+      // User wants authors SIMILAR TO the mentioned author
+      // Strategy: Find books by similar authors using vector search on author's style
       if (author_mentioned) {
-        books = await findCatalogBooksByAuthor(author_mentioned, 10);
-        // Also get vector-similar books for variety
-        if (books.length < 5) {
-          const similar = await findSimilarBooks(`books like ${author_mentioned}`, 5, 0.3);
-          books = [...books, ...similar];
-        }
+        // Get books similar to this author's style (NOT by this author)
+        const searchQuery = `books similar to ${author_mentioned} style emotional women fiction`;
+        const similar = await findSimilarBooks(searchQuery, 15, 0.3);
+        
+        // Filter OUT books by the mentioned author - user wants OTHER authors
+        books = similar.filter(b => {
+          const bookAuthor = (b.author || '').toLowerCase();
+          const mentionedAuthor = author_mentioned.toLowerCase();
+          return !bookAuthor.includes(mentionedAuthor) && !mentionedAuthor.includes(bookAuthor);
+        });
+        
+        console.log('[V2] similar_author: Found', similar.length, 'similar, filtered to', books.length, 'by other authors');
       }
       break;
       

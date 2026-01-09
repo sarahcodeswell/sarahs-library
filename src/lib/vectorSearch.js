@@ -386,6 +386,7 @@ export async function findCatalogBooksByGenre(genre, limit = 20) {
  * @returns {Promise<Array>} Books by this author from the catalog
  */
 export async function findCatalogBooksByAuthor(authorName, limit = 20) {
+  console.log('[findCatalogBooksByAuthor] Searching for:', authorName, 'limit:', limit);
   try {
     const { data, error } = await supabase.rpc('find_books_by_author', {
       author_filter: authorName,
@@ -393,13 +394,14 @@ export async function findCatalogBooksByAuthor(authorName, limit = 20) {
     });
 
     if (error) {
-      console.error('Catalog author search error:', error);
+      console.error('[findCatalogBooksByAuthor] RPC error:', error);
       return [];
     }
 
+    console.log('[findCatalogBooksByAuthor] Found', data?.length || 0, 'books');
     return data || [];
   } catch (error) {
-    console.error('Catalog author search failed:', error);
+    console.error('[findCatalogBooksByAuthor] Exception:', error);
     return [];
   }
 }
