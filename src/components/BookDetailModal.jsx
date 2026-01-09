@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Heart, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3 } from 'lucide-react';
+import { X, BookOpen, Heart, Library, Trash2, ArrowLeft, ExternalLink, Headphones, ShoppingBag, Check, Edit3, Star } from 'lucide-react';
 import { useBookEnrichment } from './BookCard';
 import { ExpandableDescription } from './ExpandableDescription';
 import { stripAccoladesFromDescription } from '../lib/descriptionUtils';
