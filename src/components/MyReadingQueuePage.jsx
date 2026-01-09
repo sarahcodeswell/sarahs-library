@@ -90,7 +90,7 @@ const themeInfo = {
   self_help: { label: 'Self Help & Personal Growth', icon: null, color: 'bg-green-100 text-green-800 border-green-200' }
 };
 
-function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpdateBook, onToggleOwned }) {
+function SortableBookCard({ book, index, onMarkAsRead, onRemove, onStartReading, isFirst, onUpdateBook, onToggleOwned }) {
   const [expanded, setExpanded] = useState(false);
   const [reputation, setReputation] = useState(book.reputation || null);
   const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
@@ -271,6 +271,14 @@ function SortableBookCard({ book, index, onMarkAsRead, onRemove, isFirst, onUpda
                 </button>
               )}
               <button
+                onClick={() => onStartReading(book)}
+                className="px-3 py-1.5 rounded text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1"
+                title="Start Reading"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Start</span>
+              </button>
+              <button
                 onClick={() => onMarkAsRead(book)}
                 className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
                 title="Mark as Finished"
@@ -440,7 +448,11 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     })
   );
 
-  // Filter to only show books marked as "want_to_read"
+  // Filter books by status
+  const currentlyReadingBooks = useMemo(() => {
+    return readingQueue.filter(item => item.status === 'reading');
+  }, [readingQueue]);
+
   const queueBooks = useMemo(() => {
     return readingQueue.filter(item => item.status === 'want_to_read');
   }, [readingQueue]);
@@ -560,6 +572,18 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
     }
   };
 
+  const handleStartReading = async (book) => {
+    const result = await updateQueueStatus(book.id, 'reading');
+    
+    if (result.success) {
+      track('book_started_reading', {
+        book_title: book.book_title,
+      });
+    } else {
+      alert('Failed to update book status. Please try again.');
+    }
+  };
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
     
@@ -654,11 +678,88 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
         <div className="mb-6">
           <h1 className="text-3xl font-serif text-[#4A5940] mb-2">Reading Queue</h1>
           <p className="text-[#7A8F6C]">
-            {queueBooks.length} {queueBooks.length === 1 ? 'book' : 'books'} you want to read
+            {currentlyReadingBooks.length > 0 && `${currentlyReadingBooks.length} currently reading · `}
+            {queueBooks.length} {queueBooks.length === 1 ? 'book' : 'books'} to read
           </p>
         </div>
 
-        {/* Search Bar - At top for easy access */}
+        {/* Currently Reading Section */}
+        {currentlyReadingBooks.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-amber-600" />
+              </div>
+              <h2 className="text-lg font-serif text-[#4A5940]">Currently Reading</h2>
+            </div>
+            <div className="space-y-3">
+              {currentlyReadingBooks.map((book) => (
+                <div
+                  key={book.id}
+                  className="rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-white p-4 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                        <div className="flex gap-3 flex-1 min-w-0">
+                          <BookCover 
+                            coverUrl={book.cover_image_url} 
+                            title={book.book_title} 
+                            isEnriching={false} 
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full">
+                                Reading
+                              </span>
+                            </div>
+                            <h3 className="font-medium text-[#4A5940] text-base">
+                              {book.book_title}
+                            </h3>
+                            {book.book_author && (
+                              <p className="text-sm text-[#7A8F6C]">
+                                by {book.book_author}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleMarkAsRead(book)}
+                            className="px-3 py-1.5 rounded text-xs font-medium text-white bg-[#5F7252] hover:bg-[#4A5940] transition-colors flex items-center gap-1"
+                            title="Mark as Finished"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>Finished</span>
+                          </button>
+                          <button
+                            onClick={() => handleRemoveBook(book)}
+                            className="p-1.5 rounded text-[#96A888] hover:text-red-500 hover:bg-red-50 transition-colors"
+                            title="Remove from queue"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Want to Read Section Header */}
+        {currentlyReadingBooks.length > 0 && queueBooks.length > 0 && (
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-[#5F7252]/10 flex items-center justify-center">
+              <Book className="w-4 h-4 text-[#5F7252]" />
+            </div>
+            <h2 className="text-lg font-serif text-[#4A5940]">Want to Read</h2>
+          </div>
+        )}
+
+        {/* Search Bar */}
         {queueBooks.length > 0 && (
           <div className="mb-6">
             <div className="relative">
@@ -715,6 +816,7 @@ export default function MyReadingQueuePage({ onNavigate, user, onShowAuthModal }
                     index={index}
                     onMarkAsRead={handleMarkAsRead}
                     onRemove={handleRemoveBook}
+                    onStartReading={handleStartReading}
                     isFirst={index === 0}
                     onUpdateBook={updateQueueItem}
                     onToggleOwned={handleToggleOwned}
