@@ -611,7 +611,7 @@ function FeedbackManagement() {
                     disabled={updating === selectedFeedback.id || adminNotes === (selectedFeedback.admin_notes || '')}
                     className="px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {updating === selectedFeedback.id ? 'Saving...' : 'Save Notes'}
+                    {updating === selectedFeedback.id ? 'Saving...' : adminNotes === (selectedFeedback.admin_notes || '') ? 'Saved' : 'Save Notes'}
                   </button>
                   <button
                     onClick={() => deleteFeedback(selectedFeedback.id)}
