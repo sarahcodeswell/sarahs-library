@@ -158,13 +158,6 @@ export default function App() {
 
   // Navigation helper to reduce duplication
   const navigateTo = useCallback((page, path) => {
-    // If navigating to home, also reset the chat to initial state
-    if (page === 'home') {
-      setMessages(getInitialMessages());
-      setSelectedThemes([]);
-      setShownBooksInSession([]);
-      setInputValue('');
-    }
     setCurrentPage(page);
     setShowNavMenu(false);
     window.scrollTo(0, 0);
