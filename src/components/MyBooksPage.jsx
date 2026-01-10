@@ -538,7 +538,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             <p className="italic">
               Full disclosure: I've been vibe coding this thing for a few weeks. It's not perfect, but as Margaret Mead said, "Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has."
             </p>
-            <p className="text-xs text-[#7A8F6C] italic">
+            <p className="text-xs text-[#7A8F6C]">
               p.s. Your local librarian could build an export button in between shelving returns.
             </p>
             <p className="text-sm text-[#5F7252] font-medium pt-1">#booksnotbillionaires</p>
