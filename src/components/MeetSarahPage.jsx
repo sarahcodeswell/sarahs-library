@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Mail, Search, Library, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, Sun, X, BookOpen, Award, ChevronLeft, ChevronRight } from 'lucide-react';
-import bookCatalog from '../books.json';
+import { ArrowLeft, Mail, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, Sun, X, BookOpen, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import bookCatalog from '../books-enriched.json';
 import { supabase } from '../lib/supabase';
 import { ExpandableDescription } from './ExpandableDescription';
 
@@ -43,8 +43,8 @@ function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, is
         <div className="overflow-y-auto max-h-[calc(90vh-60px)] p-4 sm:p-6">
           <div className="flex gap-4 mb-6">
             <div className="flex-shrink-0 w-24 h-36 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-md">
-              {book.cover_image_url ? (
-                <img src={book.cover_image_url} alt="" className="w-full h-full object-cover" />
+              {book.coverUrl ? (
+                <img src={book.coverUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <BookOpen className="w-8 h-8 text-white/70" />
               )}
@@ -74,6 +74,23 @@ function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, is
                 Reputation & Accolades
               </h4>
               <p className="text-sm text-[#5F7252] leading-relaxed">{book.reputation}</p>
+            </div>
+          )}
+
+          {/* Sarah's Review - only for signed-in users */}
+          {book.sarah_assessment && (
+            <div className="mb-6 p-4 bg-[#5F7252]/5 rounded-xl border border-[#5F7252]/10">
+              <h4 className="text-sm font-medium text-[#4A5940] mb-2 flex items-center gap-2">
+                <Star className="w-4 h-4 text-[#5F7252] fill-[#5F7252]" />
+                Sarah's Take
+              </h4>
+              {isLoggedIn ? (
+                <p className="text-sm text-[#5F7252] leading-relaxed italic">{book.sarah_assessment}</p>
+              ) : (
+                <p className="text-sm text-[#96A888] leading-relaxed">
+                  <button onClick={() => { handleClose(); }} className="text-[#5F7252] underline hover:text-[#4A5940]">Sign in</button> to see Sarah's personal take on this book.
+                </p>
+              )}
             </div>
           )}
 
@@ -171,8 +188,8 @@ function BookShelf({ books, onBookClick, userBookTitles }) {
               className="flex-shrink-0 group/book relative"
             >
               <div className="w-20 h-28 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                {book.cover_image_url ? (
-                  <img src={book.cover_image_url} alt="" className="w-full h-full object-cover" />
+                {book.coverUrl ? (
+                  <img src={book.coverUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <BookOpen className="w-6 h-6 text-white/70" />
                 )}
@@ -183,8 +200,13 @@ function BookShelf({ books, onBookClick, userBookTitles }) {
                 </div>
               )}
               <p className="mt-1.5 text-xs text-[#5F7252] text-center truncate w-20 group-hover/book:text-[#4A5940]">
-                {book.title?.length > 20 ? book.title.slice(0, 18) + '...' : book.title}
+                {book.title?.length > 15 ? book.title.slice(0, 13) + '...' : book.title}
               </p>
+              <div className="flex justify-center gap-0.5 mt-0.5">
+                {[1,2,3,4,5].map(star => (
+                  <Star key={star} className={`w-2.5 h-2.5 ${book.favorite ? 'text-[#5F7252] fill-[#5F7252]' : 'text-[#96A888] fill-[#96A888]'}`} />
+                ))}
+              </div>
             </button>
           );
         })}
@@ -203,20 +225,34 @@ function BookShelf({ books, onBookClick, userBookTitles }) {
 }
 
 export default function MeetSarahPage({ onNavigate }) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBookTitles, setUserBookTitles] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Get books by theme
-  const booksByTheme = useMemo(() => ({
-    women: bookCatalog.filter(b => b.themes?.includes('women')).slice(0, 15),
-    beach: bookCatalog.filter(b => b.themes?.includes('beach')),
-    emotional: bookCatalog.filter(b => b.themes?.includes('emotional')).slice(0, 15),
-    identity: bookCatalog.filter(b => b.themes?.includes('identity')).slice(0, 15),
-    spiritual: bookCatalog.filter(b => b.themes?.includes('spiritual')).slice(0, 15),
-    justice: bookCatalog.filter(b => b.themes?.includes('justice')).slice(0, 15),
-  }), []);
+  const booksByTheme = useMemo(() => {
+    // All-time favorites by title
+    const favoriteTitles = [
+      'Tell Me How to Be',
+      'Where the Red Fern Grows', 
+      'Loving Frank',
+      'Just Mercy',
+      'Heartland'
+    ];
+    const favorites = favoriteTitles
+      .map(title => bookCatalog.find(b => b.title === title))
+      .filter(Boolean);
+
+    return {
+      women: bookCatalog.filter(b => b.themes?.includes('women')).slice(0, 15),
+      beach: bookCatalog.filter(b => b.themes?.includes('beach')),
+      emotional: bookCatalog.filter(b => b.themes?.includes('emotional')).slice(0, 15),
+      identity: bookCatalog.filter(b => b.themes?.includes('identity')).slice(0, 15),
+      spiritual: bookCatalog.filter(b => b.themes?.includes('spiritual')).slice(0, 15),
+      justice: bookCatalog.filter(b => b.themes?.includes('justice')).slice(0, 15),
+      favorites,
+    };
+  }, []);
 
   // Check user's queue/collection
   useEffect(() => {
@@ -250,22 +286,13 @@ export default function MeetSarahPage({ onNavigate }) {
       user_id: user.id,
       book_title: book.title,
       book_author: book.author,
-      cover_image_url: book.cover_image_url,
+      cover_image_url: book.coverUrl,
       status: 'want_to_read',
       source: 'sarah_collection',
     });
     
     setUserBookTitles(prev => [...prev, book.title?.toLowerCase()]);
   };
-
-  const filteredBooks = useMemo(() => {
-    if (!searchQuery.trim()) return bookCatalog;
-    const query = searchQuery.toLowerCase();
-    return bookCatalog.filter(book => 
-      book.title?.toLowerCase().includes(query) || 
-      book.author?.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
@@ -422,60 +449,13 @@ export default function MeetSarahPage({ onNavigate }) {
               <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
                 Top recommendations that have shaped how I see the world:
               </p>
-              <ul className="text-sm text-[#5F7252] space-y-1 ml-4">
-                <li>• <span className="font-medium">Tell Me How to Be</span> by Neel Patel</li>
-                <li>• <span className="font-medium">Where the Red Fern Grows</span> by Wilson Rawls</li>
-                <li>• <span className="font-medium">Loving Frank</span> by Nancy Horan</li>
-                <li>• <span className="font-medium">Just Mercy</span> by Bryan Stevenson</li>
-                <li>• <span className="font-medium">Heartland</span> by Sarah Smarsh</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Sarah's Curated Collection */}
-        <div id="browse-collection" className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Library className="w-5 h-5 text-[#5F7252]" />
-            <h2 className="font-serif text-2xl text-[#4A5940]">Sarah's Collection</h2>
-          </div>
-          <p className="text-sm text-[#7A8F6C] mb-6">
-            All 200 books I've read and loved. This foundation collection powers the recommendation engine for everyone.
-          </p>
-
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search my books..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#D4DAD0] bg-white text-[#4A5940] placeholder-[#96A888] text-sm focus:outline-none focus:ring-2 focus:ring-[#96A888] focus:border-transparent"
-            />
-          </div>
-
-          <div className="text-xs text-[#96A888] mb-3">
-            {filteredBooks.length} book{filteredBooks.length !== 1 ? 's' : ''}
-          </div>
-
-          <div className="max-h-96 overflow-y-auto bg-white rounded-lg border border-[#D4DAD0]">
-            <div className="divide-y divide-[#E8EBE4]">
-              {filteredBooks.map((book, index) => (
-                <div key={index} className="px-4 py-3 hover:bg-[#F8F6EE] transition-colors">
-                  <div className="text-sm font-medium text-[#4A5940]">
-                    {book.title}
-                  </div>
-                  <div className="text-xs text-[#7A8F6C] font-light mt-1">
-                    {book.author}
-                  </div>
-                </div>
-              ))}
+              <BookShelf books={booksByTheme.favorites} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
             </div>
           </div>
         </div>
 
         {/* Contact */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm">
+        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm">
           <h2 className="font-serif text-xl text-[#4A5940] mb-4">Get in Touch</h2>
           <p className="text-sm text-[#5F7252] mb-4 leading-relaxed">
             Have a question or book recommendation? I'd love to hear from you.
