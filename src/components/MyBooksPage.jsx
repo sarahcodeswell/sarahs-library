@@ -515,10 +515,13 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
         )}
 
         {/* Note about data portability */}
-        <div className="mt-4 mb-6 p-4 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
-          <h2 className="font-serif text-lg text-[#4A5940] mb-3">A Note to Our Readers</h2>
-          <div className="text-sm text-[#5F7252] leading-relaxed space-y-3">
-            <p className="font-medium">We wish this were easier too.</p>
+        <div className="mt-4 mb-6 rounded-xl overflow-hidden border border-[#D4DAD0] shadow-sm">
+          <div className="bg-[#5F7252] px-4 py-2 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-white" />
+            <h2 className="font-serif text-base text-white">A Note to Our Readers</h2>
+          </div>
+          <div className="bg-[#FDFCF9] px-4 py-4 text-sm text-[#5F7252] leading-relaxed space-y-3">
+            <p className="font-medium text-[#4A5940]">We wish importing your books was easier too.</p>
             <p>
               <span className="font-medium">Looking for the Apple iBooks connector?</span> Yeah, us too.<br />
               <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't.<br />
@@ -528,11 +531,12 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             <p>
               These companies built empires on your reading data. They track every page turn, every highlight, every book you abandoned at chapter three. They just won't let you take it with you.
             </p>
-            <p className="font-medium">We think that's backwards.</p>
+            <p className="font-medium text-[#4A5940]">We think that's backwards.</p>
             <p>
               So here we are—screenshots and CSVs—building workarounds to help you reclaim your reading life. It's a little absurd, but we got you: one photo, CSV, and book at a time.
             </p>
-            <p className="text-xs text-[#7A8F6C] mt-2 italic">
+            <p className="text-sm text-[#5F7252] font-medium pt-1">#booksnotbillionaires</p>
+            <p className="text-xs text-[#7A8F6C] italic">
               p.s. Building an export button isn't hard. Your local librarian could do it between shelving returns.
             </p>
           </div>
