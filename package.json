@@ -21,7 +21,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@sentry/react": "^10.32.1",
-    "@sentry/vite-plugin": "^4.6.1",
     "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@upstash/redis": "^1.36.0",
@@ -37,8 +36,6 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@jest/globals": "^30.2.0",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.23",
     "eslint": "^9.39.1",

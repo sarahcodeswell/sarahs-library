@@ -36,7 +36,7 @@ function UserManagement() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Fetched users:', result.users?.length, 'deleted:', result.users?.filter(u => u.deletedAt).length);
+        if (import.meta.env.DEV) console.log('Fetched users:', result.users?.length, 'deleted:', result.users?.filter(u => u.deletedAt).length);
         setUsers(result.users || []);
       }
     } catch (err) {

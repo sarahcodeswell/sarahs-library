@@ -579,22 +579,22 @@ function SortableBookCard({ book, index, onRemove, onStartReading, onNotForMe, i
   useEffect(() => {
     if (expanded && !enrichedDescription && !isEnrichingDescription && book.book_title) {
       setIsEnrichingDescription(true);
-      console.log('[BookDetails] Generating description for:', book.book_title, book.book_author);
+      if (import.meta.env.DEV) console.log('[BookDetails] Generating description for:', book.book_title, book.book_author);
       import('../lib/descriptionService.js').then(({ generateBookDescriptions }) => {
         generateBookDescriptions([{ title: book.book_title, author: book.book_author }])
           .then((result) => {
-            console.log('[BookDetails] Claude result:', result);
+            if (import.meta.env.DEV) console.log('[BookDetails] Claude result:', result);
             const key = `${book.book_title.toLowerCase()}|${(book.book_author || '').toLowerCase()}`;
             const description = result[key];
             if (description) {
-              console.log('[BookDetails] Got description, length:', description.length);
+              if (import.meta.env.DEV) console.log('[BookDetails] Got description, length:', description.length);
               setEnrichedDescription(description);
               // Save to DB for future use
               if (onUpdateBook) {
                 onUpdateBook(book.id, { description });
               }
             } else {
-              console.log('[BookDetails] No description from Claude');
+              if (import.meta.env.DEV) console.log('[BookDetails] No description from Claude');
             }
           })
           .catch((err) => {
