@@ -8,17 +8,17 @@ import RecommendationCard from './RecommendationCard';
  */
 function RecommendationActionPanel({ onShowMore, onNewSearch }) {
   return (
-    <div className="mt-4 flex gap-2">
+    <div className="mt-4 grid grid-cols-2 gap-2">
       <button
         onClick={() => onShowMore && onShowMore()}
-        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors whitespace-nowrap"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
       >
         <Sparkles className="w-4 h-4 flex-shrink-0" />
-        Find Me More Like These
+        <span className="truncate">Find Me More Like These</span>
       </button>
       <button
         onClick={() => onNewSearch && onNewSearch()}
-        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors whitespace-nowrap"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
       >
         <RotateCcw className="w-4 h-4 flex-shrink-0" />
         New Search
