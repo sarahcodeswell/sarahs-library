@@ -1329,9 +1329,9 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
-          {/* Collapsed Themes & Genres (after search) */}
+          {/* Collapsed Themes & Genres (after search) - Sticky at top */}
           {messages.length > 1 && (
-            <div className="mb-4 p-3 bg-[#F8F6EE]/50 rounded-xl border border-[#E8EBE4]">
+            <div className="sticky top-0 z-10 mb-4 p-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-[#4A5940]">Browse by Theme or Genre</span>
                 <button
