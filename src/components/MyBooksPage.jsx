@@ -523,7 +523,7 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
           <div className="bg-[#FDFCF9] px-4 py-4 text-sm text-[#5F7252] leading-relaxed space-y-3">
             <p className="font-medium text-[#4A5940]">We wish importing your books was easier too.</p>
             <p>
-              <span className="font-medium">Looking for an Apple Books connector?</span> Yeah, us too. <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't. <span className="font-medium">Audible listening history?</span> They're keeping that. Goodreads actually has an export—credit to the founders for making that a hard line when Amazon came knocking.
+              <span className="font-medium">Looking for an Apple Books connector?</span> Yeah, us too. <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't. <span className="font-medium">Audible listening history?</span> They're keeping that. Goodreads actually has an export—credit to the founders who most likely had a say in this before selling to Amazon.
             </p>
             <p>
               These companies built empires on your reading data. They'd like to keep it that way.

@@ -117,7 +117,7 @@ export default function MeetSarahPage({ onNavigate }) {
                 Emotional Truth
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                Books that crack you open. The ones where you find yourself underlining passages and texting quotes to friends. Stories that hold up a mirror to what it means to be human—the grief, the joy, the mess of it all. You finish them different than you started.
+                These are the books that explore the depths of the human experience. Grief, joy, heartbreak, missed chances. These are the books that stay with you long after you read them.
               </p>
             </div>
 
