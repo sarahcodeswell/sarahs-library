@@ -88,14 +88,14 @@ export default function MeetSarahPage({ onNavigate }) {
           </p>
 
           <div className="space-y-6">
-            {/* Women's Interior Lives */}
+            {/* Women's Untold Stories */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
                 <BookHeart className="w-5 h-5 text-[#5F7252]" />
-                Women's Interior Lives and Untold Stories
+                Women's Untold Stories
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                This collection is dominated by female authors and female protagonists—not just in quantity, but in type. The reader gravitates toward books that excavate women's hidden contributions (The Personal Librarian, First Ladies), women's survival under impossible conditions (Kristin Hannah's catalog), and women navigating systems that weren't built for them (Lessons in Chemistry, The Female Persuasion). Five Kristin Hannah novels, four Paula McLain, three Marie Benedict—authors who specialize in giving voice to women history overlooked.
+                I'm drawn to stories that illuminate the experiences we rarely hear about—the women who've been footnotes in history books, the ones who survived impossible circumstances, and those whose inner lives were infinitely more complex than the world allowed them to show. These books give voice to the voiceless, whether they're historical figures finally getting their due or contemporary women navigating challenges that society prefers to ignore. Each one feels like discovering a secret that's been hiding in plain sight.
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export default function MeetSarahPage({ onNavigate }) {
                 Beach Reads
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                The books you devour in a weekend—the ones that make you laugh out loud on an airplane or stay up way too late because you have to know what happens next. Think Emily Henry's witty banter, Abby Jimenez's warm humor, or a cozy mystery that pairs perfectly with a glass of wine. Pure reading joy, no homework required.
+                These are my go-to books when I want to feel like I'm wrapped in a warm hug while lounging by the ocean. I gravitate toward stories that make me laugh out loud one moment and tear up the next—tales of second chances, unexpected friendships, and characters who are beautifully flawed but utterly lovable. They're the perfect blend of heartwarming and escapist, with just enough depth to make you think but never so heavy that they weigh down your beach bag.
               </p>
             </div>
 
@@ -117,7 +117,7 @@ export default function MeetSarahPage({ onNavigate }) {
                 Emotional Truth
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                These are the books that explore the depths of the human experience—grief, joy, heartbreak, missed chances. The thrillers here are psychological rather than procedural (Gone Girl, Verity). The romances grapple with real loss (The Midnight Library, A Man Called Ove). These are the books that stay with you long after you've finished, the ones you find yourself recommending years later.
+                These are the books that have reached into my chest and rearranged something fundamental—stories that don't just entertain but transform how I see the world and my place in it. I'm drawn to narratives that excavate the deepest parts of human experience: trauma and healing, love and loss, the weight of choices that echo across generations. Whether it's a mother fleeing violence, siblings separated by history, or someone discovering who they truly are, these books reveal the raw, beautiful complexity of what it means to be human.
               </p>
             </div>
 
@@ -125,32 +125,32 @@ export default function MeetSarahPage({ onNavigate }) {
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
                 <Users className="w-5 h-5 text-[#5F7252]" />
-                Grappling with Questions of Identity and Belonging
+                Identity & Belonging
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                The collection reveals deep interest in who we are versus who we present ourselves to be: racial identity (Vanishing Half, The Personal Librarian), class performance (Such a Fun Age), gender identity (This Is How It Always Is, The Danish Girl), and cultural identity across diaspora (Homegoing, Vanishing Half). A persistent draw toward characters navigating the gap between their authentic selves and the selves the world expects.
+                These are the books that have made me feel less alone in the world. I'm drawn to stories about people figuring out who they are when everything familiar falls away—whether through immigration, trauma, family secrets, or simply growing up. There's something deeply comforting about reading how others navigate the space between who they were raised to be and who they're becoming, especially when home feels complicated or conditional.
               </p>
             </div>
 
-            {/* Spiritual Seeker */}
+            {/* Spiritual Seeking */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#5F7252]" />
-                A Spiritual Seeker with Eclectic Tastes
+                Spiritual Seeking
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                The spirituality shelf is notably pluralistic: multiple Dalai Lama books, Thich Nhat Hanh, Pema Chödrön (Buddhism), Saraswati (Theravada), but also Ramakrishna (Hindu), Brené Brown (secular vulnerability research), and Baltasar Gracián (17th-century Jesuit). Not looking for one answer—collecting wisdom across traditions. The presence of "no-self" texts and Brené Brown's work on authenticity suggests warring through the tension between ego dissolution and showing up vulnerably as oneself.
+                These are the books that have shaped my understanding of what it means to be human—stories and teachings that explore life's biggest questions without pretending to have all the answers. I'm drawn to authors who write with both intellectual honesty and deep compassion, whether they're examining faith, consciousness, purpose, or the courage it takes to transform ourselves. Each book here has taught me something profound about navigating uncertainty and finding meaning in both struggle and joy.
               </p>
             </div>
 
-            {/* Justice */}
+            {/* Invisible Injustices */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
                 <Scale className="w-5 h-5 text-[#5F7252]" />
-                A Deep Care for Justice—Especially Invisible Injustices
+                Invisible Injustices
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                The criminal justice cluster is telling: Just Mercy, The Sun Does Shine, An American Marriage, The Master Plan. Beyond that, a draw toward systems that fail people quietly: orphan trains, the treatment of Vietnam nurses, the erasure of women scientists, Guatemala's suppressed history. Particular interest in how power operates invisibly and how ordinary people become complicit.
+                These are the books that haunt me in the best way—stories that pull back the curtain on injustices hiding in plain sight, whether in our systems, our histories, or our hearts. I'm drawn to narratives that illuminate the quiet ways power operates, the voices that have been silenced, and the human cost of indifference. They're not always easy reads, but they're essential ones that change how you see the world.
               </p>
             </div>
 

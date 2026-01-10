@@ -476,17 +476,27 @@ Why: ${book.sarah_assessment || 'A wonderful addition to this collection.'}`;
       messageParts.push(preferences);
     }
 
-    // Add theme filter requirements
+    // Add theme filter requirements with rich context
     if (themeFilters && themeFilters.length > 0) {
       const themeLabels = {
-        women: "Women's stories",
-        emotional: "Emotional truth",
-        identity: "Identity & belonging",
-        spiritual: "Spirituality & meaning",
-        justice: "Justice & systems"
+        women: "Women's Untold Stories",
+        beach: "Beach Reads",
+        emotional: "Emotional Truth",
+        identity: "Identity & Belonging",
+        spiritual: "Spiritual Seeking",
+        justice: "Invisible Injustices"
+      };
+      const themeContext = {
+        women: `Stories centered on women's experiences that have been historically marginalized or overlooked. Historical fiction featuring real women erased from history, contemporary fiction exploring difficult realities, and memoirs of survival and resilience. Women defying expectations, surviving trauma, forming powerful bonds.`,
+        beach: `Character-driven narratives balancing emotional depth with accessible storytelling. Second chances, healing from loss, found family, personal transformation. Uplifting tone despite serious subjects, with humor for emotional balance. Escapist settings, romantic subplots, comfort reading with substance.`,
+        emotional: `Narratives exploring profound human experiences with emotional depth and psychological authenticity. Characters facing life-altering circumstances—trauma, loss, displacement, identity crises. Intergenerational trauma, family secrets, redemption. Stories that privilege character development over plot.`,
+        identity: `Characters grappling with self-definition and belonging, caught between multiple worlds, cultures, or identities. Immigration, cultural displacement, family secrets, coming-of-age. Outsiders, minorities, those questioning traditional roles. Resilience and self-discovery.`,
+        spiritual: `Books exploring fundamental questions about existence, meaning, consciousness, and transformation. Philosophical novels, spiritual memoirs, wisdom from contemplative traditions. Suffering and growth, consciousness, authentic self-expression, compassion for imperfection.`,
+        justice: `Systemic oppression, marginalized voices, overlooked injustices. Institutional racism, economic inequality, immigration struggles, war crimes, abuse of power. Exposing hidden truths, amplifying silenced perspectives. Intergenerational trauma, historical wrongs.`
       };
       const selectedThemes = themeFilters.map(t => themeLabels[t] || t).join(', ');
-      messageParts.push(`🎯 MANDATORY THEME REQUIREMENT:\nALL recommendations MUST match at least one of these themes: ${selectedThemes}`);
+      const themeContextText = themeFilters.map(t => `**${themeLabels[t] || t}**: ${themeContext[t] || ''}`).join('\n');
+      messageParts.push(`🎯 MANDATORY THEME REQUIREMENT:\nALL recommendations MUST match at least one of these themes: ${selectedThemes}\n\nTHEME CONTEXT:\n${themeContextText}`);
     }
 
     // Add exclusion list
