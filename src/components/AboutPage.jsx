@@ -300,38 +300,6 @@ export default function AboutPage({ onNavigate, user }) {
 
         </div>
 
-        {/* Featured from Sarah's Collection */}
-        <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-8">
-          <h2 className="font-serif text-xl text-[#4A5940] mb-2">A Taste of the Collection</h2>
-          <p className="text-sm text-[#7A8F6C] mb-4">
-            A few favorites to give you a sense of what you'll find here.
-          </p>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {[
-              { title: 'Tell Me How to Be', cover: 'https://books.google.com/books/content?id=FkiSDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api' },
-              { title: 'Just Mercy', cover: 'https://books.google.com/books/content?id=FTppm-7CPnYC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api' },
-              { title: 'Heartland', cover: 'https://books.google.com/books/content?id=zLNPEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api' },
-              { title: 'American Dirt', cover: 'https://books.google.com/books/content?id=3lKEDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api' },
-              { title: 'The Midnight Library', cover: 'https://books.google.com/books/content?id=Xn0gEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api' },
-            ].map((book, i) => (
-              <div key={i} className="flex-shrink-0">
-                <div className="w-16 h-24 rounded-lg overflow-hidden shadow-md">
-                  <img src={book.cover} alt={book.title} className="w-full h-full object-cover" />
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => {
-              onNavigate('meet-sarah');
-              window.scrollTo(0, 0);
-            }}
-            className="mt-4 inline-flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] font-medium"
-          >
-            Browse the full collection →
-          </button>
-        </div>
-
         {/* Ready to Start CTA */}
         <div className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm text-center">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-3">Ready to find your next great read?</h2>
