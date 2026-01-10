@@ -1235,54 +1235,23 @@ Find similar books from beyond my library that match this taste profile.
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
           {/* Hero Image - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-4 rounded-2xl overflow-hidden shadow-lg">
+            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
               <img
                 src="/books.jpg"
                 alt="Cozy reading atmosphere"
                 loading="lazy"
-                className="block w-full h-[clamp(80px,12vh,140px)] object-cover object-center"
+                className="block w-full h-[clamp(100px,14vh,180px)] object-cover object-center"
               />
             </div>
           )}
 
-          {/* Search Bar - always visible at top */}
-          <div className="mb-4 bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 flex items-center gap-3">
-            <Search className="w-5 h-5 text-[#96A888] flex-shrink-0" />
-            <textarea
-              value={inputValue}
-              onChange={e => {
-                setInputValue(e.target.value);
-                e.target.style.height = '24px';
-                const newHeight = Math.min(e.target.scrollHeight, 200);
-                e.target.style.height = newHeight + 'px';
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' || e.shiftKey) return;
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              placeholder="What are you in the mood for?"
-              className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
-              disabled={isLoading}
-              style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
-              aria-label="Send message"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-
           {/* Header - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-4 text-center">
-              <h1 className="font-serif text-xl sm:text-2xl text-[#4A5940] mb-1">
+            <div className="mb-6 text-center">
+              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
                 {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'Discover your next great read'}
               </h1>
-              <p className="text-xs text-[#7A8F6C]">
+              <p className="text-sm text-[#7A8F6C]">
                 {user ? 'Ready to find your next great read?' : 'Curated by a real reader, intelligently matched to you'}
               </p>
             </div>
