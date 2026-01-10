@@ -515,27 +515,19 @@ Find similar books from beyond my library that match this taste profile.
     });
   };
 
-  // Improved chat scroll with mobile keyboard handling
+  // Scroll to TOP when new results arrive (not bottom)
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 1) {
       requestAnimationFrame(() => {
-        chatEndRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'end'
-        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
   }, [messages]);
 
-  // Handle mobile keyboard resize
+  // Handle mobile keyboard resize - disabled auto-scroll to preserve scroll position
   useEffect(() => {
     const handleResize = () => {
-      if (document.activeElement.tagName === 'INPUT' || 
-          document.activeElement.tagName === 'TEXTAREA') {
-        setTimeout(() => {
-          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
+      // No-op - we don't want to auto-scroll on keyboard anymore
     };
     
     window.addEventListener('resize', handleResize);
