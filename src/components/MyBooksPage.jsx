@@ -523,17 +523,14 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
           <div className="bg-[#FDFCF9] px-4 py-4 text-sm text-[#5F7252] leading-relaxed space-y-3">
             <p className="font-medium text-[#4A5940]">We wish importing your books was easier too.</p>
             <p>
-              <span className="font-medium">Looking for the Apple iBooks connector?</span> Yeah, us too.<br />
-              <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't.<br />
-              <span className="font-medium">Audible listening history?</span> They're keeping that.<br />
-              <span className="font-medium">Goodreads?</span> Okay, that one actually works—for now. (Amazon bought them before they thought to remove it.)
+              <span className="font-medium">Looking for an Apple Books connector?</span> Yeah, us too. <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't. <span className="font-medium">Audible listening history?</span> They're keeping that. (Goodreads actually has an export, but only because Amazon bought them before they thought to remove it.)
             </p>
             <p>
-              These companies built empires on your reading data. They track every page turn, every highlight, every book you abandoned at chapter three. They just won't let you take it with you.
+              These companies built empires on your reading data. They'd like to keep it that way.
             </p>
             <p className="font-medium text-[#4A5940]">We think that's backwards.</p>
             <p>
-              So here we are—screenshots and CSVs—building workarounds to help you reclaim your reading life. It's a little absurd, but we got you: one photo, CSV, and book at a time.
+              So here we are—screenshots and CSVs—building workarounds to help you reclaim what's yours. It shouldn't be this hard. But here we are—one photo, CSV, and book at a time.
             </p>
             <p className="text-sm text-[#5F7252] font-medium pt-1">#booksnotbillionaires</p>
             <p className="text-xs text-[#7A8F6C] italic">
