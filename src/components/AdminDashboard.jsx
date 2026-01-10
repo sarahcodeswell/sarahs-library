@@ -238,7 +238,7 @@ function UserManagement() {
                         <p className="text-[10px] text-[#96A888]">Queued</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
-                        <p className="text-lg font-semibold text-amber-600">{user.booksReading || 0}</p>
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.booksReading || 0}</p>
                         <p className="text-[10px] text-[#96A888]">Reading</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
@@ -250,7 +250,7 @@ function UserManagement() {
                         <p className="text-[10px] text-[#96A888]">Recs Made</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
-                        <p className="text-lg font-semibold text-emerald-600">{user.recsAccepted || 0}</p>
+                        <p className="text-lg font-semibold text-[#4A5940]">{user.recsAccepted || 0}</p>
                         <p className="text-[10px] text-[#96A888]">Recs Accepted</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
@@ -492,25 +492,15 @@ function AdminManagement() {
   );
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color = 'sage', onClick }) {
-  // Color mapping for consistent icon backgrounds
-  const colorMap = {
-    sage: { bg: 'bg-[#5F7252]/10', text: 'text-[#5F7252]' },
-    amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
-    emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-    violet: { bg: 'bg-violet-100', text: 'text-violet-600' },
-    rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
-  };
-  const colors = colorMap[color] || colorMap.sage;
-
+function StatCard({ title, value, subtitle, icon: Icon, onClick }) {
   return (
     <div 
       className={`bg-white rounded-xl border border-[#E8EBE4] p-4 sm:p-5 ${onClick ? 'cursor-pointer hover:border-[#5F7252] hover:shadow-md transition-all' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-3">
-        <div className={`p-2.5 ${colors.bg} rounded-lg`}>
-          <Icon className={`w-5 h-5 ${colors.text}`} />
+        <div className="p-2.5 bg-[#5F7252]/10 rounded-lg">
+          <Icon className="w-5 h-5 text-[#5F7252]" />
         </div>
         {onClick && <span className="text-xs text-[#96A888]">Click to view</span>}
       </div>
@@ -1261,27 +1251,23 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
   );
 }
 
-function ProgressBar({ label, value, percent, color = 'sage', tooltip }) {
-  const colorMap = {
-    sage: 'bg-[#5F7252]',
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500',
-  };
-  const barColor = colorMap[color] || colorMap.sage;
-
+function ProgressBar({ label, value, percent, tooltip }) {
   return (
     <div className="mb-3 group relative">
       <div className="flex justify-between text-xs mb-1">
         <span className="text-[#5F7252] flex items-center gap-1">
           {label}
           {tooltip && (
-            <span className="cursor-help text-[#96A888] hover:text-[#5F7252]" title={tooltip}>ⓘ</span>
+            <span 
+              className="cursor-help text-[#96A888] hover:text-[#5F7252] inline-flex items-center justify-center w-4 h-4 text-[10px] border border-[#D4DAD0] rounded-full"
+              title={tooltip}
+            >?</span>
           )}
         </span>
         <span className="text-[#96A888]">{value} ({percent}%)</span>
       </div>
       <div className="h-2 bg-[#E8EBE4] rounded-full overflow-hidden">
-        <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${percent}%` }} />
+        <div className="h-full bg-[#5F7252] rounded-full transition-all" style={{ width: `${percent}%` }} />
       </div>
     </div>
   );
@@ -1322,14 +1308,14 @@ function WaitlistSection({ title, icon: Icon, items, type, showFeatures, onDelet
               <button
                 onClick={() => handleDelete(item.email)}
                 disabled={deleting === item.email}
-                className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 rounded transition-all disabled:opacity-50"
-                title="Remove from list"
+                className="px-2 py-1 text-xs text-[#5F7252] bg-[#5F7252]/10 hover:bg-[#5F7252]/20 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
               >
                 {deleting === item.email ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <RefreshCw className="w-3 h-3 animate-spin" />
                 ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3" />
                 )}
+                Remove
               </button>
             </div>
           </div>
@@ -1594,7 +1580,6 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.queue?.reading || 0}
             subtitle={`${stats?.queue?.readingUsers || 0} users`}
             icon={BookOpen}
-            color="amber"
             onClick={() => setModal({ isOpen: true, type: 'reading', title: 'Currently Reading', icon: BookOpen })}
           />
           <StatCard
@@ -1620,7 +1605,6 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.sharing?.accepted || 0}
             subtitle={`${stats?.sharing?.totalShares > 0 ? Math.round((stats?.sharing?.accepted / stats?.sharing?.totalShares) * 100) : 0}% accept rate`}
             icon={Check}
-            color="emerald"
           />
           <StatCard
             title="Referrals"
@@ -1634,14 +1618,12 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.referrals?.platformKFactor || '0.00'}
             subtitle="Viral coefficient"
             icon={TrendingUp}
-            color="emerald"
           />
           <StatCard
             title="Curator Waitlist"
             value={stats?.curatorWaitlist?.total || 0}
             subtitle="Pending curators"
             icon={UserPlus}
-            color="violet"
             onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
           />
           <StatCard
@@ -1649,7 +1631,6 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.betaTesters?.total || 0}
             subtitle="Read with Friends"
             icon={Users}
-            color="rose"
             onClick={() => setModal({ isOpen: true, type: 'betaTesters', title: 'Beta Testers', icon: Users })}
           />
         </div>
@@ -1694,7 +1675,6 @@ export default function AdminDashboard({ onNavigate }) {
               label="Referral Health"
               value=""
               percent={stats?.dataQuality?.referralHealth || 0}
-              color="emerald"
               tooltip="Referral conversion rate - % of sent referrals that resulted in signups"
             />
           </div>
