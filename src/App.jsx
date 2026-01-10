@@ -515,19 +515,27 @@ Find similar books from beyond my library that match this taste profile.
     });
   };
 
-  // Scroll to TOP when new results arrive (not bottom)
+  // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
-    if (messages.length > 1) {
+    if (messages.length > 0) {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        chatEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
       });
     }
   }, [messages]);
 
-  // Handle mobile keyboard resize - disabled auto-scroll to preserve scroll position
+  // Handle mobile keyboard resize
   useEffect(() => {
     const handleResize = () => {
-      // No-op - we don't want to auto-scroll on keyboard anymore
+      if (document.activeElement.tagName === 'INPUT' || 
+          document.activeElement.tagName === 'TEXTAREA') {
+        setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     };
     
     window.addEventListener('resize', handleResize);
@@ -696,12 +704,7 @@ Find similar books from beyond my library that match this taste profile.
     }
 
     setInputValue('');
-    // Replace messages instead of appending - fresh results each search
-    setMessages([
-      { text: "Browse collections below or tell me what you're looking for.", isUser: false },
-      { text: userMessage, isUser: true }
-    ]);
-    setShownBooksInSession([]); // Reset shown books for fresh results
+    setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
     
     // Determine loading mode based on query type
@@ -734,7 +737,7 @@ Find similar books from beyond my library that match this taste profile.
       }
       
       if (!result.success) {
-        setMessages(prev => [...prev.slice(0, 2), {
+        setMessages(prev => [...prev, {
           text: result.error || result.response || "I'm having trouble thinking right now. Could you try again?",
           isUser: false
         }]);
@@ -754,7 +757,7 @@ Find similar books from beyond my library that match this taste profile.
         if (result.shownBooks && result.shownBooks.length > 0) {
           setShownBooksInSession(prev => [...prev, ...result.shownBooks]);
         }
-        setMessages(prev => [...prev.slice(0, 2), { text: result.text, isUser: false }]);
+        setMessages(prev => [...prev, { text: result.text, isUser: false }]);
         return;
       }
       
@@ -854,14 +857,14 @@ Find similar books from beyond my library that match this taste profile.
         cleanedText = cleanedText.replace('My Top 3 Picks for You', 'My Top 2 Picks for You');
       }
       
-      setMessages(prev => [...prev.slice(0, 2), { text: cleanedText, isUser: false }]);
+      setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
       
       // Show sign-in nudge for non-signed-in users after first recommendation
-      if (!user && !signInNudgeDismissed) {
+      if (!user && !signInNudgeDismissed && messages.length >= 1) {
         setShowSignInNudge(true);
       }
     } catch (error) {
-      setMessages(prev => [...prev.slice(0, 2), {
+      setMessages(prev => [...prev, {
         text: "Oops, I'm having a moment. Let me catch my breath and try again!",
         isUser: false
       }]);
@@ -1326,71 +1329,16 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
-          {/* Query context bar - shows during and after search (Option A) - dark green selected look */}
-          {(isLoading || messages.length > 2) && (
-            <div className="mb-4 px-4 py-3 bg-[#5F7252] rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const selectedTheme = selectedThemes[0];
-                  const theme = selectedTheme ? themeInfo[selectedTheme] : null;
-                  if (theme) {
-                    const IconComponent = theme.icon;
-                    return (
-                      <>
-                        {IconComponent && <IconComponent className="w-4 h-4 text-white" />}
-                        <span className="text-sm font-medium text-white">{theme.label}</span>
-                      </>
-                    );
-                  }
-                  // For free-text searches, show the query
-                  const userQuery = messages[1]?.text;
-                  return (
-                    <span className="text-sm font-medium text-white">
-                      {userQuery ? `"${userQuery.slice(0, 40)}${userQuery.length > 40 ? '...' : ''}"` : 'Searching...'}
-                    </span>
-                  );
-                })()}
-              </div>
-              <button
-                onClick={handleNewSearch}
-                className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1"
-              >
-                <X className="w-3 h-3" />
-                Clear
-              </button>
-            </div>
-          )}
-
-          {/* Results view - show after search (no chat bubbles) */}
-          {messages.length > 2 && (
-          <div className="mb-4" role="region" aria-label="Book recommendations">
-            {/* Sarah avatar + theme header */}
-            <div className="flex items-center gap-3 mb-4">
-              <img 
-                src="/sarah.png" 
-                alt="Sarah"
-                className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
-              />
-              <p className="text-[#4A5940] text-sm flex items-center gap-1.5">
-                Here are my top picks for you:
-                {(() => {
-                  const selectedTheme = selectedThemes[0];
-                  const theme = selectedTheme ? themeInfo[selectedTheme] : null;
-                  if (theme) {
-                    const IconComponent = theme.icon;
-                    return IconComponent ? <IconComponent className="w-4 h-4 text-[#5F7252]" /> : null;
-                  }
-                  return null;
-                })()}
-              </p>
-            </div>
-            
-            {/* Recommendation cards - render directly without chat wrapper */}
-            {messages.filter((msg, idx) => idx === 2 && !msg.isUser).map((msg, idx) => (
-              <FormattedRecommendations 
-                key={idx}
-                text={msg.text} 
-                chatMode={chatMode} 
+          {/* Chat messages - only show after user engages */}
+          {messages.length > 1 && (
+          <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
+            {messages.map((msg, idx) => (
+              <ChatMessage 
+                key={idx} 
+                message={msg.text} 
+                isUser={msg.isUser} 
+                messageIndex={idx}
+                chatMode={chatMode}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -1401,6 +1349,7 @@ Find similar books from beyond my library that match this taste profile.
                     if (data === 'like' && chatMode === 'library') {
                       setHasEngaged(true);
                       setLikedBooks(recommendations.map(r => ({ title: r.title, author: r.author })));
+                      // Build taste profile
                       const newThemes = extractThemes(recommendations);
                       setTasteProfile(prev => ({
                         likedBooks: [...prev.likedBooks, ...recommendations.map(r => ({ title: r.title, author: r.author }))],
@@ -1409,6 +1358,7 @@ Find similar books from beyond my library that match this taste profile.
                       }));
                     }
                   } else if (action === 'find_book') {
+                    // Open all recommended books in tabs
                     recommendations.forEach(rec => {
                       const url = data === 'goodreads' 
                         ? getGoodreadsSearchUrl(rec.title, rec.author)
@@ -1421,6 +1371,7 @@ Find similar books from beyond my library that match this taste profile.
                       chat_mode: chatMode
                     });
                   } else if (action === 'show_more') {
+                    // Direct "show more" - use the recommended books as context
                     const titles = recommendations.map(r => r.title).join(', ');
                     setInputValue(`Show me more books like: ${titles}`);
                     setTimeout(() => {
@@ -1431,6 +1382,7 @@ Find similar books from beyond my library that match this taste profile.
                       recommendation_count: recommendations.length
                     });
                   } else if (action === 'upload_library') {
+                    // Trigger the file input click
                     setImportError('');
                     importFileInputRef.current?.click();
                     track('upload_library_prompt', {
@@ -1445,83 +1397,152 @@ Find similar books from beyond my library that match this taste profile.
                 onAddToQueue={handleAddToReadingQueue}
                 onRemoveFromQueue={handleRemoveFromReadingQueue}
                 onShowAuthModal={() => setShowAuthModal(true)}
-                onNewSearch={handleNewSearch}
               />
             ))}
-          </div>
-          )}
-
-          {/* Loading: Checklist + skeleton cards */}
-          {isLoading && (
-            <div className="space-y-4 mb-4">
-              {/* Sarah avatar + checklist - full width card like results */}
-              <div className="bg-white rounded-xl border border-[#E8EBE4] p-4">
-                <div className="flex items-start gap-3">
-                  <img 
-                    src="/sarah.png" 
-                    alt="Sarah"
-                    className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
-                  />
-                  <div className="space-y-2 pt-1">
-                    {/* Step 1: Searching my collection */}
-                    <div className="flex items-center gap-2">
-                      {loadingProgress.step === 'library' ? (
-                        <div className="w-4 h-4 border-2 border-[#5F7252] border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
+            {isLoading && (
+              <div className="flex justify-start mb-4">
+                <img 
+                  src="/sarah.png" 
+                  alt="Sarah"
+                  className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
+                />
+                <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
+                  <div className="space-y-2.5">
+                    {/* Catalog-only mode: simpler steps */}
+                    {loadingProgress.mode === 'catalog' ? (
+                      <>
+                        {/* Searching my collection */}
+                        <div className="flex items-center gap-2">
+                          {loadingProgress.step === 'library' ? (
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          <span className={`text-xs ${loadingProgress.step === 'library' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Searching my collection
+                          </span>
                         </div>
-                      )}
-                      <span className={`text-sm ${loadingProgress.step === 'library' ? 'text-[#4A5940] font-medium' : 'text-[#96A888]'}`}>
-                        Searching my collection
-                      </span>
-                    </div>
-                    {/* Step 2: Finding the best matches */}
-                    {(loadingProgress.step !== 'library') && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-[#5F7252] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-sm text-[#4A5940] font-medium">
-                          Finding the best matches
-                        </span>
-                      </div>
+                        {/* Preparing picks */}
+                        {loadingProgress.step === 'preparing' && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-[#5F7252] font-medium">
+                              Preparing your picks
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Full mode: Library Check */}
+                        <div className="flex items-center gap-2">
+                          {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Checking curator's picks
+                          </span>
+                        </div>
+
+                        {/* World Search */}
+                        {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                          <div className="flex items-center gap-2">
+                            {loadingProgress.step === 'world' ? (
+                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                              Searching the world's library
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Finding Best Matches */}
+                        {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                          <div className="flex items-center gap-2">
+                            {loadingProgress.step === 'matching' ? (
+                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                              Finding your best matches
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Preparing */}
+                        {loadingProgress.step === 'preparing' && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-[#5F7252] font-medium">
+                              Preparing your picks
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               </div>
-              
-              {/* Skeleton book cards */}
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-white rounded-xl border border-[#E8EBE4] p-4 animate-pulse">
-                  <div className="flex gap-4">
-                    {/* Cover skeleton */}
-                    <div className="w-20 h-28 bg-[#E8EBE4] rounded-lg flex-shrink-0"></div>
-                    <div className="flex-1 space-y-3">
-                      {/* Badge skeleton */}
-                      <div className="h-5 w-24 bg-[#E8EBE4] rounded-full"></div>
-                      {/* Title skeleton */}
-                      <div className="h-5 w-3/4 bg-[#E8EBE4] rounded"></div>
-                      {/* Author skeleton */}
-                      <div className="h-4 w-1/2 bg-[#E8EBE4] rounded"></div>
-                      {/* Genre skeleton */}
-                      <div className="h-4 w-1/3 bg-[#E8EBE4] rounded"></div>
-                      {/* Description skeleton */}
-                      <div className="space-y-2 pt-2">
-                        <div className="h-3 w-full bg-[#E8EBE4] rounded"></div>
-                        <div className="h-3 w-5/6 bg-[#E8EBE4] rounded"></div>
-                        <div className="h-3 w-4/6 bg-[#E8EBE4] rounded"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            )}
+            <div ref={chatEndRef} />
+          </div>
+          )}
+
+          {/* Sign-In Nudge Banner - Shows after recommendations for non-signed-in users */}
+          {showSignInNudge && !user && (
+            <div className="mb-3 p-3 bg-[#5F7252]/10 rounded-xl border border-[#5F7252]/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-[#4A5940]">
+                <Library className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
+                <span>
+                  <strong>Already own some of these?</strong> Sign in to add your collection—I'll personalize future recommendations.
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setShowAuthModal(true);
+                    track('sign_in_nudge_clicked');
+                  }}
+                  className="px-3 py-1.5 bg-[#5F7252] text-white text-xs font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSignInNudge(false);
+                    setSignInNudgeDismissed(true);
+                    track('sign_in_nudge_dismissed');
+                  }}
+                  className="p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
+                  title="Dismiss"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 
-
-          {/* Text input - only show on initial state (before results) */}
-          {messages.length <= 2 && (
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <textarea
                 value={inputValue}
@@ -1550,7 +1571,6 @@ Find similar books from beyond my library that match this taste profile.
                 <Send className="w-4 h-4" />
               </button>
             </div>
-          )}
 
 
           {chatMode === 'discover' && (
@@ -1565,6 +1585,24 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {messages.length > 1 && chatMode === 'library' && (
+            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
+                <span className="text-xs text-[#5F7252] font-medium">
+                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
+                </span>
+              </div>
+              <button
+                onClick={handleNewSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
+                aria-label="Start new search"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                New Search
+              </button>
+            </div>
+          )}
 
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
