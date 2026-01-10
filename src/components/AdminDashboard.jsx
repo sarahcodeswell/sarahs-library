@@ -94,8 +94,8 @@ function UserManagement() {
         'Email', 'Name', 'User Type', 'Created', 'Last Sign In',
         'Birth Year', 'City', 'State', 'Country',
         'Favorite Genres', 'Favorite Bookstore', 'Favorite Authors',
-        'Referral Code', 'Books Queued', 'Books Read', 'Books Added', 
-        'Recs Made', 'Recs Accepted', 'Accept Rate', 'User ID'
+        'Referral Code', 'Queued', 'Reading', 'Added', 
+        'Recs Made', 'Recs Accepted', '% Acceptance', 'User ID'
       ];
 
       const rows = users.map(u => [
@@ -113,7 +113,7 @@ function UserManagement() {
         Array.isArray(u.favoriteAuthors) ? u.favoriteAuthors.join('; ') : '',
         u.referralCode || '',
         u.booksQueued || 0,
-        u.booksRead || 0,
+        u.booksReading || 0,
         u.booksAdded || 0,
         u.recsMade || 0,
         u.recsAccepted || 0,
@@ -238,8 +238,8 @@ function UserManagement() {
                         <p className="text-[10px] text-[#96A888]">Queued</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
-                        <p className="text-lg font-semibold text-[#4A5940]">{user.booksRead || 0}</p>
-                        <p className="text-[10px] text-[#96A888]">Read</p>
+                        <p className="text-lg font-semibold text-amber-600">{user.booksReading || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Reading</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
                         <p className="text-lg font-semibold text-[#4A5940]">{user.booksAdded || 0}</p>
@@ -250,14 +250,14 @@ function UserManagement() {
                         <p className="text-[10px] text-[#96A888]">Recs Made</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
-                        <p className="text-lg font-semibold text-[#4A5940]">{user.recsAccepted || 0}</p>
-                        <p className="text-[10px] text-[#96A888]">Accepted</p>
+                        <p className="text-lg font-semibold text-emerald-600">{user.recsAccepted || 0}</p>
+                        <p className="text-[10px] text-[#96A888]">Recs Accepted</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg border border-[#E8EBE4]">
                         <p className="text-lg font-semibold text-[#4A5940]">
                           {user.recsMade > 0 ? Math.round((user.recsAccepted / user.recsMade) * 100) : 0}%
                         </p>
-                        <p className="text-[10px] text-[#96A888]">Accept Rate</p>
+                        <p className="text-[10px] text-[#96A888]">% Acceptance</p>
                       </div>
                     </div>
 
@@ -492,15 +492,25 @@ function AdminManagement() {
   );
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color = 'bg-[#5F7252]', onClick }) {
+function StatCard({ title, value, subtitle, icon: Icon, color = 'sage', onClick }) {
+  // Color mapping for consistent icon backgrounds
+  const colorMap = {
+    sage: { bg: 'bg-[#5F7252]/10', text: 'text-[#5F7252]' },
+    amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
+    emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+    violet: { bg: 'bg-violet-100', text: 'text-violet-600' },
+    rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
+  };
+  const colors = colorMap[color] || colorMap.sage;
+
   return (
     <div 
       className={`bg-white rounded-xl border border-[#E8EBE4] p-4 sm:p-5 ${onClick ? 'cursor-pointer hover:border-[#5F7252] hover:shadow-md transition-all' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-3">
-        <div className={`p-2.5 ${color}/10 rounded-lg`}>
-          <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
+        <div className={`p-2.5 ${colors.bg} rounded-lg`}>
+          <Icon className={`w-5 h-5 ${colors.text}`} />
         </div>
         {onClick && <span className="text-xs text-[#96A888]">Click to view</span>}
       </div>
@@ -1251,15 +1261,79 @@ function DetailModal({ isOpen, onClose, title, type, icon: Icon }) {
   );
 }
 
-function ProgressBar({ label, value, percent, color = 'bg-[#5F7252]' }) {
+function ProgressBar({ label, value, percent, color = 'sage', tooltip }) {
+  const colorMap = {
+    sage: 'bg-[#5F7252]',
+    emerald: 'bg-emerald-500',
+    amber: 'bg-amber-500',
+  };
+  const barColor = colorMap[color] || colorMap.sage;
+
   return (
-    <div className="mb-3">
+    <div className="mb-3 group relative">
       <div className="flex justify-between text-xs mb-1">
-        <span className="text-[#5F7252]">{label}</span>
+        <span className="text-[#5F7252] flex items-center gap-1">
+          {label}
+          {tooltip && (
+            <span className="cursor-help text-[#96A888] hover:text-[#5F7252]" title={tooltip}>ⓘ</span>
+          )}
+        </span>
         <span className="text-[#96A888]">{value} ({percent}%)</span>
       </div>
       <div className="h-2 bg-[#E8EBE4] rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${percent}%` }} />
+        <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function WaitlistSection({ title, icon: Icon, items, type, showFeatures, onDelete }) {
+  const [deleting, setDeleting] = useState(null);
+
+  const handleDelete = async (email) => {
+    if (!confirm(`Remove ${email} from ${title}?`)) return;
+    setDeleting(email);
+    try {
+      await onDelete(email);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+      <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
+        <Icon className="w-4 h-4" />
+        {title}
+      </h3>
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0 group">
+            <div className="flex-1 min-w-0">
+              <span className="text-[#4A5940]">{item.email}</span>
+              {showFeatures && item.interestedFeatures?.length > 0 && (
+                <span className="text-xs text-[#96A888] ml-2">({item.interestedFeatures.join(', ')})</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#96A888]">
+                {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+              </span>
+              <button
+                onClick={() => handleDelete(item.email)}
+                disabled={deleting === item.email}
+                className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 rounded transition-all disabled:opacity-50"
+                title="Remove from list"
+              >
+                {deleting === item.email ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1367,12 +1441,55 @@ export default function AdminDashboard({ onNavigate }) {
     }
   };
 
+  // Skeleton shimmer component
+  const SkeletonCard = () => (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-4 sm:p-5 animate-pulse">
+      <div className="flex items-start justify-between mb-3">
+        <div className="w-10 h-10 bg-[#E8EBE4] rounded-lg" />
+      </div>
+      <div className="h-7 w-16 bg-[#E8EBE4] rounded mb-2" />
+      <div className="h-4 w-24 bg-[#E8EBE4] rounded mb-1" />
+      <div className="h-3 w-20 bg-[#E8EBE4] rounded" />
+    </div>
+  );
+
+  const SkeletonSection = ({ rows = 4 }) => (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 animate-pulse">
+      <div className="h-5 w-40 bg-[#E8EBE4] rounded mb-4" />
+      <div className="space-y-3">
+        {Array(rows).fill(0).map((_, i) => (
+          <div key={i} className="h-4 bg-[#E8EBE4] rounded" style={{ width: `${70 + Math.random() * 30}%` }} />
+        ))}
+      </div>
+    </div>
+  );
+
   if (loading && !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-[#5F7252] animate-spin mx-auto mb-3" />
-          <div className="text-[#7A8F6C]">Loading dashboard...</div>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FDFBF4 0%, #FBF9F0 50%, #F5EFDC 100%)' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Header skeleton */}
+          <div className="mb-6 animate-pulse">
+            <div className="h-4 w-24 bg-[#E8EBE4] rounded mb-4" />
+            <div className="h-8 w-48 bg-[#E8EBE4] rounded" />
+          </div>
+          {/* Stats grid skeleton */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          {/* Sections skeleton */}
+          <SkeletonSection rows={4} />
         </div>
       </div>
     );
@@ -1477,7 +1594,7 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.queue?.reading || 0}
             subtitle={`${stats?.queue?.readingUsers || 0} users`}
             icon={BookOpen}
-            color="bg-amber-500"
+            color="amber"
             onClick={() => setModal({ isOpen: true, type: 'reading', title: 'Currently Reading', icon: BookOpen })}
           />
           <StatCard
@@ -1503,7 +1620,7 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.sharing?.accepted || 0}
             subtitle={`${stats?.sharing?.totalShares > 0 ? Math.round((stats?.sharing?.accepted / stats?.sharing?.totalShares) * 100) : 0}% accept rate`}
             icon={Check}
-            color="bg-emerald-500"
+            color="emerald"
           />
           <StatCard
             title="Referrals"
@@ -1517,14 +1634,14 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.referrals?.platformKFactor || '0.00'}
             subtitle="Viral coefficient"
             icon={TrendingUp}
-            color="bg-emerald-500"
+            color="emerald"
           />
           <StatCard
             title="Curator Waitlist"
             value={stats?.curatorWaitlist?.total || 0}
             subtitle="Pending curators"
             icon={UserPlus}
-            color="bg-violet-500"
+            color="violet"
             onClick={() => setModal({ isOpen: true, type: 'waitlist', title: 'Curator Waitlist', icon: UserPlus })}
           />
           <StatCard
@@ -1532,15 +1649,18 @@ export default function AdminDashboard({ onNavigate }) {
             value={stats?.betaTesters?.total || 0}
             subtitle="Read with Friends"
             icon={Users}
-            color="bg-rose-500"
+            color="rose"
             onClick={() => setModal({ isOpen: true, type: 'betaTesters', title: 'Beta Testers', icon: Users })}
           />
         </div>
 
-        {/* Data Quality Breakdown */}
+        {/* Platform Health Metrics */}
         <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#4A5940]">Data Quality Breakdown</h3>
+            <h3 className="text-sm font-semibold text-[#4A5940] flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Platform Health
+            </h3>
             {stats?.dataQualityScore != null && (
               <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
                 stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
@@ -1556,22 +1676,26 @@ export default function AdminDashboard({ onNavigate }) {
               label="Profile Completeness"
               value=""
               percent={stats?.dataQuality?.profileCompleteness || 0}
+              tooltip="% of users who have filled out their profile (genres, location, etc.)"
             />
             <ProgressBar
               label="Engagement Rate"
               value=""
               percent={stats?.dataQuality?.engagementRate || 0}
+              tooltip="% of users who have added at least one book to their queue or collection"
             />
             <ProgressBar
               label="Rating Density"
               value=""
               percent={stats?.dataQuality?.ratingDensity || 0}
+              tooltip="% of finished books that have been rated by users"
             />
             <ProgressBar
               label="Referral Health"
               value=""
               percent={stats?.dataQuality?.referralHealth || 0}
-              color="bg-emerald-500"
+              color="emerald"
+              tooltip="Referral conversion rate - % of sent referrals that resulted in signups"
             />
           </div>
         </div>
@@ -1621,52 +1745,62 @@ export default function AdminDashboard({ onNavigate }) {
         {/* Curator Waitlist & Beta Testers */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           {stats?.curatorWaitlist?.recent?.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
-              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                Recent Curator Waitlist Signups
-              </h3>
-              <div className="space-y-2">
-                {stats.curatorWaitlist.recent.map((w, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
-                    <span className="text-[#4A5940]">{w.email}</span>
-                    <span className="text-xs text-[#96A888]">
-                      {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <WaitlistSection
+              title="Become a Curator Waitlist"
+              icon={UserPlus}
+              items={stats.curatorWaitlist.recent}
+              type="curator"
+              onDelete={async (email) => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+                const res = await fetch(`/api/admin/waitlist?type=curator&email=${encodeURIComponent(email)}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+                if (res.ok) fetchStats();
+              }}
+            />
           )}
 
           {stats?.betaTesters?.recent?.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
-              <h3 className="text-sm font-semibold text-[#4A5940] mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Recent Beta Signups
-              </h3>
-              <div className="space-y-2">
-                {stats.betaTesters.recent.map((b, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-[#E8EBE4] last:border-0">
-                    <div>
-                      <span className="text-[#4A5940]">{b.email}</span>
-                      {b.interestedFeatures?.length > 0 && (
-                        <span className="text-xs text-[#96A888] ml-2">({b.interestedFeatures.join(', ')})</span>
-                      )}
-                    </div>
-                    <span className="text-xs text-[#96A888]">
-                      {b.createdAt ? new Date(b.createdAt).toLocaleDateString() : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <WaitlistSection
+              title="Read with Friends Beta Users"
+              icon={Users}
+              items={stats.betaTesters.recent}
+              type="beta"
+              showFeatures
+              onDelete={async (email) => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+                const res = await fetch(`/api/admin/waitlist?type=beta&email=${encodeURIComponent(email)}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+                if (res.ok) fetchStats();
+              }}
+            />
           )}
         </div>
 
         {/* Top Genres */}
         <div className="bg-white rounded-xl border border-[#E8EBE4] p-5 mb-6">
-          <h3 className="text-sm font-semibold text-[#4A5940] mb-4">Top Genres</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-[#4A5940] flex items-center gap-2">
+              <BookMarked className="w-4 h-4" />
+              Top Genres
+            </h3>
+            <select
+              className="text-xs px-2 py-1 border border-[#D4DAD0] rounded-lg text-[#5F7252] bg-white focus:outline-none focus:ring-1 focus:ring-[#5F7252]"
+              defaultValue="profile"
+              title="Filter by data source (more sources coming soon)"
+            >
+              <option value="profile">Profile Preferences</option>
+              <option value="queue" disabled>In Reading Queue (coming soon)</option>
+              <option value="collection" disabled>In Collections (coming soon)</option>
+              <option value="searched" disabled>Searched (coming soon)</option>
+              <option value="recommended" disabled>Recommended (coming soon)</option>
+            </select>
+          </div>
           {stats?.demographics?.topGenres?.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
               {stats.demographics.topGenres.slice(0, 6).map((g, i) => (

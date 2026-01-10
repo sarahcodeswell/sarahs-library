@@ -57,16 +57,15 @@ export default async function handler(req) {
       const { data: queueData } = await supabase
         .from('reading_queue')
         .select('user_id, status');
-      const queueCounts = new Map(); // Books queued (want_to_read, reading)
-      const readCounts = new Map();  // Books read (finished only - queue workflow)
+      const queueCounts = new Map(); // Books queued (want_to_read only)
+      const readingCounts = new Map(); // Books currently reading
       const addedCounts = new Map(); // Books added to collection (finished + already_read)
       (queueData || []).forEach(q => {
-        if (q.status === 'want_to_read' || q.status === 'reading') {
+        if (q.status === 'want_to_read') {
           queueCounts.set(q.user_id, (queueCounts.get(q.user_id) || 0) + 1);
-        } else if (q.status === 'finished') {
-          readCounts.set(q.user_id, (readCounts.get(q.user_id) || 0) + 1);
-          addedCounts.set(q.user_id, (addedCounts.get(q.user_id) || 0) + 1);
-        } else if (q.status === 'already_read') {
+        } else if (q.status === 'reading') {
+          readingCounts.set(q.user_id, (readingCounts.get(q.user_id) || 0) + 1);
+        } else if (q.status === 'finished' || q.status === 'already_read') {
           addedCounts.set(q.user_id, (addedCounts.get(q.user_id) || 0) + 1);
         }
       });
@@ -130,7 +129,7 @@ export default async function handler(req) {
           referralCode: profile.referral_code || generateBookCode(u.id),
           // Activity counts
           booksQueued: queueCounts.get(u.id) || 0,
-          booksRead: readCounts.get(u.id) || 0,
+          booksReading: readingCounts.get(u.id) || 0,
           booksAdded: addedCounts.get(u.id) || 0,
           recsReceived: recsReceivedCounts.get(u.id) || 0,
           recsMade: recsMadeCounts.get(u.id) || 0,
