@@ -1634,24 +1634,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {messages.length > 1 && chatMode === 'library' && (
-            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
-                <span className="text-xs text-[#5F7252] font-medium">
-                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
-                </span>
-              </div>
-              <button
-                onClick={handleNewSearch}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
-                aria-label="Start new search"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                New Search
-              </button>
-            </div>
-          )}
 
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
@@ -1699,21 +1681,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Floating New Search Button - shows when scrolled down */}
-          {showScrollToTop && messages.length > 1 && (
-            <button
-              onClick={() => {
-                handleNewSearch();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5F7252] text-white rounded-full shadow-lg hover:bg-[#4A5940] transition-all hover:scale-105"
-              aria-label="Start new search"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span className="text-sm font-medium">New Search</span>
-            </button>
-          )}
-          
         </main>
       )}
 
