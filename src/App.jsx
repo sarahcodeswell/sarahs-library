@@ -129,6 +129,8 @@ export default function App() {
     { text: "Browse collections below or tell me what you're looking for.", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [inputPulse, setInputPulse] = useState(false);
+  const inputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState({ step: '', progress: 0 });
   const chatEndRef = useRef(null);
@@ -1278,6 +1280,10 @@ Find similar books from beyond my library that match this taste profile.
                             const themeText = `Show me options in ${info.label.toLowerCase()}.`;
                             setInputValue(themeText);
                             track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                            // Pulse the input and focus it
+                            setInputPulse(true);
+                            setTimeout(() => setInputPulse(false), 1500);
+                            inputRef.current?.focus();
                           }
                         }}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
@@ -1311,6 +1317,10 @@ Find similar books from beyond my library that match this taste profile.
                         const genreText = `Show me ${genre.toLowerCase()} books.`;
                         setInputValue(genreText);
                         track('genre_search', { genre });
+                        // Pulse the input and focus it
+                        setInputPulse(true);
+                        setTimeout(() => setInputPulse(false), 1500);
+                        inputRef.current?.focus();
                       }}
                       className="px-3 py-1.5 text-xs font-medium bg-[#F8F6EE]/50 text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
                     >
@@ -1546,8 +1556,13 @@ Find similar books from beyond my library that match this taste profile.
 
           {/* Text input - show on initial state (before results), hide after results */}
           {messages.length <= 1 && (
-          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
+          <div className={`bg-[#F8F6EE] rounded-2xl border shadow-sm p-3 sm:p-4 flex items-center gap-3 transition-all duration-300 ${
+            inputPulse 
+              ? 'border-[#5F7252] ring-2 ring-[#5F7252]/30 shadow-md' 
+              : 'border-[#E8EBE4]'
+          }`}>
               <textarea
+                ref={inputRef}
                 value={inputValue}
                 onChange={e => {
                   setInputValue(e.target.value);
