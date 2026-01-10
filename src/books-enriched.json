@@ -3213,5 +3213,120 @@
     "isbn10": "0593657519",
     "coverUrl": "https://books.google.com/books/content?id=r6M4EQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
     "sarah_rating": 5
+  },
+  {
+    "title": "Nickel and Dimed",
+    "author": "Barbara Ehrenreich",
+    "genre": "Nonfiction",
+    "themes": [
+      "justice",
+      "identity"
+    ],
+    "favorite": true,
+    "description": "Journalist Barbara Ehrenreich goes undercover as a minimum-wage worker, revealing the hidden costs of poverty in America.",
+    "goodreads": "https://www.goodreads.com/book/show/1869.Nickel_and_Dimed",
+    "isbn13": "9780805063899",
+    "isbn10": "0805063897",
+    "coverUrl": "https://books.google.com/books/content?id=I7dqQgAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api",
+    "sarah_rating": 5
+  },
+  {
+    "title": "Where'd You Go, Bernadette",
+    "author": "Maria Semple",
+    "genre": "Literary Fiction",
+    "themes": [
+      "women",
+      "identity",
+      "emotional"
+    ],
+    "favorite": true,
+    "description": "When her agoraphobic architect mother disappears, 15-year-old Bee pieces together clues from emails, documents, and FBI files to find her.",
+    "goodreads": "https://www.goodreads.com/book/show/13526165-where-d-you-go-bernadette",
+    "isbn13": "9780316204279",
+    "isbn10": "0316204277",
+    "coverUrl": "https://books.google.com/books/content?id=_xjNDQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+    "sarah_rating": 5
+  },
+  {
+    "title": "The Help",
+    "author": "Kathryn Stockett",
+    "genre": "Historical Fiction",
+    "themes": [
+      "women",
+      "justice",
+      "identity"
+    ],
+    "favorite": false,
+    "description": "In 1960s Jackson, Mississippi, three women—two Black maids and a young white socialite—form an unlikely alliance to write a tell-all book about working for white families.",
+    "goodreads": "https://www.goodreads.com/book/show/4667024-the-help",
+    "isbn13": "9780399155345",
+    "isbn10": "0399155341",
+    "coverUrl": "https://books.google.com/books/content?id=aH6NEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+    "sarah_rating": 4
+  },
+  {
+    "title": "All the Light We Cannot See",
+    "author": "Anthony Doerr",
+    "genre": "Historical Fiction",
+    "themes": [
+      "emotional",
+      "identity"
+    ],
+    "favorite": false,
+    "description": "A blind French girl and a German orphan boy's paths collide in occupied France as both try to survive the devastation of World War II.",
+    "goodreads": "https://www.goodreads.com/book/show/18143977-all-the-light-we-cannot-see",
+    "isbn13": "9781476746586",
+    "isbn10": "1476746583",
+    "coverUrl": "https://books.google.com/books/content?id=ory4AwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+    "sarah_rating": 4
+  },
+  {
+    "title": "The Book Thief",
+    "author": "Markus Zusak",
+    "genre": "Historical Fiction",
+    "themes": [
+      "emotional",
+      "identity"
+    ],
+    "favorite": true,
+    "description": "Narrated by Death, this is the story of Liesel Meminger, a foster girl in Nazi Germany who steals books and shares them with her neighbors during bombing raids.",
+    "goodreads": "https://www.goodreads.com/book/show/19063.The_Book_Thief",
+    "isbn13": "9780375842207",
+    "isbn10": "0375842209",
+    "coverUrl": "https://books.google.com/books/content?id=vgQEPQAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api",
+    "sarah_rating": 5
+  },
+  {
+    "title": "The Nickel Boys",
+    "author": "Colson Whitehead",
+    "genre": "Literary Fiction",
+    "themes": [
+      "justice",
+      "identity",
+      "emotional"
+    ],
+    "favorite": false,
+    "description": "Based on a true story, two boys at a brutal reform school in Jim Crow-era Florida form a friendship that will define their lives.",
+    "goodreads": "https://www.goodreads.com/book/show/42270835-the-nickel-boys",
+    "isbn13": "9780385537070",
+    "isbn10": "0385537077",
+    "coverUrl": "https://books.google.com/books/content?id=uHyGDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+    "sarah_rating": 3
+  },
+  {
+    "title": "City of Girls",
+    "author": "Elizabeth Gilbert",
+    "genre": "Historical Fiction",
+    "themes": [
+      "women",
+      "identity"
+    ],
+    "favorite": false,
+    "description": "In 1940s New York City, a young woman finds herself in the glamorous world of theater, navigating love, pleasure, and the consequences of her choices.",
+    "goodreads": "https://www.goodreads.com/book/show/42363926-city-of-girls",
+    "isbn13": "9781594634734",
+    "isbn10": "1594634734",
+    "coverUrl": "https://books.google.com/books/content?id=3xZ0DwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+    "sarah_rating": 3
   }
 ]
