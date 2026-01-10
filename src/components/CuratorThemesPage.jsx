@@ -45,7 +45,7 @@ export default function CuratorThemesPage({ onNavigate }) {
               Beach Reads
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              Sometimes you just need a book that makes you smile. These are the lighthearted, entertaining reads—pure enjoyment without demanding too much. We all need a bit of escapism from time to time, and there's nothing wrong with that.
+              The books you devour in a weekend. The ones that make you laugh out loud on an airplane or stay up way too late because you have to know what happens next. Pure reading joy—no homework required.
             </p>
           </div>
 
@@ -56,7 +56,7 @@ export default function CuratorThemesPage({ onNavigate }) {
               Emotional Truth
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              These are books that explore the human experience at its deepest. The thrillers are psychological rather than procedural. The romances grapple with grief, loss, and identity. Books that leave you thinking long after you've finished—the ones that change how you see the world.
+              Books that crack you open. The ones where you find yourself underlining passages and texting quotes to friends. Stories that hold up a mirror to what it means to be human—the grief, the joy, the mess of it all. You finish them different than you started.
             </p>
           </div>
 
