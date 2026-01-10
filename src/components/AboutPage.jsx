@@ -127,7 +127,7 @@ export default function AboutPage({ onNavigate, user }) {
         <div className="mb-8 text-center">
           <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-4">How It Works</h1>
           <p className="text-base text-[#5F7252] leading-relaxed max-w-xl mx-auto">
-            I've spent years building this collection—books I couldn't stop thinking about long after I finished them. Browse by curator themes, or tell me what you're looking for. I love helping people find their next great read.
+            Think of this as having a well-read friend who always knows what you should read next. Browse my curated themes, tell me what you're in the mood for—and when you're ready, I'll help you discover your own taste and become a curator too.
           </p>
         </div>
 
