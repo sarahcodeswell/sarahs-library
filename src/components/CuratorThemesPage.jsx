@@ -3,12 +3,41 @@ import { ArrowLeft, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, Me
 import bookCatalog from '../books-enriched.json';
 import { supabase } from '../lib/supabase';
 import { ExpandableDescription } from './ExpandableDescription';
+import { useBookEnrichment } from './BookCard';
+import { generateBookDescriptions } from '../lib/descriptionService';
 
-// Reuse CuratorBookModal and BookShelf from MeetSarahPage pattern
+// Rich modal for browsing Sarah's collection with enriched descriptions
 function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, isLoggedIn }) {
   const [isClosing, setIsClosing] = useState(false);
+  const [enrichedDescription, setEnrichedDescription] = useState(null);
+  const [isEnrichingDescription, setIsEnrichingDescription] = useState(false);
+
+  const { coverUrl, genres } = useBookEnrichment(book?.title, book?.author, book?.coverUrl);
+
+  useEffect(() => {
+    if (isOpen && book && !enrichedDescription && !isEnrichingDescription) {
+      const bookDesc = book.description;
+      if (bookDesc && bookDesc.length > 100) {
+        setEnrichedDescription(bookDesc);
+      } else {
+        setIsEnrichingDescription(true);
+        generateBookDescriptions([{ title: book.title, author: book.author }])
+          .then((result) => {
+            const key = `${book.title.toLowerCase()}|${(book.author || '').toLowerCase()}`;
+            if (result[key]) setEnrichedDescription(result[key]);
+            else if (bookDesc) setEnrichedDescription(bookDesc);
+          })
+          .catch(() => { if (bookDesc) setEnrichedDescription(bookDesc); })
+          .finally(() => setIsEnrichingDescription(false));
+      }
+    }
+  }, [isOpen, book, enrichedDescription, isEnrichingDescription]);
+
+  useEffect(() => { if (!isOpen) setEnrichedDescription(null); }, [isOpen]);
+
   const handleClose = () => { setIsClosing(true); setTimeout(() => { setIsClosing(false); onClose(); }, 200); };
   if (!isOpen || !book) return null;
+  const displayCover = coverUrl || book.coverUrl;
 
   return (
     <div className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`} onClick={handleClose}>
@@ -21,15 +50,22 @@ function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, is
         <div className="overflow-y-auto max-h-[calc(90vh-60px)] p-4 sm:p-6">
           <div className="flex gap-4 mb-6">
             <div className="flex-shrink-0 w-24 h-36 rounded-lg bg-gradient-to-br from-[#96A888] to-[#7A8F6C] flex items-center justify-center overflow-hidden shadow-md">
-              {book.coverUrl ? <img src={book.coverUrl} alt="" className="w-full h-full object-cover" /> : <BookOpen className="w-8 h-8 text-white/70" />}
+              {displayCover ? <img src={displayCover} alt="" className="w-full h-full object-cover" /> : <BookOpen className="w-8 h-8 text-white/70" />}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-serif text-xl text-[#4A5940] mb-1">{book.title}</h3>
               <p className="text-[#7A8F6C] mb-3">by {book.author}</p>
-              {book.genre && <span className="px-2 py-0.5 bg-[#F8F6EE] text-[#5F7252] text-xs rounded-full border border-[#E8EBE4]">{book.genre}</span>}
+              <div className="flex flex-wrap gap-1">
+                {book.genre && <span className="px-2 py-0.5 bg-[#F8F6EE] text-[#5F7252] text-xs rounded-full border border-[#E8EBE4]">{book.genre}</span>}
+                {genres && genres.slice(0, 2).map((g, i) => <span key={i} className="px-2 py-0.5 bg-[#F8F6EE] text-[#5F7252] text-xs rounded-full border border-[#E8EBE4]">{g}</span>)}
+              </div>
             </div>
           </div>
-          {book.description && <div className="mb-6"><h4 className="text-sm font-medium text-[#4A5940] mb-2">About this book</h4><ExpandableDescription text={book.description} /></div>}
+          {isEnrichingDescription ? (
+            <div className="mb-6"><h4 className="text-sm font-medium text-[#4A5940] mb-2">About this book</h4><div className="space-y-2 animate-pulse"><div className="h-3 w-full bg-[#E8EBE4] rounded" /><div className="h-3 w-full bg-[#E8EBE4] rounded" /><div className="h-3 w-3/4 bg-[#E8EBE4] rounded" /></div></div>
+          ) : enrichedDescription ? (
+            <div className="mb-6"><h4 className="text-sm font-medium text-[#4A5940] mb-2">About this book</h4><ExpandableDescription text={enrichedDescription} /></div>
+          ) : null}
           {book.reputation && <div className="mb-6 p-4 bg-[#F8F6EE] rounded-xl"><h4 className="text-sm font-medium text-[#4A5940] mb-2 flex items-center gap-2"><Award className="w-4 h-4 text-[#5F7252]" />Reputation & Accolades</h4><p className="text-sm text-[#5F7252] leading-relaxed">{book.reputation}</p></div>}
           {book.sarah_assessment && (
             <div className="mb-6 p-4 bg-[#5F7252]/5 rounded-xl border border-[#5F7252]/10">
