@@ -1326,6 +1326,41 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
+          {/* Query context bar - shows during and after search (Option A) */}
+          {(isLoading || messages.length > 2) && (
+            <div className="mb-4 px-4 py-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const selectedTheme = selectedThemes[0];
+                  const theme = selectedTheme ? themeInfo[selectedTheme] : null;
+                  if (theme) {
+                    const IconComponent = theme.icon;
+                    return (
+                      <>
+                        {IconComponent && <IconComponent className="w-4 h-4 text-[#5F7252]" />}
+                        <span className="text-sm font-medium text-[#4A5940]">{theme.label}</span>
+                      </>
+                    );
+                  }
+                  // For free-text searches, show the query
+                  const userQuery = messages[1]?.text;
+                  return (
+                    <span className="text-sm font-medium text-[#4A5940]">
+                      {userQuery ? `"${userQuery.slice(0, 40)}${userQuery.length > 40 ? '...' : ''}"` : 'Searching...'}
+                    </span>
+                  );
+                })()}
+              </div>
+              <button
+                onClick={handleNewSearch}
+                className="text-xs text-[#96A888] hover:text-[#5F7252] transition-colors flex items-center gap-1"
+              >
+                <X className="w-3 h-3" />
+                Clear
+              </button>
+            </div>
+          )}
+
           {/* Results view - show after search (no chat bubbles) */}
           {messages.length > 2 && (
           <div className="mb-4" role="region" aria-label="Book recommendations">
@@ -1412,102 +1447,50 @@ Find similar books from beyond my library that match this taste profile.
                 onAddToQueue={handleAddToReadingQueue}
                 onRemoveFromQueue={handleRemoveFromReadingQueue}
                 onShowAuthModal={() => setShowAuthModal(true)}
+                onNewSearch={handleNewSearch}
               />
             ))}
           </div>
           )}
 
-          {/* Loading indicator - shows while searching */}
+          {/* Skeleton loading cards - shows while searching */}
           {isLoading && (
-            <div className="flex items-start gap-3 mb-4">
-              <img 
-                src="/sarah.png" 
-                alt="Sarah"
-                className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
-              />
-              <div className="bg-[#F8F6EE] rounded-2xl px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
-                <div className="space-y-2.5">
-                  {loadingProgress.mode === 'catalog' ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        {loadingProgress.step === 'library' ? (
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                        <span className={`text-xs ${loadingProgress.step === 'library' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                          Searching my collection
-                        </span>
-                      </div>
-                      {loadingProgress.step === 'preparing' && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                          <span className="text-xs text-[#5F7252] font-medium">Preparing your picks</span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2">
-                        {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                        <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                          Checking curator's picks
-                        </span>
-                      </div>
-                      {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                        <div className="flex items-center gap-2">
-                          {loadingProgress.step === 'world' ? (
-                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                          <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                            Searching the world's library
-                          </span>
-                        </div>
-                      )}
-                      {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                        <div className="flex items-center gap-2">
-                          {loadingProgress.step === 'matching' ? (
-                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                          <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                            Finding your best matches
-                          </span>
-                        </div>
-                      )}
-                      {loadingProgress.step === 'preparing' && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                          <span className="text-xs text-[#5F7252] font-medium">Preparing your picks</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+            <div className="space-y-4 mb-4">
+              {/* Sarah avatar + header skeleton */}
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/sarah.png" 
+                  alt="Sarah"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
+                />
+                <div className="h-4 w-48 bg-[#E8EBE4] rounded animate-pulse"></div>
               </div>
+              
+              {/* Skeleton book cards */}
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white rounded-xl border border-[#E8EBE4] p-4 animate-pulse">
+                  <div className="flex gap-4">
+                    {/* Cover skeleton */}
+                    <div className="w-20 h-28 bg-[#E8EBE4] rounded-lg flex-shrink-0"></div>
+                    <div className="flex-1 space-y-3">
+                      {/* Badge skeleton */}
+                      <div className="h-5 w-24 bg-[#E8EBE4] rounded-full"></div>
+                      {/* Title skeleton */}
+                      <div className="h-5 w-3/4 bg-[#E8EBE4] rounded"></div>
+                      {/* Author skeleton */}
+                      <div className="h-4 w-1/2 bg-[#E8EBE4] rounded"></div>
+                      {/* Genre skeleton */}
+                      <div className="h-4 w-1/3 bg-[#E8EBE4] rounded"></div>
+                      {/* Description skeleton */}
+                      <div className="space-y-2 pt-2">
+                        <div className="h-3 w-full bg-[#E8EBE4] rounded"></div>
+                        <div className="h-3 w-5/6 bg-[#E8EBE4] rounded"></div>
+                        <div className="h-3 w-4/6 bg-[#E8EBE4] rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -1545,19 +1528,8 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* New Search button - shows after results */}
-          {messages.length > 2 && !isLoading && (
-            <div className="mb-4 flex justify-center">
-              <button
-                onClick={handleNewSearch}
-                className="px-4 py-2 text-sm font-medium text-[#5F7252] bg-white border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                New Search
-              </button>
-            </div>
-          )}
-
+          {/* Text input - only show on initial state (before results) */}
+          {messages.length <= 2 && (
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <textarea
                 value={inputValue}
@@ -1572,7 +1544,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder={messages.length > 2 ? "Refine: something lighter? funnier?" : "I'm looking for..."}
+                placeholder="I'm looking for..."
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
@@ -1586,6 +1558,7 @@ Find similar books from beyond my library that match this taste profile.
                 <Send className="w-4 h-4" />
               </button>
             </div>
+          )}
 
 
           {chatMode === 'discover' && (
