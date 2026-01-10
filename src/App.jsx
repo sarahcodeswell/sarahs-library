@@ -1232,128 +1232,101 @@ Find similar books from beyond my library that match this taste profile.
       )}
 
       {currentPage === 'home' && (
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
           {/* Hero Image - only show when no conversation yet */}
           {messages.length <= 1 && (
-            <div className="mb-4 rounded-2xl overflow-hidden shadow-lg">
+            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
               <img
                 src="/books.jpg"
                 alt="Cozy reading atmosphere"
                 loading="lazy"
-                className="block w-full h-[clamp(80px,12vh,140px)] object-cover object-center"
+                className="block w-full h-[clamp(100px,14vh,180px)] object-cover object-center"
               />
             </div>
           )}
 
-          {/* Search Bar - ALWAYS visible at top */}
-          <div className="mb-4 bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 flex items-center gap-3">
-            <Search className="w-5 h-5 text-[#96A888] flex-shrink-0" />
-            <textarea
-              value={inputValue}
-              onChange={e => {
-                setInputValue(e.target.value);
-                e.target.style.height = '24px';
-                const newHeight = Math.min(e.target.scrollHeight, 200);
-                e.target.style.height = newHeight + 'px';
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' || e.shiftKey) return;
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              placeholder="What are you in the mood for?"
-              className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
-              disabled={isLoading}
-              style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
-              aria-label="Send message"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Curator Theme Cards - ALWAYS visible */}
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Browse Sarah's Curated Themes</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(themeInfo).map(([key, info]) => {
-                const isSelected = selectedThemes.includes(key);
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedThemes([]);
-                        setInputValue('');
-                        track('theme_filter_removed', { theme: key, theme_label: info.label });
-                      } else {
-                        setSelectedThemes([key]);
-                        const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                        setInputValue(themeText);
-                        // Auto-submit when theme is selected
-                        setTimeout(() => handleSendMessage(), 100);
-                        track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
-                      }
-                    }}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
-                      isSelected 
-                        ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
-                        : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
-                    }`}
-                    aria-label={`${info.label} collection`}
-                    aria-pressed={isSelected}
-                  >
-                    {info.icon && <info.icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
-                    <span className={`text-[11px] font-medium text-center leading-tight ${
-                      isSelected ? 'text-white' : 'text-[#4A5940]'
-                    }`}>
-                      {info.label}
-                    </span>
-                  </button>
-                );
-              })}
+          {/* Header - only show when no conversation yet */}
+          {messages.length <= 1 && (
+            <div className="mb-6 text-center">
+              <h1 className="font-serif text-2xl sm:text-3xl text-[#4A5940] mb-2">
+                {user ? `Welcome back${user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!` : 'Discover your next great read'}
+              </h1>
+              <p className="text-sm text-[#7A8F6C]">
+                {user ? 'Ready to find your next great read?' : 'Curated by a real reader, intelligently matched to you'}
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Genre Pills - ALWAYS visible */}
-          <div className="mb-4">
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {['Literary Fiction', 'Historical Fiction', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
-                <button
-                  key={genre}
-                  onClick={() => {
-                    const genreText = `Show me ${genre.toLowerCase()} books.`;
-                    setInputValue(genreText);
-                    // Auto-submit when genre is selected
-                    setTimeout(() => handleSendMessage(), 100);
-                    track('genre_search', { genre });
-                  }}
-                  className="px-2.5 py-1 text-[11px] font-medium bg-[#F8F6EE]/50 text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
-                >
-                  {genre}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Results section - shows when there are recommendations */}
-          {messages.length > 1 && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#4A5940]">Recommendations</h3>
-                <button
-                  onClick={handleNewSearch}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#7A8F6C] hover:text-[#5F7252] transition-colors"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  Clear
-                </button>
+          {/* Curator Theme Cards - Grid Layout */}
+          {messages.length <= 1 && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Browse by Theme</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {Object.entries(themeInfo).map(([key, info]) => {
+                    const isSelected = selectedThemes.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedThemes([]);
+                            setInputValue('');
+                            track('theme_filter_removed', { theme: key, theme_label: info.label });
+                          } else {
+                            setSelectedThemes([key]);
+                            const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                            setInputValue(themeText);
+                            track('theme_filter_selected', { theme: key, theme_label: info.label, chat_mode: chatMode });
+                          }
+                        }}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                          isSelected 
+                            ? 'bg-[#5F7252] border-[#4A5940] shadow-lg scale-[1.02]' 
+                            : 'bg-[#F8F6EE]/50 border-[#E8EBE4] hover:border-[#5F7252] hover:shadow-md'
+                        }`}
+                        aria-label={`${info.label} collection`}
+                        aria-pressed={isSelected}
+                      >
+                        {info.icon && <info.icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-[#5F7252]'}`} />}
+                        <span className={`text-xs font-medium text-center leading-tight ${
+                          isSelected ? 'text-white' : 'text-[#4A5940]'
+                        }`}>
+                          {info.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+
+              {/* Genre Search Section */}
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-[#4A5940] mb-3 text-center">Search by Genre</h2>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {['Literary Fiction', 'Historical Fiction', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
+                    <button
+                      key={genre}
+                      onClick={() => {
+                        const genreText = `Show me ${genre.toLowerCase()} books.`;
+                        setInputValue(genreText);
+                        track('genre_search', { genre });
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium bg-[#F8F6EE]/50 text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+                <span className="text-xs text-[#96A888]">or tell me what you're looking for</span>
+                <div className="flex-1 h-px bg-[#E8EBE4]"></div>
+              </div>
+            </>
           )}
 
           {/* Chat messages - only show after user engages */}
@@ -1570,6 +1543,36 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
+              <textarea
+                value={inputValue}
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  e.target.style.height = '24px';
+                  const newHeight = Math.min(e.target.scrollHeight, 200);
+                  e.target.style.height = newHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || e.shiftKey) return;
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                placeholder="I'm looking for..."
+                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
+                disabled={isLoading}
+                style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
+                aria-label="Send message"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+
+
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
               <button
@@ -1578,6 +1581,25 @@ Find similar books from beyond my library that match this taste profile.
                 aria-label="Back to curator's picks"
               >
                 ← Back to Curator's Picks
+              </button>
+            </div>
+          )}
+
+          {messages.length > 1 && chatMode === 'library' && (
+            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
+                <span className="text-xs text-[#5F7252] font-medium">
+                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
+                </span>
+              </div>
+              <button
+                onClick={handleNewSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
+                aria-label="Start new search"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                New Search
               </button>
             </div>
           )}
@@ -1628,6 +1650,21 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {/* Floating New Search Button - shows when scrolled down */}
+          {showScrollToTop && messages.length > 1 && (
+            <button
+              onClick={() => {
+                handleNewSearch();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5F7252] text-white rounded-full shadow-lg hover:bg-[#4A5940] transition-all hover:scale-105"
+              aria-label="Start new search"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="text-sm font-medium">New Search</span>
+            </button>
+          )}
+          
         </main>
       )}
 
