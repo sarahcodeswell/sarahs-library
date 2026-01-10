@@ -331,6 +331,8 @@ function FeedbackManagement() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [updating, setUpdating] = useState(null);
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [adminNotes, setAdminNotes] = useState('');
 
   const fetchFeedback = async () => {
     try {
@@ -352,21 +354,42 @@ function FeedbackManagement() {
     fetchFeedback();
   }, []);
 
-  const updateStatus = async (id, newStatus) => {
+  const updateStatus = async (id, newStatus, notes = null) => {
     setUpdating(id);
     try {
+      const updateData = { status: newStatus };
+      if (notes !== null) updateData.admin_notes = notes;
+      
       const { error } = await supabase
         .from('feedback')
-        .update({ status: newStatus })
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
-      setFeedback(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+      setFeedback(prev => prev.map(f => f.id === id ? { ...f, ...updateData } : f));
+      if (selectedFeedback?.id === id) {
+        setSelectedFeedback(prev => ({ ...prev, ...updateData }));
+      }
     } catch (err) {
       console.error('Error updating feedback:', err);
     } finally {
       setUpdating(null);
     }
+  };
+
+  const openFeedbackDetail = (item) => {
+    setSelectedFeedback(item);
+    setAdminNotes(item.admin_notes || '');
+  };
+
+  const closeFeedbackDetail = () => {
+    setSelectedFeedback(null);
+    setAdminNotes('');
+  };
+
+  const saveNotes = async () => {
+    if (!selectedFeedback) return;
+    await updateStatus(selectedFeedback.id, selectedFeedback.status, adminNotes);
   };
 
   const filteredFeedback = filter === 'all' 
@@ -434,7 +457,11 @@ function FeedbackManagement() {
       ) : (
         <div className="space-y-3 max-h-[400px] overflow-y-auto">
           {filteredFeedback.map((item) => (
-            <div key={item.id} className="border border-[#E8EBE4] rounded-lg p-3">
+            <button
+              key={item.id}
+              onClick={() => openFeedbackDetail(item)}
+              className="w-full text-left border border-[#E8EBE4] rounded-lg p-3 hover:border-[#5F7252] hover:bg-[#F8F6EE]/50 transition-all"
+            >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{getCategoryIcon(item.category)}</span>
@@ -448,25 +475,104 @@ function FeedbackManagement() {
                 <span className="text-[10px] text-[#96A888]">{formatDate(item.created_at)}</span>
               </div>
               
-              <p className="text-sm text-[#4A5940] mb-2 whitespace-pre-wrap">{item.message}</p>
+              <p className="text-sm text-[#4A5940] line-clamp-2">{item.message}</p>
               
-              <div className="flex items-center justify-between text-[10px] text-[#96A888]">
+              <div className="flex items-center justify-between text-[10px] text-[#96A888] mt-2">
                 <span>{item.email || 'Anonymous'}</span>
-                <select
-                  value={item.status}
-                  onChange={(e) => updateStatus(item.id, e.target.value)}
-                  disabled={updating === item.id}
-                  className="text-[10px] border border-[#E8EBE4] rounded px-1.5 py-0.5 text-[#4A5940]"
+                {item.admin_notes && <span className="text-[#5F7252]">Has notes</span>}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Feedback Detail Modal */}
+      {selectedFeedback && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeFeedbackDetail} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-[#E8EBE4]">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{getCategoryIcon(selectedFeedback.category)}</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#4A5940] capitalize">
+                    {selectedFeedback.category.replace('_', ' ')}
+                  </h3>
+                  <p className="text-[10px] text-[#96A888]">{formatDate(selectedFeedback.created_at)}</p>
+                </div>
+              </div>
+              <button
+                onClick={closeFeedbackDetail}
+                className="p-2 hover:bg-[#F8F6EE] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-[#96A888]" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Message */}
+              <div>
+                <label className="block text-xs font-medium text-[#96A888] mb-1">Message</label>
+                <p className="text-sm text-[#4A5940] whitespace-pre-wrap bg-[#F8F6EE] rounded-lg p-3">
+                  {selectedFeedback.message}
+                </p>
+              </div>
+
+              {/* From */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#96A888] mb-1">From</label>
+                  <p className="text-sm text-[#4A5940]">{selectedFeedback.email || 'Anonymous'}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#96A888] mb-1">Page</label>
+                  <p className="text-xs text-[#4A5940] truncate">{selectedFeedback.page_url || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-medium text-[#96A888] mb-2">Status</label>
+                <div className="flex flex-wrap gap-2">
+                  {['new', 'reviewed', 'in_progress', 'resolved', 'wont_fix'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => updateStatus(selectedFeedback.id, status)}
+                      disabled={updating === selectedFeedback.id}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                        selectedFeedback.status === status
+                          ? getStatusColor(status) + ' ring-2 ring-offset-1 ring-current'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {status.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Admin Notes */}
+              <div>
+                <label className="block text-xs font-medium text-[#96A888] mb-1">Admin Notes</label>
+                <textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add internal notes about this feedback..."
+                  className="w-full px-3 py-2 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
+                  rows={3}
+                />
+                <button
+                  onClick={saveNotes}
+                  disabled={updating === selectedFeedback.id || adminNotes === (selectedFeedback.admin_notes || '')}
+                  className="mt-2 px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <option value="new">New</option>
-                  <option value="reviewed">Reviewed</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="wont_fix">Won't Fix</option>
-                </select>
+                  {updating === selectedFeedback.id ? 'Saving...' : 'Save Notes'}
+                </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
