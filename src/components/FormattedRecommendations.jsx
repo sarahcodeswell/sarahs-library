@@ -84,7 +84,7 @@ export default function FormattedRecommendations({
       {recommendations.length > 0 && (
         <p className="text-sm font-medium text-[#4A5940] flex items-center gap-1.5">
           <Heart className="w-4 h-4 text-[#D4A5A5]" fill="#D4A5A5" />
-          Here are my top picks for you
+          Here are my top picks for you!
         </p>
       )}
       {recommendations.map((rec, idx) => (
