@@ -221,49 +221,51 @@ export default function RecommendationCard({
 
   return (
     <div 
-      className={`bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-3 transition-all duration-300 ${
+      className={`bg-[#FDFBF4] rounded-xl border border-[#D4DAD0] p-4 transition-all duration-300 ${
         dismissed ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
       }`}
       style={{ display: dismissed ? 'none' : 'block' }}
     >
-      {/* Book Info - Compact Layout */}
-      <div className="mb-3">
+      {/* Source Badge */}
+      <div className="flex items-center gap-2 mb-3">
+        {catalogBook ? (
+          <span 
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[10px] font-medium"
+            title="From my personal collection—a book I've read and love!"
+          >
+            <Library className="w-3 h-3" />
+            Curator's Pick
+          </span>
+        ) : (
+          <span 
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[10px] font-medium"
+            title="From the wider world—the best match for your request!"
+          >
+            <Sparkles className="w-3 h-3" />
+            World Discovery
+          </span>
+        )}
+      </div>
+
+      {/* Book Info */}
+      <div className="mb-4">
         <div className="flex gap-3">
-          <BookCover coverUrl={coverUrl} title={rec.title} isEnriching={isEnriching} size="sm" />
+          <BookCover coverUrl={coverUrl} title={rec.title} isEnriching={isEnriching} />
           
           <div className="flex-1 min-w-0">
-            {/* Title + Source Badge inline */}
-            <div className="flex items-start justify-between gap-2 mb-0.5">
-              <h4 className="font-semibold text-[#4A5940] text-sm leading-tight">{rec.title}</h4>
-              {catalogBook ? (
-                <span 
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#5F7252]/10 text-[#5F7252] text-[9px] font-medium flex-shrink-0"
-                  title="From my personal collection—a book I've read and love!"
-                >
-                  <Library className="w-2.5 h-2.5" />
-                  Curator
-                </span>
-              ) : (
-                <span 
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#7A8F6C]/10 text-[#7A8F6C] text-[9px] font-medium flex-shrink-0"
-                  title="From the wider world—the best match for your request!"
-                >
-                  <Sparkles className="w-2.5 h-2.5" />
-                  World
-                </span>
-              )}
+            <h4 className="font-semibold text-[#4A5940] text-sm mb-1">{rec.title}</h4>
+            {displayAuthor && <p className="text-xs text-[#7A8F6C] mb-1">{displayAuthor}</p>}
+            
+            <div className="mt-1 mb-1">
+              <GenreBadges genres={genres} maxDisplay={2} />
             </div>
             
-            {/* Author + Genre inline */}
-            <div className="flex items-center gap-2 text-xs text-[#7A8F6C] mb-1">
-              {displayAuthor && <span>{displayAuthor}</span>}
-              {displayAuthor && genres?.length > 0 && <span>•</span>}
-              {genres?.length > 0 && <span>{genres[0]}</span>}
-            </div>
-            
-            {/* Why Sarah Recommends - truncated */}
+            {/* Why Sarah Recommends */}
             {displayWhy && (
-              <p className="text-xs text-[#5F7252] leading-relaxed line-clamp-2">{displayWhy}</p>
+              <div className="mt-2">
+                <p className="text-xs font-medium text-[#4A5940] mb-1">Why Sarah recommends:</p>
+                <p className="text-xs text-[#5F7252] leading-relaxed">{displayWhy}</p>
+              </div>
             )}
             
             <ExpandToggle 
@@ -282,7 +284,7 @@ export default function RecommendationCard({
                   });
                 }
               }}
-              className="mt-1"
+              className="mt-2"
             />
           </div>
         </div>

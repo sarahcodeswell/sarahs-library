@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck, BarChart3, Search } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck, BarChart3 } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -515,19 +515,27 @@ Find similar books from beyond my library that match this taste profile.
     });
   };
 
-  // Option A: Scroll to TOP when results arrive (not bottom)
+  // Improved chat scroll with mobile keyboard handling
   useEffect(() => {
-    if (messages.length > 1) {
+    if (messages.length > 0) {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        chatEndRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
       });
     }
   }, [messages]);
 
-  // Handle mobile keyboard resize - keep input visible but don't scroll away from results
+  // Handle mobile keyboard resize
   useEffect(() => {
     const handleResize = () => {
-      // No-op for Option A - we don't want to auto-scroll on keyboard
+      if (document.activeElement.tagName === 'INPUT' || 
+          document.activeElement.tagName === 'TEXTAREA') {
+        setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     };
     
     window.addEventListener('resize', handleResize);
@@ -671,7 +679,7 @@ Find similar books from beyond my library that match this taste profile.
     try {
       validateMessage({ message: userMessage });
     } catch (error) {
-      setMessages(prev => [...prev.slice(0, 2), {
+      setMessages(prev => [...prev, {
         text: "Please enter a valid message (max 1000 characters).",
         isUser: false
       }]);
@@ -696,12 +704,7 @@ Find similar books from beyond my library that match this taste profile.
     }
 
     setInputValue('');
-    // Option A: REPLACE messages instead of appending (fresh results each search)
-    setMessages([
-      { text: "Browse collections below or tell me what you're looking for.", isUser: false },
-      { text: userMessage, isUser: true }
-    ]);
-    setShownBooksInSession([]); // Reset shown books for fresh results
+    setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setIsLoading(true);
     
     // Determine loading mode based on query type
@@ -734,7 +737,7 @@ Find similar books from beyond my library that match this taste profile.
       }
       
       if (!result.success) {
-        setMessages(prev => [...prev.slice(0, 2), {
+        setMessages(prev => [...prev, {
           text: result.error || result.response || "I'm having trouble thinking right now. Could you try again?",
           isUser: false
         }]);
@@ -754,8 +757,7 @@ Find similar books from beyond my library that match this taste profile.
         if (result.shownBooks && result.shownBooks.length > 0) {
           setShownBooksInSession(prev => [...prev, ...result.shownBooks]);
         }
-        // Option A: Replace - keep initial + user query, add result
-        setMessages(prev => [...prev.slice(0, 2), { text: result.text, isUser: false }]);
+        setMessages(prev => [...prev, { text: result.text, isUser: false }]);
         return;
       }
       
@@ -855,15 +857,14 @@ Find similar books from beyond my library that match this taste profile.
         cleanedText = cleanedText.replace('My Top 3 Picks for You', 'My Top 2 Picks for You');
       }
       
-      // Option A: Replace - keep initial + user query, add result
-      setMessages(prev => [...prev.slice(0, 2), { text: cleanedText, isUser: false }]);
+      setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
       
       // Show sign-in nudge for non-signed-in users after first recommendation
-      if (!user && !signInNudgeDismissed) {
+      if (!user && !signInNudgeDismissed && messages.length >= 1) {
         setShowSignInNudge(true);
       }
     } catch (error) {
-      setMessages(prev => [...prev.slice(0, 2), {
+      setMessages(prev => [...prev, {
         text: "Oops, I'm having a moment. Let me catch my breath and try again!",
         isUser: false
       }]);
@@ -1256,7 +1257,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Curator Theme Cards - Full Grid (before search) */}
+          {/* Curator Theme Cards - Grid Layout */}
           {messages.length <= 1 && (
             <>
               <div className="mb-6">
@@ -1328,75 +1329,16 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
-          {/* Collapsed Themes & Genres (after search) - Sticky at top */}
+          {/* Chat messages - only show after user engages */}
           {messages.length > 1 && (
-            <div className="sticky top-0 z-10 mb-4 p-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-[#4A5940]">Browse by Theme or Genre</span>
-                <button
-                  onClick={handleNewSearch}
-                  className="text-xs text-[#7A8F6C] hover:text-[#5F7252] flex items-center gap-1"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  New Search
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(themeInfo).map(([key, info]) => {
-                  const isSelected = selectedThemes.includes(key);
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setSelectedThemes([key]);
-                        const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                        setInputValue(themeText);
-                        handleSendMessage();
-                        track('theme_filter_selected_collapsed', { theme: key, theme_label: info.label });
-                      }}
-                      className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full transition-all ${
-                        isSelected
-                          ? 'bg-[#5F7252] text-white border border-[#5F7252]'
-                          : 'bg-white text-[#5F7252] border border-[#E8EBE4] hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252]'
-                      }`}
-                    >
-                      {info.icon && <info.icon className="w-3 h-3" />}
-                      {info.label}
-                    </button>
-                  );
-                })}
-                <span className="text-[#D4DAD0] mx-1">|</span>
-                {['Literary', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
-                  <button
-                    key={genre}
-                    onClick={() => {
-                      setSelectedThemes([]); // Clear theme selection for genre search
-                      const genreText = `Show me ${genre.toLowerCase()} books.`;
-                      setInputValue(genreText);
-                      handleSendMessage();
-                      track('genre_search_collapsed', { genre });
-                    }}
-                    className="px-2 py-1 text-[10px] font-medium bg-white text-[#7A8F6C] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Results - show only the recommendation response (no chat bubbles) */}
-          {messages.length > 2 && (
-          <div className="mb-3" role="region" aria-label="Book recommendations">
-            {/* Only render the results message (index 2), skip initial + user query */}
-            {messages.filter((msg, idx) => idx === 2 && !msg.isUser).map((msg, idx) => (
+          <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
+            {messages.map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
                 message={msg.text} 
-                isUser={false} 
-                messageIndex={2}
+                isUser={msg.isUser} 
+                messageIndex={idx}
                 chatMode={chatMode}
-                hideAvatar={true}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -1615,7 +1557,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder={messages.length > 2 ? "Refine your search... something lighter? funnier?" : "I'm looking for..."}
+                placeholder="I'm looking for..."
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
@@ -1643,6 +1585,24 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {messages.length > 1 && chatMode === 'library' && (
+            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
+                <span className="text-xs text-[#5F7252] font-medium">
+                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
+                </span>
+              </div>
+              <button
+                onClick={handleNewSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
+                aria-label="Start new search"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                New Search
+              </button>
+            </div>
+          )}
 
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
@@ -1690,6 +1650,21 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {/* Floating New Search Button - shows when scrolled down */}
+          {showScrollToTop && messages.length > 1 && (
+            <button
+              onClick={() => {
+                handleNewSearch();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5F7252] text-white rounded-full shadow-lg hover:bg-[#4A5940] transition-all hover:scale-105"
+              aria-label="Start new search"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="text-sm font-medium">New Search</span>
+            </button>
+          )}
+          
         </main>
       )}
 

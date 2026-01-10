@@ -34,34 +34,14 @@ export default function ChatMessage({
   userRecommendations, 
   onAddToQueue, 
   onRemoveFromQueue, 
-  onShowAuthModal,
-  hideAvatar = false
+  onShowAuthModal 
 }) {
   const isStructured = !isUser && hasStructuredRecommendations(message);
   const isWelcomeMessage = !isUser && message.includes("Hi, I'm Sarah!");
 
-  // Option A+D hybrid: When hideAvatar is true, render results without chat bubble styling
-  if (hideAvatar && isStructured) {
-    return (
-      <div className="text-[#4A5940]">
-        <FormattedRecommendations 
-          text={message} 
-          chatMode={chatMode} 
-          onActionPanelInteraction={onActionPanelInteraction}
-          user={user}
-          readingQueue={readingQueue}
-          userRecommendations={userRecommendations}
-          onAddToQueue={onAddToQueue}
-          onRemoveFromQueue={onRemoveFromQueue}
-          onShowAuthModal={onShowAuthModal}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      {!isUser && !hideAvatar && (
+      {!isUser && (
         <img 
           src="/sarah.png" 
           alt="Sarah"
@@ -71,9 +51,7 @@ export default function ChatMessage({
       <div className={`max-w-[85%] sm:max-w-[75%] ${
         isUser 
           ? 'bg-[#5F7252] text-white rounded-2xl rounded-br-sm px-5 py-3' 
-          : hideAvatar 
-            ? 'text-[#4A5940]'
-            : 'bg-[#F8F6EE] text-[#4A5940] rounded-2xl rounded-bl-sm px-5 py-3'
+          : 'bg-[#F8F6EE] text-[#4A5940] rounded-2xl rounded-bl-sm px-5 py-3'
       }`}>
         {isStructured ? (
           <FormattedRecommendations 

@@ -149,7 +149,7 @@ Format these books as recommendations, explaining why each fits the user's reque
     );
 
     return {
-      intro_text: 'Here are my top picks for you:',
+      intro_text: formatted.intro_text || '',
       recommendations: validatedRecs,
       formatting_success: true
     };
@@ -190,7 +190,7 @@ function getFallbackFormat(verifiedBooks, context) {
   }));
 
   return {
-    intro_text: 'Here are my top picks for you:',
+    intro_text: 'Here are some recommendations from my collection:',
     recommendations,
     formatting_success: false
   };
