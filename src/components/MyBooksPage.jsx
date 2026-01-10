@@ -532,6 +532,9 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             <p>
               So here we are—screenshots and CSVs—building workarounds to help you reclaim what's yours. It shouldn't be this hard. But here we are—one photo, CSV, and book at a time.
             </p>
+            <p className="italic">
+              Full disclosure: I've been vibe coding this thing for a few weeks. It's not perfect. But I know this is a problem worth solving—and if you're here, I suspect you do too.
+            </p>
             <p className="text-sm text-[#5F7252] font-medium pt-1">#booksnotbillionaires</p>
             <p className="text-xs text-[#7A8F6C] italic">
               p.s. Building an export button isn't hard. Your local librarian could do it between shelving returns.

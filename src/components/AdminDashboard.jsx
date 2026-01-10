@@ -1643,11 +1643,7 @@ export default function AdminDashboard({ onNavigate }) {
               Platform Health
             </h3>
             {stats?.dataQualityScore != null && (
-              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-                stats.dataQualityScore >= 70 ? 'bg-green-100 text-green-700' :
-                stats.dataQualityScore >= 40 ? 'bg-amber-100 text-amber-700' :
-                'bg-red-100 text-red-700'
-              }`}>
+              <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-[#5F7252]/10 text-[#5F7252]">
                 {stats.dataQualityScore}/100
               </span>
             )}
