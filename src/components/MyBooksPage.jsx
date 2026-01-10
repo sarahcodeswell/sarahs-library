@@ -523,22 +523,25 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
           <div className="bg-[#FDFCF9] px-4 py-4 text-sm text-[#5F7252] leading-relaxed space-y-3">
             <p className="font-medium text-[#4A5940]">We wish importing your books was easier too.</p>
             <p>
-              <span className="font-medium">Looking for an Apple Books connector?</span> Yeah, us too. <span className="font-medium">Kindle library import?</span> Amazon would rather you didn't. <span className="font-medium">Audible listening history?</span> They're keeping that. Goodreads actually has an export—credit to the founders who most likely had a say in this before selling to Amazon.
+              Your reading history is one of the most intimate data sets you'll ever create—more revealing than your purchases, more personal than your browsing. What you read, when you read it, whether you finished—it tells a story about who you are and who you're becoming.
+            </p>
+            <p className="font-medium text-[#4A5940]">Big tech knows this.</p>
+            <p>
+              That's why they don't make it easy to take your books with you.
             </p>
             <p>
-              These companies built empires on your reading data. They'd like to keep it that way.
+              We think that's absurd. Your reading life should belong to you—not as a marketing input, but as a personal record. A history you can revisit, export, share, and own.
             </p>
-            <p className="font-medium text-[#4A5940]">We think that's backwards.</p>
             <p>
-              So here we are—screenshots and CSVs—building workarounds to help you reclaim what's yours. It shouldn't be this hard. But here we are—one photo, CSV, and book at a time.
+              That's why there's no iBooks connector, no Kindle import, no Audible export. Not to worry—we've built easy-to-use workarounds that make importing your books simple.
             </p>
             <p className="italic">
-              Full disclosure: I've been vibe coding this thing for a few weeks. It's not perfect. But I know this is a problem worth solving—and if you're here, I suspect you do too.
+              Full disclosure: I've been vibe coding this thing for a few weeks. It's not perfect, but as Margaret Mead said, "Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has."
+            </p>
+            <p className="text-xs text-[#7A8F6C] italic">
+              p.s. Your local librarian could build an export button in between shelving returns.
             </p>
             <p className="text-sm text-[#5F7252] font-medium pt-1">#booksnotbillionaires</p>
-            <p className="text-xs text-[#7A8F6C] italic">
-              p.s. Building an export button isn't hard. Your local librarian could do it between shelving returns.
-            </p>
           </div>
         </div>
 
