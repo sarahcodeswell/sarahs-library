@@ -1385,16 +1385,18 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Chat messages - only show after user engages */}
-          {messages.length > 1 && (
-          <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
-            {messages.map((msg, idx) => (
+          {/* Results - show only the recommendation response (no chat bubbles) */}
+          {messages.length > 2 && (
+          <div className="mb-3" role="region" aria-label="Book recommendations">
+            {/* Only render the results message (index 2), skip initial + user query */}
+            {messages.filter((msg, idx) => idx === 2 && !msg.isUser).map((msg, idx) => (
               <ChatMessage 
                 key={idx} 
                 message={msg.text} 
-                isUser={msg.isUser} 
-                messageIndex={idx}
+                isUser={false} 
+                messageIndex={2}
                 chatMode={chatMode}
+                hideAvatar={true}
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -1613,7 +1615,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="I'm looking for..."
+                placeholder={messages.length > 2 ? "Refine your search... something lighter? funnier?" : "I'm looking for..."}
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
