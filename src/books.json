@@ -19,7 +19,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "identity",
-            "emotional"
+            "emotional",
+            "justice"
         ],
         "favorite": true,
         "description": "After a Mexican cartel murders her journalist husband and most of her family, Lydia and her son flee Acapulco on La Bestia—the migrant train—heading for the US border.",
@@ -32,8 +33,8 @@
         "author": "Khaled Hosseini",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
             "emotional",
+            "identity",
             "justice"
         ],
         "favorite": true,
@@ -47,9 +48,9 @@
         "author": "Dave Eggers",
         "genre": "Literary Fiction",
         "themes": [
+            "justice",
             "identity",
-            "emotional",
-            "justice"
+            "emotional"
         ],
         "favorite": false,
         "description": "The autobiographical novel of Valentino Achak Deng, one of Sudan's Lost Boys who survived civil war, refugee camps, and resettlement in America.",
@@ -63,9 +64,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "women",
-            "identity",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "Two Afghan women from different generations become reluctant sister-wives to a brutal husband and form an unlikely bond across three decades of war.",
@@ -78,8 +78,8 @@
         "author": "Khaled Hosseini",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": false,
         "description": "In 1952 Afghanistan, a father sells his daughter to a wealthy couple in Kabul, separating her from her adoring brother. The novel follows the rippling consequences.",
@@ -92,9 +92,9 @@
         "author": "Matt Haig",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
             "emotional",
-            "spiritual"
+            "spiritual",
+            "identity"
         ],
         "favorite": false,
         "description": "Between life and death, Nora finds herself in a library where each book lets her live a different version of her life—the lives she might have had.",
@@ -137,8 +137,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "identity",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": true,
         "description": "Two half-sisters are born in 18th-century Ghana: one marries a British slaver, the other is sold into slavery. Traces their descendants through 300 years.",
@@ -152,8 +152,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "identity",
-            "emotional",
-            "spiritual"
+            "spiritual",
+            "emotional"
         ],
         "favorite": false,
         "description": "Gifty, a Ghanaian-American neuroscientist at Stanford, studies addiction while caring for her depressed mother and grappling with her abandoned faith.",
@@ -206,8 +206,8 @@
         "author": "F. Scott Fitzgerald",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": false,
         "description": "Nick Carraway befriends his mysterious millionaire neighbor Jay Gatsby, who throws lavish parties hoping to reunite with the married woman he's loved since before the war.",
@@ -234,9 +234,9 @@
         "author": "Rohinton Mistry",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
+            "justice",
             "emotional",
-            "justice"
+            "identity"
         ],
         "favorite": true,
         "description": "During India's 1975 State of Emergency, four strangers share a small apartment. Their intertwined fates expose systemic brutality.",
@@ -308,9 +308,9 @@
         "genre": "Literary Fiction",
         "themes": [
             "women",
+            "justice",
             "identity",
-            "spiritual",
-            "justice"
+            "spiritual"
         ],
         "favorite": false,
         "description": "In 1959, an evangelical Baptist family moves to the Belgian Congo. Through four daughters' voices, we witness colonialism and survival.",
@@ -337,9 +337,9 @@
         "author": "Bernhard Schlink",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
             "emotional",
-            "justice"
+            "justice",
+            "identity"
         ],
         "favorite": false,
         "description": "Fifteen-year-old Michael begins an affair with Hanna, 36. Years later, he discovers her terrible secret when she stands trial for Nazi war crimes.",
@@ -435,8 +435,8 @@
         "author": "Bernardine Evaristo",
         "genre": "Literary Fiction",
         "themes": [
-            "women",
-            "identity"
+            "identity",
+            "women"
         ],
         "favorite": false,
         "description": "Twelve interconnected characters—mostly Black British women—navigate identity, family, love, and politics across decades.",
@@ -463,8 +463,8 @@
         "author": "Ayana Mathis",
         "genre": "Literary Fiction",
         "themes": [
-            "women",
             "identity",
+            "women",
             "justice"
         ],
         "favorite": false,
@@ -492,8 +492,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "women",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "Kya, abandoned by her family, raises herself in the North Carolina marshes. When a local man is found dead, she becomes the prime suspect.",
@@ -520,9 +520,9 @@
         "author": "Tayari Jones",
         "genre": "Literary Fiction",
         "themes": [
+            "justice",
             "identity",
-            "emotional",
-            "justice"
+            "emotional"
         ],
         "favorite": true,
         "description": "Newlyweds Roy and Celestial are torn apart when Roy is wrongfully convicted. When he's exonerated after five years, can their marriage survive?",
@@ -562,8 +562,8 @@
         "author": "Nikki Erlick",
         "genre": "Literary Fiction",
         "themes": [
-            "emotional",
-            "spiritual"
+            "spiritual",
+            "emotional"
         ],
         "favorite": false,
         "description": "Every adult on Earth receives a box containing a string—the exact measure of their lifespan. Society fractures as people face knowing their fate.",
@@ -601,8 +601,8 @@
         "author": "Kiley Reid",
         "genre": "Literary Fiction",
         "themes": [
-            "identity",
-            "justice"
+            "justice",
+            "identity"
         ],
         "favorite": false,
         "description": "A professor researching wealth inequality, an ambitious resident advisor, and a secretive senior form a triangular dynamic on a college campus.",
@@ -679,7 +679,8 @@
         "author": "Molly McGhee",
         "genre": "Literary Fiction",
         "themes": [
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "Drowning in debt, Jonathan takes a surreal government job entering strangers' dreams to collect nightmares.",
@@ -692,7 +693,7 @@
         "genre": "Literary Fiction",
         "themes": [
             "identity",
-            "justice"
+            "emotional"
         ],
         "favorite": false,
         "description": "When Eugene vanishes during a walk with his non-speaking autistic son, the family must find out what happened when the only witness can't easily tell them.",
@@ -719,8 +720,8 @@
         "genre": "Literary Fiction",
         "themes": [
             "women",
-            "identity",
-            "justice"
+            "justice",
+            "identity"
         ],
         "favorite": false,
         "description": "A Chinese birth mother searches for the daughter she was forced to give up, while the adoptive mother suspects the adoption wasn't ethical.",
@@ -758,6 +759,8 @@
         "author": "Eliana Ramage",
         "genre": "Literary Fiction",
         "themes": [
+            "identity",
+            "women",
             "emotional"
         ],
         "favorite": false,
@@ -822,10 +825,10 @@
         "author": "Eleanor Morse",
         "genre": "Literary Fiction",
         "themes": [
+            "justice",
             "women",
-            "emotional",
             "identity",
-            "justice"
+            "emotional"
         ],
         "favorite": true,
         "description": "Botswana, 1977. Isaac flees apartheid South Africa. Alice, an American in a failing marriage, hires him. When Isaac is seized, Alice ventures into danger.",
@@ -974,8 +977,7 @@
         "author": "Fiona Davis",
         "genre": "Historical Fiction",
         "themes": [
-            "women",
-            "justice"
+            "women"
         ],
         "favorite": false,
         "description": "In 1884, Sara manages the newly built Dakota apartments. In 1985, her great-great-granddaughter uncovers a century-old mystery.",
@@ -1153,8 +1155,8 @@
         "genre": "Historical Fiction",
         "themes": [
             "women",
-            "identity",
-            "justice"
+            "justice",
+            "identity"
         ],
         "favorite": false,
         "description": "Based on Dorothy Kirwan Thomas, born into slavery in Montserrat, who bought her freedom and became one of the wealthiest landowners in the Caribbean.",
@@ -1166,9 +1168,9 @@
         "author": "Nathan Harris",
         "genre": "Historical Fiction",
         "themes": [
-            "identity",
+            "justice",
             "emotional",
-            "justice"
+            "identity"
         ],
         "favorite": false,
         "description": "As the Civil War ends in Georgia, two newly freed brothers and a grieving white farmer form an unlikely bond.",
@@ -1181,9 +1183,9 @@
         "author": "Christina Baker Kline",
         "genre": "Historical Fiction",
         "themes": [
+            "justice",
             "women",
-            "identity",
-            "justice"
+            "identity"
         ],
         "favorite": true,
         "description": "Molly, a foster teen, helps 91-year-old Vivian clean out her attic—and discovers Vivian was an Irish orphan sent west on the 'orphan trains' in 1929.",
@@ -1293,10 +1295,10 @@
         "author": "Alan Brennert",
         "genre": "Historical Fiction",
         "themes": [
+            "justice",
             "women",
-            "identity",
             "emotional",
-            "justice"
+            "identity"
         ],
         "favorite": false,
         "description": "Seven-year-old Rachel is torn from her Hawaiian family when she contracts leprosy and is exiled to Moloka'i.",
@@ -1337,8 +1339,8 @@
         "genre": "Historical Fiction",
         "themes": [
             "women",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "When slavery ends in the British Caribbean in 1834, Rachel sets out searching for the five children who were sold away from her.",
@@ -1352,8 +1354,8 @@
         "genre": "Historical Fiction",
         "themes": [
             "women",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": true,
         "description": "Three women's lives converge around Ravensbrück: an American socialite, a Polish prisoner subjected to experiments, and the German doctor who performed them.",
@@ -1381,8 +1383,9 @@
         "genre": "Memoir",
         "themes": [
             "women",
-            "identity",
-            "justice"
+            "justice",
+            "emotional",
+            "identity"
         ],
         "favorite": true,
         "description": "A NEW YORK TIMES READERS’ CHOICE BEST BOOK OF THE CENTURY BEST BOOK OF THE YEAR in PEOPLE | NEW YORK TIMES BOOK REVIEW | WASHINGTON POST | NPR | PARADE | TIME |GLAMOUR | CHICAGO TRIBUNE | MARIE CLAIRE | ELLE | FORTUNE \"Know My Name is a gut-punch, and in the end, somehow, also blessedly hopeful.",
@@ -1462,7 +1465,8 @@
         "author": "Elizabeth Gilbert",
         "genre": "Memoir",
         "themes": [
-            "spiritual"
+            "spiritual",
+            "women"
         ],
         "favorite": false,
         "description": "After a devastating divorce, Gilbert spends a year traveling: eating in Italy, praying in India, and finding balance in Bali.",
@@ -1503,7 +1507,8 @@
         "author": "Michelle Obama",
         "genre": "Memoir",
         "themes": [
-            "women"
+            "women",
+            "spiritual"
         ],
         "favorite": false,
         "description": "The former First Lady shares practical wisdom for navigating uncertain times—tools she's used to deal with change and visibility.",
@@ -1530,7 +1535,8 @@
         "genre": "Memoir",
         "themes": [
             "emotional",
-            "spiritual"
+            "spiritual",
+            "women"
         ],
         "favorite": false,
         "description": "The third volume of Karr's memoir trilogy follows her from blackout drinking through psychiatric wards to sobriety and Catholicism.",
@@ -1543,7 +1549,8 @@
         "author": "Mary Karr",
         "genre": "Memoir",
         "themes": [
-            "emotional"
+            "emotional",
+            "women"
         ],
         "favorite": false,
         "description": "Karr's Texas childhood defined by her oil-worker father's tall tales, her mother's psychotic break, and sexual violence she suffered.",
@@ -1556,8 +1563,8 @@
         "author": "Gregory David Roberts",
         "genre": "Memoir",
         "themes": [
-            "identity",
-            "spiritual"
+            "spiritual",
+            "identity"
         ],
         "favorite": false,
         "description": "An Australian heroin addict escapes prison and flees to Bombay, where he lives in a slum, works for the mafia, and finds love.",
@@ -1583,8 +1590,8 @@
         "author": "Zoe Fitzgerald Carter",
         "genre": "Memoir",
         "themes": [
-            "women",
-            "emotional"
+            "emotional",
+            "women"
         ],
         "favorite": false,
         "description": "Carter's mother, suffering from Parkinson's, decides to end her life and asks her three daughters to be there.",
@@ -1622,9 +1629,9 @@
         "author": "Francisco Cantú",
         "genre": "Memoir",
         "themes": [
+            "justice",
             "identity",
-            "emotional",
-            "justice"
+            "emotional"
         ],
         "favorite": false,
         "description": "Cantú joined the Border Patrol to understand immigration. Four years of discovering bodies left him questioning everything.",
@@ -1700,7 +1707,9 @@
         "title": "A Girl Named Zippy",
         "author": "Haven Kimmel",
         "genre": "Memoir",
-        "themes": [],
+        "themes": [
+            "identity"
+        ],
         "favorite": false,
         "description": "The New York Times bestselling memoir about growing up in small-town Indiana, from the author of The Solace of Leaving Early. When Haven Kimmel was born in 1965, Mooreland, Indiana, was a sleepy little hamlet of three hundred people.",
         "goodreads": "https://www.goodreads.com/book/show/29363.A_Girl_Named_Zippy",
@@ -1726,7 +1735,8 @@
         "author": "Jacob Lief",
         "genre": "Memoir",
         "themes": [
-            "justice"
+            "justice",
+            "spiritual"
         ],
         "favorite": false,
         "description": "Lief founded the Ubuntu Education Fund in South Africa's townships, transforming lives during the AIDS crisis.",
@@ -1777,8 +1787,8 @@
         "author": "Gillian Flynn",
         "genre": "Thriller & Mystery",
         "themes": [
-            "identity",
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": false,
         "description": "On their fifth anniversary, Nick's wife Amy disappears. As suspicion falls on Nick, the narrative reveals a marriage far darker than imagined.",
@@ -1874,8 +1884,8 @@
         "genre": "Thriller & Mystery",
         "themes": [
             "women",
-            "emotional",
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "When Sadie's little sister is murdered, she sets off to find the killer herself, told alongside a true-crime podcast investigating her disappearance.",
@@ -1914,9 +1924,9 @@
         "author": "William Kent Krueger",
         "genre": "Thriller & Mystery",
         "themes": [
+            "justice",
             "identity",
-            "emotional",
-            "justice"
+            "emotional"
         ],
         "favorite": false,
         "description": "In 1963 Minnesota, 12-year-old Cork O'Connor witnesses a suspicious death on the Iron Lake reservation.",
@@ -1942,7 +1952,8 @@
         "author": "Janelle Brown",
         "genre": "Thriller & Mystery",
         "themes": [
-            "identity"
+            "identity",
+            "justice"
         ],
         "favorite": false,
         "description": "Nina is a grifter who targets the wealthy through Instagram. Her next mark is Vanessa, a struggling influencer with secrets of her own.",
@@ -1955,6 +1966,7 @@
         "author": "Mona Awad",
         "genre": "Thriller & Mystery",
         "themes": [
+            "identity",
             "emotional"
         ],
         "favorite": false,
@@ -1994,7 +2006,8 @@
         "author": "Markus Zusak",
         "genre": "Thriller & Mystery",
         "themes": [
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": false,
         "description": "Ed Kennedy, an underage cab driver, accidentally stops a bank robbery and starts receiving playing cards with addresses—tasks that will transform lives.",
@@ -2034,8 +2047,8 @@
         "author": "Brené Brown",
         "genre": "Self-Help & Spirituality",
         "themes": [
-            "identity",
-            "spiritual"
+            "spiritual",
+            "identity"
         ],
         "favorite": false,
         "description": "True belonging requires the courage to stand alone. How we can belong to ourselves while still connecting with others.",
@@ -2150,6 +2163,7 @@
         "author": "Dr. Nicole LePera",
         "genre": "Self-Help & Spirituality",
         "themes": [
+            "emotional",
             "identity",
             "spiritual"
         ],
@@ -2250,8 +2264,8 @@
         "author": "Anam Thubten",
         "genre": "Self-Help & Spirituality",
         "themes": [
-            "identity",
-            "spiritual"
+            "spiritual",
+            "identity"
         ],
         "favorite": false,
         "description": "Makes the challenging Buddhist concept of 'no-self' accessible, showing how letting go of ego leads to liberation.",
@@ -2333,6 +2347,7 @@
         "author": "Emily Henry",
         "genre": "Romance & Contemporary",
         "themes": [
+            "beach",
             "emotional"
         ],
         "favorite": false,
@@ -2346,6 +2361,7 @@
         "author": "Emily Henry",
         "genre": "Romance & Contemporary",
         "themes": [
+            "beach",
             "emotional"
         ],
         "favorite": false,
@@ -2372,6 +2388,7 @@
         "author": "Fredrik Backman",
         "genre": "Romance & Contemporary",
         "themes": [
+            "beach",
             "emotional"
         ],
         "favorite": false,
@@ -2385,6 +2402,7 @@
         "author": "Fredrik Backman",
         "genre": "Romance & Contemporary",
         "themes": [
+            "beach",
             "emotional"
         ],
         "favorite": false,
@@ -2398,8 +2416,8 @@
         "author": "V.E. Schwab",
         "genre": "Romance & Contemporary",
         "themes": [
-            "identity",
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": true,
         "description": "In 1714, Addie makes a deal: immortality, but no one will ever remember her. For 300 years she's forgotten—until a boy remembers her name.",
@@ -2425,6 +2443,7 @@
         "author": "Jackie Fraser",
         "genre": "Romance & Contemporary",
         "themes": [
+            "beach",
             "emotional"
         ],
         "favorite": false,
@@ -2437,7 +2456,8 @@
         "author": "Nina George",
         "genre": "Romance & Contemporary",
         "themes": [
-            "emotional"
+            "emotional",
+            "beach"
         ],
         "favorite": true,
         "description": "Jean Perdu runs a floating bookshop, prescribing novels for what ails customers—but hasn't opened a letter from his lost love in 21 years.",
@@ -2464,7 +2484,8 @@
         "author": "Sarah Bird",
         "genre": "Romance & Contemporary",
         "themes": [
-            "emotional"
+            "emotional",
+            "identity"
         ],
         "favorite": true,
         "description": "Cyndi Rae becomes obsessed with flamenco dancing—and with Tomás. She discovers flamenco's demand for duende: soul-deep passion.",
@@ -2476,7 +2497,8 @@
         "author": "Dorothea Benton Frank",
         "genre": "Romance & Contemporary",
         "themes": [
-            "women"
+            "women",
+            "emotional"
         ],
         "favorite": false,
         "description": "Three generations of Lowcountry women navigate family secrets as an actual hurricane approaches the South Carolina coast.",
@@ -2501,7 +2523,9 @@
         "title": "The 100-Year-Old Man Who Climbed Out the Window and Disappeared",
         "author": "Jonas Jonasson",
         "genre": "Romance & Contemporary",
-        "themes": [],
+        "themes": [
+            "beach"
+        ],
         "favorite": false,
         "description": "Allan Karlsson climbs out of his nursing home on his 100th birthday and embarks on a madcap adventure.",
         "goodreads": "https://www.goodreads.com/book/show/13486632-the-hundred-year-old-man-who-climbed-out-of-the-window-and-disappeared",
@@ -2527,7 +2551,7 @@
         "author": "Sarah J. Maas",
         "genre": "Romance & Contemporary",
         "themes": [
-            "emotional"
+            "beach"
         ],
         "favorite": false,
         "description": "When huntress Feyre kills a faerie wolf, she's dragged into the immortal realm. Beauty and the Beast retelling.",
@@ -2540,6 +2564,7 @@
         "author": "Erik Larson",
         "genre": "Nonfiction",
         "themes": [
+            "justice",
             "emotional"
         ],
         "favorite": true,
@@ -2593,8 +2618,8 @@
         "genre": "Nonfiction",
         "themes": [
             "women",
-            "emotional",
-            "identity"
+            "identity",
+            "emotional"
         ],
         "favorite": false,
         "description": "Layla Smart, a Black artist at a Vermont dance residency, navigates tokenism, a fracturing marriage, and the studio's problematic past.",
@@ -2632,7 +2657,8 @@
         "author": "Claudia Rowe",
         "genre": "Nonfiction",
         "themes": [
-            "justice"
+            "justice",
+            "emotional"
         ],
         "favorite": false,
         "description": "Finalist for the 2025 National Book Award for Nonfiction “An immersive, devastating look at foster children’s lives.” (Seattle Times) A compelling exploration of the broken American foster care system, told through the stories of six former foster youth.",
