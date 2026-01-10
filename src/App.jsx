@@ -1540,6 +1540,19 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {/* New Search button - shows after results */}
+          {messages.length > 2 && !isLoading && (
+            <div className="mb-4 flex justify-center">
+              <button
+                onClick={handleNewSearch}
+                className="px-4 py-2 text-sm font-medium text-[#5F7252] bg-white border border-[#D4DAD0] rounded-lg hover:bg-[#F8F6EE] transition-colors flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                New Search
+              </button>
+            </div>
+          )}
+
           <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
               <textarea
                 value={inputValue}
