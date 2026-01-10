@@ -1326,9 +1326,9 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
-          {/* Query context bar - shows during and after search (Option A) */}
+          {/* Query context bar - shows during and after search (Option A) - dark green selected look */}
           {(isLoading || messages.length > 2) && (
-            <div className="mb-4 px-4 py-3 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
+            <div className="mb-4 px-4 py-3 bg-[#5F7252] rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {(() => {
                   const selectedTheme = selectedThemes[0];
@@ -1337,15 +1337,15 @@ Find similar books from beyond my library that match this taste profile.
                     const IconComponent = theme.icon;
                     return (
                       <>
-                        {IconComponent && <IconComponent className="w-4 h-4 text-[#5F7252]" />}
-                        <span className="text-sm font-medium text-[#4A5940]">{theme.label}</span>
+                        {IconComponent && <IconComponent className="w-4 h-4 text-white" />}
+                        <span className="text-sm font-medium text-white">{theme.label}</span>
                       </>
                     );
                   }
                   // For free-text searches, show the query
                   const userQuery = messages[1]?.text;
                   return (
-                    <span className="text-sm font-medium text-[#4A5940]">
+                    <span className="text-sm font-medium text-white">
                       {userQuery ? `"${userQuery.slice(0, 40)}${userQuery.length > 40 ? '...' : ''}"` : 'Searching...'}
                     </span>
                   );
@@ -1353,7 +1353,7 @@ Find similar books from beyond my library that match this taste profile.
               </div>
               <button
                 onClick={handleNewSearch}
-                className="text-xs text-[#96A888] hover:text-[#5F7252] transition-colors flex items-center gap-1"
+                className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1"
               >
                 <X className="w-3 h-3" />
                 Clear
@@ -1456,14 +1456,23 @@ Find similar books from beyond my library that match this taste profile.
           {/* Skeleton loading cards - shows while searching */}
           {isLoading && (
             <div className="space-y-4 mb-4">
-              {/* Sarah avatar + header skeleton */}
+              {/* Sarah avatar + theme description or loading text */}
               <div className="flex items-center gap-3">
                 <img 
                   src="/sarah.png" 
                   alt="Sarah"
                   className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
                 />
-                <div className="h-4 w-48 bg-[#E8EBE4] rounded animate-pulse"></div>
+                <p className="text-sm text-[#4A5940]">
+                  {(() => {
+                    const selectedTheme = selectedThemes[0];
+                    if (selectedTheme && themeDescriptions[selectedTheme]) {
+                      return themeDescriptions[selectedTheme];
+                    }
+                    // Fallback to loading text for free-text searches
+                    return "Searching my collection... finding your best matches...";
+                  })()}
+                </p>
               </div>
               
               {/* Skeleton book cards */}
