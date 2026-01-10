@@ -520,6 +520,25 @@ function FeedbackManagement() {
                 </p>
               </div>
 
+              {/* Screenshot */}
+              {selectedFeedback.screenshot_url && (
+                <div>
+                  <label className="block text-xs font-medium text-[#96A888] mb-1">Screenshot</label>
+                  <a 
+                    href={selectedFeedback.screenshot_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img 
+                      src={selectedFeedback.screenshot_url} 
+                      alt="Feedback screenshot" 
+                      className="w-full max-h-48 object-contain rounded-lg border border-[#E8EBE4] hover:opacity-90 transition-opacity cursor-pointer"
+                    />
+                  </a>
+                </div>
+              )}
+
               {/* From */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
