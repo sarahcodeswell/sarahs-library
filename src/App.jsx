@@ -696,7 +696,12 @@ Find similar books from beyond my library that match this taste profile.
     }
 
     setInputValue('');
-    setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
+    // Replace messages instead of appending - fresh results each search
+    setMessages([
+      { text: "Browse collections below or tell me what you're looking for.", isUser: false },
+      { text: userMessage, isUser: true }
+    ]);
+    setShownBooksInSession([]); // Reset shown books for fresh results
     setIsLoading(true);
     
     // Determine loading mode based on query type
@@ -729,7 +734,7 @@ Find similar books from beyond my library that match this taste profile.
       }
       
       if (!result.success) {
-        setMessages(prev => [...prev, {
+        setMessages(prev => [...prev.slice(0, 2), {
           text: result.error || result.response || "I'm having trouble thinking right now. Could you try again?",
           isUser: false
         }]);
@@ -749,7 +754,7 @@ Find similar books from beyond my library that match this taste profile.
         if (result.shownBooks && result.shownBooks.length > 0) {
           setShownBooksInSession(prev => [...prev, ...result.shownBooks]);
         }
-        setMessages(prev => [...prev, { text: result.text, isUser: false }]);
+        setMessages(prev => [...prev.slice(0, 2), { text: result.text, isUser: false }]);
         return;
       }
       
@@ -849,14 +854,14 @@ Find similar books from beyond my library that match this taste profile.
         cleanedText = cleanedText.replace('My Top 3 Picks for You', 'My Top 2 Picks for You');
       }
       
-      setMessages(prev => [...prev, { text: cleanedText, isUser: false }]);
+      setMessages(prev => [...prev.slice(0, 2), { text: cleanedText, isUser: false }]);
       
       // Show sign-in nudge for non-signed-in users after first recommendation
-      if (!user && !signInNudgeDismissed && messages.length >= 1) {
+      if (!user && !signInNudgeDismissed) {
         setShowSignInNudge(true);
       }
     } catch (error) {
-      setMessages(prev => [...prev, {
+      setMessages(prev => [...prev.slice(0, 2), {
         text: "Oops, I'm having a moment. Let me catch my breath and try again!",
         isUser: false
       }]);
