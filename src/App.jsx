@@ -1544,6 +1544,37 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
+          {/* Text input - show on initial state (before results), hide after results */}
+          {messages.length <= 1 && (
+          <div className="bg-[#F8F6EE] rounded-2xl border border-[#E8EBE4] shadow-sm p-3 sm:p-4 flex items-center gap-3">
+              <textarea
+                value={inputValue}
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  e.target.style.height = '24px';
+                  const newHeight = Math.min(e.target.scrollHeight, 200);
+                  e.target.style.height = newHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || e.shiftKey) return;
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                placeholder="I'm looking for..."
+                className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
+                disabled={isLoading}
+                style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center"
+                aria-label="Send message"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {chatMode === 'discover' && (
             <div className="mb-3 flex items-center justify-center gap-2">
