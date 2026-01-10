@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Sparkles, RotateCcw } from 'lucide-react';
+import { Sparkles, RotateCcw, Heart } from 'lucide-react';
 import { parseRecommendations } from '../lib/recommendationService';
 import RecommendationCard from './RecommendationCard';
 
@@ -80,8 +80,12 @@ export default function FormattedRecommendations({
   
   return (
     <div className="space-y-3">
-      {header && (
-        <p className="text-sm font-medium text-[#4A5940]">{header}</p>
+      {/* Override AI intro text with simple "Here are my top picks for you" + heart */}
+      {recommendations.length > 0 && (
+        <p className="text-sm font-medium text-[#4A5940] flex items-center gap-1.5">
+          <Heart className="w-4 h-4 text-[#D4A5A5]" fill="#D4A5A5" />
+          Here are my top picks for you
+        </p>
       )}
       {recommendations.map((rec, idx) => (
         <RecommendationCard 
