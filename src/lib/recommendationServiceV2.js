@@ -35,21 +35,34 @@ export async function getRecommendationsV2(userId, userMessage, readingQueue = [
     // Build exclusion list
     const exclusionTitles = buildExclusionList(readingQueue, shownBooksInSession);
     
-    // STEP 1: Extract search intent using Claude Tool Use
-    console.log('[V2] Step 1: Extracting search intent...');
-    const extraction = await extractSearchIntent(userMessage);
-    console.log('[V2] Extraction:', JSON.stringify(extraction, null, 2));
+    let extraction, validated;
     
-    // STEP 2: Validate entities against catalog (deterministic)
-    console.log('[V2] Step 2: Validating entities...');
-    const validated = validateExtraction(extraction);
-    console.log('[V2] Validated:', JSON.stringify(validated, null, 2));
-    
-    // Handle theme filter override from UI
+    // OPTIMIZATION: Skip query extraction for curated theme/genre selections
+    // These are predictable intents that don't need Claude to parse
     if (themeFilters && themeFilters.length > 0) {
-      validated.intent = 'theme_search';
-      validated.themes = themeFilters;
-      console.log('[V2] Theme filter override:', themeFilters);
+      console.log('[V2] Fast path: Curated theme selection, skipping query extraction');
+      extraction = {
+        search_query: themeFilters.join(' '),
+        intent: 'theme_search',
+        themes: themeFilters,
+        extraction_success: true
+      };
+      validated = {
+        intent: 'theme_search',
+        themes: themeFilters,
+        search_query: themeFilters.join(' '),
+        validation: { fast_path: true }
+      };
+    } else {
+      // STEP 1: Extract search intent using Claude Tool Use (for open text queries)
+      console.log('[V2] Step 1: Extracting search intent...');
+      extraction = await extractSearchIntent(userMessage);
+      console.log('[V2] Extraction:', JSON.stringify(extraction, null, 2));
+      
+      // STEP 2: Validate entities against catalog (deterministic)
+      console.log('[V2] Step 2: Validating entities...');
+      validated = validateExtraction(extraction);
+      console.log('[V2] Validated:', JSON.stringify(validated, null, 2));
     }
     
     // STEP 3: Route and retrieve data (deterministic)

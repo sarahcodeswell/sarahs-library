@@ -332,9 +332,9 @@ export default function RecommendationCard({
           )}
           
           {/* Reputation/Accolades */}
-          {rec.reputation && (
+          {(rec.reputation || catalogBook?.reputation) && (
             <div className="mb-3">
-              <ReputationBox reputation={rec.reputation} />
+              <ReputationBox reputation={rec.reputation || catalogBook?.reputation} />
             </div>
           )}
           
