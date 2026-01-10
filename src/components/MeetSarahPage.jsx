@@ -297,7 +297,7 @@ function BookShelf({ books, onBookClick, userBookTitles, totalCount, isLoggedIn,
   );
 }
 
-export default function MeetSarahPage({ onNavigate }) {
+export default function MeetSarahPage({ onNavigate, onShowAuthModal }) {
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBookTitles, setUserBookTitles] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -349,7 +349,7 @@ export default function MeetSarahPage({ onNavigate }) {
   const handleAddToQueue = async (book) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      onNavigate('auth');
+      onShowAuthModal?.();
       return;
     }
     
@@ -367,7 +367,7 @@ export default function MeetSarahPage({ onNavigate }) {
 
   const handleViewAll = () => {
     if (!isLoggedIn) {
-      onNavigate('auth');
+      onShowAuthModal?.();
     }
     // For logged-in users, could navigate to full collection view in future
   };

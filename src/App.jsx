@@ -1113,7 +1113,7 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'meet-sarah' && (
         <Suspense fallback={<LoadingFallback message="Loading Meet Sarah..." />}>
-          <MeetSarahPage onNavigate={setCurrentPage} />
+          <MeetSarahPage onNavigate={setCurrentPage} onShowAuthModal={() => setShowAuthModal(true)} />
         </Suspense>
       )}
 
@@ -1125,7 +1125,7 @@ Find similar books from beyond my library that match this taste profile.
 
       {currentPage === 'curator-themes' && (
         <Suspense fallback={<LoadingFallback message="Loading..." />}>
-          <CuratorThemesPage onNavigate={setCurrentPage} />
+          <CuratorThemesPage onNavigate={setCurrentPage} onShowAuthModal={() => setShowAuthModal(true)} />
         </Suspense>
       )}
       

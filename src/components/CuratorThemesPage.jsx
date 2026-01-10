@@ -142,7 +142,7 @@ function BookShelf({ books, onBookClick, userBookTitles, totalCount, isLoggedIn,
   );
 }
 
-export default function CuratorThemesPage({ onNavigate }) {
+export default function CuratorThemesPage({ onNavigate, onShowAuthModal }) {
   const [selectedBook, setSelectedBook] = useState(null);
   const [userBookTitles, setUserBookTitles] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -180,13 +180,13 @@ export default function CuratorThemesPage({ onNavigate }) {
 
   const handleAddToQueue = async (book) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { onNavigate('auth'); return; }
+    if (!user) { onShowAuthModal?.(); return; }
     await supabase.from('reading_queue').insert({ user_id: user.id, book_title: book.title, book_author: book.author, cover_image_url: book.coverUrl, status: 'want_to_read', source: 'sarah_collection' });
     setUserBookTitles(prev => [...prev, book.title?.toLowerCase()]);
   };
 
   const handleViewAll = () => {
-    if (!isLoggedIn) onNavigate('auth');
+    if (!isLoggedIn) onShowAuthModal?.();
   };
 
   return (
