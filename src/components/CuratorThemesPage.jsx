@@ -67,10 +67,11 @@ function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, is
   );
 }
 
-function BookShelf({ books, onBookClick, userBookTitles }) {
+function BookShelf({ books, onBookClick, userBookTitles, totalCount, isLoggedIn, onViewAll }) {
   const scrollRef = React.useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const hasMore = totalCount > books.length;
   const checkScroll = () => { if (scrollRef.current) { const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current; setCanScrollLeft(scrollLeft > 0); setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10); } };
   useEffect(() => { checkScroll(); const ref = scrollRef.current; if (ref) ref.addEventListener('scroll', checkScroll); return () => ref?.removeEventListener('scroll', checkScroll); }, [books]);
   const scroll = (dir) => { if (scrollRef.current) scrollRef.current.scrollBy({ left: dir * 200, behavior: 'smooth' }); };
@@ -93,6 +94,12 @@ function BookShelf({ books, onBookClick, userBookTitles }) {
             </button>
           );
         })}
+        {hasMore && (
+          <button onClick={onViewAll} className="flex-shrink-0 w-20 h-28 rounded-lg bg-[#5F7252]/10 border-2 border-dashed border-[#5F7252]/30 flex flex-col items-center justify-center hover:bg-[#5F7252]/20 hover:border-[#5F7252]/50 transition-all">
+            <span className="text-[#5F7252] text-xs font-medium">+{totalCount - books.length}</span>
+            <span className="text-[#5F7252] text-[10px] mt-1">{isLoggedIn ? 'View All' : 'Sign in'}</span>
+          </button>
+        )}
       </div>
       {canScrollRight && <button onClick={() => scroll(1)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/90 rounded-full shadow-md flex items-center justify-center text-[#5F7252] hover:bg-white transition-all opacity-0 group-hover:opacity-100"><ChevronRight className="w-5 h-5" /></button>}
     </div>
@@ -104,14 +111,22 @@ export default function CuratorThemesPage({ onNavigate }) {
   const [userBookTitles, setUserBookTitles] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const booksByTheme = useMemo(() => ({
-    women: bookCatalog.filter(b => b.themes?.includes('women')).slice(0, 15),
-    beach: bookCatalog.filter(b => b.themes?.includes('beach')),
-    emotional: bookCatalog.filter(b => b.themes?.includes('emotional')).slice(0, 15),
-    identity: bookCatalog.filter(b => b.themes?.includes('identity')).slice(0, 15),
-    spiritual: bookCatalog.filter(b => b.themes?.includes('spiritual')).slice(0, 15),
-    justice: bookCatalog.filter(b => b.themes?.includes('justice')).slice(0, 15),
-  }), []);
+  const booksByTheme = useMemo(() => {
+    const womenAll = bookCatalog.filter(b => b.themes?.includes('women'));
+    const beachAll = bookCatalog.filter(b => b.themes?.includes('beach'));
+    const emotionalAll = bookCatalog.filter(b => b.themes?.includes('emotional'));
+    const identityAll = bookCatalog.filter(b => b.themes?.includes('identity'));
+    const spiritualAll = bookCatalog.filter(b => b.themes?.includes('spiritual'));
+    const justiceAll = bookCatalog.filter(b => b.themes?.includes('justice'));
+    return {
+      women: { books: womenAll.slice(0, 15), total: womenAll.length },
+      beach: { books: beachAll, total: beachAll.length },
+      emotional: { books: emotionalAll.slice(0, 15), total: emotionalAll.length },
+      identity: { books: identityAll.slice(0, 15), total: identityAll.length },
+      spiritual: { books: spiritualAll.slice(0, 15), total: spiritualAll.length },
+      justice: { books: justiceAll.slice(0, 15), total: justiceAll.length },
+    };
+  }, []);
 
   useEffect(() => {
     const checkUserBooks = async () => {
@@ -132,6 +147,10 @@ export default function CuratorThemesPage({ onNavigate }) {
     if (!user) { onNavigate('auth'); return; }
     await supabase.from('reading_queue').insert({ user_id: user.id, book_title: book.title, book_author: book.author, cover_image_url: book.coverUrl, status: 'want_to_read', source: 'sarah_collection' });
     setUserBookTitles(prev => [...prev, book.title?.toLowerCase()]);
+  };
+
+  const handleViewAll = () => {
+    if (!isLoggedIn) onNavigate('auth');
   };
 
   return (
@@ -168,7 +187,7 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               I'm drawn to stories that illuminate the experiences we rarely hear about—the women who've been footnotes in history books, the ones who survived impossible circumstances, and those whose inner lives were infinitely more complex than the world allowed them to show.
             </p>
-            <BookShelf books={booksByTheme.women} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.women.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.women.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
           {/* Beach Reads */}
@@ -180,7 +199,7 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               These are my go-to books when I want to feel like I'm wrapped in a warm hug. Tales of second chances, unexpected friendships, and characters who are beautifully flawed but utterly lovable.
             </p>
-            <BookShelf books={booksByTheme.beach} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.beach.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.beach.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
           {/* Emotional Truth */}
@@ -192,7 +211,7 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               These are the books that have reached into my chest and rearranged something fundamental—stories that don't just entertain but transform how I see the world and my place in it.
             </p>
-            <BookShelf books={booksByTheme.emotional} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.emotional.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.emotional.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
           {/* Identity & Belonging */}
@@ -204,7 +223,7 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               These are the books that have made me feel less alone in the world. Stories about people figuring out who they are when everything familiar falls away.
             </p>
-            <BookShelf books={booksByTheme.identity} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.identity.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.identity.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
           {/* Spiritual Seeking */}
@@ -216,7 +235,7 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               Stories and teachings that explore life's biggest questions without pretending to have all the answers. Each book here has taught me something profound about finding meaning.
             </p>
-            <BookShelf books={booksByTheme.spiritual} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.spiritual.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.spiritual.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
           {/* Invisible Injustices */}
@@ -228,41 +247,9 @@ export default function CuratorThemesPage({ onNavigate }) {
             <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
               Stories that pull back the curtain on injustices hiding in plain sight. They're not always easy reads, but they're essential ones that change how you see the world.
             </p>
-            <BookShelf books={booksByTheme.justice} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
+            <BookShelf books={booksByTheme.justice.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.justice.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
 
-          {/* All-Time Favorites */}
-          <div className="bg-[#5F7252]/10 rounded-xl p-6 border border-[#5F7252]/20">
-            <h3 className="font-serif text-lg text-[#4A5940] mb-3 flex items-center gap-2">
-              <Star className="w-5 h-5 text-[#5F7252]" />
-              All-Time Favorites
-            </h3>
-            <p className="text-sm text-[#5F7252] leading-relaxed mb-4">
-              Books that have shaped how I see the world:
-            </p>
-            <ul className="text-sm text-[#5F7252] space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-[#5F7252]">•</span>
-                <span><span className="font-medium">Tell Me How to Be</span> by Neel Patel</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#5F7252]">•</span>
-                <span><span className="font-medium">Where the Red Fern Grows</span> by Wilson Rawls</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#5F7252]">•</span>
-                <span><span className="font-medium">Loving Frank</span> by Nancy Horan</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#5F7252]">•</span>
-                <span><span className="font-medium">Just Mercy</span> by Bryan Stevenson</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#5F7252]">•</span>
-                <span><span className="font-medium">Heartland</span> by Sarah Smarsh</span>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* CTA */}

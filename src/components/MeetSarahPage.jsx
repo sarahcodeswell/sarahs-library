@@ -134,10 +134,11 @@ function CuratorBookModal({ book, isOpen, onClose, userHasBook, onAddToQueue, is
 }
 
 // Horizontal scrollable book shelf component
-function BookShelf({ books, onBookClick, userBookTitles }) {
+function BookShelf({ books, onBookClick, userBookTitles, totalCount, isLoggedIn, onViewAll }) {
   const scrollRef = React.useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const hasMore = totalCount > books.length;
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -210,6 +211,15 @@ function BookShelf({ books, onBookClick, userBookTitles }) {
             </button>
           );
         })}
+        {hasMore && (
+          <button
+            onClick={onViewAll}
+            className="flex-shrink-0 w-20 h-28 rounded-lg bg-[#5F7252]/10 border-2 border-dashed border-[#5F7252]/30 flex flex-col items-center justify-center hover:bg-[#5F7252]/20 hover:border-[#5F7252]/50 transition-all"
+          >
+            <span className="text-[#5F7252] text-xs font-medium">+{totalCount - books.length}</span>
+            <span className="text-[#5F7252] text-[10px] mt-1">{isLoggedIn ? 'View All' : 'Sign in'}</span>
+          </button>
+        )}
       </div>
 
       {canScrollRight && (
@@ -229,28 +239,26 @@ export default function MeetSarahPage({ onNavigate }) {
   const [userBookTitles, setUserBookTitles] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Get books by theme
+  // Get books by theme with counts
   const booksByTheme = useMemo(() => {
-    // All-time favorites by title
-    const favoriteTitles = [
-      'Tell Me How to Be',
-      'Where the Red Fern Grows', 
-      'Loving Frank',
-      'Just Mercy',
-      'Heartland'
-    ];
-    const favorites = favoriteTitles
-      .map(title => bookCatalog.find(b => b.title === title))
-      .filter(Boolean);
+    const favoriteTitles = ['Tell Me How to Be', 'Where the Red Fern Grows', 'Loving Frank', 'Just Mercy', 'Heartland'];
+    const favorites = favoriteTitles.map(title => bookCatalog.find(b => b.title === title)).filter(Boolean);
+
+    const womenAll = bookCatalog.filter(b => b.themes?.includes('women'));
+    const beachAll = bookCatalog.filter(b => b.themes?.includes('beach'));
+    const emotionalAll = bookCatalog.filter(b => b.themes?.includes('emotional'));
+    const identityAll = bookCatalog.filter(b => b.themes?.includes('identity'));
+    const spiritualAll = bookCatalog.filter(b => b.themes?.includes('spiritual'));
+    const justiceAll = bookCatalog.filter(b => b.themes?.includes('justice'));
 
     return {
-      women: bookCatalog.filter(b => b.themes?.includes('women')).slice(0, 15),
-      beach: bookCatalog.filter(b => b.themes?.includes('beach')),
-      emotional: bookCatalog.filter(b => b.themes?.includes('emotional')).slice(0, 15),
-      identity: bookCatalog.filter(b => b.themes?.includes('identity')).slice(0, 15),
-      spiritual: bookCatalog.filter(b => b.themes?.includes('spiritual')).slice(0, 15),
-      justice: bookCatalog.filter(b => b.themes?.includes('justice')).slice(0, 15),
-      favorites,
+      women: { books: womenAll.slice(0, 15), total: womenAll.length },
+      beach: { books: beachAll, total: beachAll.length },
+      emotional: { books: emotionalAll.slice(0, 15), total: emotionalAll.length },
+      identity: { books: identityAll.slice(0, 15), total: identityAll.length },
+      spiritual: { books: spiritualAll.slice(0, 15), total: spiritualAll.length },
+      justice: { books: justiceAll.slice(0, 15), total: justiceAll.length },
+      favorites: { books: favorites, total: favorites.length },
     };
   }, []);
 
@@ -292,6 +300,13 @@ export default function MeetSarahPage({ onNavigate }) {
     });
     
     setUserBookTitles(prev => [...prev, book.title?.toLowerCase()]);
+  };
+
+  const handleViewAll = () => {
+    if (!isLoggedIn) {
+      onNavigate('auth');
+    }
+    // For logged-in users, could navigate to full collection view in future
   };
 
   return (
@@ -338,7 +353,7 @@ export default function MeetSarahPage({ onNavigate }) {
                   It's a living library that grows as we both read, with a discovery engine to help us find what's next. And when you're ready to buy, I hope you'll support a local bookstore—they're the heartbeat of our communities.
                 </p>
                 <p className="text-[#7A8F6C]">
-                  Happy reading, friend.
+                  Happy reading, friends!
                 </p>
               </div>
               <div className="mt-4">
@@ -357,100 +372,37 @@ export default function MeetSarahPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Curator Themes */}
+        {/* What I Read - Link to Curator Themes */}
         <div id="curator-themes" className="bg-[#F8F6EE] rounded-2xl p-6 sm:p-8 border border-[#D4DAD0] shadow-sm mb-6">
           <h2 className="font-serif text-2xl text-[#4A5940] mb-4 flex items-center gap-2">
             <BookText className="w-5 h-5 text-[#5F7252]" />
             What I Read
           </h2>
-          <p className="text-sm text-[#5F7252] mb-6 leading-relaxed">
-            A few common themes you'll see in my collection:
+          <p className="text-base text-[#5F7252] leading-relaxed mb-6">
+            These are the themes that keep showing up in my collection—the questions I return to, the stories that stay with me.
           </p>
+          
+          <button
+            onClick={() => {
+              onNavigate('curator-themes');
+              window.scrollTo(0, 0);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F7252] text-white text-sm font-medium hover:bg-[#4A5940] transition-colors mb-8"
+          >
+            <BookText className="w-4 h-4" />
+            Browse My Curator Themes
+          </button>
 
-          <div className="space-y-6">
-            {/* Women's Untold Stories */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <BookHeart className="w-5 h-5 text-[#5F7252]" />
-                Women's Untold Stories
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                I'm drawn to stories that illuminate the experiences we rarely hear about—the women who've been footnotes in history books, the ones who survived impossible circumstances, and those whose inner lives were infinitely more complex than the world allowed them to show.
-              </p>
-              <BookShelf books={booksByTheme.women} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* Beach Reads */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Sun className="w-5 h-5 text-[#5F7252]" />
-                Beach Reads
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                These are my go-to books when I want to feel like I'm wrapped in a warm hug. Tales of second chances, unexpected friendships, and characters who are beautifully flawed but utterly lovable.
-              </p>
-              <BookShelf books={booksByTheme.beach} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* Emotional Truth */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-[#5F7252]" />
-                Emotional Truth
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                These are the books that have reached into my chest and rearranged something fundamental—stories that don't just entertain but transform how I see the world and my place in it.
-              </p>
-              <BookShelf books={booksByTheme.emotional} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* Identity & Belonging */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Users className="w-5 h-5 text-[#5F7252]" />
-                Identity & Belonging
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                These are the books that have made me feel less alone in the world. Stories about people figuring out who they are when everything familiar falls away.
-              </p>
-              <BookShelf books={booksByTheme.identity} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* Spiritual Seeking */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#5F7252]" />
-                Spiritual Seeking
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                Stories and teachings that explore life's biggest questions without pretending to have all the answers. Each book here has taught me something profound about finding meaning.
-              </p>
-              <BookShelf books={booksByTheme.spiritual} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* Invisible Injustices */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Scale className="w-5 h-5 text-[#5F7252]" />
-                Invisible Injustices
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                Stories that pull back the curtain on injustices hiding in plain sight. They're not always easy reads, but they're essential ones that change how you see the world.
-              </p>
-              <BookShelf books={booksByTheme.justice} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
-
-            {/* All-Time Favorites */}
-            <div>
-              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
-                <Star className="w-5 h-5 text-[#5F7252]" />
-                All-Time Favorites
-              </h3>
-              <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-                Top recommendations that have shaped how I see the world:
-              </p>
-              <BookShelf books={booksByTheme.favorites} onBookClick={setSelectedBook} userBookTitles={userBookTitles} />
-            </div>
+          {/* All-Time Favorites */}
+          <div>
+            <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
+              <Star className="w-5 h-5 text-[#5F7252]" />
+              All-Time Favorites
+            </h3>
+            <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
+              Top recommendations that have shaped how I see the world:
+            </p>
+            <BookShelf books={booksByTheme.favorites.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.favorites.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
         </div>
 
