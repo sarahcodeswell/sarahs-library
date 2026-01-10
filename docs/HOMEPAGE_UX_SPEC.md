@@ -161,14 +161,16 @@ The homepage is the primary discovery interface for Sarah's Books. It should fee
 
 ## Implementation Checklist
 
-- [ ] Sticky filter bar with highlighted current selection
-- [ ] Replace results instead of append
-- [ ] Scroll to top on new results
-- [ ] Full "Why Sarah Recommends" text (no truncation)
-- [ ] Remove chat bubble styling from results
-- [ ] Single "New Search" button in sticky bar
-- [ ] "Refine your search" placeholder after results
-- [ ] Clean initial state with prominent themes
+- [x] Replace results instead of append
+- [x] Scroll to top on new results
+- [x] Full "Why Sarah Recommends" text (no truncation)
+- [x] Remove chat bubble styling from results
+- [x] Sarah avatar + "Here are my top [Theme] picks for you:" header
+- [x] Single "New Search" button at bottom of results
+- [x] "Refine: something lighter? funnier?" placeholder after results
+- [x] Clean initial state with prominent themes
+- [x] Remove "Continuing conversation" UI
+- [ ] ~~Sticky filter bar~~ (decided against - too jarring from initial state)
 
 ---
 
