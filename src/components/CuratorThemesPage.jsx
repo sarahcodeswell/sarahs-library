@@ -45,7 +45,7 @@ export default function CuratorThemesPage({ onNavigate }) {
               Beach Reads
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              The books you devour in a weekend. The ones that make you laugh out loud on an airplane or stay up way too late because you have to know what happens next. Pure reading joy—no homework required.
+              The books you devour in a weekend—the ones that make you laugh out loud on an airplane or stay up way too late because you have to know what happens next. Think Emily Henry's witty banter, Abby Jimenez's warm humor, or a cozy mystery that pairs perfectly with a glass of wine. Pure reading joy, no homework required.
             </p>
           </div>
 
@@ -56,7 +56,7 @@ export default function CuratorThemesPage({ onNavigate }) {
               Emotional Truth
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              These are the books that explore the depths of the human experience. Grief, joy, heartbreak, missed chances. These are the books that stay with you long after you read them.
+              These are the books that explore the depths of the human experience—grief, joy, heartbreak, missed chances. The thrillers here are psychological rather than procedural (Gone Girl, Verity). The romances grapple with real loss (The Midnight Library, A Man Called Ove). These are the books that stay with you long after you've finished, the ones you find yourself recommending years later.
             </p>
           </div>
 
