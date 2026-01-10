@@ -4,23 +4,65 @@
  * Uses Serper (web search) + Google Books API for verified book data.
  * This is the "world" data source in V2 architecture.
  * 
+ * Enhanced with Sarah's taste context for better discovery.
+ * 
  * @see docs/RECOMMENDATION_ARCHITECTURE_V2.md
  */
+
+// Sarah's taste keywords for enriching world searches
+const SARAHS_TASTE_KEYWORDS = {
+  core: 'emotional depth literary fiction character-driven women resilience',
+  themes: {
+    women: 'women historical fiction female protagonists untold stories resilience survival',
+    beach: 'heartwarming uplifting second chances found family comfort read',
+    emotional: 'emotional depth psychological literary fiction grief loss transformation',
+    identity: 'identity belonging immigration cultural heritage family secrets coming-of-age',
+    spiritual: 'meaning purpose mindfulness wisdom transformation philosophical',
+    justice: 'social justice systemic oppression marginalized voices historical injustice'
+  }
+};
+
+/**
+ * Get taste-enriched search query
+ * Adds Sarah's taste context to improve world discovery results
+ */
+function enrichSearchQuery(baseQuery, options = {}) {
+  const { theme, addTasteContext = true } = options;
+  
+  let enrichedQuery = baseQuery;
+  
+  // Add theme-specific keywords if theme is specified
+  if (theme && SARAHS_TASTE_KEYWORDS.themes[theme]) {
+    enrichedQuery += ` ${SARAHS_TASTE_KEYWORDS.themes[theme]}`;
+  } else if (addTasteContext) {
+    // Add core taste keywords for general searches
+    enrichedQuery += ` ${SARAHS_TASTE_KEYWORDS.core}`;
+  }
+  
+  return enrichedQuery;
+}
 
 /**
  * Search for authors similar to a given author
  * Uses web search to find recommendations, then Google Books to verify
+ * Enhanced with Sarah's taste context for better matches
  * 
  * @param {string} authorName - The author to find similar authors for
  * @param {number} limit - Maximum number of books to return
+ * @param {Object} options - Search options
+ * @param {string} options.theme - Optional theme to filter by
+ * @param {boolean} options.addTasteContext - Whether to add Sarah's taste keywords (default: true)
  * @returns {Promise<Array>} Array of verified book objects
  */
-export async function findSimilarAuthors(authorName, limit = 10) {
-  console.log('[WorldSearch] Finding authors similar to:', authorName);
+export async function findSimilarAuthors(authorName, limit = 10, options = {}) {
+  const { theme, addTasteContext = true } = options;
+  console.log('[WorldSearch] Finding authors similar to:', authorName, theme ? `(theme: ${theme})` : '');
   
   try {
-    // Step 1: Web search for similar authors
-    const searchQuery = `authors similar to ${authorName} books recommendations`;
+    // Step 1: Web search for similar authors with taste context
+    const baseQuery = `authors similar to ${authorName} books recommendations`;
+    const searchQuery = enrichSearchQuery(baseQuery, { theme, addTasteContext });
+    console.log('[WorldSearch] Enriched query:', searchQuery);
     const webResults = await searchWeb(searchQuery);
     
     if (!webResults || webResults.length === 0) {
@@ -156,13 +198,23 @@ async function searchGoogleBooks(query, limit = 5) {
 
 /**
  * Search for books similar to a given book title
+ * Enhanced with Sarah's taste context
+ * 
+ * @param {string} bookTitle - Book title to find similar books for
+ * @param {string} authorName - Author name
+ * @param {number} limit - Maximum results
+ * @param {Object} options - Search options
+ * @param {string} options.theme - Optional theme to filter by
+ * @param {boolean} options.addTasteContext - Whether to add Sarah's taste keywords (default: true)
  */
-export async function findSimilarBooks(bookTitle, authorName, limit = 10) {
-  console.log('[WorldSearch] Finding books similar to:', bookTitle);
+export async function findSimilarBooks(bookTitle, authorName, limit = 10, options = {}) {
+  const { theme, addTasteContext = true } = options;
+  console.log('[WorldSearch] Finding books similar to:', bookTitle, theme ? `(theme: ${theme})` : '');
   
   try {
-    const searchQuery = `books similar to "${bookTitle}" by ${authorName}`;
-    const webResults = await searchWeb(searchQuery);
+    const baseQuery = `books similar to "${bookTitle}" by ${authorName}`;
+    const searchQuery = enrichSearchQuery(baseQuery, { theme, addTasteContext });
+    console.log('[WorldSearch] Enriched query:', searchQuery);
     
     // Extract book titles from results and verify with Google Books
     const books = await searchGoogleBooks(searchQuery, limit);
@@ -170,6 +222,44 @@ export async function findSimilarBooks(bookTitle, authorName, limit = 10) {
     return books;
   } catch (error) {
     console.error('[WorldSearch] Error:', error);
+    return [];
+  }
+}
+
+/**
+ * Search for books by theme using Sarah's taste context
+ * This is for discovering new books that match Sarah's curatorial themes
+ * 
+ * @param {string} theme - Theme key (women, beach, emotional, identity, spiritual, justice)
+ * @param {string} additionalContext - Optional additional search context
+ * @param {number} limit - Maximum results
+ */
+export async function findBooksByTheme(theme, additionalContext = '', limit = 10) {
+  console.log('[WorldSearch] Finding books by theme:', theme);
+  
+  const themeDescriptions = {
+    women: 'books about women\'s untold stories historical fiction female protagonists women erased from history survival resilience',
+    beach: 'heartwarming uplifting books second chances found family comfort reads feel-good fiction',
+    emotional: 'emotionally devastating books literary fiction grief loss psychological depth transformative',
+    identity: 'books about identity belonging immigration cultural heritage family secrets diaspora coming-of-age',
+    spiritual: 'books about meaning purpose mindfulness wisdom spiritual journey transformation philosophical fiction',
+    justice: 'books about social justice systemic oppression marginalized voices historical injustice criminal justice reform'
+  };
+  
+  const themeQuery = themeDescriptions[theme] || theme;
+  const searchQuery = `${themeQuery} ${additionalContext} book recommendations`.trim();
+  
+  console.log('[WorldSearch] Theme search query:', searchQuery);
+  
+  try {
+    const books = await searchGoogleBooks(searchQuery, limit);
+    return books.map(b => ({
+      ...b,
+      matchedTheme: theme,
+      source: 'world'
+    }));
+  } catch (error) {
+    console.error('[WorldSearch] Theme search error:', error);
     return [];
   }
 }
