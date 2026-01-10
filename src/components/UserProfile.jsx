@@ -49,6 +49,7 @@ export default function UserProfile({ tasteProfile }) {
     recsMade: 0,
     recsAccepted: 0
   });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -448,21 +449,30 @@ export default function UserProfile({ tasteProfile }) {
   const loadStats = async () => {
     if (!user) return;
     
+    setIsLoadingStats(true);
     try {
       devLog('[Profile] Loading stats for user:', user.id);
       
-      // Parallel fetch all data for better performance
-      const [userBooksResult, queueResult, recommendationsResult, profileResult] = await Promise.all([
+      // Get profile first for userName (needed for shares query)
+      const profileResult = await db.getTasteProfile(user.id);
+      const profile = profileResult.data;
+      const userName = profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
+      
+      // Parallel fetch ALL data including shares
+      const [userBooksResult, queueResult, recommendationsResult, sharesResult] = await Promise.all([
         db.getUserBooks(user.id),
         db.getReadingQueue(user.id),
         db.getUserRecommendations(user.id),
-        db.getTasteProfile(user.id),
+        supabase ? supabase
+          .from('shared_recommendations')
+          .select('id, accepted_at')
+          .ilike('recommender_name', `%${userName}%`) : Promise.resolve({ data: null }),
       ]);
       
       const userBooks = userBooksResult.data;
       const queue = queueResult.data;
       const recommendations = recommendationsResult.data;
-      const profile = profileResult.data;
+      const shares = sharesResult?.data;
       
       devLog('[Profile] Data loaded in parallel');
       
@@ -475,22 +485,9 @@ export default function UserProfile({ tasteProfile }) {
         item.status === 'want_to_read' || item.status === 'reading'
       ) || [];
       
-      // Get sharing stats - recs made by this user (only if supabase available)
-      let recsMade = 0;
-      let recsAccepted = 0;
-      if (supabase) {
-        const userName = profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
-        
-        const { data: shares } = await supabase
-          .from('shared_recommendations')
-          .select('id, accepted_at')
-          .ilike('recommender_name', `%${userName}%`);
-        
-        if (shares) {
-          recsMade = shares.length;
-          recsAccepted = shares.filter(s => s.accepted_at).length;
-        }
-      }
+      // Calculate sharing stats
+      const recsMade = shares?.length || 0;
+      const recsAccepted = shares?.filter(s => s.accepted_at).length || 0;
       
       const stats = {
         collectionCount: collectionCount,
@@ -503,6 +500,8 @@ export default function UserProfile({ tasteProfile }) {
       setStats(stats);
     } catch (error) {
       console.error('[Profile] Error loading stats:', error);
+    } finally {
+      setIsLoadingStats(false);
     }
   };
 
@@ -1020,20 +1019,28 @@ export default function UserProfile({ tasteProfile }) {
             <div className="flex items-center justify-center mb-1">
               <BookOpen className="w-4 h-4 text-[#5F7252]" />
             </div>
-            <div className="text-lg font-semibold text-[#4A5940]">{stats.collectionCount}</div>
+            {isLoadingStats ? (
+              <div className="h-7 w-8 mx-auto bg-[#E8EBE4] rounded animate-pulse" />
+            ) : (
+              <div className="text-lg font-semibold text-[#4A5940]">{stats.collectionCount}</div>
+            )}
             <div className="text-xs text-[#7A8F6C]">Collection</div>
           </div>
           <div className="bg-[#F8F6EE] rounded-lg p-3 text-center">
             <div className="flex items-center justify-center mb-1">
               <BookMarked className="w-4 h-4 text-[#5F7252]" />
             </div>
-            <div className="text-lg font-semibold text-[#4A5940]">{stats.queueCount}</div>
+            {isLoadingStats ? (
+              <div className="h-7 w-8 mx-auto bg-[#E8EBE4] rounded animate-pulse" />
+            ) : (
+              <div className="text-lg font-semibold text-[#4A5940]">{stats.queueCount}</div>
+            )}
             <div className="text-xs text-[#7A8F6C]">Reading Queue</div>
           </div>
         </div>
         
         {/* Recs Made Stats - Collapsible */}
-        {stats.recsMade > 0 && (
+        {!isLoadingStats && stats.recsMade > 0 && (
           <div className="bg-gradient-to-r from-[#F0F4ED] to-[#F8F6EE] rounded-lg p-3 mb-4 border border-[#D4DAD0]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
