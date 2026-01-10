@@ -15,7 +15,7 @@ function RecommendationActionPanel({ onShowMore, onNewSearch }) {
         className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
       >
         <Sparkles className="w-4 h-4" />
-        Show Me More Like These
+        Find Me More Like These
       </button>
       <button
         onClick={() => onNewSearch && onNewSearch()}
@@ -81,9 +81,7 @@ export default function FormattedRecommendations({
   
   return (
     <div className="space-y-3">
-      {header && (
-        <p className="text-sm font-medium text-[#4A5940]">{header}</p>
-      )}
+      {/* Removed header/intro paragraph - "Here are my top picks" is shown above */}
       {recommendations.map((rec, idx) => (
         <RecommendationCard 
           key={idx} 

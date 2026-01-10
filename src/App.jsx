@@ -1371,18 +1371,16 @@ Find similar books from beyond my library that match this taste profile.
                 alt="Sarah"
                 className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
               />
-              <p className="text-[#4A5940] text-sm">
+              <p className="text-[#4A5940] text-sm flex items-center gap-1.5">
+                Here are my top picks for you:
                 {(() => {
                   const selectedTheme = selectedThemes[0];
                   const theme = selectedTheme ? themeInfo[selectedTheme] : null;
                   if (theme) {
-                    return (
-                      <>
-                        Here are my top <span className="font-semibold">{theme.label}</span> picks for you:
-                      </>
-                    );
+                    const IconComponent = theme.icon;
+                    return IconComponent ? <IconComponent className="w-4 h-4 text-[#5F7252]" /> : null;
                   }
-                  return "Here are my top picks for you:";
+                  return null;
                 })()}
               </p>
             </div>
@@ -1453,26 +1451,44 @@ Find similar books from beyond my library that match this taste profile.
           </div>
           )}
 
-          {/* Skeleton loading cards - shows while searching */}
+          {/* Loading: Checklist + skeleton cards */}
           {isLoading && (
             <div className="space-y-4 mb-4">
-              {/* Sarah avatar + theme description or loading text */}
-              <div className="flex items-center gap-3">
+              {/* Sarah avatar + checklist */}
+              <div className="flex items-start gap-3">
                 <img 
                   src="/sarah.png" 
                   alt="Sarah"
                   className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
                 />
-                <p className="text-sm text-[#4A5940]">
-                  {(() => {
-                    const selectedTheme = selectedThemes[0];
-                    if (selectedTheme && themeDescriptions[selectedTheme]) {
-                      return themeDescriptions[selectedTheme];
-                    }
-                    // Fallback to loading text for free-text searches
-                    return "Searching my collection... finding your best matches...";
-                  })()}
-                </p>
+                <div className="bg-[#F8F6EE] rounded-xl px-4 py-3 border border-[#E8EBE4]">
+                  <div className="space-y-2">
+                    {/* Step 1: Searching my collection */}
+                    <div className="flex items-center gap-2">
+                      {loadingProgress.step === 'library' ? (
+                        <div className="w-4 h-4 border-2 border-[#5F7252] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className={`text-sm ${loadingProgress.step === 'library' ? 'text-[#4A5940] font-medium' : 'text-[#96A888]'}`}>
+                        Searching my collection
+                      </span>
+                    </div>
+                    {/* Step 2: Finding the best matches */}
+                    {(loadingProgress.step !== 'library') && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-[#5F7252] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm text-[#4A5940] font-medium">
+                          Finding the best matches
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {/* Skeleton book cards */}
