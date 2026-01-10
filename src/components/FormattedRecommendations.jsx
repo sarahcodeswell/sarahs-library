@@ -8,19 +8,19 @@ import RecommendationCard from './RecommendationCard';
  */
 function RecommendationActionPanel({ onShowMore, onNewSearch }) {
   return (
-    <div className="mt-4 flex gap-2">
+    <div className="mt-4 flex gap-2 justify-center sm:justify-start">
       <button
         onClick={() => onShowMore && onShowMore()}
-        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#5F7252] text-white rounded-lg text-xs font-medium hover:bg-[#4A5940] transition-colors"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#5F7252] text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-[#4A5940] transition-colors"
       >
-        <Sparkles className="w-3.5 h-3.5" />
+        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         Find Me More Like These
       </button>
       <button
         onClick={() => onNewSearch && onNewSearch()}
-        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-xs font-medium hover:bg-[#F8F6EE] transition-colors"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-xs sm:text-sm font-medium hover:bg-[#F8F6EE] transition-colors"
       >
-        <RotateCcw className="w-3.5 h-3.5" />
+        <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         New Search
       </button>
     </div>
