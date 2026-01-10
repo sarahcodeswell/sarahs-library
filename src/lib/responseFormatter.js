@@ -32,6 +32,10 @@ const FORMAT_RECOMMENDATIONS_TOOL = {
               type: "string",
               enum: ["catalog", "web_search"],
               description: "Where this book came from - catalog for Sarah's collection, web_search for external"
+            },
+            reputation: {
+              type: "string",
+              description: "Notable accolades, awards, or recognition (e.g., 'NYT Bestseller', 'Pulitzer Prize', 'Goodreads Choice Award', 'Indie Next List'). Leave empty if none known."
             }
           },
           required: ["title", "author", "why_fits", "source"]
@@ -91,9 +95,13 @@ export async function formatRecommendations(userQuery, verifiedBooks, context = 
 
   // Build the available books context
   const booksContext = verifiedBooks.slice(0, 5).map((book, i) => {
-    return `${i + 1}. "${book.title}" by ${book.author}
+    let context = `${i + 1}. "${book.title}" by ${book.author}
    Description: ${book.description || book.sarah_assessment || 'A quality read.'}
    Source: ${book.source || 'catalog'}`;
+    if (book.reputation) {
+      context += `\n   Reputation: ${book.reputation}`;
+    }
+    return context;
   }).join('\n\n');
 
   const userMessage = `USER REQUEST: "${userQuery}"
@@ -221,7 +229,11 @@ export function formatToText(formattedResponse) {
   for (const rec of formattedResponse.recommendations) {
     text += `Title: ${rec.title}\n`;
     text += `Author: ${rec.author}\n`;
-    text += `Why This Fits: ${rec.why_fits}\n\n`;
+    text += `Why This Fits: ${rec.why_fits}\n`;
+    if (rec.reputation) {
+      text += `Reputation: ${rec.reputation}\n`;
+    }
+    text += '\n';
   }
 
   return text.trim();
