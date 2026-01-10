@@ -1454,15 +1454,15 @@ Find similar books from beyond my library that match this taste profile.
           {/* Loading: Checklist + skeleton cards */}
           {isLoading && (
             <div className="space-y-4 mb-4">
-              {/* Sarah avatar + checklist */}
-              <div className="flex items-start gap-3">
-                <img 
-                  src="/sarah.png" 
-                  alt="Sarah"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
-                />
-                <div className="bg-[#F8F6EE] rounded-xl px-4 py-3 border border-[#E8EBE4]">
-                  <div className="space-y-2">
+              {/* Sarah avatar + checklist - full width card like results */}
+              <div className="bg-white rounded-xl border border-[#E8EBE4] p-4">
+                <div className="flex items-start gap-3">
+                  <img 
+                    src="/sarah.png" 
+                    alt="Sarah"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
+                  />
+                  <div className="space-y-2 pt-1">
                     {/* Step 1: Searching my collection */}
                     <div className="flex items-center gap-2">
                       {loadingProgress.step === 'library' ? (
@@ -1519,39 +1519,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Sign-In Nudge Banner - Shows after recommendations for non-signed-in users */}
-          {showSignInNudge && !user && (
-            <div className="mb-3 p-3 bg-[#5F7252]/10 rounded-xl border border-[#5F7252]/20 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm text-[#4A5940]">
-                <Library className="w-4 h-4 text-[#5F7252] flex-shrink-0" />
-                <span>
-                  <strong>Already own some of these?</strong> Sign in to add your collection—I'll personalize future recommendations.
-                </span>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() => {
-                    setShowAuthModal(true);
-                    track('sign_in_nudge_clicked');
-                  }}
-                  className="px-3 py-1.5 bg-[#5F7252] text-white text-xs font-medium rounded-lg hover:bg-[#4A5940] transition-colors"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    setShowSignInNudge(false);
-                    setSignInNudgeDismissed(true);
-                    track('sign_in_nudge_dismissed');
-                  }}
-                  className="p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
-                  title="Dismiss"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Text input - only show on initial state (before results) */}
           {messages.length <= 2 && (
