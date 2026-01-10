@@ -436,6 +436,7 @@ export const db = {
       if (updates.coverImageUrl !== undefined) updateData.cover_image_url = updates.coverImageUrl;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
       if (updates.rating !== undefined) updateData.rating = updates.rating;
+      if (updates.review !== undefined) updateData.review = updates.review;
       
       const { data, error } = await supabase
         .from('user_books')
