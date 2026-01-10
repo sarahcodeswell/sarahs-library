@@ -38,14 +38,14 @@ export default function CuratorThemesPage({ onNavigate }) {
             </p>
           </div>
 
-          {/* Beach Read */}
+          {/* Beach Reads */}
           <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
             <h3 className="font-serif text-lg text-[#4A5940] mb-3 flex items-center gap-2">
               <Sun className="w-5 h-5 text-[#5F7252]" />
-              Beach Read: Lighthearted Escapes
+              Beach Reads
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              Not everything has to be heavy. This collection includes lighthearted, entertaining reads that are pure enjoyment—books that make you smile, laugh, and feel good without demanding intellectual heavy lifting. Perfect for when you need a break from the weightier themes.
+              Sometimes you just need a book that makes you smile. These are the lighthearted, entertaining reads—pure enjoyment without demanding too much. We all need a bit of escapism from time to time, and there's nothing wrong with that.
             </p>
           </div>
 
@@ -53,10 +53,10 @@ export default function CuratorThemesPage({ onNavigate }) {
           <div className="bg-[#F8F6EE] rounded-xl p-6 border border-[#D4DAD0]">
             <h3 className="font-serif text-lg text-[#4A5940] mb-3 flex items-center gap-2">
               <Heart className="w-5 h-5 text-[#5F7252]" />
-              Reading for Emotional Truth, Not Escapism
+              Emotional Truth
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed">
-              Even the "lighter" genres here aren't light. The thrillers are psychological rather than procedural. The romances are laced with grief, loss, and identity crisis. These are books that cost something to read—that leave the reader changed rather than simply entertained.
+              These are books that explore the human experience at its deepest. The thrillers are psychological rather than procedural. The romances grapple with grief, loss, and identity. Books that leave you thinking long after you've finished—the ones that change how you see the world.
             </p>
           </div>
 

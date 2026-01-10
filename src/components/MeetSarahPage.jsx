@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Mail, Search, Library, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star } from 'lucide-react';
+import { ArrowLeft, Mail, Search, Library, BookText, BookHeart, Heart, Users, Sparkles, Scale, Star, Sun } from 'lucide-react';
 import bookCatalog from '../books.json';
 
 export default function MeetSarahPage({ onNavigate }) {
@@ -99,14 +99,25 @@ export default function MeetSarahPage({ onNavigate }) {
               </p>
             </div>
 
+            {/* Beach Reads */}
+            <div>
+              <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
+                <Sun className="w-5 h-5 text-[#5F7252]" />
+                Beach Reads
+              </h3>
+              <p className="text-sm text-[#5F7252] leading-relaxed">
+                Sometimes you just need a book that makes you smile. These are the lighthearted, entertaining reads—pure enjoyment without demanding too much. We all need a bit of escapism from time to time, and there's nothing wrong with that.
+              </p>
+            </div>
+
             {/* Emotional Truth */}
             <div>
               <h3 className="font-serif text-lg text-[#4A5940] mb-2 flex items-center gap-2">
                 <Heart className="w-5 h-5 text-[#5F7252]" />
-                Reading for Emotional Truth, Not Escapism
+                Emotional Truth
               </h3>
               <p className="text-sm text-[#5F7252] leading-relaxed">
-                Even the "lighter" genres here aren't light. The thrillers are psychological (Gone Girl, Verity) rather than procedural. The romances are laced with grief, suicide, and identity crisis (The Midnight Library, A Man Called Ove). These are books that cost something to read—that leave the reader changed rather than simply entertained.
+                These are books that explore the human experience at its deepest. The thrillers are psychological (Gone Girl, Verity) rather than procedural. The romances grapple with grief, loss, and identity (The Midnight Library, A Man Called Ove). Books that leave you thinking long after you've finished—the ones that change how you see the world.
               </p>
             </div>
 
