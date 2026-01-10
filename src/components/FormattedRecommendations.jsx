@@ -11,16 +11,16 @@ function RecommendationActionPanel({ onShowMore, onNewSearch }) {
     <div className="mt-4 flex gap-2">
       <button
         onClick={() => onShowMore && onShowMore()}
-        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#5F7252] text-white rounded-lg text-xs font-medium hover:bg-[#4A5940] transition-colors"
       >
-        <Sparkles className="w-4 h-4" />
+        <Sparkles className="w-3.5 h-3.5" />
         Find Me More Like These
       </button>
       <button
         onClick={() => onNewSearch && onNewSearch()}
-        className="px-4 py-2.5 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-sm font-medium hover:bg-[#F8F6EE] transition-colors inline-flex items-center justify-center gap-2"
+        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-lg text-xs font-medium hover:bg-[#F8F6EE] transition-colors"
       >
-        <RotateCcw className="w-4 h-4" />
+        <RotateCcw className="w-3.5 h-3.5" />
         New Search
       </button>
     </div>
