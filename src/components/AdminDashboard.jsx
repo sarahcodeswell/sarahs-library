@@ -333,6 +333,7 @@ function FeedbackManagement() {
   const [updating, setUpdating] = useState(null);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [deleting, setDeleting] = useState(null);
 
   const fetchFeedback = async () => {
     try {
@@ -390,6 +391,28 @@ function FeedbackManagement() {
   const saveNotes = async () => {
     if (!selectedFeedback) return;
     await updateStatus(selectedFeedback.id, selectedFeedback.status, adminNotes);
+  };
+
+  const deleteFeedback = async (id) => {
+    if (!confirm('Are you sure you want to delete this feedback?')) return;
+    
+    setDeleting(id);
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setFeedback(prev => prev.filter(f => f.id !== id));
+      if (selectedFeedback?.id === id) {
+        closeFeedbackDetail();
+      }
+    } catch (err) {
+      console.error('Error deleting feedback:', err);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const filteredFeedback = filter === 'all' 
@@ -582,13 +605,23 @@ function FeedbackManagement() {
                   className="w-full px-3 py-2 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
                   rows={3}
                 />
-                <button
-                  onClick={saveNotes}
-                  disabled={updating === selectedFeedback.id || adminNotes === (selectedFeedback.admin_notes || '')}
-                  className="mt-2 px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {updating === selectedFeedback.id ? 'Saving...' : 'Save Notes'}
-                </button>
+                <div className="flex items-center justify-between mt-2">
+                  <button
+                    onClick={saveNotes}
+                    disabled={updating === selectedFeedback.id || adminNotes === (selectedFeedback.admin_notes || '')}
+                    className="px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {updating === selectedFeedback.id ? 'Saving...' : 'Save Notes'}
+                  </button>
+                  <button
+                    onClick={() => deleteFeedback(selectedFeedback.id)}
+                    disabled={deleting === selectedFeedback.id}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    {deleting === selectedFeedback.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
