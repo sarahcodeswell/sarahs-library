@@ -12,7 +12,8 @@
     "test:verbose": "VERBOSE=true node tests/routing.test.js",
     "test:shared": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.integration.test.js",
     "test:shared:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.integration.test.js --coverage",
-    "test:shared:full": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.test.js"
+    "test:shared:full": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/booksSharedWithMe.test.js",
+    "sync-ratings": "node scripts/sync-sarah-ratings.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
