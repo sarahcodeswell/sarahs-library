@@ -514,6 +514,16 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
           </div>
         )}
 
+        {/* Note about data portability */}
+        <div className="mt-4 mb-6 p-4 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4]">
+          <p className="text-sm text-[#5F7252] leading-relaxed">
+            <span className="font-medium">We wish this were easier too.</span> The big platforms keep your reading life under lock and key—not because they can't build an export button, but because they won't. Until that changes, we'll meet you where you are: photos, CSVs, or one book at a time.
+          </p>
+          <p className="text-xs text-[#7A8F6C] mt-2 italic">
+            p.s. Building an export button isn't hard. Your local librarian could do it between shelving returns.
+          </p>
+        </div>
+
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#96A888]" />
           <input
