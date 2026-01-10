@@ -527,13 +527,13 @@ export default function MyBooksPage({ onNavigate, user, onShowAuthModal }) {
             </p>
             <p className="font-medium text-[#4A5940]">Big tech knows this.</p>
             <p>
-              That's why they don't make it easy to take your books with you.
+              That's why there's no iBooks connector, no Kindle import, no Audible export.
             </p>
             <p>
               We think that's absurd. Your reading life should belong to you—not as a marketing input, but as a personal record. A history you can revisit, export, share, and own.
             </p>
             <p>
-              That's why there's no iBooks connector, no Kindle import, no Audible export. Not to worry—we've built easy-to-use workarounds that make importing your books simple.
+              Not to worry—we've built easy-to-use workarounds to make importing your books simple.
             </p>
             <p className="italic">
               Full disclosure: I've been vibe coding this thing for a few weeks. It's not perfect, but as Margaret Mead said, "Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has."
