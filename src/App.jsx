@@ -1257,7 +1257,7 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Curator Theme Cards - Grid Layout */}
+          {/* Curator Theme Cards - Full Grid (before search) */}
           {messages.length <= 1 && (
             <>
               <div className="mb-6">
@@ -1327,6 +1327,55 @@ Find similar books from beyond my library that match this taste profile.
                 <div className="flex-1 h-px bg-[#E8EBE4]"></div>
               </div>
             </>
+          )}
+
+          {/* Collapsed Themes & Genres (after search) */}
+          {messages.length > 1 && (
+            <div className="mb-4 p-3 bg-[#F8F6EE]/50 rounded-xl border border-[#E8EBE4]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-[#4A5940]">Browse by Theme or Genre</span>
+                <button
+                  onClick={handleNewSearch}
+                  className="text-xs text-[#7A8F6C] hover:text-[#5F7252] flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  New Search
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(themeInfo).map(([key, info]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setSelectedThemes([key]);
+                      const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                      setInputValue(themeText);
+                      handleSendMessage();
+                      track('theme_filter_selected_collapsed', { theme: key, theme_label: info.label });
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-white text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
+                  >
+                    {info.icon && <info.icon className="w-3 h-3" />}
+                    {info.label}
+                  </button>
+                ))}
+                <span className="text-[#D4DAD0] mx-1">|</span>
+                {['Literary', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => {
+                      const genreText = `Show me ${genre.toLowerCase()} books.`;
+                      setInputValue(genreText);
+                      handleSendMessage();
+                      track('genre_search_collapsed', { genre });
+                    }}
+                    className="px-2 py-1 text-[10px] font-medium bg-white text-[#7A8F6C] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Chat messages - only show after user engages */}
