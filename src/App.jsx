@@ -27,6 +27,7 @@ import AuthModal from './components/AuthModal';
 import LoadingFallback from './components/LoadingFallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import Footer from './components/Footer';
+import FeedbackModal from './components/FeedbackModal';
 import { useUser, useReadingQueue, useRecommendations } from './contexts';
 
 // Lazy load heavy components
@@ -192,6 +193,7 @@ export default function App() {
   // Navigation state
   const [currentPage, setCurrentPage] = useState('home');
   const [showNavMenu, setShowNavMenu] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const navMenuRef = useRef(null);
   const [shareToken, setShareToken] = useState(null);
 
@@ -1007,6 +1009,18 @@ Find similar books from beyond my library that match this taste profile.
                         Upload Books
                       </button>
                       
+                      {/* Send Feedback - available to all */}
+                      <button 
+                        onClick={() => {
+                          setShowFeedbackModal(true);
+                          setShowNavMenu(false);
+                        }} 
+                        className={MENU_BUTTON_CLASS}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Send Feedback
+                      </button>
+                      
                       {user && (
                         <>
                           {/* COMING SOON Section */}
@@ -1738,6 +1752,13 @@ Find similar books from beyond my library that match this taste profile.
           </div>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        user={user}
+      />
 
       {/* Auth Modal */}
       {showAuthModal && !user && (

@@ -325,6 +325,154 @@ function UserManagement() {
   );
 }
 
+// Feedback Management Component
+function FeedbackManagement() {
+  const [feedback, setFeedback] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [updating, setUpdating] = useState(null);
+
+  const fetchFeedback = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setFeedback(data || []);
+    } catch (err) {
+      console.error('Error fetching feedback:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedback();
+  }, []);
+
+  const updateStatus = async (id, newStatus) => {
+    setUpdating(id);
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      setFeedback(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    } catch (err) {
+      console.error('Error updating feedback:', err);
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const filteredFeedback = filter === 'all' 
+    ? feedback 
+    : feedback.filter(f => f.category === filter || f.status === filter);
+
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'quote': return '💬';
+      case 'feature_request': return '💡';
+      case 'bug': return '🐛';
+      default: return '📝';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'new': return 'bg-blue-100 text-blue-700';
+      case 'reviewed': return 'bg-yellow-100 text-yellow-700';
+      case 'in_progress': return 'bg-purple-100 text-purple-700';
+      case 'resolved': return 'bg-green-100 text-green-700';
+      case 'wont_fix': return 'bg-gray-100 text-gray-500';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E8EBE4] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-[#4A5940] flex items-center gap-2">
+          <MessageSquare className="w-4 h-4" />
+          User Feedback ({feedback.length})
+        </h3>
+        <div className="flex items-center gap-2">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="text-xs border border-[#E8EBE4] rounded-lg px-2 py-1 text-[#4A5940]"
+          >
+            <option value="all">All</option>
+            <option value="new">New</option>
+            <option value="quote">Quotes</option>
+            <option value="feature_request">Features</option>
+            <option value="bug">Bugs</option>
+          </select>
+          <button
+            onClick={fetchFeedback}
+            className="p-1.5 hover:bg-[#F8F6EE] rounded-lg transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="w-4 h-4 text-[#96A888]" />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-8 text-[#96A888]">Loading feedback...</div>
+      ) : filteredFeedback.length === 0 ? (
+        <div className="text-center py-8 text-[#96A888] text-sm">No feedback yet</div>
+      ) : (
+        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+          {filteredFeedback.map((item) => (
+            <div key={item.id} className="border border-[#E8EBE4] rounded-lg p-3">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{getCategoryIcon(item.category)}</span>
+                  <span className="text-xs font-medium text-[#4A5940] capitalize">
+                    {item.category.replace('_', ' ')}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusColor(item.status)}`}>
+                    {item.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#96A888]">{formatDate(item.created_at)}</span>
+              </div>
+              
+              <p className="text-sm text-[#4A5940] mb-2 whitespace-pre-wrap">{item.message}</p>
+              
+              <div className="flex items-center justify-between text-[10px] text-[#96A888]">
+                <span>{item.email || 'Anonymous'}</span>
+                <select
+                  value={item.status}
+                  onChange={(e) => updateStatus(item.id, e.target.value)}
+                  disabled={updating === item.id}
+                  className="text-[10px] border border-[#E8EBE4] rounded px-1.5 py-0.5 text-[#4A5940]"
+                >
+                  <option value="new">New</option>
+                  <option value="reviewed">Reviewed</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="wont_fix">Won't Fix</option>
+                </select>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Admin Management Component - Separate section for managing admin access
 function AdminManagement() {
   const [admins, setAdmins] = useState([]);
@@ -1839,6 +1987,11 @@ export default function AdminDashboard({ onNavigate }) {
               <p className="text-sm text-[#96A888] italic">No age data yet</p>
             )}
           </div>
+        </div>
+
+        {/* User Feedback */}
+        <div className="mb-6">
+          <FeedbackManagement />
         </div>
 
         {/* User Management */}
