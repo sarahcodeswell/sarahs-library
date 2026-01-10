@@ -1,20 +1,27 @@
 import React, { useMemo } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, RotateCcw } from 'lucide-react';
 import { parseRecommendations } from '../lib/recommendationService';
 import RecommendationCard from './RecommendationCard';
 
 /**
- * RecommendationActionPanel - Shows "Show Me More" button after recommendations
+ * RecommendationActionPanel - Shows "Find Me More" + "New Search" buttons after recommendations
  */
-function RecommendationActionPanel({ onShowMore }) {
+function RecommendationActionPanel({ onShowMore, onNewSearch }) {
   return (
-    <div className="mt-4">
+    <div className="mt-6 flex flex-col sm:flex-row gap-3">
       <button
         onClick={() => onShowMore && onShowMore()}
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#5F7252] text-white rounded-lg text-sm font-medium hover:bg-[#4A5940] transition-colors"
+        className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#5F7252] text-white rounded-xl text-base font-medium hover:bg-[#4A5940] transition-colors"
       >
-        <Sparkles className="w-4 h-4" />
-        Show Me More Like These
+        <Sparkles className="w-5 h-5" />
+        Find Me More Like These
+      </button>
+      <button
+        onClick={() => onNewSearch && onNewSearch()}
+        className="flex-1 sm:flex-none px-5 py-3 bg-white text-[#5F7252] border border-[#D4DAD0] rounded-xl text-base font-medium hover:bg-[#F8F6EE] transition-colors inline-flex items-center justify-center gap-2"
+      >
+        <RotateCcw className="w-5 h-5" />
+        New Search
       </button>
     </div>
   );
@@ -37,7 +44,8 @@ function RecommendationActionPanel({ onShowMore }) {
 export default function FormattedRecommendations({ 
   text, 
   chatMode, 
-  onActionPanelInteraction, 
+  onActionPanelInteraction,
+  onNewSearch,
   user, 
   readingQueue, 
   userRecommendations, 
@@ -90,9 +98,10 @@ export default function FormattedRecommendations({
       ))}
       
       {/* Action panel appears after recommendations */}
-      {recommendations.length > 0 && onActionPanelInteraction && (
+      {recommendations.length > 0 && (
         <RecommendationActionPanel 
-          onShowMore={() => onActionPanelInteraction('show_more', null, recommendations)}
+          onShowMore={() => onActionPanelInteraction && onActionPanelInteraction('show_more', null, recommendations)}
+          onNewSearch={onNewSearch}
         />
       )}
     </div>

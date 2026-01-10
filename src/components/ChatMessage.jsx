@@ -28,7 +28,8 @@ export default function ChatMessage({
   message, 
   isUser, 
   chatMode, 
-  onActionPanelInteraction, 
+  onActionPanelInteraction,
+  onNewSearch,
   user, 
   readingQueue, 
   userRecommendations, 
@@ -58,6 +59,7 @@ export default function ChatMessage({
             text={message} 
             chatMode={chatMode} 
             onActionPanelInteraction={onActionPanelInteraction}
+            onNewSearch={onNewSearch}
             user={user}
             readingQueue={readingQueue}
             userRecommendations={userRecommendations}
