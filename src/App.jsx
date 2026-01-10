@@ -1342,27 +1342,35 @@ Find similar books from beyond my library that match this taste profile.
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {Object.entries(themeInfo).map(([key, info]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setSelectedThemes([key]);
-                      const themeText = `Show me options in ${info.label.toLowerCase()}.`;
-                      setInputValue(themeText);
-                      handleSendMessage();
-                      track('theme_filter_selected_collapsed', { theme: key, theme_label: info.label });
-                    }}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-white text-[#5F7252] border border-[#E8EBE4] rounded-full hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252] transition-all"
-                  >
-                    {info.icon && <info.icon className="w-3 h-3" />}
-                    {info.label}
-                  </button>
-                ))}
+                {Object.entries(themeInfo).map(([key, info]) => {
+                  const isSelected = selectedThemes.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setSelectedThemes([key]);
+                        const themeText = `Show me options in ${info.label.toLowerCase()}.`;
+                        setInputValue(themeText);
+                        handleSendMessage();
+                        track('theme_filter_selected_collapsed', { theme: key, theme_label: info.label });
+                      }}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full transition-all ${
+                        isSelected
+                          ? 'bg-[#5F7252] text-white border border-[#5F7252]'
+                          : 'bg-white text-[#5F7252] border border-[#E8EBE4] hover:bg-[#5F7252] hover:text-white hover:border-[#5F7252]'
+                      }`}
+                    >
+                      {info.icon && <info.icon className="w-3 h-3" />}
+                      {info.label}
+                    </button>
+                  );
+                })}
                 <span className="text-[#D4DAD0] mx-1">|</span>
                 {['Literary', 'Memoir', 'Mystery', 'Thriller', 'Romance'].map((genre) => (
                   <button
                     key={genre}
                     onClick={() => {
+                      setSelectedThemes([]); // Clear theme selection for genre search
                       const genreText = `Show me ${genre.toLowerCase()} books.`;
                       setInputValue(genreText);
                       handleSendMessage();
