@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Library, Sparkles, Heart, Share2, Star, BookCheck, BookMarked, X } from 'lucide-react';
 import { BookCover, GenreBadges, ReputationBox, ExpandToggle, Badge } from './ui';
 import { track } from '@vercel/analytics';
@@ -10,6 +10,7 @@ import { useBookEnrichment } from './BookCard';
 import { themeInfo } from '../lib/constants';
 import { findCatalogBook } from '../lib/catalogIndex';
 import { getGoodreadsSearchUrl } from '../lib/affiliateLinks';
+import { fetchBookReputation } from '../lib/reputationEnrichment';
 
 /**
  * RecommendationCard - Displays a single book recommendation with actions
@@ -42,6 +43,8 @@ export default function RecommendationCard({
   const [userRating, setUserRating] = useState(null);
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   const [markedAsRead, setMarkedAsRead] = useState(false);
+  const [reputation, setReputation] = useState(null);
+  const [isEnrichingReputation, setIsEnrichingReputation] = useState(false);
   
   // Look up full book details from local catalog using shared function
   const catalogBook = useMemo(() => findCatalogBook(rec?.title), [rec.title]);
@@ -58,6 +61,26 @@ export default function RecommendationCard({
   const displayAuthor = String(rec?.author || catalogBook?.author || '').trim();
   const displayWhy = String(rec?.why || '').trim();
   const fullDescription = catalogBook?.description || enrichedDescription || rec.description;
+
+  // Auto-enrich reputation when expanded (for world discovery books without catalog reputation)
+  useEffect(() => {
+    const catalogReputation = catalogBook?.reputation;
+    const recReputation = rec?.reputation;
+    
+    // Skip if we already have reputation from catalog or rec
+    if (catalogReputation || recReputation || reputation) return;
+    
+    // Only fetch when expanded and not already fetching
+    if (expanded && !isEnrichingReputation) {
+      setIsEnrichingReputation(true);
+      fetchBookReputation(rec.title, displayAuthor)
+        .then((rep) => {
+          if (rep) setReputation(rep);
+        })
+        .catch(console.error)
+        .finally(() => setIsEnrichingReputation(false));
+    }
+  }, [expanded, reputation, isEnrichingReputation, rec.title, displayAuthor, catalogBook?.reputation, rec?.reputation]);
 
   // Check if book is in queue with "want_to_read" or "reading" status
   const isInQueue = readingQueue?.some(
@@ -332,11 +355,19 @@ export default function RecommendationCard({
           )}
           
           {/* Reputation/Accolades */}
-          {(rec.reputation || catalogBook?.reputation) && (
+          {(rec.reputation || catalogBook?.reputation || reputation) ? (
             <div className="mb-3">
-              <ReputationBox reputation={rec.reputation || catalogBook?.reputation} />
+              <ReputationBox reputation={rec.reputation || catalogBook?.reputation || reputation} />
             </div>
-          )}
+          ) : isEnrichingReputation ? (
+            <div className="mb-3 p-2 bg-amber-50/50 rounded-lg border border-amber-200/50 animate-pulse">
+              <p className="text-xs font-medium text-[#4A5940] mb-1 flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-500" />
+                Loading reputation...
+              </p>
+              <div className="h-3 w-32 bg-amber-100 rounded"></div>
+            </div>
+          ) : null}
           
           {catalogBook?.themes && (
             <div>
