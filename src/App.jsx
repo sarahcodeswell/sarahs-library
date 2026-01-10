@@ -1326,16 +1326,38 @@ Find similar books from beyond my library that match this taste profile.
             </>
           )}
 
-          {/* Chat messages - only show after user engages */}
-          {messages.length > 1 && (
-          <div className="mb-3 min-h-[100px] overflow-y-auto rounded-xl bg-[#F8F6EE]/50 border border-[#E8EBE4] p-3" role="log" aria-live="polite" aria-label="Chat conversation">
-            {messages.map((msg, idx) => (
-              <ChatMessage 
-                key={idx} 
-                message={msg.text} 
-                isUser={msg.isUser} 
-                messageIndex={idx}
-                chatMode={chatMode}
+          {/* Results view - show after search (no chat bubbles) */}
+          {messages.length > 2 && (
+          <div className="mb-4" role="region" aria-label="Book recommendations">
+            {/* Sarah avatar + theme header */}
+            <div className="flex items-center gap-3 mb-4">
+              <img 
+                src="/sarah.png" 
+                alt="Sarah"
+                className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
+              />
+              <p className="text-[#4A5940] text-sm">
+                {(() => {
+                  const selectedTheme = selectedThemes[0];
+                  const theme = selectedTheme ? themeInfo[selectedTheme] : null;
+                  if (theme) {
+                    return (
+                      <>
+                        Here are my top <span className="font-semibold">{theme.label}</span> picks for you:
+                      </>
+                    );
+                  }
+                  return "Here are my top picks for you:";
+                })()}
+              </p>
+            </div>
+            
+            {/* Recommendation cards - render directly without chat wrapper */}
+            {messages.filter((msg, idx) => idx === 2 && !msg.isUser).map((msg, idx) => (
+              <FormattedRecommendations 
+                key={idx}
+                text={msg.text} 
+                chatMode={chatMode} 
                 onActionPanelInteraction={(action, data, recommendations) => {
                   if (action === 'feedback') {
                     track('recommendation_feedback_panel', {
@@ -1346,7 +1368,6 @@ Find similar books from beyond my library that match this taste profile.
                     if (data === 'like' && chatMode === 'library') {
                       setHasEngaged(true);
                       setLikedBooks(recommendations.map(r => ({ title: r.title, author: r.author })));
-                      // Build taste profile
                       const newThemes = extractThemes(recommendations);
                       setTasteProfile(prev => ({
                         likedBooks: [...prev.likedBooks, ...recommendations.map(r => ({ title: r.title, author: r.author }))],
@@ -1355,7 +1376,6 @@ Find similar books from beyond my library that match this taste profile.
                       }));
                     }
                   } else if (action === 'find_book') {
-                    // Open all recommended books in tabs
                     recommendations.forEach(rec => {
                       const url = data === 'goodreads' 
                         ? getGoodreadsSearchUrl(rec.title, rec.author)
@@ -1368,7 +1388,6 @@ Find similar books from beyond my library that match this taste profile.
                       chat_mode: chatMode
                     });
                   } else if (action === 'show_more') {
-                    // Direct "show more" - use the recommended books as context
                     const titles = recommendations.map(r => r.title).join(', ');
                     setInputValue(`Show me more books like: ${titles}`);
                     setTimeout(() => {
@@ -1379,7 +1398,6 @@ Find similar books from beyond my library that match this taste profile.
                       recommendation_count: recommendations.length
                     });
                   } else if (action === 'upload_library') {
-                    // Trigger the file input click
                     setImportError('');
                     importFileInputRef.current?.click();
                     track('upload_library_prompt', {
@@ -1396,21 +1414,61 @@ Find similar books from beyond my library that match this taste profile.
                 onShowAuthModal={() => setShowAuthModal(true)}
               />
             ))}
-            {isLoading && (
-              <div className="flex justify-start mb-4">
-                <img 
-                  src="/sarah.png" 
-                  alt="Sarah"
-                  className="w-10 h-10 rounded-full object-cover mr-3 border-2 border-[#D4DAD0] flex-shrink-0"
-                />
-                <div className="bg-[#F8F6EE] rounded-2xl rounded-bl-sm px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
-                  <div className="space-y-2.5">
-                    {/* Catalog-only mode: simpler steps */}
-                    {loadingProgress.mode === 'catalog' ? (
-                      <>
-                        {/* Searching my collection */}
+          </div>
+          )}
+
+          {/* Loading indicator - shows while searching */}
+          {isLoading && (
+            <div className="flex items-start gap-3 mb-4">
+              <img 
+                src="/sarah.png" 
+                alt="Sarah"
+                className="w-10 h-10 rounded-full object-cover border-2 border-[#D4DAD0] flex-shrink-0"
+              />
+              <div className="bg-[#F8F6EE] rounded-2xl px-5 py-4 border border-[#E8EBE4] min-w-[280px]">
+                <div className="space-y-2.5">
+                  {loadingProgress.mode === 'catalog' ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        {loadingProgress.step === 'library' ? (
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className={`text-xs ${loadingProgress.step === 'library' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                          Searching my collection
+                        </span>
+                      </div>
+                      {loadingProgress.step === 'preparing' && (
                         <div className="flex items-center gap-2">
-                          {loadingProgress.step === 'library' ? (
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          <span className="text-xs text-[#5F7252] font-medium">Preparing your picks</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                          Checking curator's picks
+                        </span>
+                      </div>
+                      {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
+                        <div className="flex items-center gap-2">
+                          {loadingProgress.step === 'world' ? (
                             <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
                           ) : (
                             <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
@@ -1419,25 +1477,14 @@ Find similar books from beyond my library that match this taste profile.
                               </svg>
                             </div>
                           )}
-                          <span className={`text-xs ${loadingProgress.step === 'library' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                            Searching my collection
+                          <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Searching the world's library
                           </span>
                         </div>
-                        {/* Preparing picks */}
-                        {loadingProgress.step === 'preparing' && (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs text-[#5F7252] font-medium">
-                              Preparing your picks
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {/* Full mode: Library Check */}
+                      )}
+                      {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
                         <div className="flex items-center gap-2">
-                          {loadingProgress.step === 'library' && loadingProgress.progress < 100 ? (
+                          {loadingProgress.step === 'matching' ? (
                             <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
                           ) : (
                             <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
@@ -1446,64 +1493,22 @@ Find similar books from beyond my library that match this taste profile.
                               </svg>
                             </div>
                           )}
-                          <span className={`text-xs ${loadingProgress.step === 'library' && loadingProgress.progress < 100 ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                            Checking curator's picks
+                          <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
+                            Finding your best matches
                           </span>
                         </div>
-
-                        {/* World Search */}
-                        {(loadingProgress.step === 'world' || loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                          <div className="flex items-center gap-2">
-                            {loadingProgress.step === 'world' ? (
-                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                            <span className={`text-xs ${loadingProgress.step === 'world' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                              Searching the world's library
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Finding Best Matches */}
-                        {(loadingProgress.step === 'matching' || loadingProgress.step === 'preparing') && (
-                          <div className="flex items-center gap-2">
-                            {loadingProgress.step === 'matching' ? (
-                              <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full bg-[#5F7252] flex items-center justify-center">
-                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                            <span className={`text-xs ${loadingProgress.step === 'matching' ? 'text-[#5F7252] font-medium' : 'text-[#96A888]'}`}>
-                              Finding your best matches
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Preparing */}
-                        {loadingProgress.step === 'preparing' && (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs text-[#5F7252] font-medium">
-                              Preparing your picks
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                      )}
+                      {loadingProgress.step === 'preparing' && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-[#96A888] border-t-transparent rounded-full animate-spin" />
+                          <span className="text-xs text-[#5F7252] font-medium">Preparing your picks</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
+            </div>
           )}
 
           {/* Sign-In Nudge Banner - Shows after recommendations for non-signed-in users */}
@@ -1567,7 +1572,7 @@ Find similar books from beyond my library that match this taste profile.
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                placeholder="I'm looking for..."
+                placeholder={messages.length > 2 ? "Refine: something lighter? funnier?" : "I'm looking for..."}
                 className="flex-1 px-0 py-0 outline-none text-[#4A5940] placeholder-[#96A888] font-light text-sm sm:text-base resize-none overflow-hidden bg-transparent leading-relaxed"
                 disabled={isLoading}
                 style={{ minHeight: '24px', maxHeight: '200px', height: '24px' }}
@@ -1595,24 +1600,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {messages.length > 1 && chatMode === 'library' && (
-            <div className="mb-3 px-4 py-2.5 bg-[#F8F6EE] rounded-xl border border-[#E8EBE4] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#7A8F6C]" />
-                <span className="text-xs text-[#5F7252] font-medium">
-                  Continuing conversation ({messages.length - 1} {messages.length === 2 ? 'message' : 'messages'})
-                </span>
-              </div>
-              <button
-                onClick={handleNewSearch}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#D4DAD0] hover:bg-[#F8F6EE] text-[#5F7252] text-xs font-medium transition-colors"
-                aria-label="Start new search"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                New Search
-              </button>
-            </div>
-          )}
 
 
           {chatMode === 'discover' && likedBooks.length > 0 && (
