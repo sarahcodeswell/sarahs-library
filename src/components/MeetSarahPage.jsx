@@ -400,7 +400,7 @@ export default function MeetSarahPage({ onNavigate }) {
               All-Time Favorites
             </h3>
             <p className="text-sm text-[#5F7252] leading-relaxed mb-3">
-              Top recommendations that have shaped how I see the world:
+              These five books reveal what I care about most: the weight of family secrets and cultural identity, the fierce loyalty that shapes a childhood, forbidden love that defies convention, the moral courage to fight injustice, and the invisible class lines that define American life. Together, they're a map of my heart—stories about belonging, sacrifice, and the quiet heroism of ordinary people.
             </p>
             <BookShelf books={booksByTheme.favorites.books} onBookClick={setSelectedBook} userBookTitles={userBookTitles} totalCount={booksByTheme.favorites.total} isLoggedIn={isLoggedIn} onViewAll={handleViewAll} />
           </div>
