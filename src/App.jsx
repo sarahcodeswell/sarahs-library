@@ -1635,20 +1635,6 @@ Find similar books from beyond my library that match this taste profile.
             </div>
           )}
 
-          {/* Floating New Search Button - shows when scrolled down */}
-          {showScrollToTop && messages.length > 1 && (
-            <button
-              onClick={() => {
-                handleNewSearch();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#5F7252] text-white rounded-full shadow-lg hover:bg-[#4A5940] transition-all hover:scale-105"
-              aria-label="Start new search"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span className="text-sm font-medium">New Search</span>
-            </button>
-          )}
           
         </main>
       )}
