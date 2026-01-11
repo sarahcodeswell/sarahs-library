@@ -561,7 +561,36 @@ export default function TasteCapturePage({ user, onNavigate }) {
         })
         .eq('id', moment.id);
 
-      // 5. Reload moments and advance to next question
+      // 5. Auto-generate AI glimpse
+      try {
+        const glimpseResponse = await fetch('/api/glimpse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transcript,
+            context: 'taste_framework',
+            prompt: currentQuestion.prompt
+          })
+        });
+
+        if (glimpseResponse.ok) {
+          const { feeling, observation } = await glimpseResponse.json();
+          await supabase
+            .from('reading_moments')
+            .update({
+              glimpse_feeling: feeling,
+              glimpse_observation: observation,
+              glimpse_generated_at: new Date().toISOString(),
+              glimpse_saved: true
+            })
+            .eq('id', moment.id);
+        }
+      } catch (glimpseErr) {
+        console.error('Auto-glimpse failed:', glimpseErr);
+        // Non-blocking - continue even if glimpse fails
+      }
+
+      // 6. Reload moments and advance to next question
       await loadMoments();
       advanceToNextQuestion();
 
@@ -591,7 +620,7 @@ export default function TasteCapturePage({ user, onNavigate }) {
 
     try {
       // Create database record with text directly (no audio)
-      const { error: insertError } = await supabase
+      const { data: moment, error: insertError } = await supabase
         .from('reading_moments')
         .insert({
           user_id: user.id,
@@ -601,9 +630,40 @@ export default function TasteCapturePage({ user, onNavigate }) {
           input_type: 'text',
           transcript: text,
           transcribed_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      // Auto-generate AI glimpse
+      try {
+        const glimpseResponse = await fetch('/api/glimpse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transcript: text,
+            context: 'taste_framework',
+            prompt: currentQuestion.prompt
+          })
+        });
+
+        if (glimpseResponse.ok) {
+          const { feeling, observation } = await glimpseResponse.json();
+          await supabase
+            .from('reading_moments')
+            .update({
+              glimpse_feeling: feeling,
+              glimpse_observation: observation,
+              glimpse_generated_at: new Date().toISOString(),
+              glimpse_saved: true
+            })
+            .eq('id', moment.id);
+        }
+      } catch (glimpseErr) {
+        console.error('Auto-glimpse failed:', glimpseErr);
+        // Non-blocking - continue even if glimpse fails
+      }
 
       // Reload moments and advance to next question
       await loadMoments();
