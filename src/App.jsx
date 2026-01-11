@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
-import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck, BarChart3 } from 'lucide-react';
+import { Book, Star, MessageCircle, X, Send, ExternalLink, Library, ShoppingBag, Heart, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, ChevronRight, Share2, Upload, Plus, User as UserIcon, Menu, Home, BookOpen, Mail, ArrowLeft, Bookmark, BookHeart, Users, Sparkles, Scale, RotateCcw, MessageSquare, BookMarked, Headphones, BookCheck, BarChart3, Mic } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { track } from '@vercel/analytics';
 import bookCatalog from './books.json';
@@ -1134,13 +1134,17 @@ Find similar books from beyond my library that match this taste profile.
                             Profile
                           </button>
                           
-                          {/* Admin Dashboard - only for master admin */}
+                          {/* Admin Dashboard & Taste Capture - only for master admin */}
                           {(isAdmin || user?.email === 'sarah@darkridge.com') && (
                             <>
                               <div className="border-t border-[#E8EBE4] my-1"></div>
                               <button onClick={() => navigateTo('admin', '/admin')} className={MENU_BUTTON_CLASS}>
                                 <BarChart3 className="w-4 h-4" />
                                 Admin Dashboard
+                              </button>
+                              <button onClick={() => navigateTo('taste-capture', '/taste-capture')} className={MENU_BUTTON_CLASS}>
+                                <Mic className="w-4 h-4" />
+                                Taste Capture
                               </button>
                             </>
                           )}
