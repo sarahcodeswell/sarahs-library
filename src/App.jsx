@@ -690,6 +690,63 @@ Find similar books from beyond my library that match this taste profile.
     }
   };
 
+  // Version that accepts text directly (for programmatic sends like "More Like These")
+  const handleSendMessageWithText = useCallback(async (textToSend) => {
+    if (!textToSend?.trim() || isLoading) return;
+
+    const userMessage = textToSend.trim();
+    
+    setInputValue('');
+    setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
+    setIsLoading(true);
+    setLoadingProgress({ step: 'library', progress: 0, mode: 'full' });
+    lastActivityRef.current = Date.now();
+
+    track('chat_message', {
+      mode: chatMode,
+      message_length: userMessage.length,
+      source: 'show_more'
+    });
+
+    try {
+      // Simulate progress
+      setTimeout(() => setLoadingProgress({ step: 'matching', progress: 0, mode: 'full' }), 1000);
+
+      const result = await getRecommendationsV2(user?.id, userMessage, readingQueue, [], shownBooksInSession);
+      if (result.success) {
+        result.text = result.response;
+      }
+
+      setIsLoading(false);
+      setLoadingProgress(null);
+
+      if (result.success && result.text) {
+        setMessages(prev => [...prev, { text: result.text, isUser: false }]);
+        
+        // Track shown books
+        if (result.recommendations?.length > 0) {
+          setShownBooksInSession(prev => [
+            ...prev,
+            ...result.recommendations.map(r => r.title?.toLowerCase()).filter(Boolean)
+          ]);
+        }
+      } else {
+        setMessages(prev => [...prev, {
+          text: "I had trouble finding more recommendations. Try a different search!",
+          isUser: false
+        }]);
+      }
+    } catch (error) {
+      console.error('Show more error:', error);
+      setIsLoading(false);
+      setLoadingProgress(null);
+      setMessages(prev => [...prev, {
+        text: "Something went wrong. Please try again.",
+        isUser: false
+      }]);
+    }
+  }, [isLoading, chatMode, user, readingQueue, shownBooksInSession]);
+
   const handleSendMessage = useCallback(async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -1413,11 +1470,12 @@ Find similar books from beyond my library that match this taste profile.
                   } else if (action === 'show_more') {
                     // Direct "show more" - use the recommended books as context
                     const titles = recommendations.map(r => r.title).join(', ');
-                    setInputValue(`Show me more books like: ${titles}`);
+                    const showMoreQuery = `Show me more books like: ${titles}`;
+                    setInputValue(showMoreQuery);
+                    // Directly trigger the message send after state updates
                     setTimeout(() => {
-                      const sendButton = document.querySelector('button[aria-label="Send message"]');
-                      if (sendButton) sendButton.click();
-                    }, 50);
+                      handleSendMessageWithText(showMoreQuery);
+                    }, 100);
                     track('show_more_clicked', {
                       recommendation_count: recommendations.length
                     });
