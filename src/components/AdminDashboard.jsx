@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, BookMarked, Heart, Share2, UserPlus, RefreshCw, TrendingUp, MapPin, Calendar, BarChart3, Download, X, Check, Clock, Mail, Send, MessageSquare, Library, Shield, Trash2, Image, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const PERIODS = [
@@ -546,18 +546,16 @@ function FeedbackManagement() {
               {/* Screenshot */}
               {selectedFeedback.screenshot_url && (
                 <div>
-                  <label className="block text-xs font-medium text-[#96A888] mb-1">Screenshot</label>
+                  <label className="block text-xs font-medium text-[#96A888] mb-1">Attachment</label>
                   <a 
                     href={selectedFeedback.screenshot_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="block"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg transition-colors text-sm text-[#4A5940]"
                   >
-                    <img 
-                      src={selectedFeedback.screenshot_url} 
-                      alt="Feedback screenshot" 
-                      className="w-full max-h-48 object-contain rounded-lg border border-[#E8EBE4] hover:opacity-90 transition-opacity cursor-pointer"
-                    />
+                    <Image className="w-4 h-4 text-[#5F7252]" />
+                    <span>View Screenshot</span>
+                    <ExternalLink className="w-3 h-3 text-[#96A888]" />
                   </a>
                 </div>
               )}
