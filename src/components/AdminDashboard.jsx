@@ -334,6 +334,7 @@ function FeedbackManagement() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [deleting, setDeleting] = useState(null);
+  const [notesSaved, setNotesSaved] = useState(false);
 
   const fetchFeedback = async () => {
     try {
@@ -381,16 +382,19 @@ function FeedbackManagement() {
   const openFeedbackDetail = (item) => {
     setSelectedFeedback(item);
     setAdminNotes(item.admin_notes || '');
+    setNotesSaved(false);
   };
 
   const closeFeedbackDetail = () => {
     setSelectedFeedback(null);
     setAdminNotes('');
+    setNotesSaved(false);
   };
 
   const saveNotes = async () => {
     if (!selectedFeedback) return;
     await updateStatus(selectedFeedback.id, selectedFeedback.status, adminNotes);
+    setNotesSaved(true);
   };
 
   const deleteFeedback = async (id) => {
@@ -547,33 +551,20 @@ function FeedbackManagement() {
               {selectedFeedback.screenshot_url && (
                 <div>
                   <label className="block text-xs font-medium text-[#96A888] mb-2">Attachment</label>
-                  <div className="flex flex-wrap gap-2">
-                    <a 
-                      href={selectedFeedback.screenshot_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg transition-colors text-xs text-[#4A5940]"
-                    >
-                      <Image className="w-4 h-4 text-[#5F7252]" />
-                      <span>View</span>
-                    </a>
+                  <div className="space-y-2">
+                    <img 
+                      src={selectedFeedback.screenshot_url} 
+                      alt="Feedback screenshot" 
+                      className="w-full max-h-48 object-contain rounded-lg border border-[#E8EBE4] bg-[#F8F6EE]"
+                    />
                     <a 
                       href={selectedFeedback.screenshot_url} 
                       download
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg transition-colors text-xs text-[#4A5940]"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#5F7252] hover:bg-[#4A5940] rounded-lg transition-colors text-xs text-white font-medium"
                     >
-                      <Download className="w-4 h-4 text-[#5F7252]" />
+                      <Download className="w-4 h-4" />
                       <span>Download</span>
                     </a>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(selectedFeedback.screenshot_url);
-                      }}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-[#F8F6EE] hover:bg-[#E8EBE4] rounded-lg transition-colors text-xs text-[#4A5940]"
-                    >
-                      <Copy className="w-4 h-4 text-[#5F7252]" />
-                      <span>Copy Link</span>
-                    </button>
                   </div>
                 </div>
               )}
@@ -622,31 +613,41 @@ function FeedbackManagement() {
                   rows={3}
                 />
                 <div className="flex items-center justify-between mt-3">
-                  <button
-                    onClick={saveNotes}
-                    disabled={updating === selectedFeedback.id || adminNotes === (selectedFeedback.admin_notes || '')}
-                    className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
-                      updating === selectedFeedback.id
-                        ? 'bg-[#96A888] text-white cursor-wait'
-                        : adminNotes === (selectedFeedback.admin_notes || '')
-                        ? 'bg-[#E8EBE4] text-[#96A888] cursor-default'
-                        : 'bg-[#5F7252] text-white hover:bg-[#4A5940] shadow-sm hover:shadow'
-                    }`}
-                  >
-                    {updating === selectedFeedback.id ? (
-                      <span className="flex items-center gap-1.5">
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                        Saving...
-                      </span>
-                    ) : adminNotes === (selectedFeedback.admin_notes || '') ? (
-                      <span className="flex items-center gap-1.5">
-                        <Check className="w-3 h-3" />
-                        Saved
-                      </span>
-                    ) : (
-                      'Save Notes'
-                    )}
-                  </button>
+                  {(() => {
+                    const hasChanges = adminNotes !== (selectedFeedback.admin_notes || '');
+                    const isSaving = updating === selectedFeedback.id;
+                    const showSaved = notesSaved && !hasChanges;
+                    
+                    return (
+                      <button
+                        onClick={saveNotes}
+                        disabled={isSaving || !hasChanges}
+                        className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
+                          isSaving
+                            ? 'bg-[#96A888] text-white cursor-wait'
+                            : showSaved
+                            ? 'bg-[#E8EBE4] text-[#5F7252] cursor-default'
+                            : hasChanges
+                            ? 'bg-[#5F7252] text-white hover:bg-[#4A5940] shadow-sm hover:shadow'
+                            : 'bg-[#E8EBE4] text-[#96A888] cursor-default'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <span className="flex items-center gap-1.5">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Saving...
+                          </span>
+                        ) : showSaved ? (
+                          <span className="flex items-center gap-1.5">
+                            <Check className="w-3 h-3" />
+                            Saved
+                          </span>
+                        ) : (
+                          'Save Notes'
+                        )}
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={() => deleteFeedback(selectedFeedback.id)}
                     disabled={deleting === selectedFeedback.id}
