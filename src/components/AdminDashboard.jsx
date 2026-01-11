@@ -329,7 +329,7 @@ function UserManagement() {
 function FeedbackManagement() {
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('active');
   const [updating, setUpdating] = useState(null);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
@@ -477,6 +477,10 @@ function FeedbackManagement() {
 
   const filteredFeedback = filter === 'all' 
     ? feedback 
+    : filter === 'active'
+    ? feedback.filter(f => !['resolved', 'wont_fix'].includes(f.status))
+    : filter === 'closed'
+    ? feedback.filter(f => ['resolved', 'wont_fix'].includes(f.status))
     : feedback.filter(f => f.category === filter || f.status === filter);
 
   const getCategoryIcon = (category) => {
@@ -517,6 +521,8 @@ function FeedbackManagement() {
             onChange={(e) => setFilter(e.target.value)}
             className="text-xs border border-[#E8EBE4] rounded-lg px-2 py-1 text-[#4A5940]"
           >
+            <option value="active">Active</option>
+            <option value="closed">Closed</option>
             <option value="all">All</option>
             <option value="new">New</option>
             <option value="quote">Quotes</option>
