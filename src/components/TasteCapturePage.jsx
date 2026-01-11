@@ -432,24 +432,24 @@ function MomentCard({ moment, onGenerateGlimpse, onDelete, onEdit }) {
         <button
           onClick={handleGenerateGlimpse}
           disabled={generatingGlimpse}
-          className="mt-3 flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors"
+          className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#5F7252] bg-[#F0EDE5] hover:bg-[#E8EBE4] rounded-full transition-colors"
         >
           {generatingGlimpse ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Sparkles className="w-4 h-4" />
           )}
-          {generatingGlimpse ? 'Generating...' : 'Show AI insight'}
+          {generatingGlimpse ? 'Generating...' : 'Get AI Glimpse'}
         </button>
       )}
       
       {moment.glimpse_feeling && !showGlimpse && !isEditing && (
         <button
           onClick={() => setShowGlimpse(true)}
-          className="mt-3 flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors"
+          className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#5F7252] bg-[#F0EDE5] hover:bg-[#E8EBE4] rounded-full transition-colors"
         >
           <Sparkles className="w-4 h-4" />
-          Show saved insight
+          Show AI Glimpse
         </button>
       )}
     </div>
