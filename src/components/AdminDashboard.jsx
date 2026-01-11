@@ -335,6 +335,11 @@ function FeedbackManagement() {
   const [adminNotes, setAdminNotes] = useState('');
   const [deleting, setDeleting] = useState(null);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replyError, setReplyError] = useState(null);
+  const [replySent, setReplySent] = useState(false);
 
   const fetchFeedback = async () => {
     try {
@@ -389,6 +394,10 @@ function FeedbackManagement() {
     setSelectedFeedback(null);
     setAdminNotes('');
     setNotesSaved(false);
+    setShowReplyForm(false);
+    setReplyMessage('');
+    setReplyError(null);
+    setReplySent(false);
   };
 
   const saveNotes = async () => {
@@ -416,6 +425,53 @@ function FeedbackManagement() {
       console.error('Error deleting feedback:', err);
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const sendReply = async () => {
+    if (!selectedFeedback || !replyMessage.trim()) return;
+    
+    setSendingReply(true);
+    setReplyError(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/admin/feedback-reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          feedbackId: selectedFeedback.id,
+          recipientEmail: selectedFeedback.email,
+          message: replyMessage.trim(),
+          newStatus: selectedFeedback.status === 'new' ? 'reviewed' : undefined
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to send reply');
+      }
+
+      // Update local state
+      setFeedback(prev => prev.map(f => 
+        f.id === selectedFeedback.id 
+          ? { ...f, admin_reply_sent: true, admin_reply_at: new Date().toISOString() }
+          : f
+      ));
+      setSelectedFeedback(prev => ({ ...prev, admin_reply_sent: true }));
+      setReplySent(true);
+      setShowReplyForm(false);
+      setReplyMessage('');
+    } catch (err) {
+      console.error('Error sending reply:', err);
+      setReplyError(err.message);
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -573,13 +629,72 @@ function FeedbackManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-[#96A888] mb-1">From</label>
-                  <p className="text-sm text-[#4A5940] font-medium">{selectedFeedback.email || 'Anonymous'}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-[#4A5940] font-medium">{selectedFeedback.email || 'Anonymous'}</p>
+                    {selectedFeedback.email && !showReplyForm && (
+                      <button
+                        onClick={() => setShowReplyForm(true)}
+                        className="text-xs text-[#5F7252] hover:text-[#4A5940] underline"
+                      >
+                        {selectedFeedback.admin_reply_sent ? 'Reply again' : 'Send reply'}
+                      </button>
+                    )}
+                    {selectedFeedback.admin_reply_sent && (
+                      <span className="text-xs text-[#96A888]">✓ Replied</span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#96A888] mb-1">Page</label>
                   <p className="text-sm text-[#4A5940] font-medium capitalize">{selectedFeedback.page_url || 'N/A'}</p>
                 </div>
               </div>
+
+              {/* Reply Form */}
+              {showReplyForm && selectedFeedback.email && (
+                <div className="bg-[#F8F6EE] rounded-lg p-4">
+                  <label className="block text-xs font-medium text-[#4A5940] mb-2">
+                    Reply to {selectedFeedback.email}
+                  </label>
+                  <textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder="Write your response..."
+                    className="w-full px-3 py-2 border border-[#D4DAD0] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none bg-white"
+                    rows={3}
+                  />
+                  {replyError && (
+                    <p className="mt-2 text-xs text-red-600">{replyError}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      onClick={sendReply}
+                      disabled={sendingReply || !replyMessage.trim()}
+                      className="px-4 py-2 text-xs font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {sendingReply ? 'Sending...' : 'Send Email'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowReplyForm(false);
+                        setReplyMessage('');
+                        setReplyError(null);
+                      }}
+                      className="px-4 py-2 text-xs font-medium text-[#5F7252] hover:bg-[#E8EBE4] rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Reply Sent Confirmation */}
+              {replySent && (
+                <div className="bg-green-50 text-green-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  Reply sent successfully!
+                </div>
+              )}
 
               {/* Status */}
               <div>
@@ -604,59 +719,46 @@ function FeedbackManagement() {
 
               {/* Admin Notes */}
               <div>
-                <label className="block text-xs font-medium text-[#96A888] mb-1">Admin Notes</label>
+                <label className="block text-xs font-medium text-[#96A888] mb-1">Admin Notes (internal)</label>
                 <textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Add internal notes about this feedback..."
                   className="w-full px-3 py-2 border border-[#E8EBE4] rounded-lg text-sm text-[#4A5940] placeholder-[#96A888] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 focus:border-[#5F7252] resize-none"
-                  rows={3}
+                  rows={2}
                 />
-                <div className="flex items-center justify-between mt-3">
-                  {(() => {
-                    const hasChanges = adminNotes !== (selectedFeedback.admin_notes || '');
-                    const isSaving = updating === selectedFeedback.id;
-                    const showSaved = notesSaved && !hasChanges;
-                    
-                    return (
-                      <button
-                        onClick={saveNotes}
-                        disabled={isSaving || !hasChanges}
-                        className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
-                          isSaving
-                            ? 'bg-[#96A888] text-white cursor-wait'
-                            : showSaved
-                            ? 'bg-[#E8EBE4] text-[#5F7252] cursor-default'
-                            : hasChanges
-                            ? 'bg-[#5F7252] text-white hover:bg-[#4A5940] shadow-sm hover:shadow'
-                            : 'bg-[#E8EBE4] text-[#96A888] cursor-default'
-                        }`}
-                      >
-                        {isSaving ? (
-                          <span className="flex items-center gap-1.5">
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                            Saving...
-                          </span>
-                        ) : showSaved ? (
-                          <span className="flex items-center gap-1.5">
-                            <Check className="w-3 h-3" />
-                            Saved
-                          </span>
-                        ) : (
-                          'Save Notes'
-                        )}
-                      </button>
-                    );
-                  })()}
+                {adminNotes !== (selectedFeedback.admin_notes || '') && (
                   <button
-                    onClick={() => deleteFeedback(selectedFeedback.id)}
-                    disabled={deleting === selectedFeedback.id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    onClick={saveNotes}
+                    disabled={updating === selectedFeedback.id}
+                    className="mt-2 px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] rounded-lg transition-colors disabled:opacity-50"
                   >
-                    <Trash2 className="w-3 h-3" />
-                    {deleting === selectedFeedback.id ? 'Deleting...' : 'Delete'}
+                    {updating === selectedFeedback.id ? 'Saving...' : 'Save Notes'}
                   </button>
-                </div>
+                )}
+                {notesSaved && adminNotes === (selectedFeedback.admin_notes || '') && (
+                  <p className="mt-2 text-xs text-[#5F7252] flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Notes saved
+                  </p>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-[#E8EBE4]">
+                <button
+                  onClick={() => deleteFeedback(selectedFeedback.id)}
+                  disabled={deleting === selectedFeedback.id}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  {deleting === selectedFeedback.id ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={closeFeedbackDetail}
+                  className="px-4 py-2 text-sm font-medium bg-[#5F7252] text-white hover:bg-[#4A5940] rounded-lg transition-colors"
+                >
+                  Done
+                </button>
               </div>
             </div>
           </div>
