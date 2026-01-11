@@ -5,8 +5,8 @@ import { supabase } from '../lib/supabase';
 const TASTE_QUESTIONS = [
   {
     category: 'why_i_read',
-    title: 'Why I Read',
-    subtitle: 'The deeper pull',
+    title: 'Your Why',
+    subtitle: 'Why you read',
     questions: [
       {
         id: 'why_read',
@@ -26,9 +26,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'what_i_look_for',
-    title: 'What I Look For',
-    subtitle: 'The quality filter',
+    category: 'your_standards',
+    title: 'Your Standards',
+    subtitle: 'What makes a great book',
     questions: [
       {
         id: 'pick_up',
@@ -48,9 +48,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'how_i_share',
-    title: 'How I Share',
-    subtitle: 'The recommendation style',
+    category: 'your_voice',
+    title: 'Your Voice',
+    subtitle: 'How you talk about books',
     questions: [
       {
         id: 'how_sound',
@@ -70,9 +70,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'what_i_chase',
-    title: 'What I Chase',
-    subtitle: 'The emotional pursuit',
+    category: 'your_experience',
+    title: 'Your Experience',
+    subtitle: 'What you seek emotionally',
     questions: [
       {
         id: 'want_to_feel',
