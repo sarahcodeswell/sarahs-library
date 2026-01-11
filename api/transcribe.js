@@ -1,9 +1,12 @@
 import OpenAI from 'openai';
-import { Readable } from 'stream';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+export const config = {
+  maxDuration: 60, // Allow up to 60 seconds for longer recordings
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -25,13 +28,12 @@ export default async function handler(req, res) {
 
     const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
     
-    // Create a readable stream from the buffer with a name property
-    const stream = Readable.from(audioBuffer);
-    stream.path = 'audio.webm';
+    // Create a File-like object that OpenAI SDK accepts
+    const file = new File([audioBuffer], 'audio.webm', { type: 'audio/webm' });
 
     // Use OpenAI Whisper for transcription
     const transcription = await openai.audio.transcriptions.create({
-      file: stream,
+      file: file,
       model: 'whisper-1',
       language: 'en'
     });
