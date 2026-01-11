@@ -19,6 +19,15 @@ const SARAHS_TASTE_KEYWORDS = {
     identity: 'identity belonging immigration cultural heritage family secrets coming-of-age',
     spiritual: 'meaning purpose mindfulness wisdom transformation philosophical',
     justice: 'social justice systemic oppression marginalized voices historical injustice'
+  },
+  genres: {
+    'Literary Fiction': 'literary fiction character-driven emotional depth beautiful prose psychological complexity',
+    'Historical Fiction': 'historical fiction period drama past eras well-researched immersive historical setting',
+    'Memoir': 'memoir autobiography personal narrative true story life experience reflection',
+    'Self-Help & Spirituality': 'self-help personal growth spirituality mindfulness wisdom transformation',
+    'Thriller & Mystery': 'thriller mystery suspense page-turner twists psychological tension',
+    'Romance & Contemporary': 'romance contemporary fiction love story relationships heartwarming',
+    'Nonfiction': 'nonfiction narrative nonfiction true story investigative journalism history'
   }
 };
 
@@ -27,14 +36,19 @@ const SARAHS_TASTE_KEYWORDS = {
  * Adds Sarah's taste context to improve world discovery results
  */
 function enrichSearchQuery(baseQuery, options = {}) {
-  const { theme, addTasteContext = true } = options;
+  const { theme, genre, addTasteContext = true } = options;
   
   let enrichedQuery = baseQuery;
   
   // Add theme-specific keywords if theme is specified
   if (theme && SARAHS_TASTE_KEYWORDS.themes[theme]) {
     enrichedQuery += ` ${SARAHS_TASTE_KEYWORDS.themes[theme]}`;
-  } else if (addTasteContext) {
+  } 
+  // Add genre-specific keywords if genre is specified
+  else if (genre && SARAHS_TASTE_KEYWORDS.genres[genre]) {
+    enrichedQuery += ` ${SARAHS_TASTE_KEYWORDS.genres[genre]}`;
+  } 
+  else if (addTasteContext) {
     // Add core taste keywords for general searches
     enrichedQuery += ` ${SARAHS_TASTE_KEYWORDS.core}`;
   }
@@ -260,6 +274,45 @@ export async function findBooksByTheme(theme, additionalContext = '', limit = 10
     }));
   } catch (error) {
     console.error('[WorldSearch] Theme search error:', error);
+    return [];
+  }
+}
+
+/**
+ * Search for books by genre using Sarah's taste context
+ * This is for discovering new books that match specific genres
+ * 
+ * @param {string} genre - Genre name (Literary Fiction, Historical Fiction, etc.)
+ * @param {string} additionalContext - Optional additional search context
+ * @param {number} limit - Maximum results
+ */
+export async function findBooksByGenre(genre, additionalContext = '', limit = 10) {
+  console.log('[WorldSearch] Finding books by genre:', genre);
+  
+  const genreDescriptions = {
+    'Literary Fiction': 'best literary fiction books character-driven emotional depth beautiful prose award-winning',
+    'Historical Fiction': 'best historical fiction books immersive period drama well-researched past eras',
+    'Memoir': 'best memoir books compelling personal narrative true story life experience',
+    'Self-Help & Spirituality': 'best self-help spirituality books personal growth mindfulness wisdom',
+    'Thriller & Mystery': 'best thriller mystery books suspenseful page-turner psychological twists',
+    'Romance & Contemporary': 'best romance contemporary fiction books love story heartwarming relationships',
+    'Nonfiction': 'best narrative nonfiction books investigative journalism true story compelling'
+  };
+  
+  const genreQuery = genreDescriptions[genre] || genre;
+  const searchQuery = `${genreQuery} ${additionalContext} book recommendations`.trim();
+  
+  console.log('[WorldSearch] Genre search query:', searchQuery);
+  
+  try {
+    const books = await searchGoogleBooks(searchQuery, limit);
+    return books.map(b => ({
+      ...b,
+      matchedGenre: genre,
+      source: 'world'
+    }));
+  } catch (error) {
+    console.error('[WorldSearch] Genre search error:', error);
     return [];
   }
 }
