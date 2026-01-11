@@ -83,18 +83,24 @@ export default function FeedbackModal({ isOpen, onClose, user }) {
         const fileExt = screenshot.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
         
+        // Try the bucket name - check Supabase for exact bucket ID
+        const bucketName = 'Feedback Screenshots';
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('feedback-screenshots')
+          .from(bucketName)
           .upload(fileName, screenshot);
 
         if (uploadError) {
           console.error('Screenshot upload error:', uploadError);
-          // Continue without screenshot if upload fails
+          console.error('Bucket:', bucketName, 'File:', fileName);
+          // Show error to user so they know screenshot didn't upload
+          setError(`Screenshot upload failed: ${uploadError.message}. Your feedback will be submitted without the image.`);
         } else {
           const { data: { publicUrl } } = supabase.storage
-            .from('feedback-screenshots')
+            .from(bucketName)
             .getPublicUrl(fileName);
           screenshotUrl = publicUrl;
+          console.log('Screenshot uploaded successfully:', publicUrl);
         }
       }
 
