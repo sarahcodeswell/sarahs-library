@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase';
 const TASTE_QUESTIONS = [
   {
     category: 'why_i_read',
-    title: 'The WHY',
+    title: 'Why I Read',
+    subtitle: 'The deeper pull',
     questions: [
       {
         id: 'why_read',
@@ -25,8 +26,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'quality_lens',
-    title: 'The Quality Lens',
+    category: 'what_i_look_for',
+    title: 'What I Look For',
+    subtitle: 'The quality filter',
     questions: [
       {
         id: 'pick_up',
@@ -46,8 +48,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'voice',
-    title: 'The Voice',
+    category: 'how_i_share',
+    title: 'How I Share',
+    subtitle: 'The recommendation style',
     questions: [
       {
         id: 'how_sound',
@@ -67,8 +70,9 @@ const TASTE_QUESTIONS = [
     ]
   },
   {
-    category: 'emotional_palette',
-    title: 'The Emotional Palette',
+    category: 'what_i_chase',
+    title: 'What I Chase',
+    subtitle: 'The emotional pursuit',
     questions: [
       {
         id: 'want_to_feel',
@@ -631,12 +635,15 @@ export default function TasteCapturePage({ user, onNavigate }) {
         {/* Current Question */}
         {!isComplete && currentQuestion && (
           <div className="bg-white rounded-2xl border border-[#D4DAD0] p-6 shadow-sm mb-6">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="px-3 py-1 bg-[#F0EDE5] text-[#5F7252] text-sm font-medium rounded-full">
                 {currentCategory.title}
               </span>
-              <span className="text-sm text-[#7A8F6C]">
-                Question {currentQuestionIndex + 1} of {currentCategory.questions.length}
+              <span className="text-xs text-[#7A8F6C] italic">
+                {currentCategory.subtitle}
+              </span>
+              <span className="text-sm text-[#7A8F6C] ml-auto">
+                {currentQuestionIndex + 1} of {currentCategory.questions.length}
               </span>
             </div>
             
