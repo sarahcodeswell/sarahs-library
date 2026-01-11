@@ -595,30 +595,39 @@ export default function TasteCapturePage({ user, onNavigate }) {
 
   return (
     <div className="min-h-screen bg-[#FDFCF9]">
-      {/* Header */}
-      <div className="bg-white border-b border-[#D4DAD0] sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <button
-            onClick={() => onNavigate('home')}
-            className="flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-          <h1 className="font-serif text-2xl text-[#4A5940]">Taste Framework Capture</h1>
-          <p className="text-sm text-[#7A8F6C] mt-1">
-            {answeredQuestions} of {totalQuestions} questions answered
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => onNavigate('home')}
+          className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6 text-sm font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </button>
+
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#4A5940] mb-2">Curator Taste Framework</h1>
+          <p className="text-sm text-[#7A8F6C] leading-relaxed">
+            Capture your reading philosophy in your own words
           </p>
-          <div className="mt-2 h-2 bg-[#F0EDE5] rounded-full overflow-hidden">
+        </div>
+
+        {/* Progress Card */}
+        <div className="bg-[#F8F6EE] rounded-2xl p-4 sm:p-6 border border-[#D4DAD0] shadow-sm mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-[#4A5940]">Your Progress</span>
+            <span className="text-sm text-[#5F7252]">{answeredQuestions} of {totalQuestions} questions</span>
+          </div>
+          <div className="h-2 bg-[#E8EBE4] rounded-full overflow-hidden">
             <div 
               className="h-full bg-[#5F7252] transition-all duration-300"
               style={{ width: `${(answeredQuestions / totalQuestions) * 100}%` }}
             />
           </div>
         </div>
-      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Current Question */}
         {!isComplete && currentQuestion && (
           <div className="bg-white rounded-2xl border border-[#D4DAD0] p-6 shadow-sm mb-6">

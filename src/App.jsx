@@ -1233,7 +1233,7 @@ Find similar books from beyond my library that match this taste profile.
         </Suspense>
       )}
 
-      {currentPage === 'taste-capture' && (
+      {currentPage === 'taste-capture' && (isAdmin || user?.email === 'sarah@darkridge.com') && (
         <Suspense fallback={<LoadingFallback message="Loading..." />}>
           <TasteCapturePage user={user} onNavigate={setCurrentPage} />
         </Suspense>
