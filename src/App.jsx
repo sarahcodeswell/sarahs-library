@@ -246,6 +246,7 @@ export default function App() {
 
     // Set initial page from URL on mount
     const { page: initialPage, token } = getPageFromPath(window.location.pathname);
+    console.log('[App] Initial page from path:', window.location.pathname, '→', initialPage);
     if (initialPage === 'shared-recommendation' && token) {
       setCurrentPage('shared-recommendation');
       setShareToken(token);
