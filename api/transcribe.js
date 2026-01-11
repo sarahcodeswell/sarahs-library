@@ -1,4 +1,5 @@
-import OpenAI, { toFile } from 'openai';
+import OpenAI from 'openai';
+import { Readable } from 'stream';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -24,12 +25,13 @@ export default async function handler(req, res) {
 
     const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
     
-    // Use OpenAI's toFile helper for Node.js environments
-    const file = await toFile(audioBuffer, 'audio.webm', { type: 'audio/webm' });
+    // Create a readable stream from the buffer with a name property
+    const stream = Readable.from(audioBuffer);
+    stream.path = 'audio.webm';
 
     // Use OpenAI Whisper for transcription
     const transcription = await openai.audio.transcriptions.create({
-      file: file,
+      file: stream,
       model: 'whisper-1',
       language: 'en'
     });
