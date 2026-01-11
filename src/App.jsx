@@ -199,8 +199,17 @@ export default function App() {
   const lastActivityRef = useRef(Date.now());
   const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Navigation state
-  const [currentPage, setCurrentPage] = useState('home');
+  // Navigation state - initialize from URL
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pathname = window.location.pathname;
+    const pathParts = pathname.replace(/^\//, '').split('/');
+    const path = pathParts[0] || 'home';
+    const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'read-with-friends', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin', 'taste-capture'];
+    if (path === 'add-books') return 'my-books';
+    if (path === 'how-it-works') return 'about';
+    if (path === 'r') return 'shared-recommendation';
+    return validPages.includes(path) ? path : 'home';
+  });
   const [showNavMenu, setShowNavMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const navMenuRef = useRef(null);
