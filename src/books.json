@@ -93,7 +93,8 @@
     "genre": "Literary Fiction",
     "themes": [
       "emotional",
-      "identity"
+      "identity",
+      "beach"
     ],
     "favorite": false,
     "description": "Between life and death, Nora finds herself in a library where each book lets her live a different version of her life—the lives she might have had.",
@@ -530,7 +531,8 @@
     "author": "Gabrielle Zevin",
     "genre": "Literary Fiction",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "Widowed, bitter bookseller A.J. Fikry finds a mysterious package: an abandoned toddler with a note asking him to raise her.",
@@ -1080,7 +1082,8 @@
     "author": "Sara Gruen",
     "genre": "Historical Fiction",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "During the Depression, young Jacob joins a circus and falls for Marlena—who's married to the violent animal trainer.",
@@ -1093,7 +1096,8 @@
     "author": "Erin Morgenstern",
     "genre": "Historical Fiction",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": true,
     "description": "Le Cirque des Rêves appears without warning. Within it, two young magicians create wonders for each other without knowing only one can survive.",
@@ -1361,7 +1365,8 @@
     "genre": "Historical Fiction",
     "themes": [
       "women",
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "AnnieLee Keyes arrives in Nashville with a guitar, a dream, and a dark secret. As she rises, her violent past catches up.",
@@ -1457,7 +1462,8 @@
     "author": "Elizabeth Gilbert",
     "genre": "Memoir",
     "themes": [
-      "women"
+      "women",
+      "beach"
     ],
     "favorite": false,
     "description": "After a devastating divorce, Gilbert spends a year traveling: eating in Italy, praying in India, and finding balance in Bali.",
@@ -1654,7 +1660,8 @@
     "author": "David Sedaris",
     "genre": "Memoir",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "Sedaris's essay collection confronts his father's decline and death, the pandemic, and family complexities—with dark humor.",
@@ -2360,7 +2367,8 @@
     "author": "Jojo Moyes",
     "genre": "Romance & Contemporary",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "Quirky Louisa becomes the caretaker for wealthy, paralyzed Will, who plans to end his life. CONTROVERSIAL ending.",
@@ -2402,7 +2410,8 @@
     "genre": "Romance & Contemporary",
     "themes": [
       "emotional",
-      "identity"
+      "identity",
+      "beach"
     ],
     "favorite": true,
     "description": "In 1714, Addie makes a deal: immortality, but no one will ever remember her. For 300 years she's forgotten—until a boy remembers her name.",
@@ -2415,7 +2424,8 @@
     "author": "Audrey Niffenegger",
     "genre": "Romance & Contemporary",
     "themes": [
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "Henry has a genetic disorder that causes him to time travel unpredictably. Clare has known him since she was six. Their love defies time.",
@@ -2470,7 +2480,8 @@
     "genre": "Romance & Contemporary",
     "themes": [
       "emotional",
-      "identity"
+      "identity",
+      "beach"
     ],
     "favorite": true,
     "description": "Cyndi Rae becomes obsessed with flamenco dancing—and with Tomás. She discovers flamenco's demand for duende: soul-deep passion.",
@@ -2483,7 +2494,8 @@
     "genre": "Romance & Contemporary",
     "themes": [
       "women",
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "Three generations of Lowcountry women navigate family secrets as an actual hurricane approaches the South Carolina coast.",
@@ -2497,7 +2509,8 @@
     "genre": "Romance & Contemporary",
     "themes": [
       "identity",
-      "emotional"
+      "emotional",
+      "beach"
     ],
     "favorite": false,
     "description": "A Jane Doe lies in a Seattle ICU. Her doctor becomes obsessed with discovering who she is—while across town, a woman's life unravels.",
