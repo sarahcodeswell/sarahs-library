@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Mic, Square, Play, Pause, Loader2, Sparkles, Check, ChevronRight, PenLine, Send } from 'lucide-react';
+import { ArrowLeft, Mic, Square, Play, Pause, Loader2, Sparkles, Check, MoreVertical, PenLine, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const TASTE_QUESTIONS = [
@@ -358,9 +358,9 @@ function MomentCard({ moment, onGenerateGlimpse, onDelete, onEdit }) {
         <div className="relative">
           <button
             onClick={() => setShowActions(!showActions)}
-            className="p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
+            className="p-1.5 text-[#96A888] hover:text-[#5F7252] hover:bg-[#F8F6EE] rounded transition-colors"
           >
-            <ChevronRight className={`w-4 h-4 transition-transform ${showActions ? 'rotate-90' : ''}`} />
+            <MoreVertical className="w-4 h-4" />
           </button>
           {showActions && (
             <div className="absolute right-0 top-6 bg-white border border-[#D4DAD0] rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
