@@ -36,6 +36,7 @@ const AboutPage = lazy(() => import('./components/AboutPage'));
 const MeetSarahPage = lazy(() => import('./components/MeetSarahPage'));
 const BecomeCuratorPage = lazy(() => import('./components/BecomeCuratorPage'));
 const CuratorThemesPage = lazy(() => import('./components/CuratorThemesPage'));
+const TasteCapturePage = lazy(() => import('./components/TasteCapturePage'));
 const ShopPage = lazy(() => import('./components/ShopPage'));
 const MyCollectionPage = lazy(() => import('./components/MyCollectionPage'));
 const MyBooksPage = lazy(() => import('./components/MyBooksPage'));
@@ -226,7 +227,7 @@ export default function App() {
         return { page: 'shared-recommendation', token: pathParts[1] };
       }
       
-      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'read-with-friends', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin'];
+      const validPages = ['home', 'reading-queue', 'collection', 'my-books', 'add-books', 'read-with-friends', 'how-it-works', 'about', 'meet-sarah', 'shop', 'our-practices', 'our-mission', 'become-curator', 'curator-themes', 'admin', 'taste-capture'];
       if (path === 'add-books') return { page: 'my-books', token: null };
       if (path === 'how-it-works') return { page: 'about', token: null };
       return { page: validPages.includes(path) ? path : 'home', token: null };
@@ -1215,6 +1216,12 @@ Find similar books from beyond my library that match this taste profile.
       {currentPage === 'curator-themes' && (
         <Suspense fallback={<LoadingFallback message="Loading..." />}>
           <CuratorThemesPage onNavigate={setCurrentPage} onShowAuthModal={() => setShowAuthModal(true)} />
+        </Suspense>
+      )}
+
+      {currentPage === 'taste-capture' && (
+        <Suspense fallback={<LoadingFallback message="Loading..." />}>
+          <TasteCapturePage user={user} onNavigate={setCurrentPage} />
         </Suspense>
       )}
       
