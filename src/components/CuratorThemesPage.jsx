@@ -195,13 +195,13 @@ export default function CuratorThemesPage({ onNavigate, onShowAuthModal }) {
         {/* Back Button */}
         <button
           onClick={() => {
-            onNavigate('about');
+            onNavigate('meet-sarah');
             window.scrollTo(0, 0);
           }}
           className="inline-flex items-center gap-2 text-[#5F7252] hover:text-[#4A5940] transition-colors mb-6 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to How It Works
+          Back to Meet Sarah
         </button>
 
         {/* Header */}
