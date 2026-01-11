@@ -211,12 +211,12 @@ function InputCapture({ onRecordingComplete, onTextSubmit, isTranscribing, isSav
             <>
               <div className="text-4xl font-mono text-[#4A5940]">{formatTime(duration)}</div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <span className="w-3 h-3 bg-[#c96b6b] rounded-full animate-pulse" />
                 <span className="text-[#5F7252]">Recording...</span>
               </div>
               <button
                 onClick={stopRecording}
-                className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[#c96b6b] text-white rounded-full hover:bg-[#b85a5a] transition-colors"
               >
                 <Square className="w-5 h-5" />
                 Stop Recording
@@ -292,7 +292,7 @@ function AudioPlayer({ audioUrl }) {
   };
 
   const formatTime = (seconds) => {
-    if (!seconds || isNaN(seconds)) return '0:00';
+    if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -322,9 +322,13 @@ function AudioPlayer({ audioUrl }) {
   );
 }
 
-function MomentCard({ moment, onGenerateGlimpse }) {
+function MomentCard({ moment, onGenerateGlimpse, onDelete, onEdit }) {
   const [showGlimpse, setShowGlimpse] = useState(false);
   const [generatingGlimpse, setGeneratingGlimpse] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTranscript, setEditedTranscript] = useState(moment.transcript || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const handleGenerateGlimpse = async () => {
     setGeneratingGlimpse(true);
@@ -333,19 +337,83 @@ function MomentCard({ moment, onGenerateGlimpse }) {
     setShowGlimpse(true);
   };
 
+  const handleSaveEdit = async () => {
+    if (!editedTranscript.trim()) return;
+    setIsSaving(true);
+    await onEdit(moment.id, editedTranscript.trim());
+    setIsSaving(false);
+    setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    if (confirm('Delete this answer? This cannot be undone.')) {
+      onDelete(moment.id);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-[#D4DAD0] p-4 shadow-sm">
-      <div className="text-sm text-[#7A8F6C] mb-2">{moment.capture_prompt}</div>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="text-sm text-[#7A8F6C]">{moment.capture_prompt}</div>
+        <div className="relative">
+          <button
+            onClick={() => setShowActions(!showActions)}
+            className="p-1 text-[#96A888] hover:text-[#5F7252] transition-colors"
+          >
+            <ChevronRight className={`w-4 h-4 transition-transform ${showActions ? 'rotate-90' : ''}`} />
+          </button>
+          {showActions && (
+            <div className="absolute right-0 top-6 bg-white border border-[#D4DAD0] rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+              <button
+                onClick={() => { setIsEditing(true); setShowActions(false); }}
+                className="w-full px-3 py-1.5 text-left text-sm text-[#4A5940] hover:bg-[#F8F6EE]"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => { handleDelete(); setShowActions(false); }}
+                className="w-full px-3 py-1.5 text-left text-sm text-[#c96b6b] hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
       
       {moment.audio_url && (
         <AudioPlayer audioUrl={moment.audio_url} />
       )}
       
-      {moment.transcript && (
+      {isEditing ? (
+        <div className="mt-3">
+          <textarea
+            value={editedTranscript}
+            onChange={(e) => setEditedTranscript(e.target.value)}
+            className="w-full p-3 border border-[#D4DAD0] rounded-lg text-sm text-[#4A5940] focus:outline-none focus:ring-2 focus:ring-[#5F7252]/30 resize-none"
+            rows={4}
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editedTranscript.trim()}
+              className="px-3 py-1.5 text-xs font-medium bg-[#5F7252] text-white rounded-lg hover:bg-[#4A5940] disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+            <button
+              onClick={() => { setIsEditing(false); setEditedTranscript(moment.transcript || ''); }}
+              className="px-3 py-1.5 text-xs font-medium text-[#5F7252] hover:bg-[#F8F6EE] rounded-lg"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : moment.transcript ? (
         <div className="mt-3 p-3 bg-[#F8F6EE] rounded-lg">
           <p className="text-sm text-[#4A5940] italic">"{moment.transcript}"</p>
         </div>
-      )}
+      ) : null}
       
       {moment.glimpse_feeling && showGlimpse && (
         <div className="mt-3 p-3 bg-gradient-to-r from-[#F8F6EE] to-[#F0EDE5] rounded-lg border border-[#D4DAD0]">
@@ -360,7 +428,7 @@ function MomentCard({ moment, onGenerateGlimpse }) {
         </div>
       )}
       
-      {moment.transcript && !moment.glimpse_feeling && (
+      {moment.transcript && !moment.glimpse_feeling && !isEditing && (
         <button
           onClick={handleGenerateGlimpse}
           disabled={generatingGlimpse}
@@ -375,7 +443,7 @@ function MomentCard({ moment, onGenerateGlimpse }) {
         </button>
       )}
       
-      {moment.glimpse_feeling && !showGlimpse && (
+      {moment.glimpse_feeling && !showGlimpse && !isEditing && (
         <button
           onClick={() => setShowGlimpse(true)}
           className="mt-3 flex items-center gap-2 text-sm text-[#5F7252] hover:text-[#4A5940] transition-colors"
@@ -584,6 +652,34 @@ export default function TasteCapturePage({ user, onNavigate }) {
     }
   };
 
+  const handleDeleteMoment = async (momentId) => {
+    try {
+      const { error } = await supabase
+        .from('reading_moments')
+        .delete()
+        .eq('id', momentId);
+
+      if (error) throw error;
+      await loadMoments();
+    } catch (err) {
+      console.error('Error deleting moment:', err);
+    }
+  };
+
+  const handleEditMoment = async (momentId, newTranscript) => {
+    try {
+      const { error } = await supabase
+        .from('reading_moments')
+        .update({ transcript: newTranscript })
+        .eq('id', momentId);
+
+      if (error) throw error;
+      await loadMoments();
+    } catch (err) {
+      console.error('Error editing moment:', err);
+    }
+  };
+
   const isComplete = answeredQuestions >= totalQuestions;
 
   if (!user) {
@@ -731,6 +827,8 @@ export default function TasteCapturePage({ user, onNavigate }) {
                 key={moment.id} 
                 moment={moment}
                 onGenerateGlimpse={handleGenerateGlimpse}
+                onDelete={handleDeleteMoment}
+                onEdit={handleEditMoment}
               />
             ))
           )}
