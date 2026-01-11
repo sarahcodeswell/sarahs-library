@@ -163,6 +163,14 @@ export default function App() {
     setShowNavMenu(false);
     window.scrollTo(0, 0);
     window.history.pushState({}, '', path);
+    
+    // Track page view in Google Analytics
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_path: path,
+        page_title: page,
+      });
+    }
   }, []);
 
   // Memoized queue counts for performance
@@ -255,6 +263,14 @@ export default function App() {
         setShareToken(null);
       }
       window.scrollTo(0, 0);
+      
+      // Track page view in Google Analytics
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'page_view', {
+          page_path: window.location.pathname,
+          page_title: page,
+        });
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
