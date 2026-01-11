@@ -105,8 +105,8 @@ A comprehensive list of all external services, tools, and accounts required to r
 - **What it does:** Tracks website visitors, page views, user behavior, traffic sources, and conversion events
 - **Plan:** Free
 - **Cost:** $0
-- **Measurement ID:** G-Y1LG6YHEPC
-- **Account:** _(add login email)_
+- **Measurement ID:** G-WTK5C80YC1
+- **Account:** sarah@darkridge.com
 
 ### Sentry
 - **URL:** https://sentry.io
